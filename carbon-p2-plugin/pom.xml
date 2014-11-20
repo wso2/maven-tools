@@ -19,8 +19,15 @@
 -->
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+
+    <parent>
+        <groupId>org.wso2.maven</groupId>
+        <artifactId>maven-tools</artifactId>
+        <version>4.3.0-SNAPSHOT</version>
+        <relativePath>../pom.xml</relativePath>
+    </parent>
+
     <modelVersion>4.0.0</modelVersion>
-    <groupId>org.wso2.maven</groupId>
     <artifactId>carbon-p2-plugin</artifactId>
     <packaging>maven-plugin</packaging>
     <version>1.5.4-SNAPSHOT</version>
@@ -30,12 +37,12 @@
         <dependency>
 			<groupId>org.apache.maven</groupId>
 			<artifactId>maven-plugin-api</artifactId>
-            <version>3.0</version>
+            <version>${maven.plugin.api.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>org.apache.maven</groupId>
 			<artifactId>maven-core</artifactId>
-            <version>3.0</version>
+            <version>${maven.core.version}</version>
 		</dependency>
 
 		<dependency>
@@ -56,12 +63,12 @@
         <dependency>
             <groupId>org.apache.maven</groupId>
             <artifactId>maven-project</artifactId>
-            <version>2.0.5</version>
+            <version>${maven.project.version}</version>
         </dependency>
         <dependency>
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
-            <version>3.8.1</version>
+            <version>${junit.version}</version>
             <scope>test</scope>
         </dependency>
     </dependencies>
@@ -123,42 +130,5 @@
       </plugin>
         </plugins>
     </build>
-    <repositories>
-        <repository>
-			<id>sonatype-release</id>
-			<url>http://repository.sonatype.org/content/groups/sonatype-public-grid</url>
-			<snapshots>
-				<enabled>true</enabled>
-			</snapshots>
-			<releases>
-				<enabled>true</enabled>
-			</releases>
-		</repository>
-        <repository>
-            <id>dist-wso2</id>
-            <name>WSO2 Standard Repository</name>
-            <url>http://dist.wso2.org/maven2</url>
-        </repository>
-        <repository>
-            <id>wso2-maven2-repository-snapshot</id>
-            <name>WSO2 Standard Snapshot Repository</name>
-            <url>http://dist.wso2.org/snapshots/maven2</url>
-            <layout>legacy</layout>
-        </repository>
-    </repositories>
-    <distributionManagement>
-        <repository>
-            <id>wso2-maven2-repository</id>
-            <name>WSO2 Maven2 Repository</name>
-            <url>scp://dist.wso2.org/home/httpd/dist.wso2.org/maven2/</url>
-        </repository>
-        <snapshotRepository>
-            <id>wso2-maven2-snapshot-repository</id>
-            <name>WSO2 Maven2 Snapshot Repository</name>
-            <url>scp://dist.wso2.org/home/httpd/dist.wso2.org/snapshots/maven2/</url>
-        </snapshotRepository>
-    </distributionManagement>
-	<properties>
-		<tycho.version>0.13.0</tycho.version>
-	</properties>
+
 </project>
