@@ -20,6 +20,13 @@
         <module>carbon-p2-plugin</module>
     </modules>
 
+    <scm>
+        <url>https://github.com/wso2/maven-tools.git</url>
+        <developerConnection>scm:git:https://github.com/wso2/maven-tools.git</developerConnection>
+        <connection>scm:git:https://github.com/wso2/maven-tools.git</connection>
+        <tag>HEAD</tag>
+    </scm>
+
     <properties>
         <tycho.version>0.13.0</tycho.version>
         <maven.project.version>2.0.5</maven.project.version>
