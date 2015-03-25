@@ -18,7 +18,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>org.wso2.maven</groupId>
 	<artifactId>maven-qos-plugin</artifactId>
-	<version>1.0.5</version>
+	<version>1.0.5-SNAPSHOT</version>
 	<packaging>maven-plugin</packaging>
 
 	<name>Maven Dataservice Plugin</name>
