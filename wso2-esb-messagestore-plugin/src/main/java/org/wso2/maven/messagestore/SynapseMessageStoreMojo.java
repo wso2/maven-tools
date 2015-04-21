@@ -91,8 +91,12 @@ public class SynapseMessageStoreMojo extends AbstractMojo{
 						+ project.getVersion() + "." + extension;
 			} else {
 				String[] fileNameSplit = (artifact.getName().split("\\."));
-				String fileNameWithoutExtension = fileNameSplit[0];
-				String extension = fileNameSplit[1];
+				String extension = fileNameSplit[fileNameSplit.length-1];
+				String fileNameWithoutExtension="";
+				if(artifact.getName().indexOf(".") > 0) {
+					fileNameWithoutExtension = artifact.getName().substring(0, artifact.getName().lastIndexOf("."));
+				}
+
 				newPath = destFolder.getAbsolutePath() + File.separator + fileNameWithoutExtension + "-"
 						+ project.getVersion() + "." + extension;
 			}
