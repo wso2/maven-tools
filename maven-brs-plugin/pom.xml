@@ -77,4 +77,11 @@
 		<url>scp://dist.wso2.org/home/httpd/dist.wso2.org/maven2/</url>
 	</repository>
 </distributionManagement>
+        <repositories>
+       <repository>
+           <id>wso2-maven2-repository-1</id>
+           <url>http://dist.wso2.org/maven2</url>
+       </repository>
+        </repositories>
+
 </project>

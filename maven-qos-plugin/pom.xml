@@ -21,7 +21,7 @@
 	<version>1.0.5-SNAPSHOT</version>
 	<packaging>maven-plugin</packaging>
 
-	<name>Maven Dataservice Plugin</name>
+	<name>Maven QOS Plugin</name>
 
 	<description>Maven plugin which creates and builds Dataservice artifacts</description>
 	<build>
@@ -189,4 +189,10 @@
 			</build>
 		</profile>
 	</profiles>
+        <repositories>
+       <repository>
+           <id>wso2-maven2-repository-1</id>
+           <url>http://dist.wso2.org/maven2</url>
+       </repository>
+        </repositories>
 </project>

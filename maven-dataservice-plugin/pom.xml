@@ -189,4 +189,11 @@
 			</build>
 		</profile>
 	</profiles>
+        <repositories>
+       <repository>
+           <id>wso2-maven2-repository-1</id>
+           <url>http://dist.wso2.org/maven2</url>
+       </repository>
+        </repositories>
+
 </project>
