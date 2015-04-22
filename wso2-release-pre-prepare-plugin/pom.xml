@@ -1,5 +1,13 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+
+	<parent>
+		<groupId>org.wso2.maven</groupId>
+		<artifactId>maven-tools</artifactId>
+		<version>4.3.0-SNAPSHOT</version>
+		<relativePath>../pom.xml</relativePath>
+	</parent>
+
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>org.wso2.maven</groupId>
 	<artifactId>wso2-release-pre-prepare-plugin</artifactId>
@@ -7,7 +15,7 @@
 	<version>1.1.0-SNAPSHOT</version>
 	<name>wso2-release-pre-prepare-plugin Maven Mojo</name>
 	<url>http://maven.apache.org</url>
-	<build>	
+	<build>
 		<plugins>
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
@@ -35,101 +43,72 @@
 			</extension>
 		</extensions>
 	</build>
-	<distributionManagement>
-		<repository>
-			<id>wso2-maven2-repository</id>
-			<name>WSO2 Maven2 Repository</name>
-			<url>scp://dist.wso2.org/home/httpd/dist.wso2.org/maven2/</url>
-		</repository>
-	</distributionManagement>
 	<dependencies>
 		<dependency>
 			<groupId>org.apache.maven</groupId>
 			<artifactId>maven-project</artifactId>
-			<version>2.0.7</version>
+			<version>${maven.project.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>org.codehaus.plexus</groupId>
 			<artifactId>plexus-interactivity-api</artifactId>
-			<version>1.0-alpha-6</version>
+			<version>${plexus.interactivity.api.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>org.mockito</groupId>
 			<artifactId>mockito-core</artifactId>
-			<version>1.9.5</version>
+			<version>${mockito.core.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>org.apache.maven</groupId>
 			<artifactId>maven-plugin-api</artifactId>
-			<version>2.0</version>
+			<version>${maven.plugin.api.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>org.wso2.maven</groupId>
 			<artifactId>org.wso2.maven.registry</artifactId>
-			<version>2.0.1</version>
+			<version>${org.wso2.maven.registry.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>org.wso2.maven</groupId>
 			<artifactId>org.wso2.maven.esb</artifactId>
-			<version>2.0.1</version>
+			<version>${org.wso2.maven.esb.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>org.apache.maven.scm</groupId>
 			<artifactId>maven-scm-api</artifactId>
-			<version>1.9.1</version>
+			<version>${maven.scm.api.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>org.apache.maven.scm</groupId>
 			<artifactId>maven-scm-provider-svnexe</artifactId>
-			<version>1.9.1</version>
+			<version>${maven.scm.provider.svnexe.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>org.codehaus.plexus</groupId>
 			<artifactId>plexus-utils</artifactId>
-			<version>3.0.17</version>
+			<version>${plexus.utils.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>org.apache.maven.scm</groupId>
 			<artifactId>maven-scm-provider-svn-commons</artifactId>
-			<version>1.9.1</version>
+			<version>${maven.scm.provider.svn.commons.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>junit</groupId>
 			<artifactId>junit</artifactId>
-			<version>3.8.1</version>
+			<version>${junit.version}</version>
 			<scope>test</scope>
 		</dependency>
 		<dependency>
 			<groupId>org.sonatype.plexus</groupId>
 			<artifactId>plexus-sec-dispatcher</artifactId>
-			<version>1.4</version>
+			<version>${plexus.sec.dispatcher.version}</version>
 		</dependency>
 		<dependency>
-	        <groupId>org.sonatype.plexus</groupId>
-	        <artifactId>plexus-cipher</artifactId>
-	        <version>1.7</version>
-        </dependency>
+			<groupId>org.sonatype.plexus</groupId>
+			<artifactId>plexus-cipher</artifactId>
+			<version>${plexus.cipher.version}</version>
+		</dependency>
 	</dependencies>
-	<repositories>
-		<repository>
-			<id>wso2-maven2-repository-1</id>
-			<url>http://dist.wso2.org/maven2</url>
-		</repository>
-	</repositories>
-	<pluginRepositories>
-		<pluginRepository>
-			<id>wso2-maven2-repository-1</id>
-			<url>http://dist.wso2.org/maven2</url>
-		</pluginRepository>
-		<pluginRepository>
-			<id>wso2-maven2-repository-2</id>
-			<url>http://dist.wso2.org/snapshots/maven2</url>
-		</pluginRepository>
-		<pluginRepository>
-			<id>repository.dev.java.net-maven2</id>
-			<name>Java.net Repository for Maven</name>
-			<url>http://download.java.net/maven/2/</url>
-			<layout>default</layout>
-		</pluginRepository>
-	</pluginRepositories>
 </project>
