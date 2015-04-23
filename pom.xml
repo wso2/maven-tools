@@ -113,7 +113,7 @@
 		<module>carbon-p2-plugin</module>
 		<module>org.wso2.maven.utils</module>
 		<module>org.wso2.maven.core</module>
-		<module>org.wso2.maven.capp</module>
+<!--		<module>org.wso2.maven.capp</module>-->
 		<module>org.wso2.maven.esb</module>
 		<module>org.wso2.maven.general</module>
 		<module>org.wso2.maven.qos</module>
