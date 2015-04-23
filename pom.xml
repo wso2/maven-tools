@@ -15,14 +15,6 @@
 	<name>Maven Tool Aggregator Pom</name>
 	<url>http://wso2.org</url>
 
-	<distributionManagement>
-		<repository>
-			<id>wso2-maven2-repository</id>
-			<name>WSO2 Maven2 Repository</name>
-			<url>scp://dist.wso2.org/home/httpd/dist.wso2.org/maven2/</url>
-		</repository>
-	</distributionManagement>
-
 	<scm>
 		<url>https://github.com/wso2/maven-tools.git</url>
 		<developerConnection>scm:git:https://github.com/wso2/maven-tools.git</developerConnection>
