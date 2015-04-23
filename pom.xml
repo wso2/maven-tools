@@ -94,7 +94,7 @@
 		<plexus.container.default.version>1.0-alpha-9-stable-1</plexus.container.default.version>
 		<plexus.archiver.version>1.0-alpha-7</plexus.archiver.version>
 		<plexus.utils.version>1.4.7</plexus.utils.version>
-		<org.wso2.maven.capp.version>2.0.11-SNAPSHOT</org.wso2.maven.capp.version>
+		<org.wso2.maven.capp.version>2.0.11</org.wso2.maven.capp.version>
 		<axis2.client.version>1.6.1.wso2v9</axis2.client.version>
 		<axis2.wsdl2code.maven.plugin.version>1.6-wso2v2</axis2.wsdl2code.maven.plugin.version>
 		<axis2.client.version>1.6.1.wso2v9</axis2.client.version>
