@@ -461,7 +461,7 @@
 		<axis2.wsdl2code.maven.plugin.version>1.6-wso2v2</axis2.wsdl2code.maven.plugin.version>
 		<axis2.client.version>1.6.1.wso2v9</axis2.client.version>
 		<axis2.aar.maven.plugin.version>1.6-wso2v4</axis2.aar.maven.plugin.version>
-		<org.wso2.maven.utils.version>2.0.0</org.wso2.maven.utils.version>
+		<org.wso2.maven.utils.version>2.0.1-SNAPSHOT</org.wso2.maven.utils.version>
 		<bndlib.version>0.0.357</bndlib.version>
 		<kxml2.version>2.2.2</kxml2.version>
 		<org.apache.felix.bundlerepository.version>1.6.2</org.apache.felix.bundlerepository.version>
