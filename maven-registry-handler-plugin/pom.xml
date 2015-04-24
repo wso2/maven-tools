@@ -24,12 +24,10 @@
 		<dependency>
 			<groupId>org.wso2.maven</groupId>
 			<artifactId>org.wso2.maven.capp</artifactId>
-			<version>${org.wso2.maven.capp.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>org.apache.felix</groupId>
 			<artifactId>maven-bundle-plugin</artifactId>
-			<version>${maven.bundle.plugin.version}</version>
 		</dependency>
 	</dependencies>
 	<build>
