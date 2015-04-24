@@ -482,7 +482,7 @@
 		<commons.httpclient.version>3.1</commons.httpclient.version>
 		<commons.codec.version>1.4.0.wso2v1</commons.codec.version>
 		<httpcore.version>4.0</httpcore.version>
-		<maven.synapse.plugin.version>2.0.5</maven.synapse.plugin.version>
+		<maven.synapse.plugin.version>2.0.11-SNAPSHOT</maven.synapse.plugin.version>
 		<maven.stratos.plugin.version>2.0.5</maven.stratos.plugin.version>
 		<maven.bundle.plugin.version>2.3.7</maven.bundle.plugin.version>
 		<axis2.client.version>1.6.1.wso2v9</axis2.client.version>
@@ -490,8 +490,8 @@
 		<org.wso2.carbon.roles.mgt.stub.version>3.2.0</org.wso2.carbon.roles.mgt.stub.version>
 		<commons.io.version>1.3.2</commons.io.version>
 		<org.apache.maven.plugins.version>2.0.2</org.apache.maven.plugins.version>
-		<org.wso2.maven.esb.version>2.0.1</org.wso2.maven.esb.version>
-		<org.wso2.maven.registry.version>2.0.1</org.wso2.maven.registry.version>
+		<org.wso2.maven.esb.version>2.0.2-SNAPSHOT</org.wso2.maven.esb.version>
+		<org.wso2.maven.registry.version>2.0.3-SNAPSHOT</org.wso2.maven.registry.version>
 		<plexus.interactivity.api.version>1.0-alpha-6</plexus.interactivity.api.version>
 		<mockito.core.version>1.9.5</mockito.core.version>
 		<maven.scm.api.version>1.9.1</maven.scm.api.version>
