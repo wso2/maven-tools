@@ -20,7 +20,7 @@
 	<groupId>org.wso2.maven</groupId>
 	<artifactId>maven-tools</artifactId>
 	<packaging>pom</packaging>
-	<version>4.4.0</version>
+	<version>4.4.1-SNAPSHOT</version>
 	<name>Maven Tool Aggregator Pom</name>
 	<url>http://wso2.org</url>
 
@@ -41,7 +41,7 @@
 		<url>https://github.com/wso2/maven-tools.git</url>
 		<developerConnection>scm:git:https://github.com/wso2/maven-tools.git</developerConnection>
 		<connection>scm:git:https://github.com/wso2/maven-tools.git</connection>
-		<tag>v4.4.0</tag>
+		<tag>HEAD</tag>
 	</scm>
 
 	<modules>
@@ -455,12 +455,12 @@
 		<plexus.container.default.version>1.0-alpha-9-stable-1</plexus.container.default.version>
 		<plexus.archiver.version>1.0-alpha-7</plexus.archiver.version>
 		<plexus.utils.version>1.4.7</plexus.utils.version>
-		<org.wso2.maven.capp.version>2.0.11</org.wso2.maven.capp.version>
+		<org.wso2.maven.capp.version>2.0.12-SNAPSHOT</org.wso2.maven.capp.version>
 		<axis2.client.version>1.6.1.wso2v9</axis2.client.version>
 		<axis2.wsdl2code.maven.plugin.version>1.6-wso2v2</axis2.wsdl2code.maven.plugin.version>
 		<axis2.client.version>1.6.1.wso2v9</axis2.client.version>
 		<axis2.aar.maven.plugin.version>1.6-wso2v4</axis2.aar.maven.plugin.version>
-		<org.wso2.maven.utils.version>2.0.1</org.wso2.maven.utils.version>
+		<org.wso2.maven.utils.version>2.0.2-SNAPSHOT</org.wso2.maven.utils.version>
 		<bndlib.version>0.0.357</bndlib.version>
 		<kxml2.version>2.2.2</kxml2.version>
 		<org.apache.felix.bundlerepository.version>1.6.2</org.apache.felix.bundlerepository.version>
@@ -472,7 +472,7 @@
 		<axis2.version>1.6.1.wso2v3</axis2.version>
 		<geronimo.stax.api_1.0_spec.version>1.0.1.wso2v1</geronimo.stax.api_1.0_spec.version>
 		<commons.logging.version>1.1.1</commons.logging.version>
-		<org.wso2.maven.core.version>2.0.2</org.wso2.maven.core.version>
+		<org.wso2.maven.core.version>2.0.3-SNAPSHOT</org.wso2.maven.core.version>
 		<wsdl4j.version>1.6.2.wso2v2</wsdl4j.version>
 		<org.apache.neethi.wso2.version>2.0.4.wso2v3</org.apache.neethi.wso2.version>
 		<org.apache.ws.commons.schema.wso2.version>1.4.7.wso2v1</org.apache.ws.commons.schema.wso2.version>
@@ -481,15 +481,15 @@
 		<commons.httpclient.version>3.1</commons.httpclient.version>
 		<commons.codec.version>1.4.0.wso2v1</commons.codec.version>
 		<httpcore.version>4.0</httpcore.version>
-		<maven.synapse.plugin.version>2.0.11</maven.synapse.plugin.version>
-		<maven.stratos.plugin.version>2.0.11</maven.stratos.plugin.version>
+		<maven.synapse.plugin.version>2.0.12-SNAPSHOT</maven.synapse.plugin.version>
+		<maven.stratos.plugin.version>2.0.12-SNAPSHOT</maven.stratos.plugin.version>
 		<maven.bundle.plugin.version>2.3.7</maven.bundle.plugin.version>
 		<axis2.client.version>1.6.1.wso2v9</axis2.client.version>
 		<org.wso2.carbon.authenticator.stub.version>3.2.0</org.wso2.carbon.authenticator.stub.version>
 		<org.wso2.carbon.roles.mgt.stub.version>3.2.0</org.wso2.carbon.roles.mgt.stub.version>
 		<commons.io.version>1.3.2</commons.io.version>
-		<org.wso2.maven.esb.version>2.0.2</org.wso2.maven.esb.version>
-		<org.wso2.maven.registry.version>2.0.3</org.wso2.maven.registry.version>
+		<org.wso2.maven.esb.version>2.0.3-SNAPSHOT</org.wso2.maven.esb.version>
+		<org.wso2.maven.registry.version>2.0.4-SNAPSHOT</org.wso2.maven.registry.version>
 		<plexus.interactivity.api.version>1.0-alpha-6</plexus.interactivity.api.version>
 		<mockito.core.version>1.9.5</mockito.core.version>
 		<maven.scm.api.version>1.9.1</maven.scm.api.version>
