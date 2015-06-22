@@ -29,4 +29,5 @@ public class WSO2MavenPluginConstantants {
 	public static final String MAVEN_CAR_DEPLOY_PLUGIN_VERSION="1.0.10";
 	public static final String WSO2_ESB_MESSAGE_STORE_PLUGIN_VERSION = "1.0.6";
 	public static final String WSO2_ESB_MESSAGE_PROCESSOR_PLUGIN_VERSION = "1.0.6";
+	public static final String MAVEN_INBOUND_ENDPOINT_PLUGIN_VERSION = "1.0.0-SNAPSHOT";
 }
