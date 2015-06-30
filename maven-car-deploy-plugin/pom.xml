@@ -51,7 +51,7 @@
 							<tasks>
 								<path id="wsdl2java.classpath">
 									<pathelement
-										location="${settings.localRepository}/org/apache/axis2/wso2/axis2-client/1.6.1.wso2v3/axis2-client-1.6.1.wso2v3.jar" />
+										location="${settings.localRepository}/org/apache/axis2/wso2/axis2-client/1.6.1.wso2v9/axis2-client-1.6.1.wso2v9.jar" />
 									<pathelement
 										location="${settings.localRepository}/org/apache/axis2/wso2/axis2/1.6.1.wso2v3/axis2-1.6.1.wso2v3.jar" />
 									<pathelement
@@ -64,7 +64,7 @@
 										/> <pathelement location="${settings.localRepository}/org/apache/ws/commons/axiom/axiom-api/1.2.13/axiom-api-1.2.13.jar" 
 										/ -->
 									<pathelement
-										location="${settings.localRepository}/org/apache/ws/commons/axiom/wso2/axiom/1.2.11.wso2v2/axiom-1.2.11.wso2v2.jar" />
+										location="${settings.localRepository}/org/apache/ws/commons/axiom/wso2/axiom/1.2.11.wso2v4/axiom-1.2.11.wso2v4.jar" />
 									<pathelement
 										location="${settings.localRepository}/org/apache/ws/commons/schema/wso2/XmlSchema/1.4.7.wso2v1/XmlSchema-1.4.7.wso2v1.jar" />
 								</path>
