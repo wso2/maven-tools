@@ -31,34 +31,36 @@ import org.wso2.maven.capp.utils.CAppMavenUtils;
 import org.wso2.maven.capp.utils.CAppArtifactPriorityMapping;
 
 public class CAppArtifactDependency implements Comparable<CAppArtifactDependency> {
-	
+
 	private CAppArtifact cAppArtifact;
 	private Dependency mavenDependency;
 	private File[] artifactFiles;
-	private boolean dummyDependency=false;
-	
-	public CAppArtifactDependency(Dependency mavenDependency,String serverRole) throws MojoExecutionException {
+	private boolean dummyDependency = false;
+
+	public CAppArtifactDependency(Dependency mavenDependency, String serverRole) throws MojoExecutionException {
 		setMavenDependency(mavenDependency);
-		Artifact resolvedArtifactPom = CAppMavenUtils.getResolvedArtifactPom(mavenDependency, CAppMavenUtils.getArtifactFactory(), CAppMavenUtils.getRemoteRepositories(), CAppMavenUtils.getLocalRepository(), CAppMavenUtils.getResolver());
+		Artifact resolvedArtifactPom = CAppMavenUtils.getResolvedArtifactPom(mavenDependency,
+				CAppMavenUtils.getArtifactFactory(), CAppMavenUtils.getRemoteRepositories(),
+				CAppMavenUtils.getLocalRepository(), CAppMavenUtils.getResolver());
 		MavenProject mavenProject = CAppMavenUtils.getMavenProject(resolvedArtifactPom.getFile());
-		setcAppArtifact(new CAppArtifact(mavenProject,serverRole));
+		setcAppArtifact(new CAppArtifact(mavenProject, serverRole));
 	}
-	
+
 	public CAppArtifactDependency(MavenProject project, String type, String serverRole) {
-		setcAppArtifact(new CAppArtifact(project,serverRole));
+		setcAppArtifact(new CAppArtifact(project, serverRole));
 		getMavenDependency().setType(type);
 	}
-	
-	public String getDependencyId(){
+
+	public String getDependencyId() {
 		return cAppArtifact.getId();
 	}
-	
+
 	public String getName() {
-			return cAppArtifact.getName();
+		return cAppArtifact.getName();
 	}
 
 	public String getVersion() {
-			return cAppArtifact.getVersion();
+		return cAppArtifact.getVersion();
 	}
 
 	private Dependency createMavenDependency() {
@@ -74,8 +76,8 @@ public class CAppArtifactDependency implements Comparable<CAppArtifactDependency
 	public void setArtifactFiles(File[] artifactFiles) {
 		this.artifactFiles = artifactFiles;
 	}
-	
-	public File[] getCappArtifactFile() throws MojoExecutionException, IOException{
+
+	public File[] getCappArtifactFile() throws MojoExecutionException, IOException {
 		if (artifactFiles == null) {
 			Artifact resolvedArtifact;
 			if (null != getMavenDependency().getScope()) {
@@ -105,12 +107,11 @@ public class CAppArtifactDependency implements Comparable<CAppArtifactDependency
 				FileUtils.extract(mavenArtifact, tempDirectory);
 				File[] listFiles = tempDirectory.listFiles();
 				for (File file : listFiles) {
-					if (file.isFile()
-							&& file.getName().toLowerCase().endsWith(".xml")) {
+					if (file.isFile() && file.getName().toLowerCase().endsWith(".xml")) {
 						getcAppArtifact().setFile(file.getName());
 					}
 				}
-				artifactFiles=listFiles;
+				artifactFiles = listFiles;
 			} else {
 				getcAppArtifact().setFile(mavenArtifact.getName());
 				artifactFiles = new File[] { mavenArtifact };
@@ -123,15 +124,15 @@ public class CAppArtifactDependency implements Comparable<CAppArtifactDependency
 		Dependency artifactDependency = getMavenDependency();
 
 		if (null != artifactDependency.getSystemPath()) {
-			// Generate system path for xml based artifacts
-			if (CAppMavenUtils.XML_DEPENDENCY_TYPE.equals(artifactDependency.getType())) {
-				String artifactName = artifactDependency.getArtifactId().concat(
-						"-" + artifactDependency.getVersion() + "." + CAppMavenUtils.XML_DEPENDENCY_TYPE);
-				String pomFileSystemPath = artifactDependency.getSystemPath();
-				return pomFileSystemPath.substring(0, pomFileSystemPath.lastIndexOf(CAppMavenUtils.POM_FILE_NAME))
-						.concat(CAppMavenUtils.TARGET_DIR_NAME + File.separator + artifactName);
-			} else if (CAppMavenUtils.ZIP_DEPENDENCY_TYPE.equals(artifactDependency.getType())) {
-				// Generate system path for registry resources
+			/*
+			 * System path can be decided only for ESB, Registry and Data service artifacts. Thus xml, zip and dbs
+			 * dependency types are considered. Any other cases are ignored.
+			 */
+			if (CAppMavenUtils.XML_DEPENDENCY_TYPE.equals(artifactDependency.getType())) { // ESB artifacts
+				return createSimpleSystemPath(artifactDependency, CAppMavenUtils.XML_DEPENDENCY_TYPE);
+			} else if (CAppMavenUtils.DBS_DEPENDENCY_TYPE.equals(artifactDependency.getType())) { // data services
+				return createSimpleSystemPath(artifactDependency, CAppMavenUtils.DBS_DEPENDENCY_TYPE);
+			} else if (CAppMavenUtils.ZIP_DEPENDENCY_TYPE.equals(artifactDependency.getType())) { // registry resources
 				String artifactName = artifactDependency.getArtifactId().concat("-" + artifactDependency.getVersion());
 
 				String pomFileSystemPath = artifactDependency.getSystemPath();
@@ -171,12 +172,20 @@ public class CAppArtifactDependency implements Comparable<CAppArtifactDependency
 		return null;
 	}
 
-	public String toString() {
-	    return getCaption();
+	private String createSimpleSystemPath(Dependency artifactDependency, String dependencyType) {
+		String artifactName = artifactDependency.getArtifactId().concat(
+				"-" + artifactDependency.getVersion() + "." + dependencyType);
+		String pomFileSystemPath = artifactDependency.getSystemPath();
+		return pomFileSystemPath.substring(0, pomFileSystemPath.lastIndexOf(CAppMavenUtils.POM_FILE_NAME)).concat(
+				CAppMavenUtils.TARGET_DIR_NAME + File.separator + artifactName);
 	}
-	
-	public String getCaption(){
-		return getName()+" - "+getVersion();
+
+	public String toString() {
+		return getCaption();
+	}
+
+	public String getCaption() {
+		return getName() + " - " + getVersion();
 	}
 
 	public String getType() {
@@ -196,8 +205,8 @@ public class CAppArtifactDependency implements Comparable<CAppArtifactDependency
 	}
 
 	public Dependency getMavenDependency() {
-		if (mavenDependency==null){
-			mavenDependency=createMavenDependency();
+		if (mavenDependency == null) {
+			mavenDependency = createMavenDependency();
 		}
 		return mavenDependency;
 	}
@@ -215,10 +224,8 @@ public class CAppArtifactDependency implements Comparable<CAppArtifactDependency
 	}
 
 	public int compareTo(CAppArtifactDependency compareArtifactDependency) {
-		return CAppArtifactPriorityMapping.getPriority(this.getcAppArtifact()
-				.getType())
-				- CAppArtifactPriorityMapping.getPriority(compareArtifactDependency
-						.getcAppArtifact().getType());
+		return CAppArtifactPriorityMapping.getPriority(this.getcAppArtifact().getType())
+				- CAppArtifactPriorityMapping.getPriority(compareArtifactDependency.getcAppArtifact().getType());
 	}
 
 }

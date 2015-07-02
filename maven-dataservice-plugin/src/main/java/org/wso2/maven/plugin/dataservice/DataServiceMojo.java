@@ -27,11 +27,11 @@ import java.io.File;
 import java.io.IOException;
 
 /**
- * This is the Maven Mojo used for dataservice resources to be copied to the output
- * directory in the resource-process phase.
- *
+ * This is the Maven Mojo used for dataservice resources to be copied to the output directory in the resource-process
+ * phase.
+ * 
  * @goal package-dataservice
- *
+ * 
  */
 public class DataServiceMojo extends AbstractMojo {
 
@@ -42,14 +42,14 @@ public class DataServiceMojo extends AbstractMojo {
 
 	/**
 	 * Maven ProjectHelper.
-	 *
+	 * 
 	 * @component
 	 */
 	private MavenProjectHelper projectHelper;
 
 	/**
 	 * The path of the existing artifact
-	 *
+	 * 
 	 * @parameter expression="${package-file.artifact}"
 	 * @required
 	 */
@@ -57,26 +57,24 @@ public class DataServiceMojo extends AbstractMojo {
 
 	/**
 	 * The resulting extension of the file
-	 *
+	 * 
 	 * @parameter expression="${package-file.extension}
 	 */
 	private String extension;
 
 	/**
 	 * The resulting extension of the file
-	 *
+	 * 
 	 * @parameter expression="${package-file.fileName}
 	 */
 	private String fileName;
 
 	/**
 	 * If the file should be archived
-	 *
+	 * 
 	 * @parameter expression="${package-file.enableArchive}" default-value=false
 	 */
 	private boolean enableArchive;
-	
-	
 
 	public void execute() throws MojoExecutionException, MojoFailureException {
 
@@ -88,11 +86,18 @@ public class DataServiceMojo extends AbstractMojo {
 		} else {
 			if (extension != null) { // if the user provided the extension
 				String fileNameWithoutExtension = (artifact.getName().split("\\."))[0];
-				newPath =
-				          destFolder.getAbsolutePath() + File.separator + fileNameWithoutExtension +
-				              "." + extension;
+				newPath = destFolder.getAbsolutePath() + File.separator + fileNameWithoutExtension + "-"
+						+ project.getVersion() + "." + extension;
 			} else {
-				newPath = destFolder.getAbsolutePath() + File.separator + artifact.getName();
+				String[] fileNameSplit = (artifact.getName().split("\\."));
+				String extension = fileNameSplit[fileNameSplit.length - 1];
+				String fileNameWithoutExtension = "";
+				if (artifact.getName().indexOf(".") > 0) {
+					fileNameWithoutExtension = artifact.getName().substring(0, artifact.getName().lastIndexOf("."));
+				}
+
+				newPath = destFolder.getAbsolutePath() + File.separator + fileNameWithoutExtension + "-"
+						+ project.getVersion() + "." + extension;
 			}
 		}
 
@@ -104,13 +109,13 @@ public class DataServiceMojo extends AbstractMojo {
 		try {
 			FileUtils.copyFile(artifact, result);
 		} catch (IOException e) {
-			throw new MojoExecutionException("Error when copying " + artifact.getName() + " to " +
-			                                 result.getName() + "\n" + e.getMessage());
+			throw new MojoExecutionException("Error when copying " + artifact.getName() + " to " + result.getName()
+					+ "\n" + e.getMessage());
 		}
 
 		if (result != null && result.exists()) {
 			project.getArtifact().setFile(result);
-//			projectHelper.attachArtifact(project, extension, null, result);
+			// projectHelper.attachArtifact(project, extension, null, result);
 		} else {
 			throw new MojoExecutionException(result + " is null or doesn't exist");
 		}
@@ -118,8 +123,6 @@ public class DataServiceMojo extends AbstractMojo {
 		if (enableArchive) {
 			// TODO make the zip file
 		}
-
-
 
 	}
 

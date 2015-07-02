@@ -8,6 +8,7 @@ public class CAppMavenUtils extends MavenUtils{
 	public static final String CAPP_SCOPE_PREFIX = "capp";
 	public static final String REPLACER_DEFAULT_DELIMETER = "${}";
 	public static final String XML_DEPENDENCY_TYPE = "xml";
+	public static final String DBS_DEPENDENCY_TYPE = "dbs";
 	public static final String ZIP_DEPENDENCY_TYPE = "zip";
 	public static final String POM_FILE_NAME = "pom.xml";
 	public static final String RESOURCES_DIR_NAME = "resources";
