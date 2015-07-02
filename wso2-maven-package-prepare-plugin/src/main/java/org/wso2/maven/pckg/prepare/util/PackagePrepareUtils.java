@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package org.wso2.maven.packageprepare.util;
+package org.wso2.maven.pckg.prepare.util;
 
 import java.io.File;
 import java.util.HashMap;
@@ -30,18 +30,29 @@ import org.wso2.maven.esb.ESBArtifact;
 import org.wso2.maven.esb.ESBProjectArtifact;
 
 public class PackagePrepareUtils {
-	public static Map<String, String> getDependencyData(MavenProject project) throws FactoryConfigurationError,
+
+	/**
+	 * Returns system paths of artifacts listed under a given project
+	 * 
+	 * @param project
+	 * @return
+	 * @throws FactoryConfigurationError
+	 * @throws Exception
+	 */
+	public static Map<String, String> getArtifactsSystemPathMap(MavenProject project) throws FactoryConfigurationError,
 			Exception {
-		Map<String, String> dependencyData = new HashMap<String, String>();
+		Map<String, String> dependencyData = new HashMap<>();
 
 		StringBuilder artifactXMLPathBuilder = new StringBuilder();
 		artifactXMLPathBuilder.append(project.getBasedir().toString());
 		artifactXMLPathBuilder.append(File.separator);
-		artifactXMLPathBuilder.append(MavenConstants.ARTIFACT_XML_NAME);// refactor
-																		// to
-																		// methods
+		artifactXMLPathBuilder.append(MavenConstants.ARTIFACT_XML_NAME);
+
 		File artifactXMLFile = new File(artifactXMLPathBuilder.toString());
 
+		/*
+		 * ATM, System path can only be defined for ESB and Registry projects only. Hence filtered by artifact.xml
+		 */
 		if (artifactXMLFile.exists()) {
 			ESBProjectArtifact artifactXMLDoc = new ESBProjectArtifact();
 			artifactXMLDoc.fromFile(artifactXMLFile);
@@ -74,19 +85,6 @@ public class PackagePrepareUtils {
 
 				dependencyData.put(dependencyString, systemPath);
 			}
-		} else {
-			/*
-			 * String cAppType = ""; Dependency dependency = new Dependency();
-			 * dependency.setArtifactId(project.getArtifactId());
-			 * dependency.setGroupId(project.getGroupId());
-			 * dependency.setVersion(project.getVersion()); cAppType =
-			 * project.getModel().getPackaging(); if (cAppType == null ||
-			 * !ArtifactTypeMapping.isValidArtifactType(cAppType)) { if
-			 * (project.getModel().getProperties().containsKey("CApp.type")) {
-			 * cAppType = (String)
-			 * project.getModel().getProperties().get("CApp.type"); } }
-			 * dependency.setType(ArtifactTypeMapping.getType(cAppType));
-			 */
 		}
 		return dependencyData;
 	}
