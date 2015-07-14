@@ -73,7 +73,7 @@
 		<module>maven-registry-handler-plugin</module>
 		<module>maven-registry-filter-plugin</module>
 		<module>maven-library-plugin</module>
-		<module>maven-axis2-plugin</module>
+		<!--module>maven-axis2-plugin</module-->
 		<module>maven-war-plugin</module>
 		<module>maven-dataservice-plugin</module>
 		<module>maven-bpel-plugin</module>
