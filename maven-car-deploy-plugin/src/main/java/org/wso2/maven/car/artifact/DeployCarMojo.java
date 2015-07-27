@@ -51,6 +51,8 @@ import javax.activation.DataHandler;
  */
 public class DeployCarMojo extends AbstractMojo {
 	
+	private static final String EXTENSION_CAR = ".car";
+
 	/**
      * Location Trust Store folder
      * @required
@@ -104,7 +106,7 @@ public class DeployCarMojo extends AbstractMojo {
     /**
      * Location archiveLocation folder
      *
-     * @parameter expression="${project.build.directory}"
+     * @parameter
      */
     private File archiveLocation;
     
@@ -227,23 +229,27 @@ public class DeployCarMojo extends AbstractMojo {
 				Xpp3Dom finalNameNode = configurationNode.getChild("finalName");
 				if (finalNameNode != null) {
 					finalName = finalNameNode.getValue();
-					getLog().info("Final Name of C-App: "+finalName+".car");
+					getLog().info("Final Name of C-App: " + finalName + EXTENSION_CAR);
 				}
 				break;
 			}
 		}
 		
-	    File carFile = null;
-	    if(archiveLocation !=null){
-	    	carFile = archiveLocation;
-	    }else{
-	    	if (finalName == null) {
-	    		carFile = new File(target + "/" + project.getArtifactId() + "_"
-	    				+ project.getVersion() + ".car");
-	    	}else{
-	    		carFile = new File(target + "/" + finalName + ".car");
-	    	}
-	    }
+		File carFile = null;
+		if (null != archiveLocation) { // If default target location is changed by user
+			if (archiveLocation.isFile() && archiveLocation.getName().endsWith(EXTENSION_CAR)) {
+				carFile = archiveLocation;
+			} else {
+				throw new MojoExecutionException("Archive location is not a valid file");
+			}
+		} else { // Default target file
+			if (finalName == null) {
+				carFile = new File(target + File.separator + project.getArtifactId() + "_" + project.getVersion()
+						+ EXTENSION_CAR);
+			} else {
+				carFile = new File(target + File.separator + finalName + EXTENSION_CAR);
+			}
+		}
 		
 	    if(operation.equalsIgnoreCase("deploy")){
 		    try {
