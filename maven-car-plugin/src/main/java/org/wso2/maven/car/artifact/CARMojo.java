@@ -1,12 +1,5 @@
 package org.wso2.maven.car.artifact;
 
-import java.io.File;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
 import org.apache.maven.artifact.factory.ArtifactFactory;
 import org.apache.maven.artifact.repository.ArtifactRepository;
 import org.apache.maven.artifact.resolver.ArtifactResolver;
@@ -22,6 +15,13 @@ import org.wso2.maven.capp.model.CAppArtifactDependency;
 import org.wso2.maven.capp.utils.CAppMavenUtils;
 import org.wso2.maven.car.artifact.utils.FileManagementUtil;
 import org.wso2.maven.plugin.synapse.utils.SynapseArtifactBundleCreator;
+
+import java.io.File;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 /**
  * Create a bpel artifact from Maven project
@@ -52,7 +52,13 @@ public class CARMojo extends AbstractMojo {
 	 * @parameter
 	 */
 	public String finalName;
-    
+
+	/**
+	 * A classifier for the build final name
+	 *
+	 * @parameter
+	 */
+	public String classifier;
 
 	/**
 	 * @parameter default-value="${project}"
@@ -216,11 +222,14 @@ public class CARMojo extends AbstractMojo {
 	}
 
 	private File getArchiveFile(){
-		File archiveFile = new File(getArchiveLocation(),project.getArtifactId()+"_"+project.getVersion()+".car");
+		String archiveFilename = new StringBuilder().append(project.getArtifactId()).append("_")
+		                                            .append(project.getVersion())
+		                                            .append(classifier != null ? "-" + classifier : "")
+				                                    .append(".car").toString();
+		File archiveFile = new File(getArchiveLocation(), archiveFilename);
 		if(finalName != null && !finalName.trim().equals("")){
 			archiveFile=new File(getArchiveLocation(), finalName+".car");
-		}
-		return archiveFile;
+		}		return archiveFile;
 	}
 	
 	public File getArchiveLocation() {
