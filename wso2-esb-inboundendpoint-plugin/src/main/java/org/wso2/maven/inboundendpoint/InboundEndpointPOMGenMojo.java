@@ -21,7 +21,6 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
-import java.util.StringTokenizer;
 
 import org.apache.maven.model.Plugin;
 import org.apache.maven.plugin.MojoExecutionException;
@@ -149,26 +148,4 @@ public class InboundEndpointPOMGenMojo extends AbstractPOMGenMojo {
 	protected String getArtifactType() {
 		return MavenConstants.INBOUND_ENDPOINT_ARTIFACT_TYPE;
 	}
-
-	@Override
-	protected File processTokenReplacement(Artifact artifact) {
-		File file = artifact.getFile();
-		if (file.exists()) {
-			String fileContent;
-			try {
-				fileContent = org.wso2.developerstudio.eclipse.utils.file.FileUtils.getContentAsString(file);
-
-				Properties mavenProperties = getProject().getModel().getProperties();
-
-				String newFileContent = replaceTokens(fileContent, mavenProperties);
-				File tempFile = org.wso2.developerstudio.eclipse.utils.file.FileUtils.createTempFile();
-				org.wso2.developerstudio.eclipse.utils.file.FileUtils.writeContent(tempFile, newFileContent);
-				return tempFile;
-			} catch (IOException e) {
-				e.printStackTrace();
-			}
-		}
-		return file;
-	}
-
 }

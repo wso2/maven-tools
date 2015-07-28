@@ -148,46 +148,4 @@ public class ProxyServicePOMGenMojo extends AbstractPOMGenMojo {
 	protected String getArtifactType() {
 		return ARTIFACT_TYPE;
 	}
-	
-	@Override
-	protected File processTokenReplacement(Artifact artifact) {
-		File file = artifact.getFile();
-		if(file.exists()){
-			String fileContent;
-			StringBuffer sb=new StringBuffer();
-			try {
-				fileContent = org.wso2.developerstudio.eclipse.utils.file.FileUtils.getContentAsString(file);
-				//StringTokenizer st=new StringTokenizer(fileContent, CAppMavenUtils.REPLACER_DEFAULT_DELIMETER);
-				
-				Properties mavenProperties = getProject().getModel().getProperties();
-				//Check whether the content actually has tokens and Properties section should define them. Otherwise skip. 
-				//By default there are 2 such properties. So size check is 2.
-				/*if (st.countTokens()>1 && mavenProperties.size()>1) {
-					while (st.hasMoreTokens()) {
-						String nextToken = st.nextToken();
-						if (mavenProperties.containsKey(nextToken)) {
-							String originalToken = nextToken;
-							nextToken = (String) mavenProperties.get(nextToken);
-							getLog().info("Replacing the token: "+originalToken+" with value: "+nextToken);
-						}
-						sb.append(nextToken);
-					} 
-				}else{
-					sb.append(fileContent);
-				}*/
-				
-				String newFileContent = replaceTokens(fileContent, mavenProperties);
-				File tempFile = org.wso2.developerstudio.eclipse.utils.file.FileUtils.createTempFile();
-				//org.wso2.developerstudio.eclipse.utils.file.FileUtils.writeContent(tempFile, sb.toString());
-				org.wso2.developerstudio.eclipse.utils.file.FileUtils.writeContent(tempFile, newFileContent);
-				return tempFile;
-			} catch (IOException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-		}
-		return file;
-	}
-
-	
 }

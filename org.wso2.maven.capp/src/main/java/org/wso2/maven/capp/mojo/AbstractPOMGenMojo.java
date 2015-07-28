@@ -362,9 +362,18 @@ public abstract class AbstractPOMGenMojo extends AbstractMojo {
 		return projectLocation;
 	}	
 	
-	protected File processTokenReplacement(Artifact artifact){
-		return null;
-		//Do nothing. Implementations should be done by impplementations
+	protected File processTokenReplacement(Artifact artifact) throws IOException {
+		File file = artifact.getFile();
+		if (file.exists()) {
+			Properties mavenProperties = getProject().getModel().getProperties();
+
+			String fileContent = org.wso2.developerstudio.eclipse.utils.file.FileUtils.getContentAsString(file);
+			String newFileContent = replaceTokens(fileContent, mavenProperties);
+			File tempFile = org.wso2.developerstudio.eclipse.utils.file.FileUtils.createTempFile();
+			org.wso2.developerstudio.eclipse.utils.file.FileUtils.writeContent(tempFile, newFileContent);
+			return tempFile;
+		}
+		return file;
 	}
 	
 	/**

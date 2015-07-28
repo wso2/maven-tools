@@ -28,6 +28,7 @@ import org.apache.maven.project.MavenProject;
 import org.apache.maven.project.MavenProjectHelper;
 import org.codehaus.plexus.util.FileUtils;
 import org.codehaus.plexus.util.xml.Xpp3Dom;
+import org.wso2.developerstudio.eclipse.utils.data.ITemporaryFileTag;
 import org.wso2.maven.capp.model.Artifact;
 import org.wso2.maven.capp.mojo.AbstractPOMGenMojo;
 import org.wso2.maven.capp.utils.CAppMavenUtils;
@@ -91,8 +92,6 @@ public class SynapseTaskPOMGenMojo extends AbstractPOMGenMojo {
 	 */
 	public String typeList;
 	
-	private MavenProject mavenModuleProject;
-
 	private static final String ARTIFACT_TYPE="synapse/task";
 	
 	private List<ESBArtifact> retrieveArtifacts() {
@@ -121,11 +120,15 @@ public class SynapseTaskPOMGenMojo extends AbstractPOMGenMojo {
 		super.processArtifacts(mappedArtifacts);
 
 	}
-	
-	
-	protected void copyResources(MavenProject project, File projectLocation, Artifact artifact)throws IOException {
-		File sequenceArtifact = artifact.getFile();
-		FileUtils.copyFile(sequenceArtifact, new File(projectLocation, sequenceArtifact.getName()));
+
+	protected void copyResources(MavenProject project, File projectLocation, Artifact artifact) throws IOException {
+		ITemporaryFileTag newTag = org.wso2.developerstudio.eclipse.utils.file.FileUtils.createNewTempTag();
+		File sequenceArtifact = processTokenReplacement(artifact);
+		if (sequenceArtifact == null) {
+			sequenceArtifact = artifact.getFile();
+		}
+		FileUtils.copyFile(sequenceArtifact, new File(projectLocation, artifact.getFile().getName()));
+		newTag.clearAndEnd();
 	}
 	
 	protected void addPlugins(MavenProject artifactMavenProject, Artifact artifact) {
@@ -141,6 +144,4 @@ public class SynapseTaskPOMGenMojo extends AbstractPOMGenMojo {
 	protected String getArtifactType() {
 		return ARTIFACT_TYPE;
 	}
-
-	
 }
