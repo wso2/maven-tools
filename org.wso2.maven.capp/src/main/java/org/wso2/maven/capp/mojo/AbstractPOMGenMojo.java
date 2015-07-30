@@ -361,9 +361,27 @@ public abstract class AbstractPOMGenMojo extends AbstractMojo {
 	public File getProjectLocation() {
 		return projectLocation;
 	}	
-	
+
+	/**
+	 * Filter and replace maven placeholders in artifacts with respective property values
+	 * 
+	 * @param artifact
+	 * @return
+	 * @throws IOException
+	 */
 	protected File processTokenReplacement(Artifact artifact) throws IOException {
-		File file = artifact.getFile();
+		File artifactFile = artifact.getFile();
+		return processTokenReplacement(artifactFile);
+	}
+
+	/**
+	 * Filter and replace maven placeholders in artifacts with respective property values
+	 * 
+	 * @param file
+	 * @return
+	 * @throws IOException
+	 */
+	protected File processTokenReplacement(File file) throws IOException {
 		if (file.exists()) {
 			Properties mavenProperties = getProject().getModel().getProperties();
 

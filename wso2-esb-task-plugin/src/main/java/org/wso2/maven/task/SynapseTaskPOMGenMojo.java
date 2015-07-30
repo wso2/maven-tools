@@ -123,11 +123,11 @@ public class SynapseTaskPOMGenMojo extends AbstractPOMGenMojo {
 
 	protected void copyResources(MavenProject project, File projectLocation, Artifact artifact) throws IOException {
 		ITemporaryFileTag newTag = org.wso2.developerstudio.eclipse.utils.file.FileUtils.createNewTempTag();
-		File sequenceArtifact = processTokenReplacement(artifact);
-		if (sequenceArtifact == null) {
-			sequenceArtifact = artifact.getFile();
+		File taskArtifact = processTokenReplacement(artifact);
+		if (taskArtifact == null) {
+			taskArtifact = artifact.getFile();
 		}
-		FileUtils.copyFile(sequenceArtifact, new File(projectLocation, artifact.getFile().getName()));
+		FileUtils.copyFile(taskArtifact, new File(projectLocation, artifact.getFile().getName()));
 		newTag.clearAndEnd();
 	}
 	

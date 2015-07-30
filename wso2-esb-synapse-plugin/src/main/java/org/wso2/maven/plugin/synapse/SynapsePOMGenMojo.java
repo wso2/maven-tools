@@ -28,6 +28,7 @@ import org.apache.maven.project.MavenProject;
 import org.apache.maven.project.MavenProjectHelper;
 import org.codehaus.plexus.util.FileUtils;
 import org.codehaus.plexus.util.xml.Xpp3Dom;
+import org.wso2.developerstudio.eclipse.utils.data.ITemporaryFileTag;
 import org.wso2.maven.capp.model.Artifact;
 import org.wso2.maven.capp.mojo.AbstractPOMGenMojo;
 import org.wso2.maven.capp.utils.CAppMavenUtils;
@@ -121,11 +122,16 @@ public class SynapsePOMGenMojo extends AbstractPOMGenMojo {
 
 	}
 	
-	
-	protected void copyResources(MavenProject project, File projectLocation, Artifact artifact)throws IOException {
-		File sequenceArtifact = artifact.getFile();
-		FileUtils.copyFile(sequenceArtifact, new File(projectLocation, sequenceArtifact.getName()));
+	protected void copyResources(MavenProject project, File projectLocation, Artifact artifact) throws IOException {
+		ITemporaryFileTag newTag = org.wso2.developerstudio.eclipse.utils.file.FileUtils.createNewTempTag();
+		File synapseArtifact = processTokenReplacement(artifact);
+		if (synapseArtifact == null) {
+			synapseArtifact = artifact.getFile();
+		}
+		FileUtils.copyFile(synapseArtifact, new File(projectLocation, artifact.getFile().getName()));
+		newTag.clearAndEnd();
 	}
+	
 	protected void addPlugins(MavenProject artifactMavenProject, Artifact artifact) {
 		Plugin plugin = CAppMavenUtils.createPluginEntry(artifactMavenProject,"org.wso2.maven","maven-synapse-plugin",WSO2MavenPluginConstantants.MAVEN_SYNAPSE_PLUGIN_VERSION,true);
 		Xpp3Dom configuration = (Xpp3Dom)plugin.getConfiguration();

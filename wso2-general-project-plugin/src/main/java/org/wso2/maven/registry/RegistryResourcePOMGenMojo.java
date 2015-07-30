@@ -37,7 +37,6 @@ import java.io.IOException;
 import java.sql.Time;
 import java.util.ArrayList;
 import java.util.Hashtable;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
@@ -90,8 +89,6 @@ public class RegistryResourcePOMGenMojo extends AbstractPOMGenMojo {
 	 */
 	private String groupId;
 	
-	private MavenProject mavenModuleProject;
-
 	private static final String ARTIFACT_TYPE="registry/resource";
 	
 	private List<RegistryArtifact> artifacts;
@@ -147,7 +144,6 @@ public class RegistryResourcePOMGenMojo extends AbstractPOMGenMojo {
 
 	}
 	
-	
 	protected void copyResources(MavenProject project, File projectLocation, Artifact artifact)throws IOException {
 		//POM file and Registry-info.xml in the outside
 		
@@ -164,8 +160,6 @@ public class RegistryResourcePOMGenMojo extends AbstractPOMGenMojo {
 		if(getLog().isDebugEnabled()){
 			getLog().debug(new Time(System.currentTimeMillis())+" Starting generation of Registry Resource Metadata");
 		}
-		
-//		List<RegistryArtifact> artifacts = retrieveArtifacts();
 		
 		if(getLog().isDebugEnabled()){
 			getLog().debug(new Time(System.currentTimeMillis())+" Reusing the previously collected Artifacts details.");
@@ -240,9 +234,10 @@ public class RegistryResourcePOMGenMojo extends AbstractPOMGenMojo {
 				getLog().debug(new Time(System.currentTimeMillis())+"  Metadata processing complete. Copying artifacts.");
 			}
 			
+			// If resource is a file
 			if (file.isFile()) {
-				FileUtils.copy(file,
-				               new File(projectLocation, "resources" + File.separator + file.getName()));
+				File processedFile = processTokenReplacement(file);
+				FileUtils.copy(processedFile, new File(projectLocation, "resources" + File.separator + file.getName()));
 			} else {
 				FileUtils.copyDirectory(file,
 				                        new File(projectLocation, "resources" + File.separator +
@@ -266,36 +261,6 @@ public class RegistryResourcePOMGenMojo extends AbstractPOMGenMojo {
 		if(getLog().isDebugEnabled()){
 			getLog().debug(new Time(System.currentTimeMillis())+" Artifact copy process is completed");
 		}
-		
-//		for (RegistryElement registryElement : allESBArtifacts) {
-//			File file = null;
-//			if (registryElement instanceof RegistryItem) {
-//				file =
-//				       new File(artifact.getSource().getParentFile().getPath(),
-//				                ((RegistryItem) registryElement).getFile());
-//				((RegistryItem) registryElement).setFile(file.getName());
-//			} else if (registryElement instanceof RegistryCollection) {
-//				file =
-//				       new File(artifact.getSource().getParentFile().getPath(),
-//				                ((RegistryCollection) registryElement).getDirectory());
-//				((RegistryCollection) registryElement).setDirectory(file.getName());
-//			}
-//			try {
-//				regInfo.toFile();
-//			} catch (Exception e) {
-//				// TODO Auto-generated catch block
-//				e.printStackTrace();
-//			}
-//		}
-//		
-//		if(getLog().isDebugEnabled()){
-//			getLog().debug(new Time(System.currentTimeMillis())+" Artifact Metadata successfully generated");
-//		}
-		
-//		if(artifact.getFile().isDirectory()){
-//			File file = new File(artifact.getFile().getParentFile(),"resources");
-//			FileUtils.copyDirectory(file, new File(projectLocation, file.getName()));
-//		}
 	}
 	
 	protected void addPlugins(MavenProject artifactMavenProject, Artifact artifact) {
@@ -308,7 +273,5 @@ public class RegistryResourcePOMGenMojo extends AbstractPOMGenMojo {
 
 	protected String getArtifactType() {
 		return ARTIFACT_TYPE;
-	}
-
-	
+	}	
 }
