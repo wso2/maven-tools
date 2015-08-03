@@ -41,6 +41,7 @@ import org.apache.maven.scm.command.checkout.CheckOutScmResult;
 import org.apache.maven.scm.manager.BasicScmManager;
 import org.apache.maven.scm.manager.NoSuchScmProviderException;
 import org.apache.maven.scm.manager.ScmManager;
+import org.apache.maven.scm.provider.git.gitexe.GitExeScmProvider;
 import org.apache.maven.scm.provider.svn.svnexe.SvnExeScmProvider;
 import org.apache.maven.scm.repository.ScmRepository;
 import org.apache.maven.scm.repository.ScmRepositoryException;
@@ -62,12 +63,12 @@ import org.wso2.maven.registry.RegistryArtifact;
  */
 public class MavenReleasePrePrepareMojo extends AbstractMojo {
 
-	private static final String PROJECTNATURES = "projectnatures";
+	private static final String PROJECT_NATURES = "projectnatures";
 	private static final String MAVEN_ECLIPSE_PLUGIN = "maven-eclipse-plugin";
 	private static final String POM_XML = "pom.xml";
-	private static final String ORG_WSO2_DEVELOPERSTUDIO_ECLIPSE_GENERAL_PROJECT_NATURE =
+	private static final String ORG_WSO2_DEVELOPER_STUDIO_ECLIPSE_GENERAL_PROJECT_NATURE =
 	                                                                                      "org.wso2.developerstudio.eclipse.general.project.nature";
-	private static final String ORG_WSO2_DEVELOPERSTUDIO_ECLIPSE_ESB_PROJECT_NATURE =
+	private static final String ORG_WSO2_DEVELOPER_STUDIO_ECLIPSE_ESB_PROJECT_NATURE =
 	                                                                                  "org.wso2.developerstudio.eclipse.esb.project.nature";
 	private static final String PROJECT = "project.";
 	private static final String ARTIFACT_XML_REGEX = "**/artifact.xml";
@@ -82,6 +83,11 @@ public class MavenReleasePrePrepareMojo extends AbstractMojo {
 	private static final String POM = "pom";
 	private static final String RELEASE_PROPERTIES = "release.properties";
 	private static final String ARTIFACT_XML = "artifact.xml";
+	private static final String SVN = "svn";
+	private static final String GIT = "git";
+	public static final String TRUNK_SUFFIX = "/trunk";
+	public static final String TAGS_SUFFIX = "/tags";
+	public static final String SCM_SVN_PREFIX = "scm:svn:";
 
 	private final Log log = getLog();
 
@@ -100,10 +106,15 @@ public class MavenReleasePrePrepareMojo extends AbstractMojo {
 	 */
 	private boolean dryRun;
 
+	/**
+	 * Field to hold the name of scm provider which is derived using scm URL
+	 */
+	private String scmProvider;
+
 	public void execute() throws MojoExecutionException, MojoFailureException {
 
 		if (dryRun) {
-			log.warn(" **** wso2-relase-pre-prepare-plugin does not support for dryRun mode **** ");
+			log.warn(" **** wso2-release-pre-prepare-plugin does not support the dryRun mode **** ");
 			return;
 		}
 
@@ -117,58 +128,81 @@ public class MavenReleasePrePrepareMojo extends AbstractMojo {
 			try {
 				input = new FileInputStream(new File(baseDirPath, RELEASE_PROPERTIES));
 				prop.load(input);
+				String scmUrl = prop.getProperty(SCM_URL);
 				String scmTag = prop.getProperty(SCM_TAG);
 				String scmTagBase = prop.getProperty(SCM_TAG_BASE);
-				String scmUrl = prop.getProperty(SCM_URL);
 				String scmUserName = prop.getProperty(SCM_USERNAME);
 				String scmPassword = decrypt(prop.getProperty(SCM_PASSWORD));
 				if (scmUrl == null) {
 					scmUrl = project.getScm().getConnection();
 				}
-				ScmManager scmManager = new BasicScmManager();
-				String scmProvider = scmUrl.split(":")[1];
-				scmManager.setScmProvider(scmProvider, new SvnExeScmProvider());
-				String checkoutUrl =
-				                     SCM +
-				                             scmProvider +
-				                             ":" +
-				                             scmTagBase.replaceAll("/$", "").concat("/")
-				                                       .concat(scmTag);
+				// get ScmManager
+				ScmManager scmManager = getScmManager();
+				// derive scm Provider
+				scmProvider = scmUrl.split(":")[1];
+				if(scmTagBase == null && SVN.equals(scmProvider)){
+					scmTagBase = getDefaultSVNTagBase(scmUrl);
+				}
+				String checkoutUrl = SCM + scmProvider + ":" +
+				                       scmTagBase.replaceAll("/$", "").concat("/").concat(scmTag);
 				// checkout and commit tag
-				checkoutAndCommit(scmManager, prop, checkoutUrl,scmUserName, scmPassword, RELEASE);
+				checkoutAndCommit(scmManager, prop, checkoutUrl, scmUserName, scmPassword, RELEASE);
 				scmTagBase = project.getScm().getConnection();
 				// checkout and commit trunk
 				checkoutAndCommit(scmManager, prop, scmTagBase, scmUserName, scmPassword, DEVELOPMENT);
 
-				ScmFileSet scmFileSet =
-				                        new ScmFileSet(new File(baseDirPath), ARTIFACT_XML_REGEX,
-				                                       null);
+				ScmFileSet scmFileSet = new ScmFileSet(new File(baseDirPath), ARTIFACT_XML_REGEX,
+				                                         null);
 				ScmRepository scmRepository = scmManager.makeScmRepository(scmUrl);
 				// update the local repo with modified artifact.xml file
 				scmManager.update(scmRepository, scmFileSet);
 
 			} catch (FileNotFoundException e) {
-				log.error("Cannot find the release.properties file", e);
+				log.error("Cannot find the release.properties file.", e);
 			} catch (IOException e) {
-				log.error("error occure while loading properties from release.properties file", e);
+				log.error("Error occurred while loading properties from release.properties file.", e);
 			} catch (ScmRepositoryException e) {
-				log.error("error occure while loading ScmRepository", e);
+				log.error("Error occurred while loading ScmRepository.", e);
 			} catch (NoSuchScmProviderException e) {
-				log.error("Cannot find Scm Provider", e);
+				log.error("Cannot find Scm Provider.", e);
 			} catch (FactoryConfigurationError e) {
-				log.error("error occure while reading factory configurations", e);
+				log.error("Error occurred while reading factory configurations.", e);
 			} catch (ScmException e) {
-				log.error("error occure while loading ScmRepository", e);
+				log.error("Error occurred while loading ScmRepository.", e);
 			} finally {
 				if (input != null) {
 					try {
 						input.close();
 					} catch (IOException e) {
-						log.error("error occure while closing input stream", e);
+						log.error("Error occurred while closing input stream.", e);
 					}
 				}
 			}
 		}
+	}
+
+	/**
+	 * Method to derive the default SVN tagBase URL (<URL>/tags) from scmURL.
+	 *
+	 * @param scmUrl SCM URL
+	 *
+	 * @return Default TagBase for given SVN Repo
+	 */
+	private String getDefaultSVNTagBase(String scmUrl) {
+
+		return scmUrl.replace(TRUNK_SUFFIX, TAGS_SUFFIX).replace(SCM_SVN_PREFIX, "");
+	}
+
+	/**
+	 * Method to create the ScmManager Instance.
+	 *
+	 * @return  ScmManager  ScmManager instance
+	 */
+	private ScmManager getScmManager() {
+		ScmManager scmManager = new BasicScmManager();
+		scmManager.setScmProvider(SVN, new SvnExeScmProvider());
+		scmManager.setScmProvider(GIT, new GitExeScmProvider());
+		return scmManager;
 	}
 
 	/**
@@ -192,58 +226,61 @@ public class MavenReleasePrePrepareMojo extends AbstractMojo {
 	                               String repoType) throws FactoryConfigurationError, IOException,
 	                                               ScmException {
 
-		String modifiedCheckoutUrl = checkoutUrl;		
+		String modifiedCheckoutUrl = checkoutUrl;
 		if(scmUserName != null && scmPassword != null){
-			// Building the checkout url to have username and password Eg: scm:svn:https://username:password@svn.apache.org/svn/root/module			
+			// Building the checkout url to have username and password Eg: scm:svn:https://username:password@svn.apache.org/svn/root/module
 			modifiedCheckoutUrl = checkoutUrl.replace("://", "://" + scmUserName + ":" + scmPassword + "@");
 		}else if(scmUserName != null && scmPassword == null){
 			// Building the checkout url to have username Eg: scm:svn:https://username@svn.apache.org/svn/root/module
 			modifiedCheckoutUrl = checkoutUrl.replace("://", "://" + scmUserName + "@");
-		}		
+		}
 		ScmRepository scmRepository = scmManager.makeScmRepository(modifiedCheckoutUrl);
 		String scmBaseDir = project.getBuild().getDirectory();
 		// create temp directory for checkout
 		File targetFile = new File(scmBaseDir, repoType);
 		targetFile.mkdirs();
 		ScmFileSet scmFileSet = new ScmFileSet(targetFile, ARTIFACT_XML_REGEX, null);
+
 		CheckOutScmResult checkOut = scmManager.checkOut(scmRepository, scmFileSet);
-		List<ScmFile> checkedOutFiles = checkOut.getCheckedOutFiles();
-
-		for (ScmFile scmFile : checkedOutFiles) {
-			String scmFilePath = scmFile.getPath();
-			if (scmFilePath.endsWith(ARTIFACT_XML)) {
-				File artifactXml = new File(scmBaseDir, scmFilePath);
-				File pomFile =
-				               new File(scmBaseDir, scmFilePath.replaceAll(ARTIFACT_XML + "$",
-				                                                           POM_XML));
-				if (!pomFile.exists()) {
-					log.warn(" skiping an artifact.xml does not belongs to a maven project ");
-					continue;
-				}
-				try {
-
-					if (hasNature(pomFile, ORG_WSO2_DEVELOPERSTUDIO_ECLIPSE_ESB_PROJECT_NATURE)) {
-						setESBArtifactVersion(prop, repoType, artifactXml);
-					} else if (hasNature(pomFile,
-					                     ORG_WSO2_DEVELOPERSTUDIO_ECLIPSE_GENERAL_PROJECT_NATURE)) {
-						setRegArtifactVersion(prop, repoType, artifactXml);
+		if (checkOut.isSuccess()) {
+			List<ScmFile> checkedOutFiles = checkOut.getCheckedOutFiles();
+			for (ScmFile scmFile : checkedOutFiles) {
+				String scmFilePath = scmFile.getPath();
+				if (scmFilePath.endsWith(ARTIFACT_XML)) {
+					File artifactXml = new File(scmBaseDir, scmFilePath);
+					File pomFile =
+							new File(scmBaseDir, scmFilePath.replaceAll(ARTIFACT_XML + "$",
+							                                            POM_XML));
+					if (!pomFile.exists()) {
+						log.warn("Skipping as artifact.xml does not belongs to a maven project.");
+						continue;
 					}
-				} catch (Exception e) {
-					log.error("error occure while set artifact version", e);
-				}
+					try {
+						if (hasNature(pomFile, ORG_WSO2_DEVELOPER_STUDIO_ECLIPSE_ESB_PROJECT_NATURE)) {
+							setESBArtifactVersion(prop, repoType, artifactXml);
+						} else if (hasNature(pomFile,
+						                     ORG_WSO2_DEVELOPER_STUDIO_ECLIPSE_GENERAL_PROJECT_NATURE)) {
+							setRegArtifactVersion(prop, repoType, artifactXml);
+						}
+					} catch (Exception e) {
+						log.error("Error occurred while setting artifact version.", e);
+					}
 
+				}
 			}
+			ScmFileSet scmCheckInFileSet =
+					new ScmFileSet(new File(scmBaseDir), ARTIFACT_XML_REGEX, null);
+			// commit modified artifact.xml files
+			scmManager.checkIn(scmRepository, scmCheckInFileSet,
+			                   "Committed the modified artifact.xml file.");
 		}
-		ScmFileSet scmCheckInFileSet =
-		                               new ScmFileSet(new File(scmBaseDir), ARTIFACT_XML_REGEX,
-		                                              null);
-		// commit modified artifact.xml files
-		scmManager.checkIn(scmRepository, scmCheckInFileSet,
-		                   "  commited modified artifact.xml file ... ");
+		else {
+			log.error("Checkout failed: " + checkOut.getCommandOutput());
+		}
 	}
 
 	/**
-	 * set Registry artifact version in articact.xml file
+	 * set Registry artifact version in artifact.xml file
 	 * 
 	 * @param prop
 	 *            properties in release.properties file
@@ -273,7 +310,7 @@ public class MavenReleasePrePrepareMojo extends AbstractMojo {
 	}
 
 	/**
-	 * set ESB artifact version in articact.xml file
+	 * set ESB artifact version in artifact.xml file
 	 * 
 	 * @param prop
 	 *            properties in release.properties file
@@ -340,7 +377,7 @@ public class MavenReleasePrePrepareMojo extends AbstractMojo {
 			for (Plugin plugin : plugins) {
 				if (plugin.getArtifactId().equals(MAVEN_ECLIPSE_PLUGIN)) {
 					Xpp3Dom configurationNode = (Xpp3Dom) plugin.getConfiguration();
-					Xpp3Dom projectnatures = configurationNode.getChild(PROJECTNATURES);
+					Xpp3Dom projectnatures = configurationNode.getChild(PROJECT_NATURES);
 					Xpp3Dom[] natures = projectnatures.getChildren();
 					for (Xpp3Dom xpp3Dom : natures) {
 						if (nature.equals(xpp3Dom.getValue())) {
@@ -353,15 +390,15 @@ public class MavenReleasePrePrepareMojo extends AbstractMojo {
 		} catch (FileNotFoundException e) {
 			log.error("Cannot find the pom file", e);
 		} catch (IOException e) {
-			log.error("error occure while reading the pom file", e);
+			log.error("Error occurred while reading the pom file", e);
 		} catch (XmlPullParserException e) {
-			log.error("error occure while parse the pom file", e);
+			log.error("Error occurred while parse the pom file", e);
 		} finally {
 			if (reader != null) {
 				try {
 					reader.close();
 				} catch (IOException e) {
-					log.error("error occure while closing input stream", e);
+					log.error("Error occurred while closing input stream", e);
 				}
 			}
 		}
@@ -378,7 +415,7 @@ public class MavenReleasePrePrepareMojo extends AbstractMojo {
 		try {
 			return secDispatcher.decrypt(password);
 		} catch (SecDispatcherException sde) {
-			log.warn("error occure while decrypting password", sde);
+			log.warn("Error occurred while decrypting password", sde);
 			return password;
 		}
 	}

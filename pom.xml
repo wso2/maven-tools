@@ -245,7 +245,12 @@
 				<artifactId>maven-scm-api</artifactId>
 				<version>${org.apache.maven.scm.api.version}</version>
 			</dependency>
-			<dependency>
+            <dependency>
+                <groupId>org.apache.maven.scm</groupId>
+                <artifactId>maven-scm-provider-gitexe</artifactId>
+                <version>${org.apache.maven.scm.provider.gitexe.version}</version>
+            </dependency>
+            <dependency>
 				<groupId>org.apache.maven.scm</groupId>
 				<artifactId>maven-scm-provider-svnexe</artifactId>
 				<version>${org.apache.maven.scm.provider.svnexe.version}</version>
@@ -466,6 +471,7 @@
 		<org.apache.maven.war.plugins.version>2.1-beta-1</org.apache.maven.war.plugins.version>
 		<org.apache.maven.scm.api.version>1.9.1</org.apache.maven.scm.api.version>
 		<org.apache.maven.scm.provider.svnexe.version>1.9.1</org.apache.maven.scm.provider.svnexe.version>
+        <org.apache.maven.scm.provider.gitexe.version>1.9.1</org.apache.maven.scm.provider.gitexe.version>
 		<org.apache.maven.scm.provider.svn.commons.version>1.9.1</org.apache.maven.scm.provider.svn.commons.version>
 		<tycho.version>0.13.0</tycho.version>
 		<junit.version>3.8.1</junit.version>
