@@ -85,9 +85,12 @@ public class MavenReleasePrePrepareMojo extends AbstractMojo {
 	private static final String ARTIFACT_XML = "artifact.xml";
 	private static final String SVN = "svn";
 	private static final String GIT = "git";
-	public static final String TRUNK_SUFFIX = "/trunk";
-	public static final String TAGS_SUFFIX = "/tags";
-	public static final String SCM_SVN_PREFIX = "scm:svn:";
+	private static final String TRUNK_SUFFIX = "/trunk";
+	private static final String TAGS_SUFFIX = "/tags";
+	private static final String SCM_SVN_PREFIX = "scm:svn:";
+	private static final String SRC = "src";
+	private static final String MAIN = "main";
+	private static final String SYNAPSE_CONFIG = "synapse-config";
 
 	private final Log log = getLog();
 
@@ -248,18 +251,22 @@ public class MavenReleasePrePrepareMojo extends AbstractMojo {
 				String scmFilePath = scmFile.getPath();
 				if (scmFilePath.endsWith(ARTIFACT_XML)) {
 					File artifactXml = new File(scmBaseDir, scmFilePath);
-					File pomFile =
+					File projectPath =
 							new File(scmBaseDir, scmFilePath.replaceAll(ARTIFACT_XML + "$",
-							                                            POM_XML));
+							                                            ""));
+					File pomFile = new File(projectPath, POM_XML);
 					if (!pomFile.exists()) {
 						log.warn("Skipping as artifact.xml does not belongs to a maven project.");
 						continue;
 					}
+					File synapseConfigs = new File(projectPath + SRC + File.separator + MAIN +
+					                               File.separator, SYNAPSE_CONFIG);
 					try {
-						if (hasNature(pomFile, ORG_WSO2_DEVELOPER_STUDIO_ECLIPSE_ESB_PROJECT_NATURE)) {
+						if (synapseConfigs.exists()) {
+							// This is an ESB project
 							setESBArtifactVersion(prop, repoType, artifactXml);
-						} else if (hasNature(pomFile,
-						                     ORG_WSO2_DEVELOPER_STUDIO_ECLIPSE_GENERAL_PROJECT_NATURE)) {
+						} else {
+							// This is a registry project
 							setRegArtifactVersion(prop, repoType, artifactXml);
 						}
 					} catch (Exception e) {
