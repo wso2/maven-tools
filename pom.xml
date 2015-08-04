@@ -21,7 +21,7 @@
 	<groupId>org.wso2.maven</groupId>
 	<artifactId>maven-tools</artifactId>
 	<packaging>pom</packaging>
-	<version>4.4.0-SNAPSHOT</version>
+	<version>1.0.0-SNAPSHOT</version>
 	<name>Maven Tool Aggregator Pom</name>
 	<url>http://wso2.org</url>
 
@@ -245,12 +245,12 @@
 				<artifactId>maven-scm-api</artifactId>
 				<version>${org.apache.maven.scm.api.version}</version>
 			</dependency>
-            <dependency>
-                <groupId>org.apache.maven.scm</groupId>
-                <artifactId>maven-scm-provider-gitexe</artifactId>
-                <version>${org.apache.maven.scm.provider.gitexe.version}</version>
-            </dependency>
-            <dependency>
+			<dependency>
+				<groupId>org.apache.maven.scm</groupId>
+				<artifactId>maven-scm-provider-gitexe</artifactId>
+				<version>${org.apache.maven.scm.provider.gitexe.version}</version>
+			</dependency>
+			<dependency>
 				<groupId>org.apache.maven.scm</groupId>
 				<artifactId>maven-scm-provider-svnexe</artifactId>
 				<version>${org.apache.maven.scm.provider.svnexe.version}</version>
@@ -363,6 +363,37 @@
 				<version>${org.wso2.maven.capp.version}</version>
 			</dependency>
 			<dependency>
+				<groupId>org.wso2.maven</groupId>
+				<artifactId>maven-synapse-plugin</artifactId>
+				<version>${org.wso2.maven.synapse.plugin.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>org.wso2.maven</groupId>
+				<artifactId>maven-stratos-plugin</artifactId>
+				<version>${org.wso2.maven.stratos.plugin.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>org.wso2.maven</groupId>
+				<artifactId>org.wso2.maven.core</artifactId>
+				<version>${org.wso2.maven.core.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>org.wso2.maven</groupId>
+				<artifactId>org.wso2.maven.esb</artifactId>
+				<version>${org.wso2.maven.esb.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>org.wso2.maven</groupId>
+				<artifactId>org.wso2.maven.utils</artifactId>
+				<version>${org.wso2.maven.utils.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>org.wso2.maven</groupId>
+				<artifactId>org.wso2.maven.registry</artifactId>
+				<version>${org.wso2.maven.registry.version}</version>
+			</dependency>
+			
+			<dependency>
 				<groupId>wsdl4j.wso2</groupId>
 				<artifactId>wsdl4j</artifactId>
 				<version>${wsdl4j.version}</version>
@@ -390,16 +421,6 @@
 				</exclusions>
 			</dependency>
 			<dependency>
-				<groupId>org.wso2.maven</groupId>
-				<artifactId>maven-synapse-plugin</artifactId>
-				<version>${org.wso2.maven.synapse.plugin.version}</version>
-			</dependency>
-			<dependency>
-				<groupId>org.wso2.maven</groupId>
-				<artifactId>maven-stratos-plugin</artifactId>
-				<version>${org.wso2.maven.stratos.plugin.version}</version>
-			</dependency>
-			<dependency>
 				<groupId>org.wso2.carbon</groupId>
 				<artifactId>org.wso2.carbon.authenticator.stub</artifactId>
 				<version>${org.wso2.carbon.authenticator.stub.version}</version>
@@ -408,26 +429,6 @@
 				<groupId>org.wso2.carbon</groupId>
 				<artifactId>org.wso2.carbon.roles.mgt.stub</artifactId>
 				<version>${org.wso2.carbon.roles.mgt.stub.version}</version>
-			</dependency>
-			<dependency>
-				<groupId>org.wso2.maven</groupId>
-				<artifactId>org.wso2.maven.core</artifactId>
-				<version>${org.wso2.maven.core.version}</version>
-			</dependency>
-			<dependency>
-				<groupId>org.wso2.maven</groupId>
-				<artifactId>org.wso2.maven.esb</artifactId>
-				<version>${org.wso2.maven.esb.version}</version>
-			</dependency>
-			<dependency>
-				<groupId>org.wso2.maven</groupId>
-				<artifactId>org.wso2.maven.utils</artifactId>
-				<version>${org.wso2.maven.utils.version}</version>
-			</dependency>
-			<dependency>
-				<groupId>org.wso2.maven</groupId>
-				<artifactId>org.wso2.maven.registry</artifactId>
-				<version>${org.wso2.maven.registry.version}</version>
 			</dependency>
 		</dependencies>
 	</dependencyManagement>
@@ -471,7 +472,7 @@
 		<org.apache.maven.war.plugins.version>2.1-beta-1</org.apache.maven.war.plugins.version>
 		<org.apache.maven.scm.api.version>1.9.1</org.apache.maven.scm.api.version>
 		<org.apache.maven.scm.provider.svnexe.version>1.9.1</org.apache.maven.scm.provider.svnexe.version>
-        <org.apache.maven.scm.provider.gitexe.version>1.9.1</org.apache.maven.scm.provider.gitexe.version>
+		<org.apache.maven.scm.provider.gitexe.version>1.9.1</org.apache.maven.scm.provider.gitexe.version>
 		<org.apache.maven.scm.provider.svn.commons.version>1.9.1</org.apache.maven.scm.provider.svn.commons.version>
 		<tycho.version>0.13.0</tycho.version>
 		<junit.version>3.8.1</junit.version>
@@ -487,14 +488,14 @@
 		<commons.logging.version>1.1.1</commons.logging.version>
 		<log4j.version>1.2.14</log4j.version>
 		<commons.httpclient.version>3.1</commons.httpclient.version>
-		<org.wso2.maven.capp.version>2.0.13-SNAPSHOT</org.wso2.maven.capp.version>
 		<wsdl4j.version>1.6.2.wso2v2</wsdl4j.version>
 		<org.wso2.securevault.version>1.0.0</org.wso2.securevault.version>
 		<commons.codec.wso2.commons.codec.version>1.4.0.wso2v1</commons.codec.wso2.commons.codec.version>
-		<org.wso2.maven.synapse.plugin.version>2.0.13-SNAPSHOT</org.wso2.maven.synapse.plugin.version>
-		<org.wso2.maven.stratos.plugin.version>2.0.13-SNAPSHOT</org.wso2.maven.stratos.plugin.version>
 		<org.wso2.carbon.authenticator.stub.version>3.2.0</org.wso2.carbon.authenticator.stub.version>
 		<org.wso2.carbon.roles.mgt.stub.version>3.2.0</org.wso2.carbon.roles.mgt.stub.version>
+		<org.wso2.maven.synapse.plugin.version>2.0.13-SNAPSHOT</org.wso2.maven.synapse.plugin.version>
+		<org.wso2.maven.stratos.plugin.version>2.0.13-SNAPSHOT</org.wso2.maven.stratos.plugin.version>
+		<org.wso2.maven.capp.version>2.0.13-SNAPSHOT</org.wso2.maven.capp.version>
 		<org.wso2.maven.core.version>2.0.4-SNAPSHOT</org.wso2.maven.core.version>
 		<org.wso2.maven.esb.version>2.0.4-SNAPSHOT</org.wso2.maven.esb.version>
 		<org.wso2.maven.utils.version>2.0.3-SNAPSHOT</org.wso2.maven.utils.version>
