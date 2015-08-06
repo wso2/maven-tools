@@ -91,6 +91,11 @@ public class MavenReleasePrePrepareMojo extends AbstractMojo {
 	private static final String SRC = "src";
 	private static final String MAIN = "main";
 	private static final String SYNAPSE_CONFIG = "synapse-config";
+	public static final String COLON = ":";
+	public static final String FORWARD_SLASH = "/";
+	public static final String EMPTY_STRING = "";
+	public static final String AT_SYMBOL = "@";
+	public static final String PROTOCOL_DELIMITER = "://";
 
 	private final Log log = getLog();
 
@@ -142,12 +147,12 @@ public class MavenReleasePrePrepareMojo extends AbstractMojo {
 				// get ScmManager
 				ScmManager scmManager = getScmManager();
 				// derive scm Provider
-				scmProvider = scmUrl.split(":")[1];
+				scmProvider = scmUrl.split(COLON)[1];
 				if(scmTagBase == null && SVN.equals(scmProvider)){
 					scmTagBase = getDefaultSVNTagBase(scmUrl);
 				}
-				String checkoutUrl = SCM + scmProvider + ":" +
-				                       scmTagBase.replaceAll("/$", "").concat("/").concat(scmTag);
+				String checkoutUrl = SCM + scmProvider + COLON +
+				                       scmTagBase.replaceAll("/$", EMPTY_STRING).concat(FORWARD_SLASH).concat(scmTag);
 				// checkout and commit tag
 				checkoutAndCommit(scmManager, prop, checkoutUrl, scmUserName, scmPassword, RELEASE);
 				scmTagBase = project.getScm().getConnection();
@@ -230,14 +235,19 @@ public class MavenReleasePrePrepareMojo extends AbstractMojo {
 	                                               ScmException {
 
 		String modifiedCheckoutUrl = checkoutUrl;
-		if(scmUserName != null && scmPassword != null){
+		if (scmUserName != null && scmPassword != null) {
 			// Building the checkout url to have username and password Eg: scm:svn:https://username:password@svn.apache.org/svn/root/module
-			modifiedCheckoutUrl = checkoutUrl.replace("://", "://" + scmUserName + ":" + scmPassword + "@");
-		}else if(scmUserName != null && scmPassword == null){
+			modifiedCheckoutUrl = checkoutUrl.replace(PROTOCOL_DELIMITER,
+			                                          PROTOCOL_DELIMITER + scmUserName + COLON +
+			                                          scmPassword + AT_SYMBOL);
+
+		} else if (scmUserName != null && scmPassword == null) {
 			// Building the checkout url to have username Eg: scm:svn:https://username@svn.apache.org/svn/root/module
-			modifiedCheckoutUrl = checkoutUrl.replace("://", "://" + scmUserName + "@");
+			modifiedCheckoutUrl = checkoutUrl
+					.replace(PROTOCOL_DELIMITER, PROTOCOL_DELIMITER + scmUserName + AT_SYMBOL);
 		}
 		ScmRepository scmRepository = scmManager.makeScmRepository(modifiedCheckoutUrl);
+
 		String scmBaseDir = project.getBuild().getDirectory();
 		// create temp directory for checkout
 		File targetFile = new File(scmBaseDir, repoType);
@@ -252,8 +262,7 @@ public class MavenReleasePrePrepareMojo extends AbstractMojo {
 				if (scmFilePath.endsWith(ARTIFACT_XML)) {
 					File artifactXml = new File(scmBaseDir, scmFilePath);
 					File projectPath =
-							new File(scmBaseDir, scmFilePath.replaceAll(ARTIFACT_XML + "$",
-							                                            ""));
+							new File(scmBaseDir, scmFilePath.replaceAll(ARTIFACT_XML + "$", EMPTY_STRING));
 					File pomFile = new File(projectPath, POM_XML);
 					if (!pomFile.exists()) {
 						log.warn("Skipping as artifact.xml does not belongs to a maven project.");
