@@ -23,37 +23,42 @@ import java.io.IOException;
 import java.util.Properties;
 
 /**
- * This is the Maven Mojo used for do pre prepare tasks such as update version
- * of artifacts in Artifact.xml etc.
+ * Implementation of wso2-release:rollback goal. This will revert modified artifact.xml files to
+ * previous development version. This has to be executed prior to release:rollback.
  *
  * @goal rollback
  */
 public class RollbackReleaseMojo extends AbstractMavenReleaseMojo {
 
-	public static final String RELEASE_BACKUP_SFX = ".releaseBackup";
+	protected static final String RELEASE_BACKUP_SFX = ".releaseBackup";
 
+	/**
+	 * {@inheritDoc}
+	 */
 	@Override protected String getMode() {
 		return "rollback";
 	}
 
+	/**
+	 * {@inheritDoc}
+	 */
 	@Override protected String getCommitMessage(Properties releaseProperties) {
-		return "[wso2-release-plugin] rollback the release of " +
-		       releaseProperties.getProperty("scm.tag");
+		return "rollback the release of " + releaseProperties.getProperty(PROP_SCM_TAG);
 	}
 
+	/**
+	 * {@inheritDoc}
+	 */
 	@Override protected String getNewVersion(File artifactXml)
 			throws IOException, XmlPullParserException {
 		// Read the backup pom file created by maven-release-plugin.
-		File pomFile = new File(artifactXml.getParent() + File.separator + POM_XML +
-		                        RELEASE_BACKUP_SFX);
-		if (pomFile.exists()) {
-			MavenProject mavenProject = getMavenProject(pomFile);
-			String newVersion = releaseProperties.getProperty(
-					PROJECT + getMode() + "." + mavenProject.getGroupId() + ":" +
-					mavenProject.getArtifactId());
-			return newVersion;
+		File releaseBackupPOM = new File(artifactXml.getParent() + File.separator + POM_XML +
+		                                 RELEASE_BACKUP_SFX);
+		if (releaseBackupPOM.exists()) {
+			MavenProject mavenProjectBackup = getMavenProject(releaseBackupPOM);
+			return mavenProjectBackup.getVersion();
 		} else {
-			log.error("Cannot find " + pomFile.getPath() +
+			log.error("Cannot find " + releaseBackupPOM.getPath() +
 			          " file. Make sure you have invoked this goal before invoking" +
 			          " release:rollback of maven-release-plugin.");
 			return null;

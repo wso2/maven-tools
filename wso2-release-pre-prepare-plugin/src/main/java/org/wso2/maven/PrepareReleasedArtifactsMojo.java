@@ -23,29 +23,36 @@ import java.io.IOException;
 import java.util.Properties;
 
 /**
- * This is the Maven Mojo used for do pre prepare tasks such as update version
- * of artifacts in Artifact.xml etc.
+ * Implementation of wso2-release:prepare-release. This will modify versions in artifact.xml file
+ * of ESB and Registry projects to current release version.
  *
  * @goal prepare-release
  */
 public class PrepareReleasedArtifactsMojo extends AbstractMavenReleaseMojo {
 
+	/**
+	 * {@inheritDoc}
+	 */
 	protected String getMode() {
 		return "rel";
 	}
 
+	/**
+	 * {@inheritDoc}
+	 */
 	protected String getCommitMessage(Properties releaseProperties) {
-		return "[wso2-release-plugin] prepare release " +
-		       releaseProperties.getProperty("scm.tag");
+		return "prepare release " + releaseProperties.getProperty(PROP_SCM_TAG);
 	}
 
+	/**
+	 * {@inheritDoc}
+	 */
 	@Override protected String getNewVersion(File artifactXml)
 			throws IOException, XmlPullParserException {
-
 		File pomFile = new File(artifactXml.getParent() + File.separator + POM_XML);
 		MavenProject mavenProject = getMavenProject(pomFile);
 		String newVersion = releaseProperties.getProperty(
-				PROJECT + getMode() + "." + mavenProject.getGroupId() + ":" +
+				PROJECT_PREFIX + getMode() + "." + mavenProject.getGroupId() + ":" +
 				mavenProject.getArtifactId());
 		return newVersion;
 	}

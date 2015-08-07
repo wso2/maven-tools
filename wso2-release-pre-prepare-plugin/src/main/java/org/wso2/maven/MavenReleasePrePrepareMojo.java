@@ -59,7 +59,7 @@ import org.wso2.maven.registry.RegistryArtifact;
  * of artifacts in Artifact.xml etc.
  * 
  * @goal pre-prepare
- * 
+ * @deprecated
  */
 public class MavenReleasePrePrepareMojo extends AbstractMojo {
 
