@@ -262,6 +262,16 @@
 			</dependency>
 
 			<!-- Other dependencies -->
+            <dependency>
+                <groupId>commons-io</groupId>
+                <artifactId>commons-io</artifactId>
+                <version>${commons-io.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.twdata.maven</groupId>
+                <artifactId>mojo-executor</artifactId>
+                <version>${mojo-executor.version}</version>
+            </dependency>
 			<dependency>
 				<groupId>org.eclipse.tycho</groupId>
 				<artifactId>tycho-equinox</artifactId>
@@ -444,6 +454,8 @@
 	</build>
 
 	<properties>
+        <commons-io.version>2.4</commons-io.version>
+        <mojo-executor.version>2.2.0</mojo-executor.version>
 		<org.apache.maven.core.version>3.0</org.apache.maven.core.version>
 		<org.apache.maven.project.version>2.2.1</org.apache.maven.project.version>
 		<org.apache.maven.model.version>3.0.2</org.apache.maven.model.version>
