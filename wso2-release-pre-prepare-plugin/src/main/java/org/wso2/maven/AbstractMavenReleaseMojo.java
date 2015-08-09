@@ -18,7 +18,6 @@ package org.wso2.maven;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.filefilter.IOFileFilter;
 import org.apache.commons.io.filefilter.TrueFileFilter;
-import org.apache.commons.lang.ArrayUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.maven.execution.MavenSession;
 import org.apache.maven.model.Model;
@@ -77,11 +76,6 @@ public abstract class AbstractMavenReleaseMojo extends AbstractMojo {
 	protected static final String PROP_SCM_PASSWORD = "scm.password";
 
 	/**
-	 * @parameter expression="${dryRun}" default-value="false"
-	 */
-	protected boolean dryRun;
-
-	/**
 	 * The project currently being build.
 	 *
 	 * @parameter expression="${project}"
@@ -106,11 +100,6 @@ public abstract class AbstractMavenReleaseMojo extends AbstractMojo {
 	protected BuildPluginManager pluginManager;
 
 	/**
-	 *  Flag to indicate whether it is safe to proceed with scm commit.
-	 */
-	protected boolean isSafeToCommit;
-
-	/**
 	 * Properties loaded from release.properties file.
 	 */
 	protected Properties releaseProperties;
@@ -125,7 +114,14 @@ public abstract class AbstractMavenReleaseMojo extends AbstractMojo {
 	 *
 	 * @return Current Goal.
 	 */
-	protected abstract String getMode();
+	protected abstract String getGoal();
+
+    /**
+     * Method to retrieve the file prefix to be used in dryRunMode of current goal.
+     *
+     * @return File prefix for dryRunMode.
+     */
+    protected abstract String getDryRunFilePrefix();
 
 	/**
 	 * Method to get the customised commit message for each goal.
@@ -157,15 +153,12 @@ public abstract class AbstractMavenReleaseMojo extends AbstractMojo {
 		// execute only for the project in repository root.
 		if (releasePropertiesFile.exists()) {
 			try {
-				InputStream io = new FileInputStream(releasePropertiesFile);
-				releaseProperties.load(io);
+				InputStream inputStream = new FileInputStream(releasePropertiesFile);
+				releaseProperties.load(inputStream);
 			} catch (IOException e) {
-				log.error("Error while reading " + RELEASE_PROPERTIES, e);
-				log.error("Skipping wso2 release plugin. mode:" + getMode());
-				return;
+                String errorMessage = "Error while reading " + RELEASE_PROPERTIES;
+				throw new MojoExecutionException(errorMessage, e);
 			}
-			// set this flag to false upon any errors to avoid committing
-			isSafeToCommit = true;
 			// iterate recursively and filter out files named artifact.xml
 			Collection<File> artifactXMLFiles = FileUtils.listFiles(parentProjectBaseDir,
 			                                                    new ArtifactXMLFilter(),
@@ -177,72 +170,130 @@ public abstract class AbstractMavenReleaseMojo extends AbstractMojo {
 				File pomFile = new File(projectPath, POM_XML);
 				// if not a maven project, continue.
 				if (!pomFile.exists()) {
-					log.warn("Skipping file as " + artifactXML.getPath() +
-					         " does not belongs to a maven project.");
+					log.warn("Skipping project since " + artifactXML.getPath() +
+					         " does not belong to a maven project.");
 					continue;
 				}
-
-				try {
-					// getNewVersion() depends on current goal.
-					// Eg: for prepare-release, it should be the releasing version
-					//     for prepare-snapshot, it should be the next development version
-					//     for rollback, it should be the previous development version
-					String newVersion = getNewVersion(artifactXML);
-					if (StringUtils.isNotEmpty(newVersion)) {
-						File synapseConfigs = new File(projectPath + File.separator + SRC_FOLDER
-						                               + File.separator + MAIN_FOLDER
-						                               + File.separator, SYNAPSE_CONFIG_FOLDER);
-						if (synapseConfigs.exists()) {
-							// This is a ESB project
-							setESBArtifactVersions(artifactXML, newVersion);
-						} else {
-							// This is a Registry project
-							setRegArtifactVersions(artifactXML, newVersion);
-						}
-					} else {
-						isSafeToCommit = false;
-						log.error("Skipped updating artifact.xml as new version is empty/null. " +
-						          "Project: " + pomFile.getPath());
-					}
-				} catch (IOException | XmlPullParserException  e) {
-					isSafeToCommit = false;
-					log.error("Error occurred while getting the new version for artifacts." +
-					          " Project: " + pomFile.getPath(), e);
-				} catch (Exception e) {
-					isSafeToCommit = false;
-					log.error("Error occurred while updating artifact versions. Project: " +
-					          pomFile.getPath(), e);
-				}
-			}
+                try {
+                    // getNewVersion() depends on current goal.
+                    // Eg: for prepare-release, it should be the releasing version
+                    //     for prepare-snapshot, it should be the next development version
+                    //     for rollback, it should be the previous development version
+                    String newVersion = getNewVersion(artifactXML);
+                    if (StringUtils.isNotEmpty(newVersion)) {
+                        File synapseConfigs = new File(
+                                projectPath + File.separator + SRC_FOLDER + File.separator + MAIN_FOLDER
+                                        + File.separator, SYNAPSE_CONFIG_FOLDER);
+                        if (synapseConfigs.exists()) {
+                            // This is a ESB project
+                            setESBArtifactVersions(artifactXML, newVersion);
+                        } else {
+                            // This is a Registry project
+                            setRegArtifactVersions(artifactXML, newVersion);
+                        }
+                    } else {
+                        String errorMessage = "Cannot update artifact.xml as new version is empty/null. " +
+                                "Project: " + pomFile.getPath() + " Goal: " + getGoal();
+                        throw new MojoFailureException(errorMessage);
+                    }
+                } catch (IOException | XmlPullParserException e) {
+                    String errorMessage = "Error occurred while getting the new version for artifacts." +
+                            " Project: " + pomFile.getPath() + " Goal: " + getGoal();
+                    throw new MojoFailureException(errorMessage, e);
+                } catch (Exception e) {
+                    String errorMessage = "Error occurred while updating artifact versions. Project: "
+                                            + pomFile.getPath() + " Goal: "  + getGoal();
+                    throw new MojoFailureException(errorMessage, e);
+                }
+            }
 			// commit changes only if not running in dryRun mode
-			if (dryRun) {
+			if (isInDryRunMode()) {
 				log.info("Skipped committing changes in dryRun mode.");
-			} else if (isSafeToCommit) {
-				executeMojo(
-						plugin(
-								groupId(MAVEN_PLUGINS_GROUP),
-								artifactId(MAVEN_SCM_PLUGIN),
-								version(SCM_PLUGIN_VERSION)
-						),
-						goal(GOAL_CHECK_IN),
-						configuration(
-								getScmPluginProperties(parentProjectBaseDir)
-						),
-						executionEnvironment(
-								mavenProject,
-								mavenSession,
-								pluginManager
-						)
-				);
 			} else {
-				log.error("Skipped committing as errors were identified while updating " +
-				          "artifact.xml files. Please commit the changes manually.");
-			}
+                try {
+                    executeMojo(
+                            plugin(
+                                    groupId(MAVEN_PLUGINS_GROUP),
+                                    artifactId(MAVEN_SCM_PLUGIN),
+                                    version(SCM_PLUGIN_VERSION)
+                            ),
+                            goal(GOAL_CHECK_IN),
+                            configuration(
+                                    getScmPluginProperties(parentProjectBaseDir)
+                            ),
+                            executionEnvironment(
+                                    mavenProject,
+                                    mavenSession,
+                                    pluginManager
+                            )
+                    );
+                } catch (MojoExecutionException e) {
+                    throw new MojoExecutionException("Error occurred while invoking maven scm plug-in.", e);
+                }
+            }
 		} else {
 			log.debug("Skipping project since the " + RELEASE_PROPERTIES +
 			          " file was not found in project root.");
 		}
 	}
+
+	/**
+	 * Update versions in the given artifact.xml file of a ESB project.
+	 *
+	 * @param artifactXml artifact.xml file of a ESB project.
+	 * @param newVersion new version to which, the artifacts should be updated.
+	 * @throws Exception
+	 */
+	protected void setESBArtifactVersions(File artifactXml, String newVersion)
+			throws Exception {
+		ESBProjectArtifact esbProjectModel = new ESBProjectArtifact();
+		esbProjectModel.fromFile(artifactXml);
+		for (ESBArtifact artifact : esbProjectModel.getAllESBArtifacts()) {
+			if (artifact.getVersion() != null && artifact.getType() != null) {
+				artifact.setVersion(newVersion);
+			}
+		}
+        if(isInDryRunMode()){
+            File dryRunModeFile = new File(artifactXml.getPath() + getDryRunFilePrefix());
+            esbProjectModel.setSource(dryRunModeFile);
+        }
+		esbProjectModel.toFile();
+	}
+
+	/**
+	 * Update versions in the given artifact.xml file of a Registry project.
+	 *
+	 * @param artifactXml artifact.xml file of a Registry project.
+	 * @param newVersion new version to which, the artifacts should be updated.
+	 * @throws Exception
+	 */
+	protected void setRegArtifactVersions(File artifactXml, String newVersion)
+			throws Exception {
+		GeneralProjectArtifact registryProjectModel = new GeneralProjectArtifact();
+		registryProjectModel.fromFile(artifactXml);
+		for (RegistryArtifact artifact : registryProjectModel.getAllESBArtifacts()) {
+			if (artifact.getVersion() != null && artifact.getType() != null) {
+				artifact.setVersion(newVersion);
+			}
+		}
+        if(isInDryRunMode()){
+            File dryRunModeFile = new File(artifactXml.getPath() + getDryRunFilePrefix());
+            registryProjectModel.setSource(dryRunModeFile);
+        }
+		registryProjectModel.toFile();
+	}
+
+    /**
+     * Method to check  whether release plugin is running in dryRunMode.
+     *
+     * @return true, if running in dryRun mode.
+     */
+    protected boolean isInDryRunMode() {
+        // TODO: improve the logic of detecting dry run mode of release plugin.
+        File projectBaseDir = mavenProject.getBasedir();
+        File dryRunPomFile = new File(projectBaseDir, POM_XML + getDryRunFilePrefix());
+        return dryRunPomFile.exists();
+    }
 
     /**
      * Method to generate configuration for maven scm plugin.
@@ -274,45 +325,7 @@ public abstract class AbstractMavenReleaseMojo extends AbstractMojo {
                             WSO2_RELEASE_PLUGIN_PREFIX + " " + getCommitMessage(releaseProperties).trim()),
                     element(name(PARAM_INCLUDES), ARTIFACT_XML_REGEX) };
         }
-    }
-
-	/**
-	 * Update versions in the given artifact.xml file of a ESB project.
-	 *
-	 * @param artifactXml artifact.xml file of a ESB project.
-	 * @param newVersion new version to which, the artifacts should be updated.
-	 * @throws Exception
-	 */
-	protected void setESBArtifactVersions(File artifactXml, String newVersion)
-			throws Exception {
-		ESBProjectArtifact esbArtifact = new ESBProjectArtifact();
-		esbArtifact.fromFile(artifactXml);
-		for (ESBArtifact artifact : esbArtifact.getAllESBArtifacts()) {
-			if (artifact.getVersion() != null && artifact.getType() != null) {
-				artifact.setVersion(newVersion);
-			}
-		}
-		esbArtifact.toFile();
-	}
-
-	/**
-	 * Update versions in the given artifact.xml file of a Registry project.
-	 *
-	 * @param artifactXml artifact.xml file of a Registry project.
-	 * @param newVersion new version to which, the artifacts should be updated.
-	 * @throws Exception
-	 */
-	protected void setRegArtifactVersions(File artifactXml, String newVersion)
-			throws Exception {
-		GeneralProjectArtifact registryArtifact = new GeneralProjectArtifact();
-		registryArtifact.fromFile(artifactXml);
-		for (RegistryArtifact artifact : registryArtifact.getAllESBArtifacts()) {
-			if (artifact.getVersion() != null && artifact.getType() != null) {
-				artifact.setVersion(newVersion);
-			}
-		}
-		registryArtifact.toFile();
-	}
+}
 
 	/**
 	 * Method to instantiate a Maven project model from a pom file.

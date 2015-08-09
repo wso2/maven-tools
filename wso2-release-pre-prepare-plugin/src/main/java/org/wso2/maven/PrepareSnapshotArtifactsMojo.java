@@ -30,29 +30,28 @@ import java.util.Properties;
  */
 public class PrepareSnapshotArtifactsMojo extends AbstractMavenReleaseMojo {
 
-	/**
-	 * {@inheritDoc}
-	 */
-	protected String getMode() {
-		return "dev";
+    protected static final String GOAL_NAME = "prepare-snapshots";
+    protected static final String DRY_RUN_EXTENSION = ".next";
+    protected static final String DEV = "dev";
+
+    protected String getGoal() {
+		return GOAL_NAME;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+    @Override protected String getDryRunFilePrefix() {
+        return DRY_RUN_EXTENSION;
+    }
+
 	protected String getCommitMessage(Properties releaseProperties) {
 		return "prepare for next development iteration";
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	@Override protected String getNewVersion(File artifactXml)
 			throws IOException, XmlPullParserException {
 		File pomFile = new File(artifactXml.getParent() + File.separator + POM_XML);
 		MavenProject mavenProject = getMavenProject(pomFile);
 		String newVersion = releaseProperties.getProperty(
-				PROJECT_PREFIX + getMode() + "." + mavenProject.getGroupId() + ":" +
+				PROJECT_PREFIX + DEV + "." + mavenProject.getGroupId() + ":" +
 				mavenProject.getArtifactId());
 		return newVersion;
 	}

@@ -30,25 +30,25 @@ import java.util.Properties;
  */
 public class RollbackReleaseMojo extends AbstractMavenReleaseMojo {
 
-	protected static final String RELEASE_BACKUP_SFX = ".releaseBackup";
+    protected static final String RELEASE_BACKUP_SFX = ".releaseBackup";
+    protected static final String GOAL_NAME = "rollback";
 
-	/**
-	 * {@inheritDoc}
-	 */
-	@Override protected String getMode() {
-		return "rollback";
+    @Override protected String getGoal() {
+		return GOAL_NAME;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+    @Override protected String getDryRunFilePrefix() {
+        return null;
+    }
+
+    @Override protected boolean isInDryRunMode() {
+        return false;
+    }
+
 	@Override protected String getCommitMessage(Properties releaseProperties) {
 		return "rollback the release of " + releaseProperties.getProperty(PROP_SCM_TAG);
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	@Override protected String getNewVersion(File artifactXml)
 			throws IOException, XmlPullParserException {
 		// Read the backup pom file created by maven-release-plugin.
