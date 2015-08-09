@@ -18,6 +18,7 @@ package org.wso2.maven;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.filefilter.IOFileFilter;
 import org.apache.commons.io.filefilter.TrueFileFilter;
+import org.apache.commons.lang.ArrayUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.maven.execution.MavenSession;
 import org.apache.maven.model.Model;
@@ -225,15 +226,7 @@ public abstract class AbstractMavenReleaseMojo extends AbstractMojo {
 						),
 						goal(GOAL_CHECK_IN),
 						configuration(
-								element(name(PARAMETER_BASEDIR),
-								        parentProjectBaseDir.getAbsolutePath()),
-								element(name(PARAMETER_MESSAGE), WSO2_RELEASE_PLUGIN_PREFIX + " "
-								                   + getCommitMessage(releaseProperties).trim()),
-								element(name(PARAM_USERNAME),
-								        releaseProperties.getProperty(PROP_SCM_USERNAME)),
-								element(name(PARAM_PASSWORD),
-								        releaseProperties.getProperty(PROP_SCM_PASSWORD)),
-								element(name(PARAM_INCLUDES), ARTIFACT_XML_REGEX)
+								getScmPluginProperties(parentProjectBaseDir)
 						),
 						executionEnvironment(
 								mavenProject,
@@ -250,6 +243,38 @@ public abstract class AbstractMavenReleaseMojo extends AbstractMojo {
 			          " file was not found in project root.");
 		}
 	}
+
+    /**
+     * Method to generate configuration for maven scm plugin.
+     *
+     * @param parentProjectBaseDir root of the repository.
+     * @return configuration for maven scm plugin.
+     */
+    protected Element[] getScmPluginProperties(File parentProjectBaseDir) {
+
+        // if username is available in release.properties file, scm credentials are passed
+        // via console args. Hence we need to forward them to scm plugin also.
+        // if username is not available, credentials may configured in settings.xml file and we can avoid passing
+        // them as args to scm plugin
+        if (releaseProperties.containsKey(PROP_SCM_USERNAME)) {
+            log.debug("SCM credentials are found in release.properties file.");
+            return new Element[] {
+                    element(name(PARAMETER_BASEDIR), parentProjectBaseDir.getAbsolutePath()),
+                    element(name(PARAMETER_MESSAGE),
+                            WSO2_RELEASE_PLUGIN_PREFIX + " " + getCommitMessage(releaseProperties).trim()),
+                    element(name(PARAM_INCLUDES), ARTIFACT_XML_REGEX),
+                    element(name(PARAM_USERNAME), releaseProperties.getProperty(PROP_SCM_USERNAME)),
+                    element(name(PARAM_PASSWORD), releaseProperties.getProperty(PROP_SCM_PASSWORD)) };
+
+        } else {
+            log.debug("SCM credentials are not found in release.properties file.");
+            return new Element[] {
+                    element(name(PARAMETER_BASEDIR), parentProjectBaseDir.getAbsolutePath()),
+                    element(name(PARAMETER_MESSAGE),
+                            WSO2_RELEASE_PLUGIN_PREFIX + " " + getCommitMessage(releaseProperties).trim()),
+                    element(name(PARAM_INCLUDES), ARTIFACT_XML_REGEX) };
+        }
+    }
 
 	/**
 	 * Update versions in the given artifact.xml file of a ESB project.
