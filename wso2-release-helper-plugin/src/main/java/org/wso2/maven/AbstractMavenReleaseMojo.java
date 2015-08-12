@@ -146,34 +146,32 @@ public abstract class AbstractMavenReleaseMojo extends AbstractMojo {
 
 	@Override public void execute() throws MojoExecutionException, MojoFailureException {
 
-		File parentProjectBaseDir = mavenProject.getBasedir();
-		File releasePropertiesFile = new File(parentProjectBaseDir, RELEASE_PROPERTIES);
-		releaseProperties = new Properties();
+        File parentProjectBaseDir = mavenProject.getBasedir();
+        File releasePropertiesFile = new File(parentProjectBaseDir, RELEASE_PROPERTIES);
+        releaseProperties = new Properties();
 
-		// execute only for the project in repository root.
-		if (releasePropertiesFile.exists()) {
-			try {
-				InputStream inputStream = new FileInputStream(releasePropertiesFile);
-				releaseProperties.load(inputStream);
-			} catch (IOException e) {
+        // execute only for the project in repository root.
+        if (releasePropertiesFile.exists()) {
+            try {
+                InputStream inputStream = new FileInputStream(releasePropertiesFile);
+                releaseProperties.load(inputStream);
+            } catch (IOException e) {
                 String errorMessage = "Error while reading " + RELEASE_PROPERTIES;
-				throw new MojoExecutionException(errorMessage, e);
-			}
-			// iterate recursively and filter out files named artifact.xml
-			Collection<File> artifactXMLFiles = FileUtils.listFiles(parentProjectBaseDir,
-			                                                    new ArtifactXMLFilter(),
-			                                                    TrueFileFilter.INSTANCE);
-			for (File artifactXML : artifactXMLFiles) {
+                throw new MojoExecutionException(errorMessage, e);
+            }
+            // iterate recursively and filter out files named artifact.xml
+            Collection<File> artifactXMLFiles = FileUtils
+                    .listFiles(parentProjectBaseDir, new ArtifactXMLFilter(), TrueFileFilter.INSTANCE);
+            for (File artifactXML : artifactXMLFiles) {
 
-				File projectPath = new File(artifactXML.getPath()
-				                          .replaceAll(ARTIFACT_XML + "$", EMPTY_STRING));
-				File pomFile = new File(projectPath, POM_XML);
-				// if not a maven project, continue.
-				if (!pomFile.exists()) {
-					log.warn("Skipping project since " + artifactXML.getPath() +
-					         " does not belong to a maven project.");
-					continue;
-				}
+                File projectPath = new File(artifactXML.getPath().replaceAll(ARTIFACT_XML + "$", EMPTY_STRING));
+                File pomFile = new File(projectPath, POM_XML);
+                // if not a maven project, continue.
+                if (!pomFile.exists()) {
+                    log.warn("Skipping project since " + artifactXML.getPath() +
+                            " does not belong to a maven project.");
+                    continue;
+                }
                 try {
                     // getNewVersion() depends on current goal.
                     // Eg: for prepare-release, it should be the releasing version
@@ -201,41 +199,30 @@ public abstract class AbstractMavenReleaseMojo extends AbstractMojo {
                             " Project: " + pomFile.getPath() + " Goal: " + getGoal();
                     throw new MojoFailureException(errorMessage, e);
                 } catch (Exception e) {
-                    String errorMessage = "Error occurred while updating artifact versions. Project: "
-                                            + pomFile.getPath() + " Goal: "  + getGoal();
+                    String errorMessage =
+                            "Error occurred while updating artifact versions. Project: " + pomFile.getPath() + " Goal: "
+                                    + getGoal();
                     throw new MojoFailureException(errorMessage, e);
                 }
             }
-			// commit changes only if not running in dryRun mode
-			if (isInDryRunMode()) {
-				log.info("Skipped committing changes in dryRun mode.");
-			} else {
+            // commit changes only if not running in dryRun mode
+            if (isInDryRunMode()) {
+                log.info("Skipped committing changes in dryRun mode.");
+            } else {
                 try {
-                    executeMojo(
-                            plugin(
-                                    groupId(MAVEN_PLUGINS_GROUP),
-                                    artifactId(MAVEN_SCM_PLUGIN),
-                                    version(SCM_PLUGIN_VERSION)
-                            ),
-                            goal(GOAL_CHECK_IN),
-                            configuration(
-                                    getScmPluginProperties(parentProjectBaseDir)
-                            ),
-                            executionEnvironment(
-                                    mavenProject,
-                                    mavenSession,
-                                    pluginManager
-                            )
-                    );
+                    executeMojo(plugin(groupId(MAVEN_PLUGINS_GROUP), artifactId(MAVEN_SCM_PLUGIN),
+                                    version(SCM_PLUGIN_VERSION)), goal(GOAL_CHECK_IN),
+                            configuration(getScmPluginProperties(parentProjectBaseDir)),
+                            executionEnvironment(mavenProject, mavenSession, pluginManager));
                 } catch (MojoExecutionException e) {
                     throw new MojoExecutionException("Error occurred while invoking maven scm plug-in.", e);
                 }
             }
-		} else {
-			log.debug("Skipping project since the " + RELEASE_PROPERTIES +
-			          " file was not found in project root.");
-		}
-	}
+        } else {
+            log.debug("Skipping project since the " + RELEASE_PROPERTIES +
+                    " file was not found in project root.");
+        }
+    }
 
 	/**
 	 * Update versions in the given artifact.xml file of a ESB project.

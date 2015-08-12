@@ -92,7 +92,8 @@
 		<module>maven-qos-plugin</module>
 		<module>wso2-maven-package-prepare-plugin</module>
 		<module>wso2-release-pre-prepare-plugin</module>
-	</modules>
+        <module>wso2-release-helper-plugin</module>
+    </modules>
 
 	<dependencyManagement>
 		<dependencies>
