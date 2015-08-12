@@ -45,76 +45,84 @@ import static org.twdata.maven.mojoexecutor.MojoExecutor.*;
  */
 public abstract class AbstractMavenReleaseMojo extends AbstractMojo {
 
-	/** String constants */
-	protected static final String ARTIFACT_XML = "artifact.xml";
-	protected static final String ARTIFACT_XML_REGEX = "**/artifact.xml";
-	protected static final String EMPTY_STRING = "";
-	protected static final String POM_XML = "pom.xml";
-	protected static final String PROJECT_PREFIX = "project.";
-	protected static final String RELEASE_PROPERTIES = "release.properties";
-	protected static final String WSO2_RELEASE_PLUGIN_PREFIX = "[wso2-release-plugin]";
-	protected static final String SRC_FOLDER = "src";
-	protected static final String MAIN_FOLDER = "main";
-	protected static final String SYNAPSE_CONFIG_FOLDER = "synapse-config";
+    /**
+     * String constants
+     */
+    protected static final String ARTIFACT_XML = "artifact.xml";
+    protected static final String ARTIFACT_XML_REGEX = "**/artifact.xml";
+    protected static final String EMPTY_STRING = "";
+    protected static final String POM_XML = "pom.xml";
+    protected static final String PROJECT_PREFIX = "project.";
+    protected static final String RELEASE_PROPERTIES = "release.properties";
+    protected static final String WSO2_RELEASE_PLUGIN_PREFIX = "[wso2-release-plugin]";
+    protected static final String SRC_FOLDER = "src";
+    protected static final String MAIN_FOLDER = "main";
+    protected static final String SYNAPSE_CONFIG_FOLDER = "synapse-config";
 
-	/** maven scm plugin meta data */
-	protected static final String MAVEN_PLUGINS_GROUP = "org.apache.maven.plugins";
-	protected static final String MAVEN_SCM_PLUGIN = "maven-scm-plugin";
-	protected static final String SCM_PLUGIN_VERSION = "1.9.4";
-	protected static final String GOAL_CHECK_IN = "checkin";
+    /**
+     * maven scm plugin meta data
+     */
+    protected static final String MAVEN_PLUGINS_GROUP = "org.apache.maven.plugins";
+    protected static final String MAVEN_SCM_PLUGIN = "maven-scm-plugin";
+    protected static final String SCM_PLUGIN_VERSION = "1.9.4";
+    protected static final String GOAL_CHECK_IN = "checkin";
 
-	/** maven scm plugin params */
-	protected static final String PARAMETER_BASEDIR = "basedir";
-	protected static final String PARAMETER_MESSAGE = "message";
-	protected static final String PARAM_INCLUDES = "includes";
-	protected static final String PARAM_USERNAME = "username";
-	protected static final String PARAM_PASSWORD = "password";
+    /**
+     * maven scm plugin params
+     */
+    protected static final String PARAMETER_BASEDIR = "basedir";
+    protected static final String PARAMETER_MESSAGE = "message";
+    protected static final String PARAM_INCLUDES = "includes";
+    protected static final String PARAM_USERNAME = "username";
+    protected static final String PARAM_PASSWORD = "password";
 
-	/** release plugin scm properties */
-	protected static final String PROP_SCM_TAG = "scm.tag";
-	protected static final String PROP_SCM_USERNAME = "scm.username";
-	protected static final String PROP_SCM_PASSWORD = "scm.password";
+    /**
+     * release plugin scm properties
+     */
+    protected static final String PROP_SCM_TAG = "scm.tag";
+    protected static final String PROP_SCM_USERNAME = "scm.username";
+    protected static final String PROP_SCM_PASSWORD = "scm.password";
 
-	/**
-	 * The project currently being build.
-	 *
-	 * @parameter expression="${project}"
-	 * @required
-	 */
-	protected MavenProject mavenProject;
+    /**
+     * The project currently being build.
+     *
+     * @parameter expression="${project}"
+     * @required
+     */
+    protected MavenProject mavenProject;
 
-	/**
-	 * The current Maven session.
-	 *
-	 * @parameter expression="${session}"
-	 * @required
-	 */
-	protected MavenSession mavenSession;
+    /**
+     * The current Maven session.
+     *
+     * @parameter expression="${session}"
+     * @required
+     */
+    protected MavenSession mavenSession;
 
-	/**
-	 * The Maven BuildPluginManager component.
-	 *
-	 * @component
-	 * @required
-	 */
-	protected BuildPluginManager pluginManager;
+    /**
+     * The Maven BuildPluginManager component.
+     *
+     * @component
+     * @required
+     */
+    protected BuildPluginManager pluginManager;
 
-	/**
-	 * Properties loaded from release.properties file.
-	 */
-	protected Properties releaseProperties;
+    /**
+     * Properties loaded from release.properties file.
+     */
+    protected Properties releaseProperties;
 
-	/**
-	 * Logger for mojo.
-	 */
-	protected final Log log = getLog();
+    /**
+     * Logger for mojo.
+     */
+    protected final Log log = getLog();
 
-	/**
-	 * Method to indicate current goal.
-	 *
-	 * @return Current Goal.
-	 */
-	protected abstract String getGoal();
+    /**
+     * Method to indicate current goal.
+     *
+     * @return Current Goal.
+     */
+    protected abstract String getGoal();
 
     /**
      * Method to retrieve the file prefix to be used in dryRunMode of current goal.
@@ -123,28 +131,26 @@ public abstract class AbstractMavenReleaseMojo extends AbstractMojo {
      */
     protected abstract String getDryRunFilePrefix();
 
-	/**
-	 * Method to get the customised commit message for each goal.
-	 *
-	 * @param releaseProperties Properties generated by maven release plugin.
-	 *
-	 * @return Commit message for current goal.
-	 */
-	protected abstract String getCommitMessage(Properties releaseProperties);
+    /**
+     * Method to get the customised commit message for each goal.
+     *
+     * @param releaseProperties Properties generated by maven release plugin.
+     * @return Commit message for current goal.
+     */
+    protected abstract String getCommitMessage(Properties releaseProperties);
 
-	/**
-	 * Method to get the new version for the artifacts. Implementation depends on
-	 * the goals(prepare-release, prepare-snapshots and rollback).
-	 *
-	 * @param artifactXml artifact.xml file of the project.
-	 * @return new version.
-	 * @throws IOException
-	 * @throws XmlPullParserException
-	 */
-	protected abstract String getNewVersion(File artifactXml)
-			throws IOException, XmlPullParserException;
+    /**
+     * Method to get the new version for the artifacts. Implementation depends on
+     * the goals(prepare-release, prepare-snapshots and rollback).
+     *
+     * @param artifactXml artifact.xml file of the project.
+     * @return new version.
+     * @throws IOException
+     * @throws XmlPullParserException
+     */
+    protected abstract String getNewVersion(File artifactXml) throws IOException, XmlPullParserException;
 
-	@Override public void execute() throws MojoExecutionException, MojoFailureException {
+    @Override public void execute() throws MojoExecutionException, MojoFailureException {
 
         File parentProjectBaseDir = mavenProject.getBasedir();
         File releasePropertiesFile = new File(parentProjectBaseDir, RELEASE_PROPERTIES);
@@ -224,51 +230,49 @@ public abstract class AbstractMavenReleaseMojo extends AbstractMojo {
         }
     }
 
-	/**
-	 * Update versions in the given artifact.xml file of a ESB project.
-	 *
-	 * @param artifactXml artifact.xml file of a ESB project.
-	 * @param newVersion new version to which, the artifacts should be updated.
-	 * @throws Exception
-	 */
-	protected void setESBArtifactVersions(File artifactXml, String newVersion)
-			throws Exception {
-		ESBProjectArtifact esbProjectModel = new ESBProjectArtifact();
-		esbProjectModel.fromFile(artifactXml);
-		for (ESBArtifact artifact : esbProjectModel.getAllESBArtifacts()) {
-			if (artifact.getVersion() != null && artifact.getType() != null) {
-				artifact.setVersion(newVersion);
-			}
-		}
-        if(isInDryRunMode()){
+    /**
+     * Update versions in the given artifact.xml file of a ESB project.
+     *
+     * @param artifactXml artifact.xml file of a ESB project.
+     * @param newVersion  new version to which, the artifacts should be updated.
+     * @throws Exception
+     */
+    protected void setESBArtifactVersions(File artifactXml, String newVersion) throws Exception {
+        ESBProjectArtifact esbProjectModel = new ESBProjectArtifact();
+        esbProjectModel.fromFile(artifactXml);
+        for (ESBArtifact artifact : esbProjectModel.getAllESBArtifacts()) {
+            if (artifact.getVersion() != null && artifact.getType() != null) {
+                artifact.setVersion(newVersion);
+            }
+        }
+        if (isInDryRunMode()) {
             File dryRunModeFile = new File(artifactXml.getPath() + getDryRunFilePrefix());
             esbProjectModel.setSource(dryRunModeFile);
         }
-		esbProjectModel.toFile();
-	}
+        esbProjectModel.toFile();
+    }
 
-	/**
-	 * Update versions in the given artifact.xml file of a Registry project.
-	 *
-	 * @param artifactXml artifact.xml file of a Registry project.
-	 * @param newVersion new version to which, the artifacts should be updated.
-	 * @throws Exception
-	 */
-	protected void setRegArtifactVersions(File artifactXml, String newVersion)
-			throws Exception {
-		GeneralProjectArtifact registryProjectModel = new GeneralProjectArtifact();
-		registryProjectModel.fromFile(artifactXml);
-		for (RegistryArtifact artifact : registryProjectModel.getAllESBArtifacts()) {
-			if (artifact.getVersion() != null && artifact.getType() != null) {
-				artifact.setVersion(newVersion);
-			}
-		}
-        if(isInDryRunMode()){
+    /**
+     * Update versions in the given artifact.xml file of a Registry project.
+     *
+     * @param artifactXml artifact.xml file of a Registry project.
+     * @param newVersion  new version to which, the artifacts should be updated.
+     * @throws Exception
+     */
+    protected void setRegArtifactVersions(File artifactXml, String newVersion) throws Exception {
+        GeneralProjectArtifact registryProjectModel = new GeneralProjectArtifact();
+        registryProjectModel.fromFile(artifactXml);
+        for (RegistryArtifact artifact : registryProjectModel.getAllESBArtifacts()) {
+            if (artifact.getVersion() != null && artifact.getType() != null) {
+                artifact.setVersion(newVersion);
+            }
+        }
+        if (isInDryRunMode()) {
             File dryRunModeFile = new File(artifactXml.getPath() + getDryRunFilePrefix());
             registryProjectModel.setSource(dryRunModeFile);
         }
-		registryProjectModel.toFile();
-	}
+        registryProjectModel.toFile();
+    }
 
     /**
      * Method to check  whether release plugin is running in dryRunMode.
@@ -296,8 +300,7 @@ public abstract class AbstractMavenReleaseMojo extends AbstractMojo {
         // them as args to scm plugin
         if (releaseProperties.containsKey(PROP_SCM_USERNAME)) {
             log.debug("SCM credentials are found in release.properties file.");
-            return new Element[] {
-                    element(name(PARAMETER_BASEDIR), parentProjectBaseDir.getAbsolutePath()),
+            return new Element[] { element(name(PARAMETER_BASEDIR), parentProjectBaseDir.getAbsolutePath()),
                     element(name(PARAMETER_MESSAGE),
                             WSO2_RELEASE_PLUGIN_PREFIX + " " + getCommitMessage(releaseProperties).trim()),
                     element(name(PARAM_INCLUDES), ARTIFACT_XML_REGEX),
@@ -306,45 +309,44 @@ public abstract class AbstractMavenReleaseMojo extends AbstractMojo {
 
         } else {
             log.debug("SCM credentials are not found in release.properties file.");
-            return new Element[] {
-                    element(name(PARAMETER_BASEDIR), parentProjectBaseDir.getAbsolutePath()),
+            return new Element[] { element(name(PARAMETER_BASEDIR), parentProjectBaseDir.getAbsolutePath()),
                     element(name(PARAMETER_MESSAGE),
                             WSO2_RELEASE_PLUGIN_PREFIX + " " + getCommitMessage(releaseProperties).trim()),
                     element(name(PARAM_INCLUDES), ARTIFACT_XML_REGEX) };
         }
-}
+    }
 
-	/**
-	 * Method to instantiate a Maven project model from a pom file.
-	 *
-	 * @param pomFile Path to pom file.
-	 * @return Project model
-	 * @throws IOException
-	 * @throws org.codehaus.plexus.util.xml.pull.XmlPullParserException
-	 */
-	protected MavenProject getMavenProject(final File pomFile)
-			throws IOException, XmlPullParserException {
-		MavenXpp3Reader xpp3Reader = new MavenXpp3Reader();
-		FileReader reader = new FileReader(pomFile);
-		Model model = xpp3Reader.read(reader);
-		return new MavenProject(model);
-	}
+    /**
+     * Method to instantiate a Maven project model from a pom file.
+     *
+     * @param pomFile Path to pom file.
+     * @return Project model
+     * @throws IOException
+     * @throws org.codehaus.plexus.util.xml.pull.XmlPullParserException
+     */
+    protected MavenProject getMavenProject(final File pomFile) throws IOException, XmlPullParserException {
+        MavenXpp3Reader xpp3Reader = new MavenXpp3Reader();
+        FileReader reader = new FileReader(pomFile);
+        Model model = xpp3Reader.read(reader);
+        return new MavenProject(model);
+    }
 
-	/**
-	 * Filter for artifact.xml files.
-	 */
-	class ArtifactXMLFilter implements IOFileFilter {
-		@Override public boolean accept(File file) {
-			if (file.getPath().endsWith(ARTIFACT_XML)) {
-				return true;
-			}
-			return false;
-		}
-		@Override public boolean accept(File file, String name) {
-			if (name.endsWith(ARTIFACT_XML)) {
-				return true;
-			}
-			return false;
-		}
-	}
+    /**
+     * Filter for artifact.xml files.
+     */
+    class ArtifactXMLFilter implements IOFileFilter {
+        @Override public boolean accept(File file) {
+            if (file.getPath().endsWith(ARTIFACT_XML)) {
+                return true;
+            }
+            return false;
+        }
+
+        @Override public boolean accept(File file, String name) {
+            if (name.endsWith(ARTIFACT_XML)) {
+                return true;
+            }
+            return false;
+        }
+    }
 }

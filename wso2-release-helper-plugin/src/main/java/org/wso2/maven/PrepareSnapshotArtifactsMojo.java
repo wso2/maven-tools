@@ -35,25 +35,23 @@ public class PrepareSnapshotArtifactsMojo extends AbstractMavenReleaseMojo {
     protected static final String DEV = "dev";
 
     protected String getGoal() {
-		return GOAL_NAME;
-	}
+        return GOAL_NAME;
+    }
 
     @Override protected String getDryRunFilePrefix() {
         return DRY_RUN_EXTENSION;
     }
 
-	protected String getCommitMessage(Properties releaseProperties) {
-		return "prepare for next development iteration";
-	}
+    protected String getCommitMessage(Properties releaseProperties) {
+        return "prepare for next development iteration";
+    }
 
-	@Override protected String getNewVersion(File artifactXml)
-			throws IOException, XmlPullParserException {
-		File pomFile = new File(artifactXml.getParent() + File.separator + POM_XML);
-		MavenProject mavenProject = getMavenProject(pomFile);
-		String newVersion = releaseProperties.getProperty(
-				PROJECT_PREFIX + DEV + "." + mavenProject.getGroupId() + ":" +
-				mavenProject.getArtifactId());
-		return newVersion;
-	}
+    @Override protected String getNewVersion(File artifactXml) throws IOException, XmlPullParserException {
+        File pomFile = new File(artifactXml.getParent() + File.separator + POM_XML);
+        MavenProject mavenProject = getMavenProject(pomFile);
+        String newVersion = releaseProperties.getProperty(PROJECT_PREFIX + DEV + "." + mavenProject.getGroupId() + ":" +
+                        mavenProject.getArtifactId());
+        return newVersion;
+    }
 
 }
