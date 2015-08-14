@@ -66,6 +66,7 @@
 		<module>wso2-esb-template-plugin</module>
 		<module>wso2-esb-messagestore-plugin</module>
 		<module>wso2-esb-messageprocessor-plugin</module>
+		<module>wso2-esb-connector-plugin</module>
 		<module>maven-proxy-plugin</module>
 		<module>maven-localentry-plugin</module>
 		<module>maven-registry-plugin</module>
