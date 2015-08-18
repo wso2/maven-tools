@@ -121,11 +121,8 @@ public class ConnectorPOMGenMojo extends AbstractPOMGenMojo {
 
 	protected void copyResources(MavenProject project, File projectLocation, Artifact artifact) throws IOException {
 		ITemporaryFileTag newTag = org.wso2.developerstudio.eclipse.utils.file.FileUtils.createNewTempTag();
-		File sequenceArtifact = processTokenReplacement(artifact);
-		if (sequenceArtifact == null) {
-			sequenceArtifact = artifact.getFile();
-		}
-		FileUtils.copyFile(sequenceArtifact, new File(projectLocation, artifact.getFile().getName()));
+		File connectorArtifact = artifact.getFile();
+		FileUtils.copyFile(connectorArtifact, new File(projectLocation, artifact.getFile().getName()));
 		newTag.clearAndEnd();
 	}
 
