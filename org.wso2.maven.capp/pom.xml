@@ -19,7 +19,6 @@
 	</parent>
 
 	<modelVersion>4.0.0</modelVersion>
-	<groupId>org.wso2.maven</groupId>
 	<artifactId>org.wso2.maven.capp</artifactId>
 	<version>2.1.0-SNAPSHOT</version>
 	<packaging>jar</packaging>
