@@ -11,7 +11,7 @@
 			<plugin>
 				<groupId>org.wso2.maven</groupId>
 				<artifactId>maven-axis2-plugin</artifactId>
-                <version>2.1.0-SNAPSHOT</version>
+                <version>2.1.0</version>
         		<extensions>true</extensions>  
         		<configuration>
         			<servicesXmlFile>src/main/resources/META-INF/services.xml</servicesXmlFile>
@@ -20,7 +20,7 @@
              <plugin>
 				<groupId>org.wso2.maven</groupId>
 				<artifactId>maven-war-plugin</artifactId>
-				<version>2.1.0-SNAPSHOT</version>
+				<version>2.1.0</version>
 				<extensions>true</extensions>
 				<configuration>
 					<filteringDeploymentDescriptors>true</filteringDeploymentDescriptors>
