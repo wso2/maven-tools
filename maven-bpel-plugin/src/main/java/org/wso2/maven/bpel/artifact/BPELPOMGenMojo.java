@@ -29,7 +29,6 @@ import org.apache.maven.artifact.resolver.ArtifactResolver;
 import org.apache.maven.model.Plugin;
 import org.apache.maven.model.PluginExecution;
 import org.apache.maven.plugin.MojoExecutionException;
-import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.project.MavenProject;
 import org.apache.maven.project.MavenProjectHelper;
 import org.codehaus.plexus.util.FileUtils;
@@ -37,7 +36,6 @@ import org.codehaus.plexus.util.xml.Xpp3Dom;
 import org.wso2.maven.capp.bundleartifact.AbstractBundlePOMGenMojo;
 import org.wso2.maven.capp.model.Artifact;
 import org.wso2.maven.capp.model.BundlesDataInfo;
-import org.wso2.maven.capp.mojo.AbstractPOMGenMojo;
 import org.wso2.maven.capp.utils.CAppMavenUtils;
 import org.wso2.maven.capp.utils.WSO2MavenPluginConstantants;
 
@@ -251,13 +249,10 @@ public class BPELPOMGenMojo extends AbstractBundlePOMGenMojo {
         }
 	}
 	
-	protected void copyResources(MavenProject project, File projectLocation,
-	                 			Artifact artifact) throws IOException {
-		super.copyResources(project, projectLocation, artifact);
-    	File bpelFileOriginal=artifact.getFile();
-    	File bpelFileDest=new File(projectLocation+File.separator+bpelFileOriginal.getName());
-    	
-    	FileUtils.copyFile(bpelFileOriginal, bpelFileDest);
+	protected void copyResources(MavenProject project, File projectLocation, Artifact artifact) throws IOException {
+		super.copyResources(project, projectLocation, artifact);		
+		File bpelFileOriginal=artifact.getFile();		
+		FileUtils.copyFile(bpelFileOriginal, new File(projectLocation, bpelFileOriginal.getName()));
 	}
 
 }

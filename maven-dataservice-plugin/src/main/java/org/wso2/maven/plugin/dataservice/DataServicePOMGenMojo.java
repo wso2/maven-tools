@@ -18,7 +18,6 @@ package org.wso2.maven.plugin.dataservice;
 
 import java.io.File;
 import java.io.IOException;
-import java.sql.Time;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -118,11 +117,12 @@ public class DataServicePOMGenMojo extends AbstractPOMGenMojo {
 
 	}
 
-	protected void copyResources(MavenProject project, File projectLocation,
-			Artifact artifact) throws IOException {
-		File jaxWSArtifact = artifact.getFile();
-		FileUtils.copyFile(jaxWSArtifact, new File(projectLocation,
-				jaxWSArtifact.getName()));
+	protected void copyResources(MavenProject project, File projectLocation, Artifact artifact) throws IOException {
+		File dataServiceArtifact = processTokenReplacement(artifact);
+		if (dataServiceArtifact == null) {
+			dataServiceArtifact = artifact.getFile();
+		}
+		FileUtils.copyFile(dataServiceArtifact, new File(projectLocation, artifact.getFile().getName()));
 	}
 
 	protected void addPlugins(MavenProject artifactMavenProject,

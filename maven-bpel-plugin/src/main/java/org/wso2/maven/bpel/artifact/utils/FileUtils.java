@@ -16,8 +16,6 @@ import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 
 import org.w3c.dom.Document;
-import org.w3c.dom.Node;
-import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
 
 public class FileUtils {
@@ -107,8 +105,8 @@ public class FileUtils {
 	}
 
 	public static File createArchive(File location, File artifactLocation, String artifactName) throws Exception {
-		String path = location.toString();
-		List<File> allFilesPresentInFolder = getAllFilesPresentInFolder(new File(path));
+		String path = artifactLocation.toString();
+		List<File> allFilesPresentInFolder = getAllFilesPresentInFolder(artifactLocation);
 		List<File> bpelValidFileList =
 		                         getBpelValidFileList(path,
 		                                              (File[]) allFilesPresentInFolder.toArray(new File[allFilesPresentInFolder.size()]));
