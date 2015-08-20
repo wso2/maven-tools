@@ -8,8 +8,7 @@
 	License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS 
 	OF ANY KIND, either express or implied. See the License for the specific 
 	language governing permissions and limitations under the License. -->
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 
 	<parent>
 		<groupId>org.wso2</groupId>
@@ -21,7 +20,7 @@
 	<groupId>org.wso2.maven</groupId>
 	<artifactId>maven-tools</artifactId>
 	<packaging>pom</packaging>
-	<version>5.0.0-SNAPSHOT</version>
+	<version>5.0.0</version>
 	<name>Maven Tool Aggregator Pom</name>
 	<url>http://wso2.org</url>
 
@@ -42,7 +41,7 @@
 		<url>https://github.com/wso2/maven-tools.git</url>
 		<developerConnection>scm:git:https://github.com/wso2/maven-tools.git</developerConnection>
 		<connection>scm:git:https://github.com/wso2/maven-tools.git</connection>
-		<tag>HEAD</tag>
+		<tag>v5.0.0</tag>
 	</scm>
 
 	<modules>
@@ -520,12 +519,12 @@
 		<commons.codec.wso2.commons.codec.version>1.4.0.wso2v1</commons.codec.wso2.commons.codec.version>
 		<org.wso2.carbon.authenticator.stub.version>3.2.0</org.wso2.carbon.authenticator.stub.version>
 		<org.wso2.carbon.roles.mgt.stub.version>3.2.0</org.wso2.carbon.roles.mgt.stub.version>
-		<org.wso2.maven.synapse.plugin.version>2.1.0-SNAPSHOT</org.wso2.maven.synapse.plugin.version>
-		<org.wso2.maven.stratos.plugin.version>2.1.0-SNAPSHOT</org.wso2.maven.stratos.plugin.version>
-		<org.wso2.maven.capp.version>2.1.0-SNAPSHOT</org.wso2.maven.capp.version>
-		<org.wso2.maven.core.version>2.1.0-SNAPSHOT</org.wso2.maven.core.version>
-		<org.wso2.maven.esb.version>2.1.0-SNAPSHOT</org.wso2.maven.esb.version>
-		<org.wso2.maven.utils.version>2.1.0-SNAPSHOT</org.wso2.maven.utils.version>
-		<org.wso2.maven.registry.version>2.1.0-SNAPSHOT</org.wso2.maven.registry.version>
+		<org.wso2.maven.synapse.plugin.version>2.1.0</org.wso2.maven.synapse.plugin.version>
+		<org.wso2.maven.stratos.plugin.version>2.1.0</org.wso2.maven.stratos.plugin.version>
+		<org.wso2.maven.capp.version>2.1.0</org.wso2.maven.capp.version>
+		<org.wso2.maven.core.version>2.1.0</org.wso2.maven.core.version>
+		<org.wso2.maven.esb.version>2.1.0</org.wso2.maven.esb.version>
+		<org.wso2.maven.utils.version>2.1.0</org.wso2.maven.utils.version>
+		<org.wso2.maven.registry.version>2.1.0</org.wso2.maven.registry.version>
 	</properties>
 </project>
