@@ -20,7 +20,7 @@
 	<groupId>org.wso2.maven</groupId>
 	<artifactId>maven-tools</artifactId>
 	<packaging>pom</packaging>
-	<version>5.0.1-SNAPSHOT</version>
+	<version>5.0.0</version>
 	<name>Maven Tool Aggregator Pom</name>
 	<url>http://wso2.org</url>
 
@@ -41,7 +41,7 @@
 		<url>https://github.com/wso2/maven-tools.git</url>
 		<developerConnection>scm:git:https://github.com/wso2/maven-tools.git</developerConnection>
 		<connection>scm:git:https://github.com/wso2/maven-tools.git</connection>
-		<tag>HEAD</tag>
+		<tag>v5.0.0</tag>
 	</scm>
 
 	<modules>
@@ -519,12 +519,12 @@
 		<commons.codec.wso2.commons.codec.version>1.4.0.wso2v1</commons.codec.wso2.commons.codec.version>
 		<org.wso2.carbon.authenticator.stub.version>3.2.0</org.wso2.carbon.authenticator.stub.version>
 		<org.wso2.carbon.roles.mgt.stub.version>3.2.0</org.wso2.carbon.roles.mgt.stub.version>
-		<org.wso2.maven.synapse.plugin.version>2.1.1-SNAPSHOT</org.wso2.maven.synapse.plugin.version>
-		<org.wso2.maven.stratos.plugin.version>2.1.1-SNAPSHOT</org.wso2.maven.stratos.plugin.version>
-		<org.wso2.maven.capp.version>2.1.1-SNAPSHOT</org.wso2.maven.capp.version>
-		<org.wso2.maven.core.version>2.1.1-SNAPSHOT</org.wso2.maven.core.version>
-		<org.wso2.maven.esb.version>2.1.1-SNAPSHOT</org.wso2.maven.esb.version>
-		<org.wso2.maven.utils.version>2.1.1-SNAPSHOT</org.wso2.maven.utils.version>
-		<org.wso2.maven.registry.version>2.1.1-SNAPSHOT</org.wso2.maven.registry.version>
+		<org.wso2.maven.synapse.plugin.version>2.1.0</org.wso2.maven.synapse.plugin.version>
+		<org.wso2.maven.stratos.plugin.version>2.1.0</org.wso2.maven.stratos.plugin.version>
+		<org.wso2.maven.capp.version>2.1.0</org.wso2.maven.capp.version>
+		<org.wso2.maven.core.version>2.1.0</org.wso2.maven.core.version>
+		<org.wso2.maven.esb.version>2.1.0</org.wso2.maven.esb.version>
+		<org.wso2.maven.utils.version>2.1.0</org.wso2.maven.utils.version>
+		<org.wso2.maven.registry.version>2.1.0</org.wso2.maven.registry.version>
 	</properties>
 </project>
