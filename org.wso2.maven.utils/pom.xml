@@ -17,13 +17,13 @@
 	<parent>
 		<groupId>org.wso2.maven</groupId>
 		<artifactId>maven-tools</artifactId>
-		<version>1.0.1-SNAPSHOT</version>
+		<version>1.0.0</version>
 		<relativePath>../pom.xml</relativePath>
 	</parent>
 
 	<modelVersion>4.0.0</modelVersion>
 	<artifactId>org.wso2.maven.utils</artifactId>
-	<version>2.1.1-SNAPSHOT</version>
+	<version>2.1.0</version>
 	<packaging>jar</packaging>
 	<description>Maven utilities for Plugins</description>
 	<name>WSO2 Maven Common Utils</name>
