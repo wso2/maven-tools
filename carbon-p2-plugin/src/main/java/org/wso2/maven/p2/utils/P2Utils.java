@@ -15,7 +15,7 @@
 * specific language governing permissions and limitations
 * under the License.
 */
-package org.wso2.maven.p2.generate.utils;
+package org.wso2.maven.p2.utils;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -42,18 +42,14 @@ import org.apache.maven.artifact.repository.ArtifactRepository;
 import org.apache.maven.artifact.resolver.ArtifactResolver;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.project.MavenProject;
-import org.codehaus.plexus.util.FileUtils;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
-import org.w3c.dom.Node;
-import org.w3c.dom.NodeList;
 import org.wso2.maven.p2.CatFeature;
 import org.wso2.maven.p2.Category;
 import org.wso2.maven.p2.EquinoxLauncher;
 import org.wso2.maven.p2.FeatureArtifact;
 import org.wso2.maven.p2.P2Profile;
-import org.wso2.maven.p2.generate.feature.Bundle;
-import org.wso2.maven.p2.generate.feature.IncludedFeature;
+import org.wso2.maven.p2.feature.Bundle;
 
 public class P2Utils {
 	private static String[] matchList=new String[]{"perfect","equivalent","compatible","greaterOrEqual","patch", "optional"};
@@ -98,11 +94,11 @@ public class P2Utils {
             if (obj instanceof FeatureArtifact) {
                 b = (Bundle) obj;
             } else if (obj instanceof String) {
-                b = Bundle.getBundle(obj.toString());
+                b = BundleUtils.getBundle(obj.toString());
             } else
                 b = (Bundle) obj;
             try {
-                b.resolveVersion(project);
+                BundleUtils.resolveVersionForBundle(b, project);//b.resolveVersion(project);
             } catch (MojoExecutionException e) {
                 b.setVersion(P2Constants.getDefaultVersion(b.getGroupId(), b.getArtifactId()));
                 if (b.getVersion() == null)
@@ -239,7 +235,7 @@ public class P2Utils {
 				
 				Element featureDef = doc.createElement("feature");
 				featureDef.setAttribute("id", feature.getId());
-				featureDef.setAttribute("version", Bundle.getOSGIVersion(feature.getVersion()));
+				featureDef.setAttribute("version", BundleUtils.getOSGIVersion(feature.getVersion()));
 				for (Object catId : list) {
 					Element category = doc.createElement("category");
 					category.setAttribute("name", catId.toString());

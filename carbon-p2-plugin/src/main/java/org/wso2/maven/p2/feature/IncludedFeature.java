@@ -13,9 +13,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.wso2.maven.p2.generate.feature;
+package org.wso2.maven.p2.feature;
 
 import org.apache.maven.artifact.Artifact;
+import org.wso2.maven.p2.utils.BundleUtils;
 
 public class IncludedFeature {
 
@@ -123,7 +124,7 @@ public class IncludedFeature {
                 feature.optional = true;
             } else {
                 feature.artifactVersion = segment;
-                feature.featureVersion = Bundle.getOSGIVersion(segment);
+                feature.featureVersion = BundleUtils.getOSGIVersion(segment);
             }            
         }
 
@@ -139,7 +140,7 @@ public class IncludedFeature {
     public void setFeatureVersion(String version) {
         if(artifactVersion == null || artifactVersion.equals("")) {
             artifactVersion = version;
-            featureVersion = Bundle.getOSGIVersion(version);
+            featureVersion = BundleUtils.getOSGIVersion(version);
         }
     }
 }

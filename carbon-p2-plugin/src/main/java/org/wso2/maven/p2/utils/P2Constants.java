@@ -15,7 +15,7 @@
 * specific language governing permissions and limitations
 * under the License.
 */
-package org.wso2.maven.p2.generate.utils;
+package org.wso2.maven.p2.utils;
 
 public class P2Constants {
     public static final String[] OSGI_FILES=new String[]{"org.eclipse.equinox:org.eclipse.equinox.common",

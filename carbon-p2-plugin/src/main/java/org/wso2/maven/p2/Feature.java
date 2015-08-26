@@ -16,8 +16,8 @@
 package org.wso2.maven.p2;
 
 import org.apache.maven.plugin.MojoExecutionException;
-import org.wso2.maven.p2.generate.feature.Bundle;
-import org.wso2.maven.p2.generate.feature.ImportFeature;
+import org.wso2.maven.p2.feature.Bundle;
+import org.wso2.maven.p2.utils.BundleUtils;
 
 public class Feature {
     
@@ -50,7 +50,7 @@ public class Feature {
     }
 
     public String getVersion() {
-        return Bundle.getOSGIVersion(version);
+        return BundleUtils.getOSGIVersion(version);
     }
 
     public void setVersion(String version) {

@@ -21,7 +21,6 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
-import java.util.List;
 
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
@@ -30,10 +29,8 @@ import org.apache.maven.project.MavenProject;
 import org.apache.maven.project.MavenProjectHelper;
 import org.codehaus.plexus.util.FileUtils;
 import org.eclipse.tycho.p2.facade.internal.P2ApplicationLauncher;
-import org.wso2.maven.p2.generate.utils.FileManagementUtil;
-import org.wso2.maven.p2.generate.utils.MavenUtils;
-import org.wso2.maven.p2.generate.utils.P2Constants;
-import org.wso2.maven.p2.generate.utils.P2Utils;
+import org.wso2.maven.p2.utils.FileManagementUtil;
+import org.wso2.maven.p2.utils.P2Constants;
 
 /**
  * Write environment information for the current build to file.

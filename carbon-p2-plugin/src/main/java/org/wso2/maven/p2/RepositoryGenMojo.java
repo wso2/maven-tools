@@ -15,10 +15,8 @@
  */
 package org.wso2.maven.p2;
 
-import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
@@ -34,11 +32,11 @@ import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.project.MavenProject;
-import org.codehaus.plexus.util.FileUtils;
 import org.eclipse.tycho.p2.facade.internal.P2ApplicationLauncher;
-import org.wso2.maven.p2.generate.utils.FileManagementUtil;
-import org.wso2.maven.p2.generate.utils.MavenUtils;
-import org.wso2.maven.p2.generate.utils.P2Utils;
+import org.wso2.maven.p2.utils.BundleUtils;
+import org.wso2.maven.p2.utils.FileManagementUtil;
+import org.wso2.maven.p2.utils.MavenUtils;
+import org.wso2.maven.p2.utils.P2Utils;
 
 /**
  * Write environment information for the current build to file.
@@ -349,7 +347,7 @@ public class RepositoryGenMojo extends AbstractMojo {
                 f = BundleArtifact.getBundleArtifact(obj.toString());
             } else
                 f = (BundleArtifact) obj;
-            f.resolveVersion(getProject());
+            BundleUtils.resolveVersionForBundle(f, getProject());// f.resolveVersion(getProject());
             f.setArtifact(MavenUtils.getResolvedArtifact(f, getArtifactFactory(), remoteRepositories, getLocalRepository(), getResolver()));
             processedBundleArtifacts.add(f);
         }

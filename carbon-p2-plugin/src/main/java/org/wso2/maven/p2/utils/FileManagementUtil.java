@@ -15,15 +15,13 @@
 * specific language governing permissions and limitations
 * under the License.
 */
-package org.wso2.maven.p2.generate.utils;
+package org.wso2.maven.p2.utils;
 
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
-import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
-import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;

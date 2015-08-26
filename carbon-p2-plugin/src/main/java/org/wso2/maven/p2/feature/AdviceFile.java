@@ -15,23 +15,24 @@
 * specific language governing permissions and limitations
 * under the License.
 */
-package org.wso2.maven.p2.generate.feature;
+package org.wso2.maven.p2.feature;
 
-public class Feature {
+import java.util.ArrayList;
+
+public class AdviceFile {
 
     /**
-     * Feature Id of the Feature
+     * define properties
      *
      * @parameter
-     * @required
      */
-	public String featureId;
-	
-    /**
-     * Version of the Feature
-     *
-     * @parameter
-     * @required
-     */
-	public String version;
+    private ArrayList properties;
+
+    public ArrayList getProperties() {
+        return this.properties;
+    }
+
+    public void setProperties(ArrayList properties) {
+        this.properties = properties;
+    }
 }

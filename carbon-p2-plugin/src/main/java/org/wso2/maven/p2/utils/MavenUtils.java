@@ -15,9 +15,8 @@
 * specific language governing permissions and limitations
 * under the License.
 */
-package org.wso2.maven.p2.generate.utils;
+package org.wso2.maven.p2.utils;
 
-import java.io.FileInputStream;
 import java.util.List;
 
 import javax.xml.parsers.DocumentBuilder;
@@ -34,7 +33,7 @@ import org.apache.maven.plugin.MojoExecutionException;
 import org.w3c.dom.Document;
 import org.wso2.maven.p2.FeatureArtifact;
 import org.wso2.maven.p2.P2Profile;
-import org.wso2.maven.p2.generate.feature.Bundle;
+import org.wso2.maven.p2.feature.Bundle;
 
 public class MavenUtils {
 

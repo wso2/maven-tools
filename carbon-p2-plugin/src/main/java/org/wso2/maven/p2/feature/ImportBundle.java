@@ -15,10 +15,7 @@
 * specific language governing permissions and limitations
 * under the License.
 */
-package org.wso2.maven.p2.generate.feature;
-
-import org.apache.maven.plugin.MojoExecutionException;
-
+package org.wso2.maven.p2.feature;
 
 public class ImportBundle extends Bundle{
 
@@ -50,10 +47,6 @@ public class ImportBundle extends Bundle{
 
 	public boolean isExclude() {
 		return exclude;
-	}
-	
-	public static ImportBundle getBundle(String bundleDefinition) throws MojoExecutionException{
-		return (ImportBundle) Bundle.getBundle(bundleDefinition, new ImportBundle());
 	}
 	
 	public void setBundleSymbolicName(String bundleSymbolicName) {
