@@ -24,12 +24,12 @@ import org.wso2.maven.p2.utils.P2Utils;
 
 public class ImportFeature{
 
-	/**
+
+    /**
      * Feature Id of the feature
      *
      * @parameter
      */
-
 	private String featureId;
 
 	/**
@@ -76,24 +76,27 @@ public class ImportFeature{
 
     public static ImportFeature getFeature(String featureDefinition) throws MojoExecutionException{
 		String[] split = featureDefinition.split(":");
-		ImportFeature feature=new ImportFeature();
-		if (split.length>0){
+		ImportFeature feature = new ImportFeature();
+		if (split.length > 0) {
 			feature.setFeatureId(split[0]);
-			String match="equivalent";
-			if (split.length>1){
-				if (P2Utils.isMatchString(split[1])){
-					match=split[1].toUpperCase();
-                    if(match.equalsIgnoreCase("optional"))
-                        feature.setOptional(true);
-					if (split.length>2)
+			String match = "equivalent";
+			if (split.length > 1) {
+				if (P2Utils.isMatchString(split[1])) {
+					match = split[1].toUpperCase();
+                    if(match.equalsIgnoreCase("optional")) {
+						feature.setOptional(true);
+					}
+					if (split.length > 2) {
 						feature.setFeatureVersion(split[2]);
-				}else{
+					}
+				} else {
 					feature.setFeatureVersion(split[1]);
-					if (split.length>2) {
-						if  (P2Utils.isMatchString(split[2])) {
-                            match=split[2].toUpperCase();
-                            if(match.equalsIgnoreCase("optional"))
-                                feature.setOptional(true);
+					if (split.length > 2) {
+						if(P2Utils.isMatchString(split[2])) {
+                            match = split[2].toUpperCase();
+                            if(match.equalsIgnoreCase("optional")) {
+								feature.setOptional(true);
+							}
                         }
                     }
 				}

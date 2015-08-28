@@ -29,10 +29,18 @@ import java.util.regex.Pattern;
 
 public class BundleUtils {
 
-    private static final Pattern OSGI_VERSION_PATTERN = Pattern.compile( "[0-9]+\\.[0-9]+\\.[0-9]+(\\.[0-9A-Za-z_-]+)?" );
-    private static final Pattern ONLY_NUMBERS = Pattern.compile( "[0-9]+" );
+    private static final Pattern OSGI_VERSION_PATTERN = Pattern.compile("[0-9]+\\.[0-9]+\\.[0-9]+(\\.[0-9A-Za-z_-]+)?");
+    private static final Pattern ONLY_NUMBERS = Pattern.compile("[0-9]+");
 
-    public static Bundle getBundle(String bundleDefinition, Bundle bundle) throws MojoExecutionException {
+    /**
+     * Takes the string bundle definition and returns the Bundle representing the string bundledef.
+     *
+     * @param bundleDefinition String
+     * @return Bundle
+     * @throws MojoExecutionException
+     */
+    public static Bundle getBundle(String bundleDefinition) throws MojoExecutionException {
+        Bundle bundle = new Bundle();
         String[] split = bundleDefinition.split(":");
         if (split.length > 1) {
             bundle.setGroupId(split[0]);
@@ -60,45 +68,46 @@ public class BundleUtils {
                 "Insufficient artifact information provided to determine the bundle: " + bundleDefinition);
     }
 
-    public static Bundle getBundle(String bundleDefinition) throws MojoExecutionException {
-        return getBundle(bundleDefinition, new Bundle());
-    }
-
-    public static void resolveVersionForBundle(Bundle bundle, MavenProject project) throws MojoExecutionException{
+    /**
+     * Resolves the version for a given bundle by analyzing the MavenProject dependencies.
+     *
+     * @param bundle  Bundle
+     * @param project MavenProject
+     * @throws MojoExecutionException
+     */
+    public static void resolveVersionForBundle(Bundle bundle, MavenProject project) throws MojoExecutionException {
         if (bundle.getVersion() == null) {
             List dependencies = project.getDependencies();
-            for (Iterator iterator = dependencies.iterator(); iterator.hasNext();) {
+            for (Iterator iterator = dependencies.iterator(); iterator.hasNext(); ) {
                 Dependency dependancy = (Dependency) iterator.next();
-                if (dependancy.getGroupId().equalsIgnoreCase(bundle.getGroupId())&&dependancy.getArtifactId().equalsIgnoreCase(bundle.getArtifactId())){
+                if (dependancy.getGroupId().equalsIgnoreCase(bundle.getGroupId()) && dependancy.getArtifactId().equalsIgnoreCase(bundle.getArtifactId())) {
                     bundle.setVersion(dependancy.getVersion());
                 }
-
             }
         }
+
         if (bundle.getVersion() == null) {
             if (project.getDependencyManagement() != null) {
                 List dependencies = project.getDependencyManagement().getDependencies();
-                for (Iterator iterator = dependencies.iterator(); iterator.hasNext();) {
+                for (Iterator iterator = dependencies.iterator(); iterator.hasNext(); ) {
                     Dependency dependency = (Dependency) iterator.next();
                     if (dependency.getGroupId().equalsIgnoreCase(bundle.getGroupId()) && dependency.getArtifactId().equalsIgnoreCase(bundle.getArtifactId())) {
                         bundle.setVersion(dependency.getVersion());
                     }
-
                 }
             }
         }
         if (bundle.getVersion() == null) {
-            throw new MojoExecutionException("Could not find the version for "+ bundle.getGroupId()+":"+ bundle.getArtifactId());
+            throw new MojoExecutionException("Could not find the version for " + bundle.getGroupId() + ":" + bundle.getArtifactId());
         }
         Properties properties = project.getProperties();
-        for (Object key:properties.keySet()) {
+        for (Object key : properties.keySet()) {
             bundle.setVersion(bundle.getVersion().replaceAll(Pattern.quote("${" + key + "}"),
                     properties.get(key).toString()));
         }
     }
 
-    public static String getOSGIVersion( String version )
-    {
+    public static String getOSGIVersion(String version) {
         String osgiVersion;
 
         // Matcher m = P_VERSION.matcher(version);
@@ -111,52 +120,47 @@ public class BundleUtils {
         Matcher m;
 
         /* if it's already OSGi compliant don't touch it */
-        m = OSGI_VERSION_PATTERN.matcher( version );
-        if ( m.matches() )
-        {
+        m = OSGI_VERSION_PATTERN.matcher(version);
+        if (m.matches()) {
             return version;
         }
 
         osgiVersion = version;
 
         /* check for dated snapshot versions with only major or major and minor */
-        Pattern DATED_SNAPSHOT = Pattern.compile( "([0-9])(\\.([0-9]))?(\\.([0-9]))?\\-([0-9]{8}\\.[0-9]{6}\\-[0-9]*)" );
-        m = DATED_SNAPSHOT.matcher( osgiVersion );
-        if ( m.matches() )
-        {
-            String major = m.group( 1 );
-            String minor = ( m.group( 3 ) != null ) ? m.group( 3 ) : "0";
-            String service = ( m.group( 5 ) != null ) ? m.group( 5 ) : "0";
-            String qualifier = m.group( 6 ).replaceAll( "-", "_" ).replaceAll( "\\.", "_" );
+        Pattern DATED_SNAPSHOT = Pattern.compile("([0-9])(\\.([0-9]))?(\\.([0-9]))?\\-([0-9]{8}\\.[0-9]{6}\\-[0-9]*)");
+        m = DATED_SNAPSHOT.matcher(osgiVersion);
+        if (m.matches()) {
+            String major = m.group(1);
+            String minor = (m.group(3) != null) ? m.group(3) : "0";
+            String service = (m.group(5) != null) ? m.group(5) : "0";
+            String qualifier = m.group(6).replaceAll("-", "_").replaceAll("\\.", "_");
             osgiVersion = major + "." + minor + "." + service + "." + qualifier;
         }
 
         /* else transform first - to . and others to _ */
-        osgiVersion = osgiVersion.replaceFirst( "-", "\\." );
-        osgiVersion = osgiVersion.replaceAll( "-", "_" );
-        m = OSGI_VERSION_PATTERN.matcher( osgiVersion );
-        if ( m.matches() )
-        {
+        osgiVersion = osgiVersion.replaceFirst("-", "\\.");
+        osgiVersion = osgiVersion.replaceAll("-", "_");
+        m = OSGI_VERSION_PATTERN.matcher(osgiVersion);
+        if (m.matches()) {
             return osgiVersion;
         }
 
         /* remove dots in the middle of the qualifier */
-        Pattern DOTS_IN_QUALIFIER = Pattern.compile( "([0-9])(\\.[0-9])?\\.([0-9A-Za-z_-]+)\\.([0-9A-Za-z_-]+)" );
-        m = DOTS_IN_QUALIFIER.matcher( osgiVersion );
-        if ( m.matches() )
-        {
-            String s1 = m.group( 1 );
-            String s2 = m.group( 2 );
-            String s3 = m.group( 3 );
-            String s4 = m.group( 4 );
+        Pattern DOTS_IN_QUALIFIER = Pattern.compile("([0-9])(\\.[0-9])?\\.([0-9A-Za-z_-]+)\\.([0-9A-Za-z_-]+)");
+        m = DOTS_IN_QUALIFIER.matcher(osgiVersion);
+        if (m.matches()) {
+            String s1 = m.group(1);
+            String s2 = m.group(2);
+            String s3 = m.group(3);
+            String s4 = m.group(4);
 
-            Matcher qualifierMatcher = ONLY_NUMBERS.matcher( s3 );
+            Matcher qualifierMatcher = ONLY_NUMBERS.matcher(s3);
             /*
              * if last portion before dot is only numbers then it's not in the middle of the
              * qualifier
              */
-            if ( !qualifierMatcher.matches() )
-            {
+            if (!qualifierMatcher.matches()) {
                 osgiVersion = s1 + s2 + "." + s3 + "_" + s4;
             }
         }
@@ -168,69 +172,58 @@ public class BundleUtils {
          * 1.1        -> 1.1.0
          */
         //Pattern NEED_TO_FILL_ZEROS = Pattern.compile( "([0-9])(\\.([0-9]))?\\.([0-9A-Za-z_-]+)" );
-        Pattern NEED_TO_FILL_ZEROS = Pattern.compile( "([0-9])(\\.([0-9]))?(\\.([0-9A-Za-z_-]+))?" );
-        m = NEED_TO_FILL_ZEROS.matcher( osgiVersion );
-        if ( m.matches() )
-        {
-            String major = m.group( 1 );
-            String minor = m.group( 3 );
+        Pattern NEED_TO_FILL_ZEROS = Pattern.compile("([0-9])(\\.([0-9]))?(\\.([0-9A-Za-z_-]+))?");
+        m = NEED_TO_FILL_ZEROS.matcher(osgiVersion);
+        if (m.matches()) {
+            String major = m.group(1);
+            String minor = m.group(3);
             String service = null;
-            String qualifier = m.group( 5 );
+            String qualifier = m.group(5);
 
             /* if there's no qualifier just fill with 0s */
-            if ( qualifier == null )
-            {
-                osgiVersion = getOSGIVersion( major, minor, service, qualifier );
-            }
-            else
-            {
+            if (qualifier == null) {
+                osgiVersion = getOSGIVersion(major, minor, service, qualifier);
+            } else {
                 /* if last portion is only numbers then it's not a qualifier */
-                Matcher qualifierMatcher = ONLY_NUMBERS.matcher( qualifier );
-                if ( qualifierMatcher.matches() )
-                {
-                    if ( minor == null )
-                    {
+                Matcher qualifierMatcher = ONLY_NUMBERS.matcher(qualifier);
+                if (qualifierMatcher.matches()) {
+                    if (minor == null) {
                         minor = qualifier;
-                    }
-                    else
-                    {
+                    } else {
                         service = qualifier;
                     }
-                    osgiVersion = getOSGIVersion( major, minor, service, null );
-                }
-                else
-                {
-                    osgiVersion = getOSGIVersion( major, minor, service, qualifier );
+                    osgiVersion = getOSGIVersion(major, minor, service, null);
+                } else {
+                    osgiVersion = getOSGIVersion(major, minor, service, qualifier);
                 }
             }
         }
 
-        m = OSGI_VERSION_PATTERN.matcher( osgiVersion );
+        m = OSGI_VERSION_PATTERN.matcher(osgiVersion);
         /* if still its not OSGi version then add everything as qualifier */
-        if ( !m.matches() )
-        {
+        if (!m.matches()) {
             String major = "0";
             String minor = "0";
             String service = "0";
-            String qualifier = osgiVersion.replaceAll( "\\.", "_" );
+            String qualifier = osgiVersion.replaceAll("\\.", "_");
             osgiVersion = major + "." + minor + "." + service + "." + qualifier;
         }
 
         return osgiVersion;
     }
-    private static String getOSGIVersion( String major, String minor, String service, String qualifier )
-    {
+
+    private static String getOSGIVersion(String major, String minor, String service, String qualifier) {
         StringBuffer sb = new StringBuffer();
-        sb.append( major != null ? major : "0" );
-        sb.append( '.' );
-        sb.append( minor != null ? minor : "0" );
-        sb.append( '.' );
-        sb.append( service != null ? service : "0" );
-        if ( qualifier != null )
-        {
-            sb.append( '.' );
-            sb.append( qualifier );
+        sb.append(major != null ? major : "0");
+        sb.append('.');
+        sb.append(minor != null ? minor : "0");
+        sb.append('.');
+        sb.append(service != null ? service : "0");
+        if (qualifier != null) {
+            sb.append('.');
+            sb.append(qualifier);
         }
         return sb.toString();
     }
+
 }

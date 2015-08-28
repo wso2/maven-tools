@@ -22,6 +22,7 @@ import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.project.MavenProject;
 import org.apache.maven.project.MavenProjectHelper;
+import org.wso2.maven.p2.commons.FeatureResourceBundle;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -210,30 +211,32 @@ public class FeatureGenMojo extends AbstractMojo {
      * @return FeatureGenerator
      */
     public FeatureGenerator constructFeatureGenerator() {
-        FeatureGenerator generator = new FeatureGenerator();
-        generator.setLogger(getLog());
-        generator.setId(id);
-        generator.setVersion(version);
-        generator.setLabel(label);
-        generator.setDescription(description);
-        generator.setProviderName(providerName);
-        generator.setCopyright(copyright);
-        generator.setLicence(licence);
-        generator.setLicenceUrl(licenceUrl);
-        generator.setManifest(manifest);
-        generator.setPropertiesFile(propertiesFile);
-        generator.setProperties(properties);
-        generator.setBundles(bundles);
-        generator.setImportBundles(importBundles);
-        generator.setImportFeatures(importFeatures);
-        generator.setIncludedFeatures(includedFeatures);
-        generator.setAdviceFile(adviceFile);
-        generator.setArtifactFactory(artifactFactory);
-        generator.setResolver(resolver);
-        generator.setLocalRepository(localRepository);
-        generator.setRemoteRepositories(remoteRepositories);
-        generator.setProject(project);
-        generator.setProjectHelper(projectHelper);
+        FeatureResourceBundle resourceBundle = new FeatureResourceBundle();
+        resourceBundle.setId(id);
+        resourceBundle.setVersion(version);
+        resourceBundle.setLabel(label);
+        resourceBundle.setDescription(description);
+        resourceBundle.setProviderName(providerName);
+        resourceBundle.setCopyright(copyright);
+        resourceBundle.setLicence(licence);
+        resourceBundle.setLicenceUrl(licenceUrl);
+        resourceBundle.setManifest(manifest);
+        resourceBundle.setPropertiesFile(propertiesFile);
+        resourceBundle.setProperties(properties);
+        resourceBundle.setBundles(bundles);
+        resourceBundle.setImportBundles(importBundles);
+        resourceBundle.setImportFeatures(importFeatures);
+        resourceBundle.setIncludedFeatures(includedFeatures);
+        resourceBundle.setAdviceFile(adviceFile);
+        resourceBundle.setArtifactFactory(artifactFactory);
+        resourceBundle.setResolver(resolver);
+        resourceBundle.setLocalRepository(localRepository);
+        resourceBundle.setRemoteRepositories(remoteRepositories);
+        resourceBundle.setProject(project);
+        resourceBundle.setProjectHelper(projectHelper);
+        resourceBundle.setLog(getLog());
+
+        FeatureGenerator generator = new FeatureGenerator(resourceBundle, getLog());
         return generator;
     }
 

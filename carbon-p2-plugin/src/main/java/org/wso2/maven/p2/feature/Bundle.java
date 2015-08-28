@@ -17,23 +17,15 @@
 */
 package org.wso2.maven.p2.feature;
 
+import org.apache.maven.artifact.Artifact;
+import org.apache.maven.plugin.MojoExecutionException;
+
 import java.io.IOException;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Properties;
 import java.util.jar.JarFile;
 import java.util.jar.Manifest;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-
-import org.apache.maven.artifact.Artifact;
-import org.apache.maven.model.Dependency;
-import org.apache.maven.plugin.MojoExecutionException;
-import org.apache.maven.project.MavenProject;
-import org.wso2.maven.p2.utils.P2Utils;
 
 
-public class Bundle{
+public class Bundle {
 
     /**
      * Group Id of the Bundle
@@ -41,126 +33,132 @@ public class Bundle{
      * @parameter
      * @required
      */
-	private String groupId;
+    private String groupId;
 
-	/**
+    /**
      * Artifact Id of the Bundle
      *
      * @parameter
      * @required
      */
-	private String artifactId;
+    private String artifactId;
     /**
      * Version of the Bundle
-     *
-     * @parameter default-value=""
      */
-	private String version;
-
-	private Artifact artifact;
-
-	private String bundleSymbolicName;
-	private String bundleVersion;
-
+    private String version;
+    private Artifact artifact;
+    private String bundleSymbolicName;
+    private String bundleVersion;
     private String compatibility;
+    private boolean exclude;
 
-	public void setGroupId(String groupId) {
-		this.groupId = groupId;
-	}
+    public boolean isExclude() {
+        return exclude;
+    }
 
-	public String getGroupId() {
-		return this.groupId;
-	}
+    public void setExclude(boolean exclude) {
+        this.exclude = exclude;
+    }
 
-	public void setArtifactId(String artifactId) {
-		this.artifactId = artifactId;
-	}
+    public void setGroupId(String groupId) {
+        this.groupId = groupId;
+    }
 
-	public String getArtifactId() {
-		return this.artifactId;
-	}
+    public String getGroupId() {
+        return this.groupId;
+    }
 
-	public void setVersion(String version) {
-		this.version = version;
-	}
+    public void setArtifactId(String artifactId) {
+        this.artifactId = artifactId;
+    }
 
-	public String getVersion() {
-		return this.version;
-	}
+    public String getArtifactId() {
+        return this.artifactId;
+    }
+
+    public void setVersion(String version) {
+        this.version = version;
+    }
+
+    public String getVersion() {
+        return this.version;
+    }
 
     public void setCompatibility(String compatibility) {
-		this.compatibility = compatibility;
-	}
+        this.compatibility = compatibility;
+    }
 
-	public String getCompatibility() {
-		return this.compatibility;
-	}
+    public String getCompatibility() {
+        return this.compatibility;
+    }
 
-	public void setArtifact(Artifact artifact) throws MojoExecutionException {
-		this.artifact = artifact;
-		resolveOSGIInfo();
-	}
+    public void setArtifact(Artifact artifact) throws MojoExecutionException {
+        this.artifact = artifact;
+        resolveOSGIInfo();
+    }
 
-	public Artifact getArtifact() {
-		return this.artifact;
-	}
+    public Artifact getArtifact() {
+        return this.artifact;
+    }
 
-	public String toString(){
-		if (getVersion() != null && !getVersion().equalsIgnoreCase(""))
-			return getGroupId() + ":"+getArtifactId() +":"+getVersion();
-		else
-			return getGroupId()+":"+getArtifactId();
-	}
+    public String toString() {
+        String bundleString;
+        if (getVersion() != null && !getVersion().equalsIgnoreCase("")) {
+            bundleString = getGroupId() + ":" + getArtifactId() + ":" + getVersion();
+        } else {
+            bundleString = getGroupId() + ":" + getArtifactId();
+        }
+        return bundleString;
+    }
 
-	public String toOSGIString(){
-		return getBundleSymbolicName()+":"+getBundleVersion();
-	}
+    public String toOSGIString() {
+        return getBundleSymbolicName() + ":" + getBundleVersion();
+    }
 
+    public void setBundleSymbolicName(String bundleSymbolicName) {
+        this.bundleSymbolicName = bundleSymbolicName;
+    }
 
+    public String getBundleSymbolicName() {
+        return bundleSymbolicName;
+    }
 
-	public void setBundleSymbolicName(String bundleSymbolicName) {
-		this.bundleSymbolicName = bundleSymbolicName;
-	}
+    public void setBundleVersion(String bundleVersion) {
+        this.bundleVersion = bundleVersion;
+    }
 
-	public String getBundleSymbolicName() {
-		return bundleSymbolicName;
-	}
+    public String getBundleVersion() {
+        return bundleVersion;
+    }
 
-	public void setBundleVersion(String bundleVersion) {
-		this.bundleVersion = bundleVersion;
-	}
-
-	public String getBundleVersion() {
-		return bundleVersion;
-	}
-
-	public void resolveOSGIInfo() throws MojoExecutionException{
-		try {
-			JarFile jarFile = new JarFile(getArtifact().getFile());
-			Manifest manifest = jarFile.getManifest();
-			if (getBundleSymbolicName()==null){
-				String value = manifest.getMainAttributes().getValue(BUNDLE_SYMBOLIC_NAME);
+    public void resolveOSGIInfo() throws MojoExecutionException {
+        try {
+            JarFile jarFile = new JarFile(getArtifact().getFile());
+            Manifest manifest = jarFile.getManifest();
+            if (getBundleSymbolicName() == null) {
+                String value = manifest.getMainAttributes().getValue(BUNDLE_SYMBOLIC_NAME);
                 if (value == null) {
                     throw new MojoExecutionException(BUNDLE_SYMBOLIC_NAME +
                             " cannot be found in the bundle: " + getArtifact().getFile());
                 }
-				String[] split = value.split(";");
-				setBundleSymbolicName(split[0]);
-			}
-			if (getBundleVersion()==null){
-				 setBundleVersion(manifest.getMainAttributes().getValue(BUNDLE_VERSION));
-			}
-			jarFile.close();
-			if (getBundleSymbolicName()==null || getBundleVersion()==null)
-				throw new MojoExecutionException("Artifact doesn't contain OSGI info: "+getGroupId()+":"+getArtifactId()+":"+getVersion());
-		} catch (IOException e) {
-			throw new MojoExecutionException("Unable to retreive osgi bundle info: "+getGroupId()+":"+getArtifactId()+":"+getVersion(),e);
-		}
+                String[] split = value.split(";");
+                setBundleSymbolicName(split[0]);
+            }
+            if (getBundleVersion() == null) {
+                setBundleVersion(manifest.getMainAttributes().getValue(BUNDLE_VERSION));
+            }
+            jarFile.close();
+            if (getBundleSymbolicName() == null || getBundleVersion() == null) {
+                throw new MojoExecutionException("Artifact doesn't contain OSGI info: " + getGroupId() + ":" + getArtifactId() + ":" + getVersion());
+            }
+        } catch (IOException e) {
+            throw new MojoExecutionException("Unable to retreive osgi bundle info: " + getGroupId() + ":" + getArtifactId() + ":" + getVersion(), e);
+        }
 
-	}
+    }
 
-	public static final String BUNDLE_SYMBOLIC_NAME="Bundle-SymbolicName";
-	public static final String BUNDLE_VERSION="Bundle-Version";
+    public static final String BUNDLE_SYMBOLIC_NAME = "Bundle-SymbolicName";
+    public static final String BUNDLE_VERSION = "Bundle-Version";
 
 
 }

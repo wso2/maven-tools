@@ -177,8 +177,9 @@ public class P2Utils {
     }
     
     public static String getMatchRule(String matchStr){
-    	if (isPatch(matchStr))
-    		return "perfect";
+    	if (isPatch(matchStr)) {
+            return "perfect";
+        }
     	for (String match : matchList) {
 			if (matchStr.equalsIgnoreCase(match)){
 				return match;

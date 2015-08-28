@@ -16,20 +16,27 @@
 
 package org.wso2.maven.p2.commons;
 
+import org.apache.maven.plugin.logging.Log;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
-import org.apache.maven.plugin.logging.Log;
 
+/**
+ * The Generator class must be extended by all the generator classes which implement the the plugin logic.
+ */
 public abstract class Generator {
     private Log log;
 
-    public abstract void generate()  throws MojoExecutionException, MojoFailureException;
-
-    public void setLogger(Log logger) {
+    /**
+     * Constructor taking Log object as a parameter. The log is needed to log the generator activity flow.
+     * @param logger
+     */
+    public Generator(Log logger) {
         this.log = logger;
     }
 
-    public Log getLog() {
+    public abstract void generate()  throws MojoExecutionException, MojoFailureException;
+
+    protected Log getLog() {
         return this.log;
     }
 }
