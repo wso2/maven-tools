@@ -19,7 +19,7 @@ package org.wso2.maven.p2.utils;
 import org.apache.maven.model.Dependency;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.project.MavenProject;
-import org.wso2.maven.p2.feature.Bundle;
+import org.wso2.maven.p2.beans.Bundle;
 
 import java.util.Iterator;
 import java.util.List;

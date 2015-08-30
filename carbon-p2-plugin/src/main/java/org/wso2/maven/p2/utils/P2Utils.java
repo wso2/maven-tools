@@ -49,7 +49,7 @@ import org.wso2.maven.p2.Category;
 import org.wso2.maven.p2.EquinoxLauncher;
 import org.wso2.maven.p2.FeatureArtifact;
 import org.wso2.maven.p2.P2Profile;
-import org.wso2.maven.p2.feature.Bundle;
+import org.wso2.maven.p2.beans.Bundle;
 
 public class P2Utils {
 	private static String[] matchList=new String[]{"perfect","equivalent","compatible","greaterOrEqual","patch", "optional"};

@@ -33,7 +33,7 @@ import org.apache.maven.plugin.MojoExecutionException;
 import org.w3c.dom.Document;
 import org.wso2.maven.p2.FeatureArtifact;
 import org.wso2.maven.p2.P2Profile;
-import org.wso2.maven.p2.feature.Bundle;
+import org.wso2.maven.p2.beans.Bundle;
 
 public class MavenUtils {
 

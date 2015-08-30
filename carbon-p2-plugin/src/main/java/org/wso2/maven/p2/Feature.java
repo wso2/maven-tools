@@ -16,7 +16,6 @@
 package org.wso2.maven.p2;
 
 import org.apache.maven.plugin.MojoExecutionException;
-import org.wso2.maven.p2.feature.Bundle;
 import org.wso2.maven.p2.utils.BundleUtils;
 
 public class Feature {

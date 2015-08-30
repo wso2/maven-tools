@@ -14,7 +14,7 @@
  *  limitations under the License.
  */
 
-package org.wso2.maven.p2.commons;
+package org.wso2.maven.p2.feature;
 
 import org.apache.maven.artifact.factory.ArtifactFactory;
 import org.apache.maven.artifact.repository.ArtifactRepository;
@@ -22,11 +22,7 @@ import org.apache.maven.artifact.resolver.ArtifactResolver;
 import org.apache.maven.plugin.logging.Log;
 import org.apache.maven.project.MavenProject;
 import org.apache.maven.project.MavenProjectHelper;
-import org.wso2.maven.p2.feature.AdviceFile;
-import org.wso2.maven.p2.feature.Bundle;
-import org.wso2.maven.p2.feature.ImportFeature;
-import org.wso2.maven.p2.feature.IncludedFeature;
-import org.wso2.maven.p2.feature.Property;
+import org.wso2.maven.p2.beans.Bundle;
 
 import java.io.File;
 import java.util.ArrayList;

@@ -22,7 +22,6 @@ import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.project.MavenProject;
 import org.apache.maven.project.MavenProjectHelper;
-import org.wso2.maven.p2.commons.FeatureResourceBundle;
 
 import java.io.File;
 import java.util.ArrayList;

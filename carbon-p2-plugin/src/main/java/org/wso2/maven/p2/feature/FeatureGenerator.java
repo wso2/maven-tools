@@ -24,7 +24,7 @@ import org.apache.maven.project.MavenProject;
 import org.apache.maven.project.MavenProjectHelper;
 import org.codehaus.plexus.util.DirectoryScanner;
 import org.codehaus.plexus.util.FileUtils;
-import org.wso2.maven.p2.commons.FeatureResourceBundle;
+import org.wso2.maven.p2.beans.Bundle;
 import org.wso2.maven.p2.commons.Generator;
 import org.wso2.maven.p2.feature.utils.InputParamProcessor;
 import org.wso2.maven.p2.feature.utils.OutputFileGeneratorUtils;

@@ -21,8 +21,8 @@ import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
-import org.wso2.maven.p2.commons.FeatureResourceBundle;
-import org.wso2.maven.p2.feature.Bundle;
+import org.wso2.maven.p2.feature.FeatureResourceBundle;
+import org.wso2.maven.p2.beans.Bundle;
 import org.wso2.maven.p2.feature.ImportFeature;
 import org.wso2.maven.p2.feature.IncludedFeature;
 import org.wso2.maven.p2.feature.Property;
@@ -57,14 +57,14 @@ public class OutputFileGeneratorUtils {
 
     public static void createPropertiesFile(FeatureResourceBundle resourceBundle, File featurePropertyFile) throws MojoExecutionException {
         Properties props = getProperties(resourceBundle);
-        if (props == null) return;
-        if (!props.isEmpty())
+        if (props != null && !props.isEmpty()) {
             try {
                 resourceBundle.getLog().info("Generating feature properties");
                 props.store(new FileOutputStream(featurePropertyFile), "Properties of " + resourceBundle.getId());
             } catch (Exception e) {
                 throw new MojoExecutionException("Unable to create the feature properties", e);
             }
+        }
     }
 
     private static Properties getProperties(FeatureResourceBundle resourceBundle) throws MojoExecutionException {
