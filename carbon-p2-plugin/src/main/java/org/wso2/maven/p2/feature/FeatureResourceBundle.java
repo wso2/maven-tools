@@ -23,6 +23,8 @@ import org.apache.maven.plugin.logging.Log;
 import org.apache.maven.project.MavenProject;
 import org.apache.maven.project.MavenProjectHelper;
 import org.wso2.maven.p2.beans.Bundle;
+import org.wso2.maven.p2.beans.ImportFeature;
+import org.wso2.maven.p2.beans.IncludedFeature;
 
 import java.io.File;
 import java.util.ArrayList;

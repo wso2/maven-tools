@@ -197,11 +197,8 @@ public class FeatureGenMojo extends AbstractMojo {
      */
     private MavenProjectHelper projectHelper;
 
-
-    private FeatureGenerator featureGenerator;
-
     public void execute() throws MojoExecutionException, MojoFailureException {
-        featureGenerator = constructFeatureGenerator();
+        FeatureGenerator featureGenerator = constructFeatureGenerator();
         featureGenerator.generate();
     }
 
