@@ -50,8 +50,9 @@ public class BundleUtils {
             if (split.length > 2) {
                 if (P2Utils.isMatchString(split[2])) {
                     match = split[2].toUpperCase();
-                    if (split.length > 3)
+                    if (split.length > 3) {
                         bundle.setVersion(split[3]);
+                    }
                 } else {
                     bundle.setVersion(split[2]);
                     if (split.length > 3) {
@@ -77,33 +78,33 @@ public class BundleUtils {
      */
     public static void resolveVersionForBundle(Bundle bundle, MavenProject project) throws MojoExecutionException {
         if (bundle.getVersion() == null) {
-            List dependencies = project.getDependencies();
-            for (Iterator iterator = dependencies.iterator(); iterator.hasNext(); ) {
-                Dependency dependancy = (Dependency) iterator.next();
-                if (dependancy.getGroupId().equalsIgnoreCase(bundle.getGroupId()) && dependancy.getArtifactId().equalsIgnoreCase(bundle.getArtifactId())) {
-                    bundle.setVersion(dependancy.getVersion());
-                }
-            }
+            List<Dependency> dependencies = project.getDependencies();
+            setVersionForBundle(bundle, dependencies);
         }
 
         if (bundle.getVersion() == null) {
             if (project.getDependencyManagement() != null) {
-                List dependencies = project.getDependencyManagement().getDependencies();
-                for (Iterator iterator = dependencies.iterator(); iterator.hasNext(); ) {
-                    Dependency dependency = (Dependency) iterator.next();
-                    if (dependency.getGroupId().equalsIgnoreCase(bundle.getGroupId()) && dependency.getArtifactId().equalsIgnoreCase(bundle.getArtifactId())) {
-                        bundle.setVersion(dependency.getVersion());
-                    }
-                }
+                List<Dependency> dependencies = project.getDependencyManagement().getDependencies();
+                setVersionForBundle(bundle, dependencies);
             }
         }
+
         if (bundle.getVersion() == null) {
             throw new MojoExecutionException("Could not find the version for " + bundle.getGroupId() + ":" + bundle.getArtifactId());
         }
+
         Properties properties = project.getProperties();
         for (Object key : properties.keySet()) {
             bundle.setVersion(bundle.getVersion().replaceAll(Pattern.quote("${" + key + "}"),
                     properties.get(key).toString()));
+        }
+    }
+
+    public static void setVersionForBundle(Bundle bundle, List<Dependency> dependencies) {
+        for (Dependency dependency : dependencies) {
+            if (dependency.getGroupId().equalsIgnoreCase(bundle.getGroupId()) && dependency.getArtifactId().equalsIgnoreCase(bundle.getArtifactId())) {
+                bundle.setVersion(dependency.getVersion());
+            }
         }
     }
 

@@ -24,27 +24,13 @@ import java.io.IOException;
 import java.util.jar.JarFile;
 import java.util.jar.Manifest;
 
-
+/**
+ * Bean class representing a bundle.
+ */
 public class Bundle {
 
-    /**
-     * Group Id of the Bundle
-     *
-     * @parameter
-     * @required
-     */
     private String groupId;
-
-    /**
-     * Artifact Id of the Bundle
-     *
-     * @parameter
-     * @required
-     */
     private String artifactId;
-    /**
-     * Version of the Bundle
-     */
     private String version;
     private Artifact artifact;
     private String bundleSymbolicName;
@@ -101,16 +87,6 @@ public class Bundle {
         return this.artifact;
     }
 
-    public String toString() {
-        String bundleString;
-        if (getVersion() != null && !getVersion().equalsIgnoreCase("")) {
-            bundleString = getGroupId() + ":" + getArtifactId() + ":" + getVersion();
-        } else {
-            bundleString = getGroupId() + ":" + getArtifactId();
-        }
-        return bundleString;
-    }
-
     public String toOSGIString() {
         return getBundleSymbolicName() + ":" + getBundleVersion();
     }
@@ -131,7 +107,22 @@ public class Bundle {
         return bundleVersion;
     }
 
+    public String toString() {
+        String bundleString;
+        if (getVersion() != null && !getVersion().equalsIgnoreCase("")) {
+            bundleString = getGroupId() + ":" + getArtifactId() + ":" + getVersion();
+        } else {
+            bundleString = getGroupId() + ":" + getArtifactId();
+        }
+        return bundleString;
+    }
+
+
+    public static final String BUNDLE_VERSION = "Bundle-Version";
+    public static final String BUNDLE_SYMBOLIC_NAME = "Bundle-SymbolicName";
+
     public void resolveOSGIInfo() throws MojoExecutionException {
+
         try {
             JarFile jarFile = new JarFile(getArtifact().getFile());
             Manifest manifest = jarFile.getManifest();
@@ -149,16 +140,15 @@ public class Bundle {
             }
             jarFile.close();
             if (getBundleSymbolicName() == null || getBundleVersion() == null) {
-                throw new MojoExecutionException("Artifact doesn't contain OSGI info: " + getGroupId() + ":" + getArtifactId() + ":" + getVersion());
+                throw new MojoExecutionException("Artifact doesn't contain OSGI info: " + getGroupId() + ":" +
+                        getArtifactId() + ":" + getVersion());
             }
         } catch (IOException e) {
-            throw new MojoExecutionException("Unable to retreive osgi bundle info: " + getGroupId() + ":" + getArtifactId() + ":" + getVersion(), e);
+            throw new MojoExecutionException("Unable to retreive osgi bundle info: " + getGroupId() +
+                    ":" + getArtifactId() + ":" + getVersion(), e);
         }
 
     }
-
-    public static final String BUNDLE_SYMBOLIC_NAME = "Bundle-SymbolicName";
-    public static final String BUNDLE_VERSION = "Bundle-Version";
 
 
 }

@@ -18,48 +18,25 @@ package org.wso2.maven.p2.beans;
 import org.apache.maven.artifact.Artifact;
 import org.wso2.maven.p2.utils.BundleUtils;
 
+/**
+ * Bean class representing an IncludedFeature.
+ */
 public class IncludedFeature {
 
-    /**
-     * Group Id of the Bundle
-     *
-     * @parameter
-     * @required
-     */
-	private String groupId;
-
-	/**
-     * Artifact Id of the Bundle
-     *
-     * @parameter
-     * @required
-     */
-	private String artifactId;
-
-    /**
-     * Version of the Bundle
-     *
-     * @parameter default-value=""
-     */
-	private String artifactVersion;
-
-   /**
-     * Optionality of the included feature
-     *
-     * @parameter default-value=""
-     */
-    private String optionality;
-
+    private String groupId;
+    private String artifactId;
+    private String artifactVersion;
     private boolean optional = false;
-
     private String featureID;
-
     private String featureVersion;
-
     private Artifact artifact;
 
     public boolean isOptional() {
         return optional;
+    }
+
+    public void setOptional(boolean isOptional) {
+        this.optional = isOptional;
     }
 
     public String getGroupId() {
@@ -98,47 +75,16 @@ public class IncludedFeature {
         return featureID;
     }
 
-    public String getFeatureVersion(){
+    public void setFeatureId(String featureId) {
+        this.featureID = featureId;
+    }
+
+    public String getFeatureVersion() {
         return featureVersion;
     }
 
-    public static IncludedFeature getIncludedFeature(String definition){
-        IncludedFeature feature;
-        String segment;
-        String[] segments = definition.split(":");
-
-        if(segments.length >= 2){
-            feature = new IncludedFeature();
-            feature.groupId = segments[0];
-            feature.artifactId = segments[1];
-            if(segments[1].endsWith(".feature")){
-                feature.featureID = segments[1].substring(0, segments[1].lastIndexOf(".feature"));
-            }
-        } else {
-            return null;
-        }        
-
-        if(segments.length >= 3) {
-            segment = segments[2];
-            if("optional".equals(segment)) {
-                feature.optional = true;
-            } else {
-                feature.artifactVersion = segment;
-                feature.featureVersion = BundleUtils.getOSGIVersion(segment);
-            }            
-        }
-
-        if(segments.length == 4) {
-            segment = segments[3];
-            if("optional".equals(segment))
-                feature.optional = true;
-        }
-
-        return feature;
-    }
-
     public void setFeatureVersion(String version) {
-        if(artifactVersion == null || artifactVersion.equals("")) {
+        if (artifactVersion == null || artifactVersion.equals("")) {
             artifactVersion = version;
             featureVersion = BundleUtils.getOSGIVersion(version);
         }

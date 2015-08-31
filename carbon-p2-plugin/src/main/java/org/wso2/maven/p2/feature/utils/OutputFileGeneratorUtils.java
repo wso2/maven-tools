@@ -25,7 +25,7 @@ import org.wso2.maven.p2.feature.FeatureResourceBundle;
 import org.wso2.maven.p2.beans.Bundle;
 import org.wso2.maven.p2.beans.ImportFeature;
 import org.wso2.maven.p2.beans.IncludedFeature;
-import org.wso2.maven.p2.feature.Property;
+import org.wso2.maven.p2.beans.Property;
 import org.wso2.maven.p2.utils.BundleUtils;
 import org.wso2.maven.p2.utils.P2Utils;
 import org.wso2.maven.p2.utils.PropertyReplacer;

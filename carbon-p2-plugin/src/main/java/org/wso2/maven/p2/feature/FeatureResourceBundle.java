@@ -25,6 +25,7 @@ import org.apache.maven.project.MavenProjectHelper;
 import org.wso2.maven.p2.beans.Bundle;
 import org.wso2.maven.p2.beans.ImportFeature;
 import org.wso2.maven.p2.beans.IncludedFeature;
+import org.wso2.maven.p2.beans.Property;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -61,6 +62,7 @@ public class FeatureResourceBundle {
     private ArrayList<ImportFeature> processedImportFeatures;
     private ArrayList<Property> processedAdviceProperties;
     private ArrayList<IncludedFeature> processedIncludedFeatures;
+
     private org.apache.maven.artifact.factory.ArtifactFactory artifactFactory;
 
     private org.apache.maven.artifact.resolver.ArtifactResolver resolver;
@@ -69,6 +71,7 @@ public class FeatureResourceBundle {
     private MavenProject project;
     private MavenProjectHelper projectHelper;
     private Log log;
+
     public String getId() {
         return id;
     }

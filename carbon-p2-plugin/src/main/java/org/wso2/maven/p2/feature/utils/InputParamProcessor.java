@@ -26,9 +26,11 @@ import org.wso2.maven.p2.feature.AdviceFile;
 import org.wso2.maven.p2.beans.Bundle;
 import org.wso2.maven.p2.beans.ImportFeature;
 import org.wso2.maven.p2.beans.IncludedFeature;
-import org.wso2.maven.p2.feature.Property;
+import org.wso2.maven.p2.beans.Property;
 import org.wso2.maven.p2.utils.BundleUtils;
+import org.wso2.maven.p2.utils.FeatureUtils;
 import org.wso2.maven.p2.utils.MavenUtils;
+import org.wso2.maven.p2.utils.PropertyUtils;
 
 import java.util.ArrayList;
 
@@ -44,14 +46,39 @@ public class InputParamProcessor {
     private org.apache.maven.artifact.resolver.ArtifactResolver resolver;
     private MavenProject project;
     private AdviceFile adviceFile;
+    private FeatureResourceBundle resourceBundle;
 
+    /**
+     * Constructs the InputParamProcessor by taking the feature resource bundle.
+     * @param resourceBundle FeatureResourceBundle contains all the utility objects and data structures needed
+     *                       for processing input values.
+     */
     public InputParamProcessor(FeatureResourceBundle resourceBundle) {
+        this.resourceBundle = resourceBundle;
         this.remoteRepositories = resourceBundle.getRemoteRepositories();
         this.localRepository = resourceBundle.getLocalRepository();
         this.artifactFactory = resourceBundle.getArtifactFactory();
         this.resolver = resourceBundle.getResolver();
         this.project = resourceBundle.getProject();
         this.adviceFile = resourceBundle.getAdviceFile();
+    }
+
+    /**
+     * Generates processed bundles taken from pom.xml configuration.
+     * @return processed bundles in an ArrayList&lt;Bundle&gt;
+     * @throws MojoExecutionException
+     */
+    public ArrayList<Bundle> getProcessedBundlesList() throws MojoExecutionException {
+        return getProcessedBundlesList(this.resourceBundle.getBundles(), false);
+    }
+
+    /**
+     * Generates processed import bundles taken from pom.xml configuration.
+     * @return processed import bundles in an ArrayList&lt;Bundle&gt;
+     * @throws MojoExecutionException
+     */
+    public ArrayList<Bundle> getProcessedImportBundlesList() throws MojoExecutionException {
+        return getProcessedBundlesList(this.resourceBundle.getImportBundles(), true);
     }
 
     /**
@@ -63,7 +90,7 @@ public class InputParamProcessor {
      * @return ArrayList<Bundle>
      * @throws MojoExecutionException
      */
-    public ArrayList<Bundle> getProcessedBundlesList(ArrayList bundles, boolean isImportBundles) throws MojoExecutionException {
+    private ArrayList<Bundle> getProcessedBundlesList(ArrayList bundles, boolean isImportBundles) throws MojoExecutionException {
         if (bundles == null || bundles.size() == 0) {
             return new ArrayList<Bundle>();
         }
@@ -92,20 +119,20 @@ public class InputParamProcessor {
     }
 
     /**
-     * Returns the processed ImportFeatures from unprocessed importfeatures.
-     * @param importFeatures ArrayList of importFeatures
-     * @return ArrayList&lt;ImportFeature&gt;
+     * Generates the processed ImportFeatures from pom.xml configuration.
+     * @return processed import features in an ArrayList&lt;ImportFeature&gt;
      * @throws MojoExecutionException
      */
-    public ArrayList<ImportFeature> getProcessedImportFeaturesList(ArrayList importFeatures) throws MojoExecutionException {
+    public ArrayList<ImportFeature> getProcessedImportFeaturesList() throws MojoExecutionException {
+        ArrayList importFeatures = this.resourceBundle.getImportFeatures();
         if (importFeatures == null || importFeatures.size() == 0) {
-            return null;
+            return new ArrayList<ImportFeature>();
         }
         ArrayList<ImportFeature> processedImportFeatures = new ArrayList<ImportFeature>();
         for (Object obj : importFeatures) {
             ImportFeature f;
             if (obj instanceof String) {
-                f = ImportFeature.getFeature(obj.toString());
+                f = FeatureUtils.getImportFeature(obj.toString());
             } else {
                 throw new MojoExecutionException("Unknown ImportFeature definition: " + obj.toString());
             }
@@ -116,19 +143,20 @@ public class InputParamProcessor {
     }
 
     /**
-     * Returns the processed IncludedFeatures from an ArrayList of row includedFeatures ArrayList.
-     * @param includedFeatures ArrayList
-     * @return ArrayList&lt;IncludedFeature&gt;
+     * Generates the processed IncludedFeatures from an pom.xml configuration
+     * @return processed included features in an ArrayList&lt;IncludedFeature&gt;
      * @throws MojoExecutionException
      */
-    public ArrayList<IncludedFeature> getIncludedFeatures(ArrayList includedFeatures) throws MojoExecutionException {
-        if (includedFeatures == null || includedFeatures.size() == 0)
-            return null;
+    public ArrayList<IncludedFeature> getIncludedFeatures() throws MojoExecutionException {
+        ArrayList includedFeatures = this.resourceBundle.getIncludedFeatures();
+        if (includedFeatures == null || includedFeatures.size() == 0) {
+            return new ArrayList<IncludedFeature>();
+        }
 
         ArrayList<IncludedFeature> processedIncludedFeatures = new ArrayList<IncludedFeature>();
         for (Object obj : includedFeatures) {
             if (obj instanceof String) {
-                IncludedFeature includedFeature = IncludedFeature.getIncludedFeature((String) obj);
+                IncludedFeature includedFeature = FeatureUtils.getIncludedFeature((String) obj);
                 if (includedFeature != null) {
                     includedFeature.setFeatureVersion(this.project.getVersion());
                     Artifact artifact = this.artifactFactory.createArtifact(includedFeature.getGroupId(),
@@ -154,7 +182,7 @@ public class InputParamProcessor {
             for (Object property : adviceFile.getProperties()) {
                 Property prop;
                 if (property instanceof String) {
-                    prop = Property.getProperty(property.toString());
+                    prop = PropertyUtils.getProperty(property.toString());
                 } else {
                     throw new MojoExecutionException("Unknown advice property definition: " + property.toString());
                 }

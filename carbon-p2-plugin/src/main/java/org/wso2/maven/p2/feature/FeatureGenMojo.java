@@ -149,12 +149,6 @@ public class FeatureGenMojo extends AbstractMojo {
      */
     private AdviceFile adviceFile;
 
-//    /**
-//     * define category
-//     * @parameter [alias="carbonCategories"]
-//     */
-    //    private String category;
-    //
     /**
      * @component
      */
@@ -174,16 +168,6 @@ public class FeatureGenMojo extends AbstractMojo {
      * @parameter default-value="${project.remoteArtifactRepositories}"
      */
     private java.util.List remoteRepositories;
-
-//    /**
-//     * @parameter default-value="${project.distributionManagementArtifactRepository}"
-//     */
-//    private ArtifactRepository deploymentRepository;
-
-//    /**
-//     * @component
-//     */
-//    private ArtifactMetadataSource artifactMetadataSource;
 
     /**
      * @parameter default-value="${project}"

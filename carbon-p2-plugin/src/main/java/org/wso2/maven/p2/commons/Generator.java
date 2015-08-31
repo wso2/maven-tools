@@ -24,7 +24,7 @@ import org.apache.maven.plugin.MojoFailureException;
  * The Generator class must be extended by all the generator classes which implement the the plugin logic.
  */
 public abstract class Generator {
-    private Log log;
+    private final Log log;
 
     /**
      * Constructor taking Log object as a parameter. The log is needed to log the generator activity flow.

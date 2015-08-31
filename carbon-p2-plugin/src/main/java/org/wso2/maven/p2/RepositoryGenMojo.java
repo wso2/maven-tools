@@ -254,7 +254,7 @@ public class RepositoryGenMojo extends AbstractMojo {
         }
     }
 
-    private void addArguments(P2ApplicationLauncher launcher) throws IOException, MalformedURLException {
+    private void addArguments(P2ApplicationLauncher launcher) throws IOException {
         launcher.addArguments("-source", sourceDir.getAbsolutePath(), //
                 "-metadataRepository", metadataRepository.toString(), //
                 "-metadataRepositoryName", getRepositoryName(), //
@@ -399,11 +399,8 @@ public class RepositoryGenMojo extends AbstractMojo {
 	}
     
 	private boolean isCategoriesAvailable() {
-		if (categories == null || categories.size() == 0) {
-			return false;
-		}
-		return true;
-	}
+        return !(categories == null || categories.size() == 0);
+    }
     
     private void performMopUp() {
         try {

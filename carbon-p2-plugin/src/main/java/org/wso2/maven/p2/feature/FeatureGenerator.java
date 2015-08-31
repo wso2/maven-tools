@@ -17,9 +17,9 @@
 package org.wso2.maven.p2.feature;
 
 import org.apache.maven.model.Resource;
-import org.apache.maven.plugin.logging.Log;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
+import org.apache.maven.plugin.logging.Log;
 import org.apache.maven.project.MavenProject;
 import org.apache.maven.project.MavenProjectHelper;
 import org.codehaus.plexus.util.DirectoryScanner;
@@ -27,6 +27,7 @@ import org.codehaus.plexus.util.FileUtils;
 import org.wso2.maven.p2.beans.Bundle;
 import org.wso2.maven.p2.beans.ImportFeature;
 import org.wso2.maven.p2.beans.IncludedFeature;
+import org.wso2.maven.p2.beans.Property;
 import org.wso2.maven.p2.commons.Generator;
 import org.wso2.maven.p2.feature.utils.InputParamProcessor;
 import org.wso2.maven.p2.feature.utils.OutputFileGeneratorUtils;
@@ -39,15 +40,14 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+/**
+ * FeatureGenerator takes parameters from the pom.xml and generates the feature.
+ */
 public class FeatureGenerator extends Generator {
 
-    private ArrayList bundles;
-    private ArrayList importBundles;
-    private ArrayList importFeatures;
-    private ArrayList includedFeatures;
-
-    private MavenProject project;
-    private MavenProjectHelper projectHelper;
+    private final FeatureResourceBundle resourceBundle;
+    private final MavenProject project;
+    private final MavenProjectHelper projectHelper;
 
     private ArrayList<Bundle> processedBundles;
     private ArrayList<Bundle> processedImportBundles;
@@ -64,26 +64,23 @@ public class FeatureGenerator extends Generator {
     private File featureManifestFile;
     private File featureZipFile;
 
-    private FeatureResourceBundle resourceBundle;
 
     /**
      * Constructor for the FeatureGenerator.
      * Takes FeatureResourceBundle as a param to set private fields.
+     *
      * @param resourceBundle FeatureResourceBundle
      */
     public FeatureGenerator(FeatureResourceBundle resourceBundle, Log logger) {
         super(logger);
         this.resourceBundle = resourceBundle;
-        this.bundles = resourceBundle.getBundles();
-        this.importBundles = resourceBundle.getImportBundles();
-        this.importFeatures = resourceBundle.getImportFeatures();
-        this.includedFeatures = resourceBundle.getIncludedFeatures();
         this.project = resourceBundle.getProject();
         this.projectHelper = resourceBundle.getProjectHelper();
     }
 
     /**
-     * This method will generate the Feature. This overrides the parent generate method of Generator abstract class.
+     * Generates the Feature. This overrides the parent generate method of Generator abstract class.
+     *
      * @throws MojoExecutionException
      * @throws MojoFailureException
      */
@@ -104,13 +101,13 @@ public class FeatureGenerator extends Generator {
     private void processInputs() throws MojoExecutionException {
         InputParamProcessor paramProcessor = new InputParamProcessor(this.resourceBundle);
         getLog().info("Processing bundles");
-        processedBundles = paramProcessor.getProcessedBundlesList(bundles, false);
+        processedBundles = paramProcessor.getProcessedBundlesList();
         getLog().info("Processing import bundles");
-        processedImportBundles = paramProcessor.getProcessedBundlesList(importBundles, true);
+        processedImportBundles = paramProcessor.getProcessedImportBundlesList();
         getLog().info("Processing import features");
-        processedImportFeatures = paramProcessor.getProcessedImportFeaturesList(importFeatures);
+        processedImportFeatures = paramProcessor.getProcessedImportFeaturesList();
         getLog().info("Processing include features");
-        processedIncludedFeatures = paramProcessor.getIncludedFeatures(includedFeatures);
+        processedIncludedFeatures = paramProcessor.getIncludedFeatures();
         getLog().info("Processing advice properties");
         processedAdviceProperties = paramProcessor.getProcessedAdviceProperties();
 
@@ -126,7 +123,8 @@ public class FeatureGenerator extends Generator {
         File destFolder = new File(project.getBasedir(), "target");
         rowOutputFolder = new File(destFolder, "raw");
         File featuresParentDir = new File(rowOutputFolder, "features");
-        featureIdFolder = new File(featuresParentDir, resourceBundle.getId() + "_" + BundleUtils.getOSGIVersion(resourceBundle.getVersion()));
+        featureIdFolder = new File(featuresParentDir, resourceBundle.getId() + "_" +
+                BundleUtils.getOSGIVersion(resourceBundle.getVersion()));
         pluginsFolder = new File(rowOutputFolder, "plugins");
         File featureMetaInfFolder = new File(featureIdFolder, "META-INF");
         featureXmlFile = new File(featureIdFolder, "feature.xml");
@@ -138,7 +136,23 @@ public class FeatureGenerator extends Generator {
         pluginsFolder.mkdirs();
     }
 
+    /**
+     * Copy all the dependencies into output folder.
+     *
+     * @throws MojoExecutionException
+     */
     private void copyAllDependencies() throws MojoExecutionException {
+        copyBundles();
+        copyImportBundles();
+        copyIncludedFeatures();
+    }
+
+    /**
+     * Copy bundles into plugins folder.
+     *
+     * @throws MojoExecutionException
+     */
+    private void copyBundles() throws MojoExecutionException {
         ArrayList<Bundle> processedBundlesList = processedBundles;
         if (processedBundlesList != null) {
             getLog().info("Copying bundle dependencies");
@@ -152,6 +166,14 @@ public class FeatureGenerator extends Generator {
                 }
             }
         }
+    }
+
+    /**
+     * Copy import bundles into plugins folder.
+     *
+     * @throws MojoExecutionException
+     */
+    private void copyImportBundles() throws MojoExecutionException {
         ArrayList<Bundle> processedImportBundlesList = processedImportBundles;
         if (processedImportBundlesList != null) {
             getLog().info("Copying import bundle dependencies");
@@ -167,8 +189,14 @@ public class FeatureGenerator extends Generator {
                 }
             }
         }
+    }
 
-        //Copying includedFeatures
+    /**
+     * Copying includedFeatures into the output folder.
+     *
+     * @throws MojoExecutionException
+     */
+    private void copyIncludedFeatures() throws MojoExecutionException {
         if (processedIncludedFeatures != null) {
             for (IncludedFeature includedFeature : processedIncludedFeatures) {
                 try {
@@ -176,12 +204,11 @@ public class FeatureGenerator extends Generator {
                             includedFeature.getArtifactId());
                     FileManagementUtil.unzip(includedFeature.getArtifact().getFile(), rowOutputFolder);
                 } catch (Exception e) {
-                    throw new MojoExecutionException("Error occured when extracting the Feature Artifact: " +
+                    throw new MojoExecutionException("Error occurred when extracting the Feature Artifact: " +
                             includedFeature.getGroupId() + ":" + includedFeature.getArtifactId(), e);
                 }
             }
         }
-
     }
 
     private void createArchive() throws MojoExecutionException {
@@ -196,6 +223,10 @@ public class FeatureGenerator extends Generator {
         }
     }
 
+    /**
+     * Copy maven project resources into the output feature folder.
+     * @throws MojoExecutionException
+     */
     private void copyResources() throws MojoExecutionException {
         //The following code was taken from the maven bundle plugin and updated suit the purpose
         List<Resource> resources = project.getResources();
@@ -236,27 +267,11 @@ public class FeatureGenerator extends Generator {
                 }
             }
         }
-
-        //        List resources = project.getResources();
-        //        if (resources != null) {
-        //            getLog().info("Copying resources");
-        //            for (Object obj : resources) {
-        //                if (obj instanceof Resource) {
-        //                    Resource resource = (Resource) obj;
-        //                    try {
-        //                        File resourceFolder = new File(resource.getDirectory());
-        //                        if (resourceFolder.exists()) {
-        //                            getLog().info("   " + resource.getDirectory());
-        //                            FileManagementUtil.copyDirectory(resourceFolder, featureIdFolder);
-        //                        }
-        //                    } catch (IOException e) {
-        //                        throw new MojoExecutionException("Unable copy resources: " + resource.getDirectory(), e);
-        //                    }
-        //                }
-        //            }
-        //        }
     }
 
+    /**
+     * Deletes the temp output folder.
+     */
     private void performMopUp() {
         try {
             FileUtils.deleteDirectory(rowOutputFolder);
