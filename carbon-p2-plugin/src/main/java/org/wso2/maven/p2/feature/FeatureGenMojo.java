@@ -152,12 +152,7 @@ public class FeatureGenMojo extends AbstractMojo {
     /**
      * @component
      */
-    private org.apache.maven.artifact.factory.ArtifactFactory artifactFactory;
-
-    /**
-     * @component
-     */
-    private org.apache.maven.artifact.resolver.ArtifactResolver resolver;
+    private org.apache.maven.repository.RepositorySystem repositorySystem;
 
     /**
      * @parameter default-value="${localRepository}"
@@ -208,16 +203,14 @@ public class FeatureGenMojo extends AbstractMojo {
         resourceBundle.setImportFeatures(importFeatures);
         resourceBundle.setIncludedFeatures(includedFeatures);
         resourceBundle.setAdviceFile(adviceFile);
-        resourceBundle.setArtifactFactory(artifactFactory);
-        resourceBundle.setResolver(resolver);
+        resourceBundle.setRepositorySystem(repositorySystem);
         resourceBundle.setLocalRepository(localRepository);
         resourceBundle.setRemoteRepositories(remoteRepositories);
         resourceBundle.setProject(project);
         resourceBundle.setProjectHelper(projectHelper);
         resourceBundle.setLog(getLog());
 
-        FeatureGenerator generator = new FeatureGenerator(resourceBundle, getLog());
-        return generator;
+        return new FeatureGenerator(resourceBundle, getLog());
     }
 
 

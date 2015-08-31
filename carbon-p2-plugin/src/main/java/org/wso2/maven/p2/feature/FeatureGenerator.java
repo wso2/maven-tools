@@ -51,8 +51,6 @@ public class FeatureGenerator extends Generator {
 
     private ArrayList<Bundle> processedBundles;
     private ArrayList<Bundle> processedImportBundles;
-    private ArrayList<ImportFeature> processedImportFeatures;
-    private ArrayList<Property> processedAdviceProperties;
     private ArrayList<IncludedFeature> processedIncludedFeatures;
 
     private File rowOutputFolder;
@@ -105,11 +103,11 @@ public class FeatureGenerator extends Generator {
         getLog().info("Processing import bundles");
         processedImportBundles = paramProcessor.getProcessedImportBundlesList();
         getLog().info("Processing import features");
-        processedImportFeatures = paramProcessor.getProcessedImportFeaturesList();
+        ArrayList<ImportFeature> processedImportFeatures = paramProcessor.getProcessedImportFeaturesList();
         getLog().info("Processing include features");
         processedIncludedFeatures = paramProcessor.getIncludedFeatures();
         getLog().info("Processing advice properties");
-        processedAdviceProperties = paramProcessor.getProcessedAdviceProperties();
+        ArrayList<Property> processedAdviceProperties = paramProcessor.getProcessedAdviceProperties();
 
         resourceBundle.setProcessedBundles(processedBundles);
         resourceBundle.setProcessedImportBundles(processedImportBundles);
@@ -236,14 +234,14 @@ public class FeatureGenerator extends Generator {
                 DirectoryScanner scanner = new DirectoryScanner();
                 scanner.setBasedir(resource.getDirectory());
                 if (resource.getIncludes() != null && !resource.getIncludes().isEmpty()) {
-                    scanner.setIncludes(resource.getIncludes().toArray(new String[]{}));
+                    scanner.setIncludes(resource.getIncludes().toArray(new String[resource.getIncludes().size()]));
                 } else {
                     scanner.setIncludes(new String[]{"**/**"});
                 }
 
                 List<String> excludes = resource.getExcludes();
                 if (excludes != null && !excludes.isEmpty()) {
-                    scanner.setExcludes(excludes.toArray(new String[]{}));
+                    scanner.setExcludes(excludes.toArray(new String[excludes.size()]));
                 }
 
                 scanner.addDefaultExcludes();

@@ -117,14 +117,12 @@ public class Bundle {
         return bundleString;
     }
 
-
-    public static final String BUNDLE_VERSION = "Bundle-Version";
-    public static final String BUNDLE_SYMBOLIC_NAME = "Bundle-SymbolicName";
-
-    public void resolveOSGIInfo() throws MojoExecutionException {
-
+    private void resolveOSGIInfo() throws MojoExecutionException {
+        String BUNDLE_VERSION = "Bundle-Version";
+        String BUNDLE_SYMBOLIC_NAME = "Bundle-SymbolicName";
+        JarFile jarFile = null;
         try {
-            JarFile jarFile = new JarFile(getArtifact().getFile());
+            jarFile = new JarFile(getArtifact().getFile());
             Manifest manifest = jarFile.getManifest();
             if (getBundleSymbolicName() == null) {
                 String value = manifest.getMainAttributes().getValue(BUNDLE_SYMBOLIC_NAME);
@@ -138,17 +136,22 @@ public class Bundle {
             if (getBundleVersion() == null) {
                 setBundleVersion(manifest.getMainAttributes().getValue(BUNDLE_VERSION));
             }
-            jarFile.close();
             if (getBundleSymbolicName() == null || getBundleVersion() == null) {
                 throw new MojoExecutionException("Artifact doesn't contain OSGI info: " + getGroupId() + ":" +
                         getArtifactId() + ":" + getVersion());
             }
         } catch (IOException e) {
-            throw new MojoExecutionException("Unable to retreive osgi bundle info: " + getGroupId() +
+            throw new MojoExecutionException("Unable to retrieve OSGI bundle info: " + getGroupId() +
                     ":" + getArtifactId() + ":" + getVersion(), e);
+        } finally {
+            if (jarFile != null) {
+                try {
+                    jarFile.close();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
         }
-
     }
-
 
 }

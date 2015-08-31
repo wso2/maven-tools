@@ -21,11 +21,11 @@ import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
-import org.wso2.maven.p2.feature.FeatureResourceBundle;
 import org.wso2.maven.p2.beans.Bundle;
 import org.wso2.maven.p2.beans.ImportFeature;
 import org.wso2.maven.p2.beans.IncludedFeature;
 import org.wso2.maven.p2.beans.Property;
+import org.wso2.maven.p2.feature.FeatureResourceBundle;
 import org.wso2.maven.p2.utils.BundleUtils;
 import org.wso2.maven.p2.utils.P2Utils;
 import org.wso2.maven.p2.utils.PropertyReplacer;
@@ -39,30 +39,55 @@ import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
 import java.io.BufferedReader;
-import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
-import java.io.FileReader;
-import java.io.FileWriter;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.OutputStream;
+import java.io.OutputStreamWriter;
+import java.io.PrintWriter;
+import java.io.Writer;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Properties;
 
+/**
+ * Utility class which will generate output files that are needed to generate a particular feature.
+ */
 public class OutputFileGeneratorUtils {
 
-    public static void createPropertiesFile(FeatureResourceBundle resourceBundle, File featurePropertyFile) throws MojoExecutionException {
+    private static final String DEFAULT_ENCODING = "UTF-8";
+
+    /**
+     * Generates the feature property file.
+     * @param resourceBundle containing the project resources
+     * @param featurePropertyFile  File Object representing the feature property file
+     * @throws MojoExecutionException
+     */
+    public static void createPropertiesFile(FeatureResourceBundle resourceBundle, File featurePropertyFile)
+            throws MojoExecutionException {
         Properties props = getProperties(resourceBundle);
+        OutputStream propertyFileStream = null;
         if (props != null && !props.isEmpty()) {
             try {
                 resourceBundle.getLog().info("Generating feature properties");
-                props.store(new FileOutputStream(featurePropertyFile), "Properties of " + resourceBundle.getId());
+                propertyFileStream = new FileOutputStream(featurePropertyFile);
+                props.store(propertyFileStream, "Properties of " + resourceBundle.getId());
             } catch (Exception e) {
                 throw new MojoExecutionException("Unable to create the feature properties", e);
+            } finally {
+                if (propertyFileStream != null) {
+                    try {
+                        propertyFileStream.close();
+                    } catch (IOException e) {
+                        resourceBundle.getLog().error("Unable to close the properties file");
+                        //throw new MojoExecutionException("Unable to close the properties file", e);
+                    }
+                }
             }
         }
     }
@@ -70,12 +95,24 @@ public class OutputFileGeneratorUtils {
     private static Properties getProperties(FeatureResourceBundle resourceBundle) throws MojoExecutionException {
         File propertiesFile = resourceBundle.getPropertiesFile();
         Properties properties = resourceBundle.getProperties();
+
+        InputStream propertyFileStream = null;
         if (propertiesFile != null && propertiesFile.exists()) {
             Properties props = new Properties();
             try {
-                props.load(new FileInputStream(propertiesFile));
+                propertyFileStream = new FileInputStream(propertiesFile);
+                props.load(propertyFileStream);
             } catch (Exception e) {
                 throw new MojoExecutionException("Unable to load the given properties file", e);
+            } finally {
+                if(propertyFileStream != null) {
+                    try {
+                        propertyFileStream.close();
+                    } catch (IOException e) {
+                        resourceBundle.getLog().error("Unable to close the given properties file");
+                        //throw new MojoExecutionException("Unable to close the given properties file", e);
+                    }
+                }
             }
             if (properties != null) {
                 for (Object key : properties.keySet().toArray()) {
@@ -88,19 +125,37 @@ public class OutputFileGeneratorUtils {
         return properties;
     }
 
+    /**
+     * Creates manifest file for a feature.
+     * @param resourceBundle containing the project resources
+     * @param featureManifestFile File Object representing the manifest file
+     * @throws MojoExecutionException
+     */
     public static void createManifestMFFile(FeatureResourceBundle resourceBundle, File featureManifestFile) throws MojoExecutionException {
+        PrintWriter pw = null;
         try {
             resourceBundle.getLog().info("Generating MANIFEST.MF");
-            BufferedWriter out = new BufferedWriter(new FileWriter(featureManifestFile));
-            out.write("Manifest-Version: 1.0\n\n");
-            out.close();
+            Writer writer = new OutputStreamWriter(new FileOutputStream(featureManifestFile), DEFAULT_ENCODING);
+            pw = new PrintWriter(writer);
+            pw.print("Manifest-Version: 1.0\n\n");
         } catch (Exception e) {
             throw new MojoExecutionException("Unable to create manifest file", e);
+        } finally {
+            if(pw != null) {
+                pw.close();
+            }
         }
     }
 
+    /**
+     * Generates the P2Inf file.
+     * @param resourceBundle containing the project resources
+     * @param p2InfFile  File object representing the p2inf file
+     * @throws MojoExecutionException
+     */
     public static void createP2Inf(FeatureResourceBundle resourceBundle, File p2InfFile) throws MojoExecutionException {
-        BufferedWriter out = null;
+        PrintWriter pw = null;
+
         List<String> p2infStringList = null;
         try {
             ArrayList<Property> list = resourceBundle.getProcessedAdviceProperties();
@@ -112,43 +167,45 @@ public class OutputFileGeneratorUtils {
                 resourceBundle.getLog().info("Generating Advice file (p2.inf)");
             }
 
-            out = new BufferedWriter(new FileWriter(p2InfFile.getAbsolutePath()));
+            Writer writer = new OutputStreamWriter(new FileOutputStream(p2InfFile.getAbsolutePath()), DEFAULT_ENCODING);
+            pw = new PrintWriter(writer);
             //re-writing the already availabled p2.inf lines
             Properties properties = new Properties();
             properties.setProperty("feature.version", BundleUtils.getOSGIVersion(resourceBundle.getVersion()));
             if (p2infStringList != null && p2infStringList.size() > 0) {
                 for (String str : p2infStringList) {
-                    out.write(PropertyReplacer.replaceProperties(str, properties) + "\n"); // writing the strings after replacing ${feature.version}
+                    // writing the strings after replacing ${feature.version}
+                    pw.write(PropertyReplacer.replaceProperties(str, properties) + "\n");
                 }
             }
             if (list.size() == 0) {
-                return;    // finally block will take care of output stream closing.
+                return;
             }
             int nextIndex = P2Utils.getLastIndexOfProperties(p2InfFile) + 1;
             for (Object category : list) {
                 Property cat = (Property) category;
-                out.write("\nproperties." + nextIndex + ".name=" + cat.getKey());
-                out.write("\nproperties." + nextIndex + ".value=" + cat.getValue());
+                pw.write("\nproperties." + nextIndex + ".name=" + cat.getKey());
+                pw.write("\nproperties." + nextIndex + ".value=" + cat.getValue());
                 nextIndex++;
             }
         } catch (Exception e) {
             throw new MojoExecutionException("Unable to create/open p2.inf file", e);
         } finally {
-            if (out != null)
-                try {
-                    out.close();
-                } catch (IOException e) {
-                    throw new MojoExecutionException("Unable to finalize p2.inf file", e);
-                }
+            if (pw != null) {
+                pw.close();
+            }
         }
     }
 
     private static List<String> readAdviceFile(String absolutePath) throws MojoExecutionException {
         List<String> stringList = new ArrayList<String>();
-        String inputLine = null;
+        String inputLine;
         BufferedReader br = null;
+
+        InputStreamReader reader = null;
         try {
-            br = new BufferedReader(new FileReader(absolutePath));
+            reader = new InputStreamReader(new FileInputStream(absolutePath), DEFAULT_ENCODING);
+            br = new BufferedReader(reader);
             while ((inputLine = br.readLine()) != null) {
                 stringList.add(inputLine);
             }
@@ -160,15 +217,23 @@ public class OutputFileGeneratorUtils {
             if (br != null) {
                 try {
                     br.close();
+                    reader.close();
                 } catch (IOException e) {
-                    throw new MojoExecutionException("Unable to finalize p2.inf file", e);
+                    e.printStackTrace();
                 }
             }
         }
         return stringList;
     }
 
-    public static void createFeatureXml(FeatureResourceBundle resourceBundle, File featureXmlFile) throws MojoExecutionException {
+    /**
+     * Generates the feature.xml file for a feature.
+     * @param resourceBundle containing the project resources
+     * @param featureXmlFile File object representing the feature xml file
+     * @throws MojoExecutionException
+     */
+    public static void createFeatureXml(FeatureResourceBundle resourceBundle, File featureXmlFile)
+            throws MojoExecutionException {
         resourceBundle.getLog().info("Generating feature manifest");
         Document document = getManifestDocument(resourceBundle.getManifest());
         Element rootElement = document.getDocumentElement();
@@ -211,14 +276,13 @@ public class OutputFileGeneratorUtils {
             rootElement.appendChild(license);
         }
 
-        ArrayList<Object> processedMissingPlugins = getMissingPlugins(resourceBundle, document);
-        ArrayList<Object> processedMissingImportPlugins = getMissingImportPlugins(resourceBundle, document);
+        ArrayList<Bundle> processedMissingPlugins = getMissingPlugins(resourceBundle, document);
+        ArrayList<Bundle> processedMissingImportPlugins = getMissingImportPlugins(resourceBundle, document);
         ArrayList<Object> processedMissingImportFeatures = getMissingImportFeatures(resourceBundle, document);
         ArrayList<IncludedFeature> includedFeatures = resourceBundle.getProcessedIncludedFeatures();
 
         if (processedMissingPlugins != null) {
-            for (Iterator<Object> iterator = processedMissingPlugins.iterator(); iterator.hasNext(); ) {
-                Bundle bundle = (Bundle) iterator.next();
+            for (Bundle bundle : processedMissingPlugins) {
                 Element plugin = document.createElement("plugin");
                 plugin.setAttribute("id", bundle.getBundleSymbolicName());
                 plugin.setAttribute("version", bundle.getBundleVersion());
@@ -238,8 +302,7 @@ public class OutputFileGeneratorUtils {
             }
 
             if (processedMissingImportPlugins != null) {
-                for (Iterator<Object> iterator = processedMissingImportPlugins.iterator(); iterator.hasNext(); ) {
-                    Bundle bundle = (Bundle) iterator.next();
+                for (Bundle bundle : processedMissingImportPlugins) {
                     Element plugin = document.createElement("import");
                     plugin.setAttribute("plugin", bundle.getBundleSymbolicName());
                     plugin.setAttribute("version", bundle.getBundleVersion());
@@ -311,11 +374,22 @@ public class OutputFileGeneratorUtils {
             throw new MojoExecutionException("Unable to load feature manifest", e1);
         }
         Document document;
+        InputStream manifestFileStream = null;
         if (manifest != null && manifest.exists()) {
             try {
-                document = documentBuilder.parse(new FileInputStream(manifest));
+                manifestFileStream = new FileInputStream(manifest);
+                document = documentBuilder.parse(manifestFileStream);
             } catch (Exception e) {
                 throw new MojoExecutionException("Unable to load feature manifest", e);
+            } finally {
+                if (manifestFileStream != null) {
+                    try {
+                        manifestFileStream.close();
+                    } catch (IOException e) {
+                        //throw new MojoExecutionException("Unable to close feature manifest file", e);
+                        e.printStackTrace();
+                    }
+                }
             }
         } else {
             document = documentBuilder.newDocument();
@@ -323,11 +397,11 @@ public class OutputFileGeneratorUtils {
         return document;
     }
 
-    private static ArrayList<Object> getMissingPlugins(FeatureResourceBundle resourceBundle, Document document) throws MojoExecutionException {
+    private static ArrayList<Bundle> getMissingPlugins(FeatureResourceBundle resourceBundle, Document document) throws MojoExecutionException {
         HashMap<String, Bundle> missingPlugins = new HashMap<String, Bundle>();
         ArrayList<Bundle> processedBundlesList = resourceBundle.getProcessedBundles();
         if (processedBundlesList == null || processedBundlesList.size() == 0) {
-            return new ArrayList<Object>();
+            return new ArrayList<Bundle>();
         }
         for (Bundle bundle : processedBundlesList) {
             missingPlugins.put(bundle.getArtifactId(), bundle);
@@ -344,11 +418,11 @@ public class OutputFileGeneratorUtils {
         }
 
 //        return returnArrayList(missingPlugins.values().toArray());
-        return new ArrayList<Object>(missingPlugins.values());
+        return new ArrayList<Bundle>(missingPlugins.values());
     }
 
     //TODO Duplicate code in getMissingImportPlugins and getMissingImportFeatures method. extract and create a single method.
-    private static ArrayList<Object> getMissingImportPlugins(FeatureResourceBundle resourceBundle, Document document) throws MojoExecutionException {
+    private static ArrayList<Bundle> getMissingImportPlugins(FeatureResourceBundle resourceBundle, Document document) throws MojoExecutionException {
         HashMap<String, Bundle> missingImportPlugins = new HashMap<String, Bundle>();
         ArrayList<Bundle> processedImportBundlesList = resourceBundle.getProcessedImportBundles();
 
@@ -361,8 +435,7 @@ public class OutputFileGeneratorUtils {
 
         NodeList requireNodeList = document.getDocumentElement().getElementsByTagName("require");
         if (requireNodeList == null || requireNodeList.getLength() == 0) {
-//            return returnArrayList(missingImportPlugins.values().toArray());
-            return new ArrayList<Object>(missingImportPlugins.values());
+            return new ArrayList<Bundle>(missingImportPlugins.values());
         }
 
         Node requireNode = requireNodeList.item(0);
@@ -370,8 +443,7 @@ public class OutputFileGeneratorUtils {
             Element requireElement = (Element) requireNode;
             NodeList importNodes = requireElement.getElementsByTagName("import");
             if (importNodes == null) {
-//                return returnArrayList(missingImportPlugins.values().toArray());
-                return new ArrayList<Object>(missingImportPlugins.values());
+                return new ArrayList<Bundle>(missingImportPlugins.values());
             }
             for (int i = 0; i < importNodes.getLength(); i++) {
                 Node node = importNodes.item(i);
@@ -381,13 +453,13 @@ public class OutputFileGeneratorUtils {
                 }
             }
         }
-//        return returnArrayList(missingImportPlugins.values().toArray());
-        return new ArrayList<Object>(missingImportPlugins.values());
+        return new ArrayList<Bundle>(missingImportPlugins.values());
     }
 
-    private static ArrayList<Object> getMissingImportFeatures(FeatureResourceBundle resourceBundle, Document document) throws MojoExecutionException {
+    private static ArrayList<Object> getMissingImportFeatures(FeatureResourceBundle resourceBundle, Document document)
+            throws MojoExecutionException {
         HashMap<String, ImportFeature> missingImportFeatures = new HashMap<String, ImportFeature>();
-        ArrayList<ImportFeature> processedImportFeaturesList = resourceBundle.getProcessedImportFeatures(); //processedImportFeatures;
+        ArrayList<ImportFeature> processedImportFeaturesList = resourceBundle.getProcessedImportFeatures();
         if (processedImportFeaturesList == null) {
             return null;
         }
@@ -397,7 +469,6 @@ public class OutputFileGeneratorUtils {
 
         NodeList requireNodeList = document.getDocumentElement().getElementsByTagName("require");
         if (requireNodeList == null || requireNodeList.getLength() == 0) {
-//            return returnArrayList(missingImportFeatures.values().toArray());
             return new ArrayList<Object>(missingImportFeatures.values());
         }
         Node requireNode = requireNodeList.item(0);
@@ -405,7 +476,6 @@ public class OutputFileGeneratorUtils {
             Element requireElement = (Element) requireNode;
             NodeList importNodes = requireElement.getElementsByTagName("import");
             if (importNodes == null) {
-//                return returnArrayList(missingImportFeatures.values().toArray());
                 return new ArrayList<Object>(missingImportFeatures.values());
             }
             for (int i = 0; i < importNodes.getLength(); i++) {
@@ -417,7 +487,6 @@ public class OutputFileGeneratorUtils {
             }
         }
         return new ArrayList<Object>(missingImportFeatures.values());
-        //return returnArrayList(missingImportFeatures.values().toArray());
     }
 
 //    private static ArrayList<Object> returnArrayList(Object[] arr) {

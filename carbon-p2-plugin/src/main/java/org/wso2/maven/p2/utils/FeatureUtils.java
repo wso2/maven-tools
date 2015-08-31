@@ -82,10 +82,12 @@ public class FeatureUtils {
                         feature.setOptional(true);
                     }
                     if (split.length > 2) {
-                        feature.setFeatureVersion(split[2]);
+                        feature.setFeatureVersion(BundleUtils.getOSGIVersion(split[2]));
+//                        feature.setFeatureVersion(split[2]);
                     }
                 } else {
-                    feature.setFeatureVersion(split[1]);
+                    feature.setFeatureVersion(BundleUtils.getOSGIVersion(split[1]));
+//                    feature.setFeatureVersion(split[1]);
                     if (split.length > 2) {
                         if (P2Utils.isMatchString(split[2])) {
                             match = split[2].toUpperCase();

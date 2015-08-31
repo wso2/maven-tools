@@ -17,9 +17,6 @@
 */
 package org.wso2.maven.p2.beans;
 
-import org.apache.maven.artifact.Artifact;
-import org.wso2.maven.p2.utils.BundleUtils;
-
 /**
  * Bean class representing an ImportFeature.
  */
@@ -28,7 +25,6 @@ public class ImportFeature {
     private String featureId;
     private String featureVersion;
     private String compatibility;
-    private Artifact artifact;
     private boolean isOptional;
 
     public void setFeatureId(String featureId) {
@@ -56,8 +52,10 @@ public class ImportFeature {
     }
 
     public void setFeatureVersion(String version) {
-        if (featureVersion == null || featureVersion.equals(""))
-            featureVersion = BundleUtils.getOSGIVersion(version);
+        featureVersion = version;
+//        if (featureVersion == null || featureVersion.equals("")) {
+//            featureVersion = BundleUtils.getOSGIVersion(version);
+//        }
     }
 
     public String getFeatureVersion() {

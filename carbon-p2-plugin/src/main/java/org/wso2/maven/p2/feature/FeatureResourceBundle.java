@@ -16,12 +16,11 @@
 
 package org.wso2.maven.p2.feature;
 
-import org.apache.maven.artifact.factory.ArtifactFactory;
 import org.apache.maven.artifact.repository.ArtifactRepository;
-import org.apache.maven.artifact.resolver.ArtifactResolver;
 import org.apache.maven.plugin.logging.Log;
 import org.apache.maven.project.MavenProject;
 import org.apache.maven.project.MavenProjectHelper;
+import org.apache.maven.repository.RepositorySystem;
 import org.wso2.maven.p2.beans.Bundle;
 import org.wso2.maven.p2.beans.ImportFeature;
 import org.wso2.maven.p2.beans.IncludedFeature;
@@ -63,9 +62,8 @@ public class FeatureResourceBundle {
     private ArrayList<Property> processedAdviceProperties;
     private ArrayList<IncludedFeature> processedIncludedFeatures;
 
-    private org.apache.maven.artifact.factory.ArtifactFactory artifactFactory;
+    private org.apache.maven.repository.RepositorySystem repositorySystem;
 
-    private org.apache.maven.artifact.resolver.ArtifactResolver resolver;
     private org.apache.maven.artifact.repository.ArtifactRepository localRepository;
     private java.util.List remoteRepositories;
     private MavenProject project;
@@ -200,20 +198,12 @@ public class FeatureResourceBundle {
         this.adviceFile = adviceFile;
     }
 
-    public ArtifactFactory getArtifactFactory() {
-        return artifactFactory;
+    public RepositorySystem getRepositorySystem() {
+        return repositorySystem;
     }
 
-    public void setArtifactFactory(ArtifactFactory artifactFactory) {
-        this.artifactFactory = artifactFactory;
-    }
-
-    public ArtifactResolver getResolver() {
-        return resolver;
-    }
-
-    public void setResolver(ArtifactResolver resolver) {
-        this.resolver = resolver;
+    public void setRepositorySystem(RepositorySystem repositorySystem) {
+        this.repositorySystem = repositorySystem;
     }
 
     public ArtifactRepository getLocalRepository() {

@@ -16,17 +16,14 @@
 
 package org.wso2.maven.p2.feature.utils;
 
-import org.apache.maven.artifact.Artifact;
-import org.apache.maven.artifact.resolver.ArtifactNotFoundException;
-import org.apache.maven.artifact.resolver.ArtifactResolutionException;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.project.MavenProject;
-import org.wso2.maven.p2.feature.FeatureResourceBundle;
-import org.wso2.maven.p2.feature.AdviceFile;
 import org.wso2.maven.p2.beans.Bundle;
 import org.wso2.maven.p2.beans.ImportFeature;
 import org.wso2.maven.p2.beans.IncludedFeature;
 import org.wso2.maven.p2.beans.Property;
+import org.wso2.maven.p2.feature.AdviceFile;
+import org.wso2.maven.p2.feature.FeatureResourceBundle;
 import org.wso2.maven.p2.utils.BundleUtils;
 import org.wso2.maven.p2.utils.FeatureUtils;
 import org.wso2.maven.p2.utils.MavenUtils;
@@ -42,14 +39,14 @@ public class InputParamProcessor {
 
     private java.util.List remoteRepositories;
     private org.apache.maven.artifact.repository.ArtifactRepository localRepository;
-    private org.apache.maven.artifact.factory.ArtifactFactory artifactFactory;
-    private org.apache.maven.artifact.resolver.ArtifactResolver resolver;
+    private org.apache.maven.repository.RepositorySystem repositorySystem;
     private MavenProject project;
     private AdviceFile adviceFile;
     private FeatureResourceBundle resourceBundle;
 
     /**
      * Constructs the InputParamProcessor by taking the feature resource bundle.
+     *
      * @param resourceBundle FeatureResourceBundle contains all the utility objects and data structures needed
      *                       for processing input values.
      */
@@ -57,14 +54,14 @@ public class InputParamProcessor {
         this.resourceBundle = resourceBundle;
         this.remoteRepositories = resourceBundle.getRemoteRepositories();
         this.localRepository = resourceBundle.getLocalRepository();
-        this.artifactFactory = resourceBundle.getArtifactFactory();
-        this.resolver = resourceBundle.getResolver();
+        this.repositorySystem = resourceBundle.getRepositorySystem();
         this.project = resourceBundle.getProject();
         this.adviceFile = resourceBundle.getAdviceFile();
     }
 
     /**
      * Generates processed bundles taken from pom.xml configuration.
+     *
      * @return processed bundles in an ArrayList&lt;Bundle&gt;
      * @throws MojoExecutionException
      */
@@ -74,6 +71,7 @@ public class InputParamProcessor {
 
     /**
      * Generates processed import bundles taken from pom.xml configuration.
+     *
      * @return processed import bundles in an ArrayList&lt;Bundle&gt;
      * @throws MojoExecutionException
      */
@@ -85,12 +83,13 @@ public class InputParamProcessor {
      * Gets an object ArrayList and populate the content into a ArrayList<Bundle> by casting it properly. The object
      * array may contain strings or Bundle objects.
      *
-     * @param bundles ArrayList of bundles
+     * @param bundles         ArrayList of bundles
      * @param isImportBundles set this true to get processed importBundles
      * @return ArrayList<Bundle>
      * @throws MojoExecutionException
      */
-    private ArrayList<Bundle> getProcessedBundlesList(ArrayList bundles, boolean isImportBundles) throws MojoExecutionException {
+    private ArrayList<Bundle> getProcessedBundlesList(ArrayList bundles, boolean isImportBundles)
+            throws MojoExecutionException {
         if (bundles == null || bundles.size() == 0) {
             return new ArrayList<Bundle>();
         }
@@ -103,8 +102,9 @@ public class InputParamProcessor {
                 throw new MojoExecutionException("Unknown bundle definition: " + obj.toString());
             }
             BundleUtils.resolveVersionForBundle(b, this.project);
+            b.setArtifact(MavenUtils.getResolvedArtifact(b, this.repositorySystem, this.remoteRepositories,
+                    this.localRepository));
 
-            b.setArtifact(getResolvedArtifact(b));
             if (isImportBundles) {
                 //TODO: The code throws an nullpointer exception when isExclude is true. Check with SameeraJ.
 //            if (!b.isExclude()) {
@@ -120,6 +120,7 @@ public class InputParamProcessor {
 
     /**
      * Generates the processed ImportFeatures from pom.xml configuration.
+     *
      * @return processed import features in an ArrayList&lt;ImportFeature&gt;
      * @throws MojoExecutionException
      */
@@ -136,7 +137,7 @@ public class InputParamProcessor {
             } else {
                 throw new MojoExecutionException("Unknown ImportFeature definition: " + obj.toString());
             }
-            f.setFeatureVersion(this.project.getVersion());
+            f.setFeatureVersion(BundleUtils.getOSGIVersion(this.project.getVersion()));
             processedImportFeatures.add(f);
         }
         return processedImportFeatures;
@@ -144,6 +145,7 @@ public class InputParamProcessor {
 
     /**
      * Generates the processed IncludedFeatures from an pom.xml configuration
+     *
      * @return processed included features in an ArrayList&lt;IncludedFeature&gt;
      * @throws MojoExecutionException
      */
@@ -159,11 +161,8 @@ public class InputParamProcessor {
                 IncludedFeature includedFeature = FeatureUtils.getIncludedFeature((String) obj);
                 if (includedFeature != null) {
                     includedFeature.setFeatureVersion(this.project.getVersion());
-                    Artifact artifact = this.artifactFactory.createArtifact(includedFeature.getGroupId(),
-                            includedFeature.getArtifactId(), includedFeature.getArtifactVersion(),
-                            Artifact.SCOPE_RUNTIME, "zip");
-                    includedFeature.setArtifact(
-                            MavenUtils.getResolvedArtifact(artifact, this.remoteRepositories, this.localRepository, this.resolver));
+                    includedFeature.setArtifact(MavenUtils.getResolvedArtifact(includedFeature, this.repositorySystem,
+                            this.remoteRepositories, this.localRepository));
                     processedIncludedFeatures.add(includedFeature);
                 }
             }
@@ -173,6 +172,7 @@ public class InputParamProcessor {
 
     /**
      * Returns processed AdviceProperties from the row adviceFile.
+     *
      * @return ArrayList&lt;Property&gt;
      * @throws MojoExecutionException
      */
@@ -190,18 +190,6 @@ public class InputParamProcessor {
             }
         }
         return processedAdviceProperties;
-    }
-
-    private Artifact getResolvedArtifact(Bundle bundle) throws MojoExecutionException {
-        Artifact artifact = this.artifactFactory.createArtifact(bundle.getGroupId(), bundle.getArtifactId(), bundle.getVersion(), Artifact.SCOPE_RUNTIME, "jar");
-        try {
-            this.resolver.resolve(artifact, this.remoteRepositories, this.localRepository);
-        } catch (ArtifactResolutionException e) {
-            throw new MojoExecutionException("ERROR", e);
-        } catch (ArtifactNotFoundException e) {
-            throw new MojoExecutionException("ERROR", e);
-        }
-        return artifact;
     }
 
 }
