@@ -28,7 +28,7 @@ import org.wso2.maven.p2.beans.ImportFeature;
 import org.wso2.maven.p2.beans.IncludedFeature;
 import org.wso2.maven.p2.beans.Property;
 import org.wso2.maven.p2.commons.Generator;
-import org.wso2.maven.p2.feature.utils.InputParamProcessor;
+import org.wso2.maven.p2.feature.utils.BeanGeneratorUtils;
 import org.wso2.maven.p2.feature.utils.FeatureFileGeneratorUtils;
 import org.wso2.maven.p2.utils.BundleUtils;
 import org.wso2.maven.p2.utils.FileManagementUtil;
@@ -82,7 +82,10 @@ public class FeatureGenerator extends Generator {
      */
     @Override
     public void generate() throws MojoExecutionException, MojoFailureException {
+        //Generates bean classes from the xml configuration provided through the pom.xml in plugin configuration
         generateBeansFromInputs();
+
+        //Setup
         setupTempOutputFolderStructure();
         copyFeatureResources();
         generateFeatureOutputFiles();
@@ -97,7 +100,7 @@ public class FeatureGenerator extends Generator {
      * @throws MojoExecutionException
      */
     private void generateBeansFromInputs() throws MojoExecutionException {
-        InputParamProcessor paramProcessor = new InputParamProcessor(this.resourceBundle);
+        BeanGeneratorUtils paramProcessor = new BeanGeneratorUtils(this.resourceBundle);
         getLog().info("Processing bundles");
         processedBundles = paramProcessor.getProcessedBundlesList();
         getLog().info("Processing import bundles");
@@ -156,7 +159,7 @@ public class FeatureGenerator extends Generator {
      */
     private void copyAllIncludedArtifacts() throws MojoExecutionException {
         copyBundles();
-        //copyImportBundles(); Commmentted from code review
+        //copyImportBundles(); Commented from code review
         copyIncludedFeatures();
     }
 

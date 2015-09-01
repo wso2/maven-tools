@@ -35,7 +35,7 @@ import java.util.ArrayList;
  * This class takes the configuration data entered into the plugin and cast it to the internal
  * data representation. This sole purpose of this is to reduce the complexity of the FeatureGenerator.java.
  */
-public class InputParamProcessor {
+public class BeanGeneratorUtils {
 
     private java.util.List remoteRepositories;
     private org.apache.maven.artifact.repository.ArtifactRepository localRepository;
@@ -45,12 +45,12 @@ public class InputParamProcessor {
     private FeatureResourceBundle resourceBundle;
 
     /**
-     * Constructs the InputParamProcessor by taking the feature resource bundle.
+     * Constructs the BeanGeneratorUtils by taking the feature resource bundle.
      *
      * @param resourceBundle FeatureResourceBundle contains all the utility objects and data structures needed
      *                       for processing input values.
      */
-    public InputParamProcessor(FeatureResourceBundle resourceBundle) {
+    public BeanGeneratorUtils(FeatureResourceBundle resourceBundle) {
         this.resourceBundle = resourceBundle;
         this.remoteRepositories = resourceBundle.getRemoteRepositories();
         this.localRepository = resourceBundle.getLocalRepository();

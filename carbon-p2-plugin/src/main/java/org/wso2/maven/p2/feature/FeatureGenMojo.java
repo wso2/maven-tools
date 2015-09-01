@@ -17,14 +17,17 @@
 */
 package org.wso2.maven.p2.feature;
 
+import org.apache.maven.artifact.repository.ArtifactRepository;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
+import org.apache.maven.plugins.annotations.Component;
 import org.apache.maven.plugins.annotations.LifecyclePhase;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.project.MavenProject;
 import org.apache.maven.project.MavenProjectHelper;
+import org.apache.maven.repository.RepositorySystem;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -32,153 +35,100 @@ import java.util.Properties;
 
 /**
  * Write environment information for the current build to file.
- *
- * @goal p2-feature-gen
- * @phase package
  */
-@Mojo(name="p2-feature-gen", defaultPhase = LifecyclePhase.PACKAGE)
+@Mojo(name = "p2-feature-gen", defaultPhase = LifecyclePhase.PACKAGE)
 public class FeatureGenMojo extends AbstractMojo {
 
-    /**
-     * feature id
-     *
-     * @parameter
-     * @required
-     */
+
     @Parameter(required = true)
     private String id;
 
-    /**
-     * version
-     *
-     * @parameter default-value="${project.version}"
-     */
+    @Parameter(defaultValue = "${project.version}")
     private String version;
 
-    /**
-     * label of the feature
-     *
-     * @parameter default-value="${project.name}"
-     */
+    @Parameter(defaultValue = "${project.name}")
     private String label;
 
-    /**
-     * description of the feature
-     *
-     * @parameter default-value="${project.description}"
-     */
+    @Parameter(defaultValue = "${project.description}")
     private String description;
 
-    /**
-     * provider name
-     *
-     * @parameter default-value="%providerName"
-     */
+    @Parameter(defaultValue = "%providerName")
     private String providerName;
 
-    /**
-     * copyrite
-     *
-     * @parameter default-value="%copyright"
-     */
+    @Parameter(defaultValue = "%copyright")
     private String copyright;
 
-    /**
-     * licence url
-     *
-     * @parameter default-value="%licenseURL"
-     */
+    @Parameter(defaultValue = "%licenseURL")
     private String licenceUrl;
 
-    /**
-     * licence
-     *
-     * @parameter default-value="%license"
-     */
+    @Parameter(defaultValue = "%license")
     private String licence;
 
     /**
      * path to manifest file
-     *
-     * @parameter
      */
+    @Parameter
     private File manifest;
 
     /**
      * path to properties file
-     *
-     * @parameter
      */
+    @Parameter
     private File propertiesFile;
 
     /**
      * list of properties
      * precedance over propertiesFile
-     *
-     * @parameter
      */
+    @Parameter
     private Properties properties;
 
     /**
      * Collection of bundles
-     *
-     * @parameter
      */
+    @Parameter
     private ArrayList bundles;
 
     /**
      * Collection of import bundles
-     *
-     * @parameter
      */
+    @Parameter
     private ArrayList importBundles;
 
     /**
      * Collection of required Features
-     *
-     * @parameter
      */
+    @Parameter
     private ArrayList importFeatures;
 
     /**
      * Collection of required Features
-     *
-     * @parameter
      */
+    @Parameter
     private ArrayList includedFeatures;
 
     /**
      * define advice file content
-     *
-     * @parameter
      */
+    @Parameter
     private AdviceFile adviceFile;
 
-    /**
-     * @component
-     */
-    private org.apache.maven.repository.RepositorySystem repositorySystem;
+    @Component
+    private RepositorySystem repositorySystem;
 
-    /**
-     * @parameter default-value="${localRepository}"
-     */
-    private org.apache.maven.artifact.repository.ArtifactRepository localRepository;
+    @Parameter(defaultValue = "${localRepository}")
+    private ArtifactRepository localRepository;
 
-    /**
-     * @parameter default-value="${project.remoteArtifactRepositories}"
-     */
+    @Parameter(defaultValue = "${project.remoteArtifactRepositories}")
     private java.util.List remoteRepositories;
 
-    /**
-     * @parameter default-value="${project}"
-     */
+    @Parameter(defaultValue = "${project}")
     private MavenProject project;
 
     /**
      * Maven ProjectHelper.
-     *
-     * @component
      */
+    @Component
     private MavenProjectHelper projectHelper;
 
     public void execute() throws MojoExecutionException, MojoFailureException {
