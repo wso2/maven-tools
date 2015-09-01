@@ -21,19 +21,24 @@ import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
 
 /**
- * The Generator class must be extended by all the generator classes which implement the the plugin logic.
+ * The Generator class must be extended by all the generator classes which implement the the maven goal logic.
  */
 public abstract class Generator {
     private final Log log;
 
     /**
      * Constructor taking Log object as a parameter. The log is needed to log the generator activity flow.
-     * @param logger
+     * @param logger needs to set by the logger inherited via AbstractMojo class.
      */
     public Generator(Log logger) {
         this.log = logger;
     }
 
+    /**
+     * Override generate method in the Generator child classes and insert the maven goal generation logic.
+     * @throws MojoExecutionException
+     * @throws MojoFailureException
+     */
     public abstract void generate()  throws MojoExecutionException, MojoFailureException;
 
     protected Log getLog() {

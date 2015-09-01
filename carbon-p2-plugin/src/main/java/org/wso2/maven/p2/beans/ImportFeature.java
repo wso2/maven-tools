@@ -40,25 +40,25 @@ public class ImportFeature {
     }
 
     public String getCompatibility() {
-        return compatibility;
+        return this.compatibility;
     }
 
     public boolean isOptional() {
-        return isOptional;
+        return this.isOptional;
     }
 
     public void setOptional(boolean optional) {
-        isOptional = optional;
+        this.isOptional = optional;
     }
 
     public void setFeatureVersion(String version) {
-        featureVersion = version;
+        this.featureVersion = version;
 //        if (featureVersion == null || featureVersion.equals("")) {
 //            featureVersion = BundleUtils.getOSGIVersion(version);
 //        }
     }
 
     public String getFeatureVersion() {
-        return featureVersion;
+        return this.featureVersion;
     }
 }

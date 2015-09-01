@@ -16,7 +16,6 @@
 package org.wso2.maven.p2.beans;
 
 import org.apache.maven.artifact.Artifact;
-import org.wso2.maven.p2.utils.BundleUtils;
 
 /**
  * Bean class representing an IncludedFeature.
@@ -84,9 +83,11 @@ public class IncludedFeature {
     }
 
     public void setFeatureVersion(String version) {
-        if (artifactVersion == null || artifactVersion.equals("")) {
-            artifactVersion = version;
-            featureVersion = BundleUtils.getOSGIVersion(version);
-        }
+
+        this.featureVersion = version;
+//        if (artifactVersion == null || artifactVersion.equals("")) {
+//            artifactVersion = version;
+//            featureVersion = BundleUtils.getOSGIVersion(version);
+//        }
     }
 }

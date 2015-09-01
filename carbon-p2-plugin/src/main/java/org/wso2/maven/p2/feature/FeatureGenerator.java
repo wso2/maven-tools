@@ -82,6 +82,7 @@ public class FeatureGenerator extends Generator {
      * @throws MojoExecutionException
      * @throws MojoFailureException
      */
+    @Override
     public void generate() throws MojoExecutionException, MojoFailureException {
         processInputs();
         createAndSetupPaths();

@@ -105,14 +105,14 @@ public class InputParamProcessor {
             b.setArtifact(MavenUtils.getResolvedArtifact(b, this.repositorySystem, this.remoteRepositories,
                     this.localRepository));
 
-            if (isImportBundles) {
-                //TODO: The code throws an nullpointer exception when isExclude is true. Check with SameeraJ.
-//            if (!b.isExclude()) {
-//                b.setArtifact(getResolvedArtifact(b));
-//            } else {
-//                b.resolveOSGIInfo();
-//            }
+/*            if (isImportBundles) {
+                //TODO: The code throws an null pointer exception when isExclude is true. Check with SameeraJ.
+            if (!b.isExclude()) {
+                b.setArtifact(getResolvedArtifact(b));
+            } else {
+                b.resolveOSGIInfo();
             }
+            }*/
             processedBundles.add(b);
         }
         return processedBundles;
@@ -160,7 +160,8 @@ public class InputParamProcessor {
             if (obj instanceof String) {
                 IncludedFeature includedFeature = FeatureUtils.getIncludedFeature((String) obj);
                 if (includedFeature != null) {
-                    includedFeature.setFeatureVersion(this.project.getVersion());
+                    includedFeature.setArtifactVersion(this.project.getVersion());
+                    includedFeature.setFeatureVersion(BundleUtils.getOSGIVersion(this.project.getVersion()));
                     includedFeature.setArtifact(MavenUtils.getResolvedArtifact(includedFeature, this.repositorySystem,
                             this.remoteRepositories, this.localRepository));
                     processedIncludedFeatures.add(includedFeature);

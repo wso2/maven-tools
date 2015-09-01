@@ -183,6 +183,7 @@ public class FeatureGenMojo extends AbstractMojo {
 
     /**
      * Generates the FeatureGenerator object in order to generate the feature.
+     *
      * @return FeatureGenerator
      */
     public FeatureGenerator constructFeatureGenerator() {
@@ -212,8 +213,6 @@ public class FeatureGenMojo extends AbstractMojo {
 
         return new FeatureGenerator(resourceBundle, getLog());
     }
-
-
 
 
 }

@@ -118,23 +118,23 @@ public class Bundle {
     }
 
     private void resolveOSGIInfo() throws MojoExecutionException {
-        String BUNDLE_VERSION = "Bundle-Version";
-        String BUNDLE_SYMBOLIC_NAME = "Bundle-SymbolicName";
+        String bundleVersionStr = "Bundle-Version";
+        String bundleSymbolicNameStr = "Bundle-SymbolicName";
         JarFile jarFile = null;
         try {
             jarFile = new JarFile(getArtifact().getFile());
             Manifest manifest = jarFile.getManifest();
             if (getBundleSymbolicName() == null) {
-                String value = manifest.getMainAttributes().getValue(BUNDLE_SYMBOLIC_NAME);
+                String value = manifest.getMainAttributes().getValue(bundleSymbolicNameStr);
                 if (value == null) {
-                    throw new MojoExecutionException(BUNDLE_SYMBOLIC_NAME +
+                    throw new MojoExecutionException(bundleSymbolicNameStr +
                             " cannot be found in the bundle: " + getArtifact().getFile());
                 }
                 String[] split = value.split(";");
                 setBundleSymbolicName(split[0]);
             }
             if (getBundleVersion() == null) {
-                setBundleVersion(manifest.getMainAttributes().getValue(BUNDLE_VERSION));
+                setBundleVersion(manifest.getMainAttributes().getValue(bundleVersionStr));
             }
             if (getBundleSymbolicName() == null || getBundleVersion() == null) {
                 throw new MojoExecutionException("Artifact doesn't contain OSGI info: " + getGroupId() + ":" +

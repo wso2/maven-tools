@@ -64,8 +64,9 @@ public class OutputFileGeneratorUtils {
 
     /**
      * Generates the feature property file.
-     * @param resourceBundle containing the project resources
-     * @param featurePropertyFile  File Object representing the feature property file
+     *
+     * @param resourceBundle      containing the project resources
+     * @param featurePropertyFile File Object representing the feature property file
      * @throws MojoExecutionException
      */
     public static void createPropertiesFile(FeatureResourceBundle resourceBundle, File featurePropertyFile)
@@ -105,7 +106,7 @@ public class OutputFileGeneratorUtils {
             } catch (Exception e) {
                 throw new MojoExecutionException("Unable to load the given properties file", e);
             } finally {
-                if(propertyFileStream != null) {
+                if (propertyFileStream != null) {
                     try {
                         propertyFileStream.close();
                     } catch (IOException e) {
@@ -127,11 +128,13 @@ public class OutputFileGeneratorUtils {
 
     /**
      * Creates manifest file for a feature.
-     * @param resourceBundle containing the project resources
+     *
+     * @param resourceBundle      containing the project resources
      * @param featureManifestFile File Object representing the manifest file
      * @throws MojoExecutionException
      */
-    public static void createManifestMFFile(FeatureResourceBundle resourceBundle, File featureManifestFile) throws MojoExecutionException {
+    public static void createManifestMFFile(FeatureResourceBundle resourceBundle, File featureManifestFile)
+            throws MojoExecutionException {
         PrintWriter pw = null;
         try {
             resourceBundle.getLog().info("Generating MANIFEST.MF");
@@ -141,7 +144,7 @@ public class OutputFileGeneratorUtils {
         } catch (Exception e) {
             throw new MojoExecutionException("Unable to create manifest file", e);
         } finally {
-            if(pw != null) {
+            if (pw != null) {
                 pw.close();
             }
         }
@@ -149,8 +152,9 @@ public class OutputFileGeneratorUtils {
 
     /**
      * Generates the P2Inf file.
+     *
      * @param resourceBundle containing the project resources
-     * @param p2InfFile  File object representing the p2inf file
+     * @param p2InfFile      File object representing the p2inf file
      * @throws MojoExecutionException
      */
     public static void createP2Inf(FeatureResourceBundle resourceBundle, File p2InfFile) throws MojoExecutionException {
@@ -228,6 +232,7 @@ public class OutputFileGeneratorUtils {
 
     /**
      * Generates the feature.xml file for a feature.
+     *
      * @param resourceBundle containing the project resources
      * @param featureXmlFile File object representing the feature xml file
      * @throws MojoExecutionException
@@ -397,7 +402,8 @@ public class OutputFileGeneratorUtils {
         return document;
     }
 
-    private static ArrayList<Bundle> getMissingPlugins(FeatureResourceBundle resourceBundle, Document document) throws MojoExecutionException {
+    private static ArrayList<Bundle> getMissingPlugins(FeatureResourceBundle resourceBundle, Document document)
+            throws MojoExecutionException {
         HashMap<String, Bundle> missingPlugins = new HashMap<String, Bundle>();
         ArrayList<Bundle> processedBundlesList = resourceBundle.getProcessedBundles();
         if (processedBundlesList == null || processedBundlesList.size() == 0) {
@@ -412,7 +418,8 @@ public class OutputFileGeneratorUtils {
         for (int i = 0; i < existingPlugins.getLength(); i++) {
             Node node = existingPlugins.item(i);
             Node namedItem = node.getAttributes().getNamedItem("id");
-            if (namedItem != null && namedItem.getTextContent() != null && missingPlugins.containsKey(namedItem.getTextContent())) {
+            if (namedItem != null && namedItem.getTextContent() != null &&
+                    missingPlugins.containsKey(namedItem.getTextContent())) {
                 missingPlugins.remove(namedItem.getTextContent());
             }
         }
@@ -422,7 +429,8 @@ public class OutputFileGeneratorUtils {
     }
 
     //TODO Duplicate code in getMissingImportPlugins and getMissingImportFeatures method. extract and create a single method.
-    private static ArrayList<Bundle> getMissingImportPlugins(FeatureResourceBundle resourceBundle, Document document) throws MojoExecutionException {
+    private static ArrayList<Bundle> getMissingImportPlugins(FeatureResourceBundle resourceBundle, Document document)
+            throws MojoExecutionException {
         HashMap<String, Bundle> missingImportPlugins = new HashMap<String, Bundle>();
         ArrayList<Bundle> processedImportBundlesList = resourceBundle.getProcessedImportBundles();
 
@@ -448,7 +456,8 @@ public class OutputFileGeneratorUtils {
             for (int i = 0; i < importNodes.getLength(); i++) {
                 Node node = importNodes.item(i);
                 Node namedItem = node.getAttributes().getNamedItem("plugin");
-                if (namedItem != null && namedItem.getTextContent() != null && missingImportPlugins.containsKey(namedItem.getTextContent())) {
+                if (namedItem != null && namedItem.getTextContent() != null &&
+                        missingImportPlugins.containsKey(namedItem.getTextContent())) {
                     missingImportPlugins.remove(namedItem.getTextContent());
                 }
             }
@@ -481,7 +490,8 @@ public class OutputFileGeneratorUtils {
             for (int i = 0; i < importNodes.getLength(); i++) {
                 Node node = importNodes.item(i);
                 Node namedItem = node.getAttributes().getNamedItem("feature");
-                if (namedItem != null && namedItem.getTextContent() != null && missingImportFeatures.containsKey(namedItem.getTextContent())) {
+                if (namedItem != null && namedItem.getTextContent() != null &&
+                        missingImportFeatures.containsKey(namedItem.getTextContent())) {
                     missingImportFeatures.remove(namedItem.getTextContent());
                 }
             }
