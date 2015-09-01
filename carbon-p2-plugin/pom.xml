@@ -63,6 +63,11 @@
             		<artifactId>junit</artifactId>
             		<scope>test</scope>
         	</dependency>
+        <dependency>
+            <groupId>org.apache.maven.plugin-tools</groupId>
+            <artifactId>maven-plugin-annotations</artifactId>
+            <version>3.3</version>
+        </dependency>
     </dependencies>
 
     <build>

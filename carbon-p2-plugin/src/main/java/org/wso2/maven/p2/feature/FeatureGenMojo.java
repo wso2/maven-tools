@@ -20,6 +20,9 @@ package org.wso2.maven.p2.feature;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
+import org.apache.maven.plugins.annotations.LifecyclePhase;
+import org.apache.maven.plugins.annotations.Mojo;
+import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.project.MavenProject;
 import org.apache.maven.project.MavenProjectHelper;
 
@@ -33,6 +36,7 @@ import java.util.Properties;
  * @goal p2-feature-gen
  * @phase package
  */
+@Mojo(name="p2-feature-gen", defaultPhase = LifecyclePhase.PACKAGE)
 public class FeatureGenMojo extends AbstractMojo {
 
     /**
@@ -41,6 +45,7 @@ public class FeatureGenMojo extends AbstractMojo {
      * @parameter
      * @required
      */
+    @Parameter(required = true)
     private String id;
 
     /**
@@ -210,8 +215,9 @@ public class FeatureGenMojo extends AbstractMojo {
         resourceBundle.setProject(project);
         resourceBundle.setProjectHelper(projectHelper);
         resourceBundle.setLog(getLog());
-
-        return new FeatureGenerator(resourceBundle, getLog());
+        FeatureGenerator generator = new FeatureGenerator(resourceBundle);
+        generator.setLog(getLog());
+        return generator;
     }
 
 

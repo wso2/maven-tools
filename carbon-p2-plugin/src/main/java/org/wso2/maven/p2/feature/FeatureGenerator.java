@@ -19,7 +19,6 @@ package org.wso2.maven.p2.feature;
 import org.apache.maven.model.Resource;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
-import org.apache.maven.plugin.logging.Log;
 import org.apache.maven.project.MavenProject;
 import org.apache.maven.project.MavenProjectHelper;
 import org.codehaus.plexus.util.DirectoryScanner;
@@ -30,7 +29,7 @@ import org.wso2.maven.p2.beans.IncludedFeature;
 import org.wso2.maven.p2.beans.Property;
 import org.wso2.maven.p2.commons.Generator;
 import org.wso2.maven.p2.feature.utils.InputParamProcessor;
-import org.wso2.maven.p2.feature.utils.OutputFileGeneratorUtils;
+import org.wso2.maven.p2.feature.utils.FeatureFileGeneratorUtils;
 import org.wso2.maven.p2.utils.BundleUtils;
 import org.wso2.maven.p2.utils.FileManagementUtil;
 
@@ -69,8 +68,7 @@ public class FeatureGenerator extends Generator {
      *
      * @param resourceBundle FeatureResourceBundle
      */
-    public FeatureGenerator(FeatureResourceBundle resourceBundle, Log logger) {
-        super(logger);
+    public FeatureGenerator(FeatureResourceBundle resourceBundle) {
         this.resourceBundle = resourceBundle;
         this.project = resourceBundle.getProject();
         this.projectHelper = resourceBundle.getProjectHelper();
@@ -84,20 +82,21 @@ public class FeatureGenerator extends Generator {
      */
     @Override
     public void generate() throws MojoExecutionException, MojoFailureException {
-        processInputs();
-        createAndSetupPaths();
-        copyResources();
-        OutputFileGeneratorUtils.createFeatureXml(resourceBundle, featureXmlFile);
-        OutputFileGeneratorUtils.createPropertiesFile(resourceBundle, featurePropertyFile);
-        OutputFileGeneratorUtils.createManifestMFFile(resourceBundle, featureManifestFile);
-        OutputFileGeneratorUtils.createP2Inf(resourceBundle, p2InfFile);
-        copyAllDependencies();
-        createArchive();
+        generateBeansFromInputs();
+        setupTempOutputFolderStructure();
+        copyFeatureResources();
+        generateFeatureOutputFiles();
+        copyAllIncludedArtifacts();
+        createFeatureArchive();
         deployArtifact();
         performMopUp();
     }
 
-    private void processInputs() throws MojoExecutionException {
+    /**
+     * Generates internal bean objects from the plugin configuration passed in through the pom.xml
+     * @throws MojoExecutionException
+     */
+    private void generateBeansFromInputs() throws MojoExecutionException {
         InputParamProcessor paramProcessor = new InputParamProcessor(this.resourceBundle);
         getLog().info("Processing bundles");
         processedBundles = paramProcessor.getProcessedBundlesList();
@@ -117,7 +116,17 @@ public class FeatureGenerator extends Generator {
         resourceBundle.setProcessedAdviceProperties(processedAdviceProperties);
     }
 
-    private void createAndSetupPaths() {
+    private void generateFeatureOutputFiles() throws MojoExecutionException {
+        FeatureFileGeneratorUtils.createFeatureXml(resourceBundle, featureXmlFile);
+        FeatureFileGeneratorUtils.createPropertiesFile(resourceBundle, featurePropertyFile);
+        FeatureFileGeneratorUtils.createManifestMFFile(resourceBundle, featureManifestFile);
+        FeatureFileGeneratorUtils.createP2Inf(resourceBundle, p2InfFile);
+    }
+
+    /**
+     * Set up the temporary output folder structure.
+     */
+    private void setupTempOutputFolderStructure() throws MojoExecutionException {
         getLog().info("Setting up folder structure");
         File destFolder = new File(project.getBasedir(), "target");
         rowOutputFolder = new File(destFolder, "raw");
@@ -131,8 +140,13 @@ public class FeatureGenerator extends Generator {
         p2InfFile = new File(featureIdFolder, "p2.inf");
         featureManifestFile = new File(featureMetaInfFolder, "MANIFEST.MF");
         featureZipFile = new File(destFolder, project.getArtifactId() + "-" + project.getVersion() + ".zip");
-        featureMetaInfFolder.mkdirs();
-        pluginsFolder.mkdirs();
+        if (!featureMetaInfFolder.mkdirs()) {
+            throw new MojoExecutionException("Unable to create folder " + featureMetaInfFolder.getAbsolutePath());
+        }
+        if (!pluginsFolder.mkdirs()) {
+            throw new MojoExecutionException("Unable to create folder " + pluginsFolder.getAbsolutePath());
+        }
+
     }
 
     /**
@@ -140,9 +154,9 @@ public class FeatureGenerator extends Generator {
      *
      * @throws MojoExecutionException
      */
-    private void copyAllDependencies() throws MojoExecutionException {
+    private void copyAllIncludedArtifacts() throws MojoExecutionException {
         copyBundles();
-        copyImportBundles();
+        //copyImportBundles(); Commmentted from code review
         copyIncludedFeatures();
     }
 
@@ -210,7 +224,7 @@ public class FeatureGenerator extends Generator {
         }
     }
 
-    private void createArchive() throws MojoExecutionException {
+    private void createFeatureArchive() throws MojoExecutionException {
         getLog().info("Generating feature archive: " + featureZipFile.getAbsolutePath());
         FileManagementUtil.zipFolder(rowOutputFolder.getAbsolutePath(), featureZipFile.getAbsolutePath());
     }
@@ -226,7 +240,7 @@ public class FeatureGenerator extends Generator {
      * Copy maven project resources into the output feature folder.
      * @throws MojoExecutionException
      */
-    private void copyResources() throws MojoExecutionException {
+    private void copyFeatureResources() throws MojoExecutionException {
         //The following code was taken from the maven bundle plugin and updated suit the purpose
         List<Resource> resources = project.getResources();
         for (Resource resource : resources) {
@@ -256,7 +270,9 @@ public class FeatureGenerator extends Generator {
 
                     try {
                         if (fromPath.isDirectory() && !toPath.exists()) {
-                            toPath.mkdirs();
+                            if(!toPath.mkdirs()) {
+                                throw new MojoExecutionException("Unable create directory: " + toPath.getAbsolutePath());
+                            }
                         } else {
                             FileManagementUtil.copy(fromPath, toPath);
                         }

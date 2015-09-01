@@ -58,7 +58,7 @@ import java.util.Properties;
 /**
  * Utility class which will generate output files that are needed to generate a particular feature.
  */
-public class OutputFileGeneratorUtils {
+public class FeatureFileGeneratorUtils {
 
     private static final String DEFAULT_ENCODING = "UTF-8";
 

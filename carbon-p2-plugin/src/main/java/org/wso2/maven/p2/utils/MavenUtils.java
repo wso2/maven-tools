@@ -100,7 +100,8 @@ public class MavenUtils {
     }
 
     private static Artifact getResolvedArtifact(String groupId, String artifactId, String version,
-                                                RepositorySystem repositorySystem, List remoteRepositories, ArtifactRepository localRepository) {
+                                                RepositorySystem repositorySystem, List remoteRepositories,
+                                                ArtifactRepository localRepository) {
 
         Artifact artifact = repositorySystem.createArtifact(groupId, artifactId, version, Artifact.SCOPE_RUNTIME, "jar");
 

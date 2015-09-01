@@ -22,6 +22,7 @@ import org.apache.maven.project.MavenProject;
 import org.wso2.maven.p2.beans.Bundle;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Properties;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -93,6 +94,11 @@ public class BundleUtils {
         }
 
         Properties properties = project.getProperties();
+//        for(Map.Entry<Object, Object> obj : properties.entrySet()) {
+//            bundle.setVersion(bundle.getVersion().replaceAll(Pattern.quote("${" + obj.getKey() + "}"),
+//                    obj.getValue().toString()));
+//        }
+
         for (Object key : properties.keySet()) {
             bundle.setVersion(bundle.getVersion().replaceAll(Pattern.quote("${" + key + "}"),
                     properties.get(key).toString()));
@@ -182,7 +188,7 @@ public class BundleUtils {
 
             /* if there's no qualifier just fill with 0s */
             if (qualifier == null) {
-                osgiVersion = getOSGIVersion(major, minor, service, qualifier);
+                osgiVersion = getOSGIVersion(major, minor, null, null);
             } else {
                 /* if last portion is only numbers then it's not a qualifier */
                 Matcher qualifierMatcher = ONLY_NUMBERS.matcher(qualifier);
