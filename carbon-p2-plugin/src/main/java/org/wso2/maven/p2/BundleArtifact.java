@@ -29,7 +29,7 @@ public class BundleArtifact extends Bundle {
 			if (split.length==3) bundleArtifact.setVersion(split[2]);
 			return bundleArtifact;
 		}
-		throw new MojoExecutionException("Insufficient artifact information provided to determine the feature: "+bundleArtifactDefinition) ; 
+		throw new MojoExecutionException("Insufficient artifact information provided to determine the feature: "+bundleArtifactDefinition) ;
 	}
 	public static BundleArtifact getBundleArtifact(String bundleArtifactDefinition) throws MojoExecutionException{
 		return getBundleArtifact(bundleArtifactDefinition, new BundleArtifact());

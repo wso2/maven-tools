@@ -17,6 +17,8 @@
 */
 package org.wso2.maven.p2;
 
+import org.wso2.maven.p2.repo.RepositoryGenMojo;
+
 import java.net.URL;
 
 public class P2Repository {

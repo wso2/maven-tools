@@ -1,0 +1,238 @@
+/*
+ *  Copyright (c) 2015, WSO2 Inc. (http://www.wso2.org) All Rights Reserved.
+ *
+ *  Licensed under the Apache License, Version 2.0 (the "License");
+ *  you may not use this file except in compliance with the License.
+ *  You may obtain a copy of the License at
+ *
+ *  http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *  Unless required by applicable law or agreed to in writing, software
+ *  distributed under the License is distributed on an "AS IS" BASIS,
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *  See the License for the specific language governing permissions and
+ *  limitations under the License.
+ */
+
+package org.wso2.maven.p2.repo;
+
+import org.apache.maven.artifact.factory.ArtifactFactory;
+import org.apache.maven.artifact.repository.ArtifactRepository;
+import org.apache.maven.artifact.resolver.ArtifactResolver;
+import org.apache.maven.plugin.logging.Log;
+import org.apache.maven.project.MavenProject;
+import org.eclipse.tycho.p2.facade.internal.P2ApplicationLauncher;
+import org.wso2.maven.p2.EquinoxLauncher;
+import org.wso2.maven.p2.P2Profile;
+
+import java.net.URL;
+import java.util.ArrayList;
+import java.util.List;
+
+public class RepositoryResourceBundle {
+
+    private String name;
+    private URL metadataRepository;
+    private URL artifactRepository;
+
+    private ArrayList featureArtifacts;
+
+    private ArrayList bundleArtifacts;
+    private ArrayList categories;
+    /**
+     * flag indicating whether the artifacts should be published to the repository. When this flag is not set,
+     * the actual bytes underlying the artifact will not be copied, but the repository index will be created.
+     * When this option is not specified, it is recommended to set the artifactRepository to be in the same location
+     * as the source (-source)
+     *
+     * @parameter
+     */
+    private boolean publishArtifacts;
+
+    /**
+     * Type of Artifact (War,Jar,etc)
+     *
+     */
+    private boolean publishArtifactRepository;
+
+    /**
+     * Equinox Launcher
+
+     *
+     */
+    private EquinoxLauncher equinoxLauncher;
+
+    /**
+     * Equinox p2 configuration path
+     *
+     */
+    private P2Profile p2Profile;
+
+    private MavenProject project;
+
+
+    private boolean archive;
+
+    private org.apache.maven.artifact.factory.ArtifactFactory artifactFactory;
+    private org.apache.maven.artifact.resolver.ArtifactResolver resolver;
+    private org.apache.maven.artifact.repository.ArtifactRepository localRepository;
+    private List remoteRepositories;
+    private P2ApplicationLauncher launcher;
+    private int forkedProcessTimeoutInSeconds;
+
+    private Log log;
+
+    public String getName() {
+        return name;
+    }
+
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public URL getMetadataRepository() {
+        return metadataRepository;
+    }
+
+    public void setMetadataRepository(URL metadataRepository) {
+        this.metadataRepository = metadataRepository;
+    }
+
+    public URL getArtifactRepository() {
+        return artifactRepository;
+    }
+
+    public void setArtifactRepository(URL artifactRepository) {
+        this.artifactRepository = artifactRepository;
+    }
+
+    public ArrayList getFeatureArtifacts() {
+        return featureArtifacts;
+    }
+
+    public void setFeatureArtifacts(ArrayList featureArtifacts) {
+        this.featureArtifacts = featureArtifacts;
+    }
+
+    public ArrayList getBundleArtifacts() {
+        return bundleArtifacts;
+    }
+
+    public void setBundleArtifacts(ArrayList bundleArtifacts) {
+        this.bundleArtifacts = bundleArtifacts;
+    }
+
+    public ArrayList getCategories() {
+        return categories;
+    }
+
+    public void setCategories(ArrayList categories) {
+        this.categories = categories;
+    }
+
+    public boolean isPublishArtifacts() {
+        return publishArtifacts;
+    }
+
+    public void setPublishArtifacts(boolean publishArtifacts) {
+        this.publishArtifacts = publishArtifacts;
+    }
+
+    public boolean isPublishArtifactRepository() {
+        return publishArtifactRepository;
+    }
+
+    public void setPublishArtifactRepository(boolean publishArtifactRepository) {
+        this.publishArtifactRepository = publishArtifactRepository;
+    }
+
+    public EquinoxLauncher getEquinoxLauncher() {
+        return equinoxLauncher;
+    }
+
+    public void setEquinoxLauncher(EquinoxLauncher equinoxLauncher) {
+        this.equinoxLauncher = equinoxLauncher;
+    }
+
+    public P2Profile getP2Profile() {
+        return p2Profile;
+    }
+
+    public void setP2Profile(P2Profile p2Profile) {
+        this.p2Profile = p2Profile;
+    }
+
+    public MavenProject getProject() {
+        return project;
+    }
+
+    public void setProject(MavenProject project) {
+        this.project = project;
+    }
+
+    public boolean isArchive() {
+        return archive;
+    }
+
+    public void setArchive(boolean archive) {
+        this.archive = archive;
+    }
+
+    public ArtifactFactory getArtifactFactory() {
+        return artifactFactory;
+    }
+
+    public void setArtifactFactory(ArtifactFactory artifactFactory) {
+        this.artifactFactory = artifactFactory;
+    }
+
+    public ArtifactResolver getResolver() {
+        return resolver;
+    }
+
+    public void setResolver(ArtifactResolver resolver) {
+        this.resolver = resolver;
+    }
+
+    public ArtifactRepository getLocalRepository() {
+        return localRepository;
+    }
+
+    public void setLocalRepository(ArtifactRepository localRepository) {
+        this.localRepository = localRepository;
+    }
+
+    public List getRemoteRepositories() {
+        return remoteRepositories;
+    }
+
+    public void setRemoteRepositories(List remoteRepositories) {
+        this.remoteRepositories = remoteRepositories;
+    }
+
+    public P2ApplicationLauncher getLauncher() {
+        return launcher;
+    }
+
+    public void setLauncher(P2ApplicationLauncher launcher) {
+        this.launcher = launcher;
+    }
+
+    public int getForkedProcessTimeoutInSeconds() {
+        return forkedProcessTimeoutInSeconds;
+    }
+
+    public void setForkedProcessTimeoutInSeconds(int forkedProcessTimeoutInSeconds) {
+        this.forkedProcessTimeoutInSeconds = forkedProcessTimeoutInSeconds;
+    }
+
+    public Log getLog() {
+        return log;
+    }
+
+    public void setLog(Log log) {
+        this.log = log;
+    }
+
+}

@@ -39,7 +39,6 @@ import java.util.Properties;
 @Mojo(name = "p2-feature-gen", defaultPhase = LifecyclePhase.PACKAGE)
 public class FeatureGenMojo extends AbstractMojo {
 
-
     @Parameter(required = true)
     private String id;
 
@@ -125,9 +124,6 @@ public class FeatureGenMojo extends AbstractMojo {
     @Parameter(defaultValue = "${project}")
     private MavenProject project;
 
-    /**
-     * Maven ProjectHelper.
-     */
     @Component
     private MavenProjectHelper projectHelper;
 
