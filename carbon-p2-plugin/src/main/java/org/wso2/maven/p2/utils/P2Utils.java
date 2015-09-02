@@ -192,7 +192,7 @@ public class P2Utils {
     	return matchStr.equalsIgnoreCase("patch");
     }
     
-    public static void createCategoryFile(MavenProject project, ArrayList categories, File categoryFile, ArtifactFactory artifactFactory, List remoteRepositories, ArtifactRepository localRepository, ArtifactResolver resolver)throws Exception {
+    public static void createCategoryFile(MavenProject project, ArrayList categories, File categoryFile, ArtifactFactory artifactFactory, List remoteRepositories, ArtifactRepository localRepository, ArtifactResolver resolver)throws MojoExecutionException {
     	
     	Map featureCategories=new HashMap();
     	

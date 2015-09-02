@@ -20,10 +20,10 @@ import org.apache.maven.model.Resource;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.project.MavenProject;
-import org.eclipse.tycho.p2.facade.internal.P2ApplicationLauncher;
 import org.wso2.maven.p2.BundleArtifact;
 import org.wso2.maven.p2.FeatureArtifact;
 import org.wso2.maven.p2.commons.Generator;
+import org.wso2.maven.p2.commons.P2ApplicationLaunchManager;
 import org.wso2.maven.p2.repo.utils.RepoBeanGeneratorUtils;
 import org.wso2.maven.p2.utils.FileManagementUtil;
 import org.wso2.maven.p2.utils.P2Utils;
@@ -40,15 +40,12 @@ public class RepoGenerator extends Generator {
     private final RepositoryResourceBundle resourceBundle;
     private final MavenProject project;
 
-    private ArrayList processedFeatureArtifacts;
-    private ArrayList processedBundleArtifacts;
+    private ArrayList<FeatureArtifact> processedFeatureArtifacts;
+    private ArrayList<BundleArtifact> processedBundleArtifacts;
 
-    private ArrayList processedP2LauncherFiles;
     private File targetDir;
     private File tempDir;
     private File sourceDir;
-    private File p2AgentDir;
-
 
     private File REPO_GEN_LOCATION;
 
@@ -57,10 +54,14 @@ public class RepoGenerator extends Generator {
     private File ARCHIVE_FILE;
 
     private static final String PUBLISHER_APPLICATION = "org.eclipse.equinox.p2.publisher.FeaturesAndBundlesPublisher";
+    private static final String CATEGORY_PUBLISHER_APPLICATION = "org.eclipse.equinox.p2.publisher.CategoryPublisher";
+
+    P2ApplicationLaunchManager p2LaunchManager;
 
     public RepoGenerator(RepositoryResourceBundle resourceBundle) {
         this.resourceBundle = resourceBundle;
         this.project = this.resourceBundle.getProject();
+        p2LaunchManager = new P2ApplicationLaunchManager(resourceBundle.getLauncher());
     }
 
     @Override
@@ -68,8 +69,13 @@ public class RepoGenerator extends Generator {
         generateBeansFromInputs();
         setupTempOutputFolderStructure();
         unzipFeaturesToOutputFolder();
-
-        createRepo();
+        copyBundleArtifacts();
+        copyProjectResources();
+        this.getLog().info("Running Equinox P2 Publisher Application for Repository Generation");
+        generateRepository();
+        this.getLog().info("Running Equinox P2 Category Publisher Application for the Generated Repository");
+        updateRepositoryWithCategories();
+        archiveRepo();
         performMopUp();
     }
 
@@ -77,21 +83,6 @@ public class RepoGenerator extends Generator {
         RepoBeanGeneratorUtils beanGenerator = new RepoBeanGeneratorUtils(this.resourceBundle);
         processedFeatureArtifacts = beanGenerator.getProcessedFeatureArtifacts();
         processedBundleArtifacts = beanGenerator.getProcessedBundleArtifacts();
-    }
-
-    public void createRepo() throws MojoExecutionException, MojoFailureException {
-        try {
-            copyBundleArtifacts();
-            copyProjectResources();
-            this.getLog().info("Running Equinox P2 Publisher Application for Repository Generation");
-            generateRepository();
-            this.getLog().info("Running Equinox P2 Category Publisher Application for the Generated Repository");
-            updateRepositoryWithCategories();
-            archiveRepo();
-        } catch (Exception e) {
-            this.getLog().error(e.getMessage(), e);
-            throw new MojoExecutionException(e.getMessage(), e);
-        }
     }
 
     /**
@@ -120,41 +111,16 @@ public class RepoGenerator extends Generator {
         }
     }
 
-
-    private void generateRepository() throws Exception {
-
-        P2ApplicationLauncher launcher = resourceBundle.getLauncher();
-
-        launcher.setWorkingDirectory(project.getBasedir());
-        launcher.setApplicationName(PUBLISHER_APPLICATION);
-
-        addArguments(launcher);
-
-
-        int result = launcher.execute(resourceBundle.getForkedProcessTimeoutInSeconds());
-        if (result != 0) {
-            throw new MojoFailureException("P2 publisher return code was " + result);
-        }
-    }
-
-    private void addArguments(P2ApplicationLauncher launcher) throws IOException {
-        launcher.addArguments("-source", sourceDir.getAbsolutePath(), //
-                "-metadataRepository", resourceBundle.getMetadataRepository().toString(), //
-                "-metadataRepositoryName", getRepositoryName(), //
-                "-artifactRepository", resourceBundle.getMetadataRepository().toString(), //
-                "-artifactRepositoryName", getRepositoryName(), //
-                "-publishArtifacts",
-                "-publishArtifactRepository",
-                "-compress",
-                "-append");
+    private void generateRepository() throws MojoExecutionException {
+        p2LaunchManager.setWorkingDirectory(project.getBasedir());
+        p2LaunchManager.setApplicationName(PUBLISHER_APPLICATION);
+        p2LaunchManager.addRepoGenerationArguments(sourceDir.getAbsolutePath(), resourceBundle.getMetadataRepository().toString(), getRepositoryName(), getRepositoryName());
+        p2LaunchManager.generateRepo(resourceBundle.getForkedProcessTimeoutInSeconds());
     }
 
     private void unzipFeaturesToOutputFolder() throws MojoExecutionException {
-        ArrayList processedFeatureArtifacts = this.processedFeatureArtifacts;//getProcessedFeatureArtifacts();
-        if (processedFeatureArtifacts == null) return;
-        for (Iterator iterator = processedFeatureArtifacts.iterator(); iterator
-                .hasNext(); ) {
-            FeatureArtifact featureArtifact = (FeatureArtifact) iterator.next();
+        ArrayList<FeatureArtifact> processedFeatureArtifacts = this.processedFeatureArtifacts;
+        for (FeatureArtifact featureArtifact : processedFeatureArtifacts) {
             try {
                 getLog().info("Extracting feature " + featureArtifact.getGroupId() + ":" + featureArtifact.getArtifactId());
                 FileManagementUtil.unzip(featureArtifact.getArtifact().getFile(), sourceDir);
@@ -165,14 +131,10 @@ public class RepoGenerator extends Generator {
     }
 
     private void copyBundleArtifacts() throws MojoExecutionException {
-        ArrayList processedBundleArtifacts = this.processedBundleArtifacts;
-        if (processedBundleArtifacts == null) {
-            return;
-        }
+        ArrayList<BundleArtifact> processedBundleArtifacts = this.processedBundleArtifacts;
+
         File pluginsDir = new File(sourceDir, "plugins");
-        for (Iterator iterator = processedBundleArtifacts.iterator(); iterator
-                .hasNext(); ) {
-            BundleArtifact bundleArtifact = (BundleArtifact) iterator.next();
+        for (BundleArtifact bundleArtifact : processedBundleArtifacts) {
             try {
                 File file = bundleArtifact.getArtifact().getFile();
                 FileManagementUtil.copy(file, new File(pluginsDir, file.getName()));
@@ -221,24 +183,18 @@ public class RepoGenerator extends Generator {
         }
     }
 
-    private void updateRepositoryWithCategories() throws Exception {
+    private void updateRepositoryWithCategories() throws MojoExecutionException {
         if (isCategoriesAvailable()) {
             P2Utils.createCategoryFile(project, resourceBundle.getCategories(), categoryDeinitionFile,
                     resourceBundle.getArtifactFactory(), resourceBundle.getRemoteRepositories(),
                     resourceBundle.getLocalRepository(), resourceBundle.getResolver());
-            P2ApplicationLauncher launcher = resourceBundle.getLauncher();
-            launcher.setWorkingDirectory(project.getBasedir());
-            launcher.setApplicationName("org.eclipse.equinox.p2.publisher.CategoryPublisher");
-            launcher.addArguments("-metadataRepository", resourceBundle.getMetadataRepository().toString(),
-                    "-categoryDefinition", categoryDeinitionFile.toURI().toString(),
-                    "-categoryQualifier",
-                    "-compress",
-                    "-append");
 
-            int result = launcher.execute(resourceBundle.getForkedProcessTimeoutInSeconds());
-            if (result != 0) {
-                throw new MojoFailureException("P2 publisher return code was " + result);
-            }
+            p2LaunchManager.setWorkingDirectory(project.getBasedir());
+            p2LaunchManager.setApplicationName(CATEGORY_PUBLISHER_APPLICATION);
+            p2LaunchManager.addUpdateRepoWithCategoryArguments(resourceBundle.getMetadataRepository().toString(),
+                    categoryDeinitionFile.toURI().toString());
+
+            p2LaunchManager.generateRepo(resourceBundle.getForkedProcessTimeoutInSeconds());
         }
     }
 

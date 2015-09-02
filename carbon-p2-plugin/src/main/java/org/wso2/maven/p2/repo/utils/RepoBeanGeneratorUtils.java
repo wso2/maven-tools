@@ -24,7 +24,6 @@ import org.wso2.maven.p2.utils.BundleUtils;
 import org.wso2.maven.p2.utils.MavenUtils;
 
 import java.util.ArrayList;
-import java.util.Iterator;
 
 public class RepoBeanGeneratorUtils {
 
@@ -34,11 +33,11 @@ public class RepoBeanGeneratorUtils {
         this.resourceBundle = resourceBundle;
     }
 
-    public ArrayList getProcessedFeatureArtifacts() throws MojoExecutionException {
-        if(resourceBundle.getFeatureArtifacts() == null || resourceBundle.getFeatureArtifacts().size() == 0) {
-            return null;
+    public ArrayList<FeatureArtifact> getProcessedFeatureArtifacts() throws MojoExecutionException {
+        ArrayList<FeatureArtifact> processedFeatureArtifacts = new ArrayList<FeatureArtifact>();
+        if(resourceBundle.getFeatureArtifacts() == null) {
+            return processedFeatureArtifacts;
         }
-        ArrayList processedFeatureArtifacts = new ArrayList();
         for (Object obj : resourceBundle.getFeatureArtifacts()) {
             FeatureArtifact f = null;
             try {
@@ -58,14 +57,12 @@ public class RepoBeanGeneratorUtils {
         return processedFeatureArtifacts;
     }
 
-    public ArrayList getProcessedBundleArtifacts() throws MojoExecutionException {
-
-        ArrayList bundleArtifacts = resourceBundle.getBundleArtifacts();
-        if (bundleArtifacts == null || bundleArtifacts.size() == 0) {
-            return null;
+    public ArrayList<BundleArtifact> getProcessedBundleArtifacts() throws MojoExecutionException {
+        ArrayList<BundleArtifact> processedBundleArtifacts = new ArrayList<BundleArtifact>();
+        if(resourceBundle.getBundleArtifacts() == null) {
+            return processedBundleArtifacts;
         }
-        ArrayList processedBundleArtifacts = new ArrayList();
-        for (Object obj : bundleArtifacts) {
+        for (Object obj : resourceBundle.getBundleArtifacts()) {
             BundleArtifact f;
             if (obj instanceof BundleArtifact) {
                 f = (BundleArtifact) obj;
