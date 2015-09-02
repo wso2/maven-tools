@@ -21,6 +21,10 @@ import org.apache.maven.artifact.resolver.ArtifactResolver;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
+import org.apache.maven.plugins.annotations.Component;
+import org.apache.maven.plugins.annotations.LifecyclePhase;
+import org.apache.maven.plugins.annotations.Mojo;
+import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.project.MavenProject;
 import org.eclipse.tycho.p2.facade.internal.P2ApplicationLauncher;
 import org.wso2.maven.p2.EquinoxLauncher;
@@ -32,10 +36,8 @@ import java.util.List;
 
 /**
  * Write environment information for the current build to file.
- *
- * @goal p2-repo-gen
- * @phase package
  */
+@Mojo(name = "p2-repo-gen", defaultPhase = LifecyclePhase.PACKAGE)
 public class RepositoryGenMojo extends AbstractMojo {
 
 //    /**
@@ -47,45 +49,38 @@ public class RepositoryGenMojo extends AbstractMojo {
 
     /**
      * Name of the repository
-     *
-     * @parameter
      */
+    @Parameter
     private String name;
 
     /**
      * URL of the Metadata Repository
-     *
-     * @parameter
      */
+    @Parameter
     private URL metadataRepository;
 
     /**
      * URL of the Artifact Repository
-     *
-     * @parameter
      */
+    @Parameter
     private URL artifactRepository;
 
     /**
      * Source folder
-     *
-     * @parameter
-     * @required
      */
+    @Parameter(required = true)
     private ArrayList featureArtifacts;
 
     /**
      * Source folder
-     *
-     * @parameter
      */
+    @Parameter
     private ArrayList bundleArtifacts;
 
     /**
      * Source folder
-     *
-     * @parameter
      */
+    @Parameter
     private ArrayList categories;
 
     /**
@@ -93,16 +88,14 @@ public class RepositoryGenMojo extends AbstractMojo {
      * the actual bytes underlying the artifact will not be copied, but the repository index will be created.
      * When this option is not specified, it is recommended to set the artifactRepository to be in the same location
      * as the source (-source)
-     *
-     * @parameter
      */
+    @Parameter
     private boolean publishArtifacts;
 
     /**
      * Type of Artifact (War,Jar,etc)
-     *
-     * @parameter
      */
+    @Parameter
     private boolean publishArtifactRepository;
 
     /**
@@ -115,43 +108,31 @@ public class RepositoryGenMojo extends AbstractMojo {
 
     /**
      * Equinox p2 configuration path
-     *
-     * @parameter
      */
+    @Parameter
     private P2Profile p2Profile;
 
-    /**
-     * @parameter default-value="${project}"
-     */
+    @Parameter(defaultValue = "${project}")
     private MavenProject project;
 
-    /**
-     * @parameter default-value="false"
-     */
+    @Parameter(defaultValue = "false")
     private boolean archive;
 
-    /**
-     * @component
-     */
+    @Component
     private ArtifactFactory artifactFactory;
 
-    /**
-     * @component
-     */
+    @Component
     private ArtifactResolver resolver;
 
-    /**
-     * @parameter default-value="${localRepository}"
-     */
+    @Parameter(defaultValue = "${localRepository}")
     private ArtifactRepository localRepository;
 
-    /**
-     * @parameter default-value="${project.remoteArtifactRepositories}"
-     */
+
+    @Parameter(defaultValue = "${project.remoteArtifactRepositories}")
     private List remoteRepositories;
 
 
-    /** @component */
+    @Component
     private P2ApplicationLauncher launcher;
 
     /**
@@ -160,9 +141,8 @@ public class RepositoryGenMojo extends AbstractMojo {
      *
      * @parameter expression="${p2.timeout}"
      */
+    @Parameter
     private int forkedProcessTimeoutInSeconds;
-
-
 
     public void execute() throws MojoExecutionException, MojoFailureException {
         RepoGenerator generator = constructRepoGenerator();

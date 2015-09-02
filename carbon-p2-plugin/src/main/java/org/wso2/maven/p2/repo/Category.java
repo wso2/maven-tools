@@ -15,16 +15,12 @@
 * specific language governing permissions and limitations
 * under the License.
 */
-package org.wso2.maven.p2;
+package org.wso2.maven.p2.repo;
 
-import org.apache.maven.artifact.factory.ArtifactFactory;
-import org.apache.maven.artifact.repository.ArtifactRepository;
-import org.apache.maven.artifact.resolver.ArtifactResolver;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.project.MavenProject;
 
 import java.util.ArrayList;
-import java.util.List;
 
 public class Category {
 
@@ -64,7 +60,7 @@ public class Category {
         return features;
     }
 
-    public ArrayList<CatFeature> getProcessedFeatures(MavenProject project, ArtifactFactory artifactFactory, List remoteRepositories, ArtifactRepository localRepository, ArtifactResolver resolver) throws MojoExecutionException {
+    public ArrayList<CatFeature> getProcessedFeatures(MavenProject project) throws MojoExecutionException {
         if (processedFeatures != null) {
             return processedFeatures;
         }

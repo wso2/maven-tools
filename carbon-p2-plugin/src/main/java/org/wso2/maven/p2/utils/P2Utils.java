@@ -17,6 +17,18 @@
 */
 package org.wso2.maven.p2.utils;
 
+import org.apache.maven.plugin.MojoExecutionException;
+import org.apache.maven.project.MavenProject;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+import org.wso2.maven.p2.repo.CatFeature;
+import org.wso2.maven.p2.repo.Category;
+
+import javax.xml.transform.OutputKeys;
+import javax.xml.transform.Transformer;
+import javax.xml.transform.TransformerFactory;
+import javax.xml.transform.dom.DOMSource;
+import javax.xml.transform.stream.StreamResult;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -28,24 +40,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.regex.Pattern;
 
-import javax.xml.transform.OutputKeys;
-import javax.xml.transform.Transformer;
-import javax.xml.transform.TransformerFactory;
-import javax.xml.transform.dom.DOMSource;
-import javax.xml.transform.stream.StreamResult;
-
-import org.apache.maven.artifact.factory.ArtifactFactory;
-import org.apache.maven.artifact.repository.ArtifactRepository;
-import org.apache.maven.artifact.resolver.ArtifactResolver;
-import org.apache.maven.plugin.MojoExecutionException;
-import org.apache.maven.project.MavenProject;
-import org.w3c.dom.Document;
-import org.w3c.dom.Element;
-import org.wso2.maven.p2.CatFeature;
-import org.wso2.maven.p2.Category;
-
 public class P2Utils {
-	private static String[] matchList=new String[]{"perfect","equivalent","compatible","greaterOrEqual","patch", "optional"};
+    private static String[] matchList = new String[]{"perfect", "equivalent", "compatible", "greaterOrEqual", "patch", "optional"};
 
 //	public static void setupLauncherLocation(P2Profile p2Profile, File p2LauncherDir, File p2LauncherPluginDir, EquinoxLauncher equinoxLauncher) throws MojoExecutionException {
 //        try {
@@ -159,86 +155,86 @@ public class P2Utils {
 //        //launcher jar is not found.
 //        throw new Exception("Please specify a valid location of a P2 Agent Distribution");
 //    }
-    
-    public static boolean isMatchString(String matchStr){
-    	for (String match : matchList) {
-			if (matchStr.equalsIgnoreCase(match)){
-				return true;
-			}
-		}
-    	return false;
+
+    public static boolean isMatchString(String matchStr) {
+        for (String match : matchList) {
+            if (matchStr.equalsIgnoreCase(match)) {
+                return true;
+            }
+        }
+        return false;
     }
-    
-    public static String getMatchRule(String matchStr){
-    	if (isPatch(matchStr)) {
+
+    public static String getMatchRule(String matchStr) {
+        if (isPatch(matchStr)) {
             return "perfect";
         }
-    	for (String match : matchList) {
-			if (matchStr.equalsIgnoreCase(match)){
-				return match;
-			}
-		}  
-    	return null;
+        for (String match : matchList) {
+            if (matchStr.equalsIgnoreCase(match)) {
+                return match;
+            }
+        }
+        return null;
     }
-    
-    public static boolean isPatch(String matchStr){
-    	return matchStr.equalsIgnoreCase("patch");
+
+    public static boolean isPatch(String matchStr) {
+        return matchStr.equalsIgnoreCase("patch");
     }
-    
-    public static void createCategoryFile(MavenProject project, ArrayList categories, File categoryFile, ArtifactFactory artifactFactory, List remoteRepositories, ArtifactRepository localRepository, ArtifactResolver resolver)throws MojoExecutionException {
-    	
-    	Map featureCategories=new HashMap();
-    	
-    	Document doc = MavenUtils.getManifestDocument();
-    	Element rootElement = doc.getDocumentElement();
-    	
+
+    public static void createCategoryFile(MavenProject project, ArrayList categories, File categoryFile) throws MojoExecutionException {
+
+        Map featureCategories = new HashMap();
+
+        Document doc = MavenUtils.getManifestDocument();
+        Element rootElement = doc.getDocumentElement();
+
         if (rootElement == null) {
             rootElement = doc.createElement("site");
             doc.appendChild(rootElement);
         }
 
-    	for (Object object : categories) {
-			if (object instanceof Category){
-				Category cat=(Category)object;
-				Element categoryDef = doc.createElement("category-def");
-				categoryDef.setAttribute("name", cat.getId());
-				categoryDef.setAttribute("label", cat.getLabel());
-				rootElement.appendChild(categoryDef);
-				Element descriptionElement = doc.createElement("description");
-				descriptionElement.setTextContent(cat.getDescription());
-				categoryDef.appendChild(descriptionElement);
-				ArrayList<CatFeature> processedFeatures = cat.getProcessedFeatures(project, artifactFactory, remoteRepositories, localRepository, resolver);
-				for (CatFeature feature : processedFeatures) {
-					if (!featureCategories.containsKey(feature.getId()+feature.getVersion())){
-						ArrayList list = new ArrayList();
-						featureCategories.put((feature.getId()+feature.getVersion()), list);
-						list.add(feature);
-					}
-					ArrayList list = (ArrayList)featureCategories.get(feature.getId()+feature.getVersion());
-					list.add(cat.getId());
-				}
-			}
-		}
-    	
-    	for (Object key : featureCategories.keySet()) {
-    		Object object = featureCategories.get(key);
-			if (object instanceof List){
-				List list=(List)object;
-				CatFeature feature=(CatFeature)list.get(0);
-				list.remove(0);
-				
-				Element featureDef = doc.createElement("feature");
-				featureDef.setAttribute("id", feature.getId());
-				featureDef.setAttribute("version", BundleUtils.getOSGIVersion(feature.getVersion()));
-				for (Object catId : list) {
-					Element category = doc.createElement("category");
-					category.setAttribute("name", catId.toString());
-					featureDef.appendChild(category);
-				}
-				rootElement.appendChild(featureDef);
-			}
-		}
-    	
+        for (Object object : categories) {
+            if (object instanceof Category) {
+                Category cat = (Category) object;
+                Element categoryDef = doc.createElement("category-def");
+                categoryDef.setAttribute("name", cat.getId());
+                categoryDef.setAttribute("label", cat.getLabel());
+                rootElement.appendChild(categoryDef);
+                Element descriptionElement = doc.createElement("description");
+                descriptionElement.setTextContent(cat.getDescription());
+                categoryDef.appendChild(descriptionElement);
+                ArrayList<CatFeature> processedFeatures = cat.getProcessedFeatures(project);
+                for (CatFeature feature : processedFeatures) {
+                    if (!featureCategories.containsKey(feature.getId() + feature.getVersion())) {
+                        ArrayList list = new ArrayList();
+                        featureCategories.put((feature.getId() + feature.getVersion()), list);
+                        list.add(feature);
+                    }
+                    ArrayList list = (ArrayList) featureCategories.get(feature.getId() + feature.getVersion());
+                    list.add(cat.getId());
+                }
+            }
+        }
+
+        for (Object key : featureCategories.keySet()) {
+            Object object = featureCategories.get(key);
+            if (object instanceof List) {
+                List list = (List) object;
+                CatFeature feature = (CatFeature) list.get(0);
+                list.remove(0);
+
+                Element featureDef = doc.createElement("feature");
+                featureDef.setAttribute("id", feature.getId());
+                featureDef.setAttribute("version", BundleUtils.getOSGIVersion(feature.getVersion()));
+                for (Object catId : list) {
+                    Element category = doc.createElement("category");
+                    category.setAttribute("name", catId.toString());
+                    featureDef.appendChild(category);
+                }
+                rootElement.appendChild(featureDef);
+            }
+        }
+
         try {
             TransformerFactory transformerFactory = TransformerFactory.newInstance();
             Transformer transformer;

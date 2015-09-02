@@ -21,8 +21,8 @@ import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.project.MavenProject;
 import org.codehaus.plexus.util.FileUtils;
-import org.wso2.maven.p2.beans.FeatureArtifact;
 import org.wso2.maven.p2.beans.Bundle;
+import org.wso2.maven.p2.beans.FeatureArtifact;
 import org.wso2.maven.p2.commons.Generator;
 import org.wso2.maven.p2.commons.P2ApplicationLaunchManager;
 import org.wso2.maven.p2.repo.utils.RepoBeanGeneratorUtils;
@@ -154,18 +154,18 @@ public class RepoGenerator extends Generator {
         }
     }
 
-
     private void setupTempOutputFolderStructure() throws MojoExecutionException {
         try {
             File targetDir = new File(project.getBasedir(), "target");
             String timestampVal = String.valueOf((new Date()).getTime());
             tempDir = new File(targetDir, "tmp." + timestampVal);
             sourceDir = new File(tempDir, "featureExtract");
-            if(!sourceDir.mkdirs()) {
+            if (!sourceDir.mkdirs()) {
                 throw new MojoExecutionException("Error occurred while creating output folder structure");
             }
 
-            //Some weird shit is going on. Check this part : 01/09/2015
+            //Noted a weird assignment of values to metadataRepository and artifactRepository in the previous code.
+            //Kept it as it is.
             if (resourceBundle.getArtifactRepository() != null) {
                 resourceBundle.setMetadataRepository(resourceBundle.getArtifactRepository());
             }
@@ -188,9 +188,7 @@ public class RepoGenerator extends Generator {
 
     private void updateRepositoryWithCategories() throws MojoExecutionException {
         if (isCategoriesAvailable()) {
-            P2Utils.createCategoryFile(project, resourceBundle.getCategories(), categoryDefinitionFile,
-                    resourceBundle.getArtifactFactory(), resourceBundle.getRemoteRepositories(),
-                    resourceBundle.getLocalRepository(), resourceBundle.getResolver());
+            P2Utils.createCategoryFile(project, resourceBundle.getCategories(), categoryDefinitionFile);
 
             p2LaunchManager.setWorkingDirectory(project.getBasedir());
             p2LaunchManager.setApplicationName(CATEGORY_PUBLISHER_APPLICATION);
@@ -214,7 +212,6 @@ public class RepoGenerator extends Generator {
             getLog().warn(new MojoExecutionException("Unable complete mop up operation", e));
         }
     }
-
 
     public String getRepositoryName() {
         if (resourceBundle.getName() == null) {

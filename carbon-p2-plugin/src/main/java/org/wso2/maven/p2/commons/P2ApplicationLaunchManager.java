@@ -21,6 +21,9 @@ import org.eclipse.tycho.p2.facade.internal.P2ApplicationLauncher;
 
 import java.io.File;
 
+/**
+ * Wrapper class containing P2ApplicationLauncher which makes configuring the P2ApplicationLauncher easier.
+ */
 public class P2ApplicationLaunchManager {
 
     private final P2ApplicationLauncher launcher;
