@@ -21,9 +21,9 @@ import org.apache.maven.artifact.repository.ArtifactRepository;
 import org.apache.maven.artifact.resolver.ArtifactResolver;
 import org.apache.maven.plugin.logging.Log;
 import org.apache.maven.project.MavenProject;
+import org.apache.maven.repository.RepositorySystem;
 import org.eclipse.tycho.p2.facade.internal.P2ApplicationLauncher;
-import org.wso2.maven.p2.EquinoxLauncher;
-import org.wso2.maven.p2.P2Profile;
+import org.wso2.maven.p2.profile.P2Profile;
 
 import java.net.URL;
 import java.util.ArrayList;
@@ -56,13 +56,6 @@ public class RepositoryResourceBundle {
     private boolean publishArtifactRepository;
 
     /**
-     * Equinox Launcher
-
-     *
-     */
-    private EquinoxLauncher equinoxLauncher;
-
-    /**
      * Equinox p2 configuration path
      *
      */
@@ -73,8 +66,7 @@ public class RepositoryResourceBundle {
 
     private boolean archive;
 
-    private org.apache.maven.artifact.factory.ArtifactFactory artifactFactory;
-    private org.apache.maven.artifact.resolver.ArtifactResolver resolver;
+    private RepositorySystem repositorySystem;
     private org.apache.maven.artifact.repository.ArtifactRepository localRepository;
     private List remoteRepositories;
     private P2ApplicationLauncher launcher;
@@ -147,14 +139,6 @@ public class RepositoryResourceBundle {
         this.publishArtifactRepository = publishArtifactRepository;
     }
 
-    public EquinoxLauncher getEquinoxLauncher() {
-        return equinoxLauncher;
-    }
-
-    public void setEquinoxLauncher(EquinoxLauncher equinoxLauncher) {
-        this.equinoxLauncher = equinoxLauncher;
-    }
-
     public P2Profile getP2Profile() {
         return p2Profile;
     }
@@ -179,20 +163,12 @@ public class RepositoryResourceBundle {
         this.archive = archive;
     }
 
-    public ArtifactFactory getArtifactFactory() {
-        return artifactFactory;
+    public RepositorySystem getRepositorySystem() {
+        return repositorySystem;
     }
 
-    public void setArtifactFactory(ArtifactFactory artifactFactory) {
-        this.artifactFactory = artifactFactory;
-    }
-
-    public ArtifactResolver getResolver() {
-        return resolver;
-    }
-
-    public void setResolver(ArtifactResolver resolver) {
-        this.resolver = resolver;
+    public void setRepositorySystem(RepositorySystem repositorySystem) {
+        this.repositorySystem = repositorySystem;
     }
 
     public ArtifactRepository getLocalRepository() {

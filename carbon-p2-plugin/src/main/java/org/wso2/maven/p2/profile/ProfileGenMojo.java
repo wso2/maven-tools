@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.wso2.maven.p2;
+package org.wso2.maven.p2.profile;
 
 import java.io.*;
 import java.net.MalformedURLException;
@@ -25,6 +25,10 @@ import java.util.Date;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
+import org.apache.maven.plugins.annotations.Component;
+import org.apache.maven.plugins.annotations.LifecyclePhase;
+import org.apache.maven.plugins.annotations.Mojo;
+import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.project.MavenProject;
 import org.apache.maven.project.MavenProjectHelper;
 import org.codehaus.plexus.util.FileUtils;
@@ -38,26 +42,23 @@ import org.wso2.maven.p2.utils.P2Constants;
 /**
  * Write environment information for the current build to file.
  *
- * @goal p2-profile-gen
- * @phase package
  */
+@Mojo(name = "p2-profile-gen", defaultPhase = LifecyclePhase.PACKAGE)
 public class ProfileGenMojo extends AbstractMojo {
 
 
     /**
      * Destination to which the features should be installed
      *
-     * @parameter
-     * @required
      */
+    @Parameter(required = true)
     private String destination;
 
     /**
      * target profile
      *
-     * @parameter
-     * @required
      */
+    @Parameter(required = true)
     private String profile;
 
 
@@ -65,87 +66,76 @@ public class ProfileGenMojo extends AbstractMojo {
     /**
      * URL of the Metadata Repository
      *
-     * @parameter
      */
+    @Parameter
     private URL metadataRepository;
 
     /**
      * URL of the Artifact Repository
      *
-     * @parameter
      */
+    @Parameter
     private URL artifactRepository;
 
     /**
      * List of features
      *
-     * @parameter
-     * @required
      */
+    @Parameter(required = true)
     private ArrayList features;
 
     /**
      * Flag to indicate whether to delete old profile files
      *
-     * @parameter default-value="true"
      */
+    @Parameter(defaultValue = "true")
     private boolean deleteOldProfileFiles = true;
 
     /**
      * Location of the p2 repository
      *
-     * @parameter
      */
+    @Parameter
     private P2Repository p2Repository;
 
-    /**
-     * @parameter default-value="${project}"
-     */
+    @Parameter(defaultValue = "${project}")
     private MavenProject project;
 
-    /**
-     * @component
-     */
+    @Component
     private org.apache.maven.artifact.factory.ArtifactFactory artifactFactory;
 
-    /**
-     * @component
-     */
+    @Component
     private org.apache.maven.artifact.resolver.ArtifactResolver resolver;
 
-    /**
-     * @parameter default-value="${localRepository}"
-     */
+    @Parameter(defaultValue = "${localRepository}")
     private org.apache.maven.artifact.repository.ArtifactRepository localRepository;
 
-    /**
-     * @parameter default-value="${project.remoteArtifactRepositories}"
-     */
+    @Parameter(defaultValue = "${project.remoteArtifactRepositories}")
     private java.util.List remoteRepositories;
 
     /**
      * Equinox p2 configuration path
      *
-     * @parameter
      */
+    @Parameter
     private P2Profile p2Profile;
 
     /**
      * Maven ProjectHelper.
      *
-     * @component
      */
+    @Component
     private MavenProjectHelper projectHelper;
 
-    /** @component */
+    @Component
     private P2ApplicationLauncher launcher;
 
     /**
      * Kill the forked test process after a certain number of seconds. If set to 0, wait forever for
      * the process, never timing out.
      *
-     * @parameter expression="${p2.timeout}"
      */
+    @Parameter(defaultValue = "${p2.timeout}")
     private int forkedProcessTimeoutInSeconds;
 
 

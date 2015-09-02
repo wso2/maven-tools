@@ -81,7 +81,7 @@ public class MavenUtils {
     public static Artifact getResolvedArtifact(Bundle bundle, RepositorySystem repositorySystem, List remoteRepositories,
                                                ArtifactRepository localRepository) {
         return getResolvedArtifact(bundle.getGroupId(), bundle.getArtifactId(), bundle.getVersion(), repositorySystem,
-                remoteRepositories, localRepository);
+                remoteRepositories, localRepository, "jar");
     }
 
     /**
@@ -96,14 +96,29 @@ public class MavenUtils {
     public static Artifact getResolvedArtifact(IncludedFeature feature, RepositorySystem repositorySystem,
                                                List remoteRepositories, ArtifactRepository localRepository) {
         return getResolvedArtifact(feature.getGroupId(), feature.getArtifactId(), feature.getArtifactVersion(),
-                repositorySystem, remoteRepositories, localRepository);
+                repositorySystem, remoteRepositories, localRepository, "jar");
+    }
+
+    /**
+     * Returns an artifact which represent by a bundle
+     *
+     * @param feature             bundle which need to resolve the artifact
+     * @param repositorySystem   RepositorySystem object
+     * @param remoteRepositories collection of remote repositories
+     * @param localRepository    local repository representation
+     * @return the resolved Artifact
+     */
+    public static Artifact getResolvedArtifact(FeatureArtifact feature, RepositorySystem repositorySystem, List remoteRepositories,
+                                               ArtifactRepository localRepository) {
+        return getResolvedArtifact(feature.getGroupId(), feature.getArtifactId(), feature.getVersion(), repositorySystem,
+                remoteRepositories, localRepository, "zip");
     }
 
     private static Artifact getResolvedArtifact(String groupId, String artifactId, String version,
                                                 RepositorySystem repositorySystem, List remoteRepositories,
-                                                ArtifactRepository localRepository) {
+                                                ArtifactRepository localRepository, String type) {
 
-        Artifact artifact = repositorySystem.createArtifact(groupId, artifactId, version, Artifact.SCOPE_RUNTIME, "jar");
+        Artifact artifact = repositorySystem.createArtifact(groupId, artifactId, version, Artifact.SCOPE_RUNTIME, type);
 
         ArtifactResolutionRequest request = new ArtifactResolutionRequest();
         request.setArtifact(artifact);

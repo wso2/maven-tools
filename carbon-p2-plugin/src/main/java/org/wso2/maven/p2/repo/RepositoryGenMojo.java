@@ -26,9 +26,9 @@ import org.apache.maven.plugins.annotations.LifecyclePhase;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.project.MavenProject;
+import org.apache.maven.repository.RepositorySystem;
 import org.eclipse.tycho.p2.facade.internal.P2ApplicationLauncher;
-import org.wso2.maven.p2.EquinoxLauncher;
-import org.wso2.maven.p2.P2Profile;
+import org.wso2.maven.p2.profile.P2Profile;
 
 import java.net.URL;
 import java.util.ArrayList;
@@ -99,14 +99,6 @@ public class RepositoryGenMojo extends AbstractMojo {
     private boolean publishArtifactRepository;
 
     /**
-     * Equinox Launcher
-     *
-     * @parameter
-     */
-    private EquinoxLauncher equinoxLauncher;
-
-
-    /**
      * Equinox p2 configuration path
      */
     @Parameter
@@ -119,10 +111,7 @@ public class RepositoryGenMojo extends AbstractMojo {
     private boolean archive;
 
     @Component
-    private ArtifactFactory artifactFactory;
-
-    @Component
-    private ArtifactResolver resolver;
+    private RepositorySystem repositorySystem;
 
     @Parameter(defaultValue = "${localRepository}")
     private ArtifactRepository localRepository;
@@ -139,9 +128,8 @@ public class RepositoryGenMojo extends AbstractMojo {
      * Kill the forked test process after a certain number of seconds. If set to 0, wait forever for
      * the process, never timing out.
      *
-     * @parameter expression="${p2.timeout}"
      */
-    @Parameter
+    @Parameter(defaultValue = "${p2.timeout}")
     private int forkedProcessTimeoutInSeconds;
 
     public void execute() throws MojoExecutionException, MojoFailureException {
@@ -159,12 +147,10 @@ public class RepositoryGenMojo extends AbstractMojo {
         resourceBundle.setCategories(this.categories);
         resourceBundle.setPublishArtifacts(this.publishArtifacts);
         resourceBundle.setPublishArtifactRepository(this.publishArtifactRepository);
-        resourceBundle.setEquinoxLauncher(this.equinoxLauncher);
         resourceBundle.setP2Profile(this.p2Profile);
         resourceBundle.setProject(this.project);
         resourceBundle.setArchive(this.archive);
-        resourceBundle.setArtifactFactory(this.artifactFactory);
-        resourceBundle.setResolver(this.resolver);
+        resourceBundle.setRepositorySystem(this.repositorySystem);
         resourceBundle.setLocalRepository(this.localRepository);
         resourceBundle.setRemoteRepositories(this.remoteRepositories);
         resourceBundle.setLauncher(this.launcher);

@@ -47,7 +47,7 @@ public class RepoBeanGeneratorUtils {
                 } else
                     f = (FeatureArtifact) obj;
                 f.resolveVersion(this.resourceBundle.getProject());
-                f.setArtifact(MavenUtils.getResolvedArtifact(f, resourceBundle.getArtifactFactory(), resourceBundle.getRemoteRepositories(), resourceBundle.getLocalRepository(), resourceBundle.getResolver()));
+                f.setArtifact(MavenUtils.getResolvedArtifact(f, resourceBundle.getRepositorySystem(), resourceBundle.getRemoteRepositories(), resourceBundle.getLocalRepository()));
                 processedFeatureArtifacts.add(f);
             } catch (Exception e) {
                 throw new MojoExecutionException("Error occurred when processing the Feature Artifact: " + obj.toString(), e);
@@ -69,7 +69,7 @@ public class RepoBeanGeneratorUtils {
                 f = (Bundle) obj;
             }
             BundleUtils.resolveVersionForBundle(f, this.resourceBundle.getProject());// f.resolveVersion(getProject());
-            f.setArtifact(MavenUtils.getResolvedArtifact(f, resourceBundle.getArtifactFactory(), resourceBundle.getRemoteRepositories(), resourceBundle.getLocalRepository(), resourceBundle.getResolver()));
+            f.setArtifact(MavenUtils.getResolvedArtifact(f, resourceBundle.getRepositorySystem(), resourceBundle.getRemoteRepositories(), resourceBundle.getLocalRepository()));
             processedBundleArtifacts.add(f);
         }
         return processedBundleArtifacts;
