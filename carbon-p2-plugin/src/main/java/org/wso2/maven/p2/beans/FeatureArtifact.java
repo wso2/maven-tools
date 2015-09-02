@@ -15,44 +15,23 @@
 * specific language governing permissions and limitations
 * under the License.
 */
-package org.wso2.maven.p2;
+package org.wso2.maven.p2.beans;
 
 import org.apache.maven.artifact.Artifact;
 import org.apache.maven.model.Dependency;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.project.MavenProject;
 
-import java.util.Iterator;
 import java.util.List;
 import java.util.Properties;
 import java.util.regex.Pattern;
 
 public class FeatureArtifact {
-    /**
-     * Group Id of the Bundle
-     *
-     * @parameter
-     * @required
-     */
+
     private String groupId;
-
-    /**
-     * Artifact Id of the Bundle
-     *
-     * @parameter
-     * @required
-     */
     private String artifactId;
-
-    /**
-     * Version of the Bundle
-     *
-     * @parameter default-value=""
-     */
     private String version;
-
     private Artifact artifact;
-
     private String featureId;
     private String featureVersion;
 
@@ -88,40 +67,22 @@ public class FeatureArtifact {
         return artifact;
     }
 
-    protected static FeatureArtifact getFeatureArtifact(String featureArtifactDefinition, FeatureArtifact featureArtifact) throws MojoExecutionException {
-        String[] split = featureArtifactDefinition.split(":");
-        if (split.length > 1) {
-            featureArtifact.setGroupId(split[0]);
-            featureArtifact.setArtifactId(split[1]);
-            if (split.length == 3) featureArtifact.setVersion(split[2]);
-            return featureArtifact;
-        }
-        throw new MojoExecutionException("Insufficient artifact information provided to determine the feature: " + featureArtifactDefinition);
-    }
-
-    public static FeatureArtifact getFeatureArtifact(String featureArtifactDefinition) throws MojoExecutionException {
-        return getFeatureArtifact(featureArtifactDefinition, new FeatureArtifact());
-    }
-
     public void resolveVersion(MavenProject project) throws MojoExecutionException {
         if (version == null) {
-            List dependencies = project.getDependencies();
-            for (Iterator iterator = dependencies.iterator(); iterator.hasNext(); ) {
-                Dependency dependancy = (Dependency) iterator.next();
-                if (dependancy.getGroupId().equalsIgnoreCase(getGroupId()) && dependancy.getArtifactId().equalsIgnoreCase(getArtifactId())) {
-                    setVersion(dependancy.getVersion());
+            List<Dependency> dependencies = project.getDependencies();
+            for (Dependency dependency : dependencies) {
+                if (dependency.getGroupId().equalsIgnoreCase(getGroupId()) && dependency.getArtifactId().equalsIgnoreCase(getArtifactId())) {
+                    setVersion(dependency.getVersion());
                 }
-
             }
         }
-        if (version == null) {
-            List dependencies = project.getDependencyManagement().getDependencies();
-            for (Iterator iterator = dependencies.iterator(); iterator.hasNext(); ) {
-                Dependency dependancy = (Dependency) iterator.next();
-                if (dependancy.getGroupId().equalsIgnoreCase(getGroupId()) && dependancy.getArtifactId().equalsIgnoreCase(getArtifactId())) {
-                    setVersion(dependancy.getVersion());
-                }
 
+        if (version == null) {
+            List<Dependency> dependencies = project.getDependencyManagement().getDependencies();
+            for (Dependency dependency : dependencies) {
+                if (dependency.getGroupId().equalsIgnoreCase(getGroupId()) && dependency.getArtifactId().equalsIgnoreCase(getArtifactId())) {
+                    setVersion(dependency.getVersion());
+                }
             }
         }
         if (version == null) {

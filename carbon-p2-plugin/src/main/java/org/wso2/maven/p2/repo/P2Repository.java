@@ -15,7 +15,7 @@
 * specific language governing permissions and limitations
 * under the License.
 */
-package org.wso2.maven.p2;
+package org.wso2.maven.p2.repo;
 
 import org.wso2.maven.p2.repo.RepositoryGenMojo;
 

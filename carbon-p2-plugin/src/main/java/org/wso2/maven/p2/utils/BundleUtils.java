@@ -69,6 +69,20 @@ public class BundleUtils {
                 "Insufficient artifact information provided to determine the bundle: " + bundleDefinition);
     }
 
+    public static Bundle getBundleArtifact(String bundleArtifactDefinition) throws MojoExecutionException {
+        Bundle bundleArtifact = new Bundle();
+        String[] split = bundleArtifactDefinition.split(":");
+        if (split.length > 1) {
+            bundleArtifact.setGroupId(split[0]);
+            bundleArtifact.setArtifactId(split[1]);
+            if (split.length == 3) {
+                bundleArtifact.setVersion(split[2]);
+            }
+            return bundleArtifact;
+        }
+        throw new MojoExecutionException("Insufficient artifact information provided to determine the feature: " + bundleArtifactDefinition);
+    }
+
     /**
      * Resolves the version for a given bundle by analyzing the MavenProject dependencies.
      *

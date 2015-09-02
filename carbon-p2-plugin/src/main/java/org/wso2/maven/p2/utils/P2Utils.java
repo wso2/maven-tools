@@ -21,14 +21,11 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
-import java.io.FilenameFilter;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.jar.JarFile;
 import java.util.regex.Pattern;
 
 import javax.xml.transform.OutputKeys;
@@ -46,10 +43,6 @@ import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.wso2.maven.p2.CatFeature;
 import org.wso2.maven.p2.Category;
-import org.wso2.maven.p2.EquinoxLauncher;
-import org.wso2.maven.p2.FeatureArtifact;
-import org.wso2.maven.p2.P2Profile;
-import org.wso2.maven.p2.beans.Bundle;
 
 public class P2Utils {
 	private static String[] matchList=new String[]{"perfect","equivalent","compatible","greaterOrEqual","patch", "optional"};

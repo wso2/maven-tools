@@ -20,8 +20,9 @@ import org.apache.maven.model.Resource;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.project.MavenProject;
-import org.wso2.maven.p2.BundleArtifact;
-import org.wso2.maven.p2.FeatureArtifact;
+import org.codehaus.plexus.util.FileUtils;
+import org.wso2.maven.p2.beans.FeatureArtifact;
+import org.wso2.maven.p2.beans.Bundle;
 import org.wso2.maven.p2.commons.Generator;
 import org.wso2.maven.p2.commons.P2ApplicationLaunchManager;
 import org.wso2.maven.p2.repo.utils.RepoBeanGeneratorUtils;
@@ -32,7 +33,6 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Date;
-import java.util.Iterator;
 import java.util.List;
 
 public class RepoGenerator extends Generator {
@@ -41,22 +41,19 @@ public class RepoGenerator extends Generator {
     private final MavenProject project;
 
     private ArrayList<FeatureArtifact> processedFeatureArtifacts;
-    private ArrayList<BundleArtifact> processedBundleArtifacts;
+    private ArrayList<Bundle> processedBundleArtifacts;
 
-    private File targetDir;
     private File tempDir;
     private File sourceDir;
 
-    private File REPO_GEN_LOCATION;
-
-    private File categoryDeinitionFile;
-
-    private File ARCHIVE_FILE;
+    private File repoGenerationLocation;
+    private File archiveFile;
+    private File categoryDefinitionFile;
 
     private static final String PUBLISHER_APPLICATION = "org.eclipse.equinox.p2.publisher.FeaturesAndBundlesPublisher";
     private static final String CATEGORY_PUBLISHER_APPLICATION = "org.eclipse.equinox.p2.publisher.CategoryPublisher";
 
-    P2ApplicationLaunchManager p2LaunchManager;
+    private P2ApplicationLaunchManager p2LaunchManager;
 
     public RepoGenerator(RepositoryResourceBundle resourceBundle) {
         this.resourceBundle = resourceBundle;
@@ -71,15 +68,16 @@ public class RepoGenerator extends Generator {
         unzipFeaturesToOutputFolder();
         copyBundleArtifacts();
         copyProjectResources();
-        this.getLog().info("Running Equinox P2 Publisher Application for Repository Generation");
+        getLog().info("Running Equinox P2 Publisher Application for Repository Generation");
         generateRepository();
-        this.getLog().info("Running Equinox P2 Category Publisher Application for the Generated Repository");
+        getLog().info("Running Equinox P2 Category Publisher Application for the Generated Repository");
         updateRepositoryWithCategories();
         archiveRepo();
         performMopUp();
     }
 
     private void generateBeansFromInputs() throws MojoExecutionException {
+        getLog().info("Generating beans from input configuration");
         RepoBeanGeneratorUtils beanGenerator = new RepoBeanGeneratorUtils(this.resourceBundle);
         processedFeatureArtifacts = beanGenerator.getProcessedFeatureArtifacts();
         processedBundleArtifacts = beanGenerator.getProcessedBundleArtifacts();
@@ -101,7 +99,7 @@ public class RepoGenerator extends Generator {
                         File resourceFolder = new File(resource.getDirectory());
                         if (resourceFolder.exists()) {
                             getLog().info("   " + resource.getDirectory());
-                            FileManagementUtil.copyDirectory(resourceFolder, REPO_GEN_LOCATION);
+                            FileManagementUtil.copyDirectory(resourceFolder, repoGenerationLocation);
                         }
                     } catch (IOException e) {
                         throw new MojoExecutionException("Unable copy resources: " + resource.getDirectory(), e);
@@ -131,11 +129,14 @@ public class RepoGenerator extends Generator {
     }
 
     private void copyBundleArtifacts() throws MojoExecutionException {
-        ArrayList<BundleArtifact> processedBundleArtifacts = this.processedBundleArtifacts;
-
+        ArrayList<Bundle> processedBundleArtifacts = this.processedBundleArtifacts;
+        if (processedBundleArtifacts.size() > 0) {
+            getLog().info("Copying bundle artifacts.");
+        }
         File pluginsDir = new File(sourceDir, "plugins");
-        for (BundleArtifact bundleArtifact : processedBundleArtifacts) {
+        for (Bundle bundleArtifact : processedBundleArtifacts) {
             try {
+                getLog().info("Copying bundle artifact:" + bundleArtifact.getBundleSymbolicName());
                 File file = bundleArtifact.getArtifact().getFile();
                 FileManagementUtil.copy(file, new File(pluginsDir, file.getName()));
             } catch (Exception e) {
@@ -147,20 +148,22 @@ public class RepoGenerator extends Generator {
     private void archiveRepo() throws MojoExecutionException {
         if (resourceBundle.isArchive()) {
             getLog().info("Generating repository archive...");
-            FileManagementUtil.zipFolder(REPO_GEN_LOCATION.toString(), ARCHIVE_FILE.toString());
-            getLog().info("Repository Archive: " + ARCHIVE_FILE.toString());
-            FileManagementUtil.deleteDirectories(REPO_GEN_LOCATION);
+            FileManagementUtil.zipFolder(repoGenerationLocation.toString(), archiveFile.toString());
+            getLog().info("Repository Archive: " + archiveFile.toString());
+            FileManagementUtil.deleteDirectories(repoGenerationLocation);
         }
     }
 
 
     private void setupTempOutputFolderStructure() throws MojoExecutionException {
         try {
-            targetDir = new File(project.getBasedir(), "target");
+            File targetDir = new File(project.getBasedir(), "target");
             String timestampVal = String.valueOf((new Date()).getTime());
             tempDir = new File(targetDir, "tmp." + timestampVal);
             sourceDir = new File(tempDir, "featureExtract");
-            sourceDir.mkdirs();
+            if(!sourceDir.mkdirs()) {
+                throw new MojoExecutionException("Error occurred while creating output folder structure");
+            }
 
             //Some weird shit is going on. Check this part : 01/09/2015
             if (resourceBundle.getArtifactRepository() != null) {
@@ -171,13 +174,13 @@ public class RepoGenerator extends Generator {
             }
             if (resourceBundle.getMetadataRepository() == null) {
                 File repo = new File(targetDir, project.getArtifactId() + "_" + project.getVersion());
-                resourceBundle.setMetadataRepository(repo.toURL());
-                resourceBundle.setArtifactRepository(repo.toURL());
+                resourceBundle.setMetadataRepository(repo.toURI().toURL());
+                resourceBundle.setArtifactRepository(repo.toURI().toURL());
             }
 
-            REPO_GEN_LOCATION = new File(resourceBundle.getMetadataRepository().getFile().replace("/", File.separator));
-            ARCHIVE_FILE = new File(targetDir, project.getArtifactId() + "_" + project.getVersion() + ".zip");
-            categoryDeinitionFile = File.createTempFile("equinox-p2", "category");
+            repoGenerationLocation = new File(resourceBundle.getMetadataRepository().getFile().replace("/", File.separator));
+            archiveFile = new File(targetDir, project.getArtifactId() + "_" + project.getVersion() + ".zip");
+            categoryDefinitionFile = File.createTempFile("equinox-p2", "category");
         } catch (IOException e) {
             throw new MojoExecutionException("Error occurred while creating output folder structure", e);
         }
@@ -185,14 +188,14 @@ public class RepoGenerator extends Generator {
 
     private void updateRepositoryWithCategories() throws MojoExecutionException {
         if (isCategoriesAvailable()) {
-            P2Utils.createCategoryFile(project, resourceBundle.getCategories(), categoryDeinitionFile,
+            P2Utils.createCategoryFile(project, resourceBundle.getCategories(), categoryDefinitionFile,
                     resourceBundle.getArtifactFactory(), resourceBundle.getRemoteRepositories(),
                     resourceBundle.getLocalRepository(), resourceBundle.getResolver());
 
             p2LaunchManager.setWorkingDirectory(project.getBasedir());
             p2LaunchManager.setApplicationName(CATEGORY_PUBLISHER_APPLICATION);
             p2LaunchManager.addUpdateRepoWithCategoryArguments(resourceBundle.getMetadataRepository().toString(),
-                    categoryDeinitionFile.toURI().toString());
+                    categoryDefinitionFile.toURI().toString());
 
             p2LaunchManager.generateRepo(resourceBundle.getForkedProcessTimeoutInSeconds());
         }
@@ -206,7 +209,7 @@ public class RepoGenerator extends Generator {
         try {
             // we want this temp file, in order to debug some errors. since this is in target, it will
             // get removed in the next build cycle.
-            // FileUtils.deleteDirectory(tempDir);
+            FileUtils.deleteDirectory(tempDir);
         } catch (Exception e) {
             getLog().warn(new MojoExecutionException("Unable complete mop up operation", e));
         }

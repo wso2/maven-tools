@@ -15,32 +15,20 @@
  */
 package org.wso2.maven.p2.repo;
 
-import java.io.File;
-import java.io.IOException;
-import java.net.MalformedURLException;
-import java.net.URL;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.Iterator;
-import java.util.List;
-
 import org.apache.maven.artifact.factory.ArtifactFactory;
 import org.apache.maven.artifact.repository.ArtifactRepository;
 import org.apache.maven.artifact.resolver.ArtifactResolver;
-import org.apache.maven.model.Resource;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.project.MavenProject;
 import org.eclipse.tycho.p2.facade.internal.P2ApplicationLauncher;
-import org.wso2.maven.p2.BundleArtifact;
 import org.wso2.maven.p2.EquinoxLauncher;
-import org.wso2.maven.p2.FeatureArtifact;
 import org.wso2.maven.p2.P2Profile;
-import org.wso2.maven.p2.utils.BundleUtils;
-import org.wso2.maven.p2.utils.FileManagementUtil;
-import org.wso2.maven.p2.utils.MavenUtils;
-import org.wso2.maven.p2.utils.P2Utils;
+
+import java.net.URL;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Write environment information for the current build to file.
@@ -145,17 +133,17 @@ public class RepositoryGenMojo extends AbstractMojo {
     /**
      * @component
      */
-    private org.apache.maven.artifact.factory.ArtifactFactory artifactFactory;
+    private ArtifactFactory artifactFactory;
 
     /**
      * @component
      */
-    private org.apache.maven.artifact.resolver.ArtifactResolver resolver;
+    private ArtifactResolver resolver;
 
     /**
      * @parameter default-value="${localRepository}"
      */
-    private org.apache.maven.artifact.repository.ArtifactRepository localRepository;
+    private ArtifactRepository localRepository;
 
     /**
      * @parameter default-value="${project.remoteArtifactRepositories}"

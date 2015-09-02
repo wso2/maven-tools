@@ -29,6 +29,9 @@ import org.apache.maven.project.MavenProject;
 import org.apache.maven.project.MavenProjectHelper;
 import org.codehaus.plexus.util.FileUtils;
 import org.eclipse.tycho.p2.facade.internal.P2ApplicationLauncher;
+import org.wso2.maven.p2.beans.Feature;
+import org.wso2.maven.p2.repo.P2Repository;
+import org.wso2.maven.p2.utils.FeatureUtils;
 import org.wso2.maven.p2.utils.FileManagementUtil;
 import org.wso2.maven.p2.utils.P2Constants;
 
@@ -188,7 +191,7 @@ public class ProfileGenMojo extends AbstractMojo {
             if (featureObj instanceof Feature) {
                 f = (Feature) featureObj;
             } else if (featureObj instanceof String) {
-                f = Feature.getFeature(featureObj.toString());
+                f = FeatureUtils.getFeature(featureObj.toString());
             } else
                 f = (Feature) featureObj;
             installUIs = installUIs + f.getId().trim() + "/" + f.getVersion().trim() + ",";

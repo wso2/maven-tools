@@ -17,10 +17,11 @@
 package org.wso2.maven.p2.repo.utils;
 
 import org.apache.maven.plugin.MojoExecutionException;
-import org.wso2.maven.p2.BundleArtifact;
-import org.wso2.maven.p2.FeatureArtifact;
+import org.wso2.maven.p2.beans.FeatureArtifact;
+import org.wso2.maven.p2.beans.Bundle;
 import org.wso2.maven.p2.repo.RepositoryResourceBundle;
 import org.wso2.maven.p2.utils.BundleUtils;
+import org.wso2.maven.p2.utils.FeatureUtils;
 import org.wso2.maven.p2.utils.MavenUtils;
 
 import java.util.ArrayList;
@@ -39,12 +40,10 @@ public class RepoBeanGeneratorUtils {
             return processedFeatureArtifacts;
         }
         for (Object obj : resourceBundle.getFeatureArtifacts()) {
-            FeatureArtifact f = null;
             try {
-                if (obj instanceof FeatureArtifact) {
-                    f = (FeatureArtifact) obj;
-                } else if (obj instanceof String) {
-                    f = FeatureArtifact.getFeatureArtifact(obj.toString());
+                FeatureArtifact f = null;
+                if (obj instanceof String) {
+                    f = FeatureUtils.getFeatureArtifact(obj.toString());
                 } else
                     f = (FeatureArtifact) obj;
                 f.resolveVersion(this.resourceBundle.getProject());
@@ -57,19 +56,17 @@ public class RepoBeanGeneratorUtils {
         return processedFeatureArtifacts;
     }
 
-    public ArrayList<BundleArtifact> getProcessedBundleArtifacts() throws MojoExecutionException {
-        ArrayList<BundleArtifact> processedBundleArtifacts = new ArrayList<BundleArtifact>();
+    public ArrayList<Bundle> getProcessedBundleArtifacts() throws MojoExecutionException {
+        ArrayList<Bundle> processedBundleArtifacts = new ArrayList<Bundle>();
         if(resourceBundle.getBundleArtifacts() == null) {
             return processedBundleArtifacts;
         }
         for (Object obj : resourceBundle.getBundleArtifacts()) {
-            BundleArtifact f;
-            if (obj instanceof BundleArtifact) {
-                f = (BundleArtifact) obj;
-            } else if (obj instanceof String) {
-                f = BundleArtifact.getBundleArtifact(obj.toString());
+            Bundle f;
+            if (obj instanceof String) {
+                f = BundleUtils.getBundleArtifact(obj.toString());
             } else {
-                f = (BundleArtifact) obj;
+                f = (Bundle) obj;
             }
             BundleUtils.resolveVersionForBundle(f, this.resourceBundle.getProject());// f.resolveVersion(getProject());
             f.setArtifact(MavenUtils.getResolvedArtifact(f, resourceBundle.getArtifactFactory(), resourceBundle.getRemoteRepositories(), resourceBundle.getLocalRepository(), resourceBundle.getResolver()));

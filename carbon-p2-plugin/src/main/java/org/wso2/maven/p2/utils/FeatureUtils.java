@@ -17,6 +17,8 @@
 package org.wso2.maven.p2.utils;
 
 import org.apache.maven.plugin.MojoExecutionException;
+import org.wso2.maven.p2.beans.Feature;
+import org.wso2.maven.p2.beans.FeatureArtifact;
 import org.wso2.maven.p2.beans.ImportFeature;
 import org.wso2.maven.p2.beans.IncludedFeature;
 
@@ -103,5 +105,28 @@ public class FeatureUtils {
         }
         throw new MojoExecutionException("Insufficient feature artifact information provided to determine the feature: "
                 + featureDefinition);
+    }
+
+    public static Feature getFeature(String bundleDefinition) throws MojoExecutionException {
+        String[] split = bundleDefinition.split(":");
+        if (split.length > 1) {
+            Feature feature = new Feature();
+            feature.setId(split[0]);
+            feature.setVersion(split[1]);
+            return feature;
+        }
+        throw new MojoExecutionException("Insufficient feature information provided to determine the feature: " + bundleDefinition);
+    }
+
+    public static FeatureArtifact getFeatureArtifact(String featureArtifactDefinition) throws MojoExecutionException {
+        String[] split = featureArtifactDefinition.split(":");
+        if (split.length > 1) {
+            FeatureArtifact featureArtifact = new FeatureArtifact();
+            featureArtifact.setGroupId(split[0]);
+            featureArtifact.setArtifactId(split[1]);
+            if (split.length == 3) featureArtifact.setVersion(split[2]);
+            return featureArtifact;
+        }
+        throw new MojoExecutionException("Insufficient artifact information provided to determine the feature: " + featureArtifactDefinition);
     }
 }

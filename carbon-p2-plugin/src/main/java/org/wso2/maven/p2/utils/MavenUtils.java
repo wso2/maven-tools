@@ -27,7 +27,7 @@ import org.apache.maven.artifact.resolver.ArtifactResolver;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.repository.RepositorySystem;
 import org.w3c.dom.Document;
-import org.wso2.maven.p2.FeatureArtifact;
+import org.wso2.maven.p2.beans.FeatureArtifact;
 import org.wso2.maven.p2.beans.Bundle;
 import org.wso2.maven.p2.beans.IncludedFeature;
 
