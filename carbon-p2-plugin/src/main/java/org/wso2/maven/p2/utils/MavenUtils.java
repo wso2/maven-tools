@@ -38,37 +38,6 @@ import java.util.List;
 
 public class MavenUtils {
 
-    public static Artifact getResolvedArtifact(Bundle bundle, ArtifactFactory artifactFactory, List remoteRepositories,
-                                               ArtifactRepository localRepository, ArtifactResolver resolver)
-            throws MojoExecutionException {
-        Artifact artifact = artifactFactory.createArtifact(bundle.getGroupId(), bundle.getArtifactId(),
-                bundle.getVersion(), Artifact.SCOPE_RUNTIME, "jar");
-        try {
-            resolver.resolve(artifact, remoteRepositories, localRepository);
-        } catch (ArtifactResolutionException e) {
-            throw new MojoExecutionException("ERROR", e);
-        } catch (ArtifactNotFoundException e) {
-            throw new MojoExecutionException("ERROR", e);
-        }
-        return artifact;
-    }
-
-    public static Artifact getResolvedArtifact(FeatureArtifact featureArtifact, ArtifactFactory artifactFactory,
-                                               List remoteRepositories, ArtifactRepository localRepository,
-                                               ArtifactResolver resolver) throws MojoExecutionException {
-
-        Artifact artifact = artifactFactory.createArtifact(featureArtifact.getGroupId(), featureArtifact.getArtifactId(),
-                featureArtifact.getVersion(), Artifact.SCOPE_RUNTIME, "zip");
-        try {
-            resolver.resolve(artifact, remoteRepositories, localRepository);
-        } catch (ArtifactResolutionException e) {
-            throw new MojoExecutionException("ERROR", e);
-        } catch (ArtifactNotFoundException e) {
-            throw new MojoExecutionException("ERROR", e);
-        }
-        return artifact;
-    }
-
     /**
      * Returns an artifact which represent by a bundle
      *
@@ -128,29 +97,6 @@ public class MavenUtils {
 
         return artifact;
     }
-
-//	public static Artifact getResolvedArtifact(P2Profile p2Profile, ArtifactFactory artifactFactory, List remoteRepositories, ArtifactRepository localRepository, ArtifactResolver resolver) throws MojoExecutionException{
-//		Artifact artifact = artifactFactory.createArtifact(p2Profile.getGroupId(),p2Profile.getArtifactId(),p2Profile.getVersion(),Artifact.SCOPE_RUNTIME,"zip");
-//		try {
-//			resolver.resolve(artifact,remoteRepositories,localRepository);
-//		} catch (ArtifactResolutionException e) {
-//			throw new MojoExecutionException("ERROR",e);
-//		} catch (ArtifactNotFoundException e) {
-//			throw new MojoExecutionException("ERROR",e);
-//		}
-//		return artifact;
-//	}
-
-//    public static Artifact getResolvedArtifact(Artifact artifact, List remoteRepositories, ArtifactRepository localRepository, ArtifactResolver resolver) throws MojoExecutionException{
-//		try {
-//			resolver.resolve(artifact,remoteRepositories,localRepository);
-//		} catch (ArtifactResolutionException e) {
-//			throw new MojoExecutionException("ERROR",e);
-//		} catch (ArtifactNotFoundException e) {
-//			throw new MojoExecutionException("ERROR",e);
-//		}
-//		return artifact;
-//	}
 
     public static Document getManifestDocument() throws MojoExecutionException {
         DocumentBuilderFactory documentBuilderFactory = DocumentBuilderFactory.newInstance();
