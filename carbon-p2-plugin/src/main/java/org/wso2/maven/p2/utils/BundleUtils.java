@@ -80,7 +80,8 @@ public class BundleUtils {
             }
             return bundleArtifact;
         }
-        throw new MojoExecutionException("Insufficient artifact information provided to determine the feature: " + bundleArtifactDefinition);
+        throw new MojoExecutionException("Insufficient artifact information provided to determine the feature: "
+                + bundleArtifactDefinition);
     }
 
     /**
@@ -104,7 +105,8 @@ public class BundleUtils {
         }
 
         if (bundle.getVersion() == null) {
-            throw new MojoExecutionException("Could not find the version for " + bundle.getGroupId() + ":" + bundle.getArtifactId());
+            throw new MojoExecutionException("Could not find the version for " + bundle.getGroupId() + ":"
+                    + bundle.getArtifactId());
         }
 
         Properties properties = project.getProperties();
@@ -114,15 +116,17 @@ public class BundleUtils {
         }
     }
 
-    public static void setVersionForBundle(Bundle bundle, List<Dependency> dependencies) {
+    private static void setVersionForBundle(Bundle bundle, List<Dependency> dependencies) {
         for (Dependency dependency : dependencies) {
-            if (dependency.getGroupId().equalsIgnoreCase(bundle.getGroupId()) && dependency.getArtifactId().equalsIgnoreCase(bundle.getArtifactId())) {
+            if (dependency.getGroupId().equalsIgnoreCase(bundle.getGroupId()) && dependency.getArtifactId()
+                    .equalsIgnoreCase(bundle.getArtifactId())) {
                 bundle.setVersion(dependency.getVersion());
             }
         }
     }
 
     public static String getOSGIVersion(String version) {
+        //A complex logic is added in this method. Thus during the architectural migration, this logic is kept as it is.
         String osgiVersion;
 
         // Matcher m = P_VERSION.matcher(version);

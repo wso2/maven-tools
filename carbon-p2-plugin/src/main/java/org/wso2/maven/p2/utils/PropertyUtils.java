@@ -29,10 +29,6 @@ public class PropertyUtils {
      * @throws MojoExecutionException
      */
     public static Property getProperty(String advicePropertyDefinition) throws MojoExecutionException {
-        if (advicePropertyDefinition.trim().equalsIgnoreCase("")) {
-            throw new MojoExecutionException("Invalid advice property definition.");
-        }
-
         String[] propertyDefs = advicePropertyDefinition.split(":");
         Property property = new Property();
 

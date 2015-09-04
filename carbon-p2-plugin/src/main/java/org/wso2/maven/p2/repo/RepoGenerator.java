@@ -69,13 +69,11 @@ public class RepoGenerator extends Generator {
         generateBeansFromInputs();
         setupTempOutputFolderStructure();
         unzipFeaturesToOutputFolder();
-        copyBundleArtifacts();
-        copyProjectResources();
-        getLog().info("Running Equinox P2 Publisher Application for Repository Generation");
+        copyBundleArtifactsToOutputFolder();
+        copyProjectResourcesToOutputFolder();
         generateRepository();
-        getLog().info("Running Equinox P2 Category Publisher Application for the Generated Repository");
         updateRepositoryWithCategories();
-        archiveRepo();
+        archiveGeneratedRepo();
         performMopUp();
     }
 
@@ -91,7 +89,7 @@ public class RepoGenerator extends Generator {
      *
      * @throws MojoExecutionException
      */
-    private void copyProjectResources() throws MojoExecutionException {
+    private void copyProjectResourcesToOutputFolder() throws MojoExecutionException {
         List resources = project.getResources();
         if (resources != null) {
             getLog().info("Copying resources");
@@ -113,10 +111,13 @@ public class RepoGenerator extends Generator {
     }
 
     private void generateRepository() throws MojoExecutionException {
+        getLog().info("Running Equinox P2 Publisher Application for Repository Generation");
         p2LaunchManager.setWorkingDirectory(project.getBasedir());
         p2LaunchManager.setApplicationName(PUBLISHER_APPLICATION);
-        p2LaunchManager.addRepoGenerationArguments(sourceDir.getAbsolutePath(), resourceBundle.getMetadataRepository().toString(), getRepositoryName(), getRepositoryName());
+        p2LaunchManager.addRepoGenerationArguments(sourceDir.getAbsolutePath(), resourceBundle.getMetadataRepository().
+                toString(), getRepositoryName(), getRepositoryName());
         p2LaunchManager.generateRepo(resourceBundle.getForkedProcessTimeoutInSeconds());
+        getLog().info("Completed running Equinox P2 Publisher Application for Repository Generation");
     }
 
     private void unzipFeaturesToOutputFolder() throws MojoExecutionException {
@@ -131,7 +132,7 @@ public class RepoGenerator extends Generator {
         }
     }
 
-    private void copyBundleArtifacts() throws MojoExecutionException {
+    private void copyBundleArtifactsToOutputFolder() throws MojoExecutionException {
         ArrayList<Bundle> processedBundleArtifacts = this.processedBundleArtifacts;
         if (processedBundleArtifacts.size() > 0) {
             getLog().info("Copying bundle artifacts.");
@@ -148,7 +149,11 @@ public class RepoGenerator extends Generator {
         }
     }
 
-    private void archiveRepo() throws MojoExecutionException {
+    /**
+     * Creates a zip archive from the generated repository and delete the repo.
+     * @throws MojoExecutionException
+     */
+    private void archiveGeneratedRepo() throws MojoExecutionException {
         if (resourceBundle.isArchive()) {
             getLog().info("Generating repository archive...");
             FileManagementUtil.zipFolder(repoGenerationLocation.toString(), archiveFile.toString());
@@ -189,8 +194,13 @@ public class RepoGenerator extends Generator {
         }
     }
 
+    /**
+     * Update the generated repository with categories.
+     * @throws MojoExecutionException
+     */
     private void updateRepositoryWithCategories() throws MojoExecutionException {
         if (isCategoriesAvailable()) {
+            getLog().info("Running Equinox P2 Category Publisher Application for the Generated Repository");
             P2Utils.createCategoryFile(project, resourceBundle.getCategories(), categoryDefinitionFile);
 
             p2LaunchManager.setWorkingDirectory(project.getBasedir());
@@ -199,6 +209,7 @@ public class RepoGenerator extends Generator {
                     categoryDefinitionFile.toURI().toString());
 
             p2LaunchManager.generateRepo(resourceBundle.getForkedProcessTimeoutInSeconds());
+            getLog().info("Completed running Equinox P2 Category Publisher Application for the Generated Repository");
         }
     }
 
@@ -206,10 +217,11 @@ public class RepoGenerator extends Generator {
         return !(resourceBundle.getCategories() == null || resourceBundle.getCategories().size() == 0);
     }
 
+    /**
+     * Delete the temporary folder.
+     */
     private void performMopUp() {
         try {
-            // we want this temp file, in order to debug some errors. since this is in target, it will
-            // get removed in the next build cycle.
             FileUtils.deleteDirectory(tempDir);
         } catch (Exception e) {
             getLog().warn(new MojoExecutionException("Unable complete mop up operation", e));

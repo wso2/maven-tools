@@ -56,20 +56,21 @@ public class ProfileGenerator extends Generator {
     @Override
     public void generate() throws MojoExecutionException, MojoFailureException {
         try {
-            rewriteEclipseIni();
-            this.getLog().info("Running Equinox P2 Director Application");
+            writeEclipseIni();
             installFeatures(getIUsToInstall());
-            //updating profile's config.ini p2.data.area property using relative path
-            File profileConfigIni = FileManagementUtil.getProfileConfigIniFile(destination, resourceBundle.getProfile());
-            FileManagementUtil.changeConfigIniProperty(profileConfigIni, "eclipse.p2.data.area", "@config.dir/../../p2/");
-
-            //deleting old profile files, if specified
-            if (resourceBundle.isDeleteOldProfileFiles()) {
-                deleteOldProfiles();
-            }
+            updateProfileConfigIni();
+            deleteOldProfiles();
         } catch (Exception e) {
             throw new MojoExecutionException(e.getMessage(), e);
         }
+    }
+
+    /**
+     * updating profile's config.ini p2.data.area property using relative path
+     */
+    private void updateProfileConfigIni() {
+        File profileConfigIni = FileManagementUtil.getProfileConfigIniFile(destination, resourceBundle.getProfile());
+        FileManagementUtil.changeConfigIniProperty(profileConfigIni, "eclipse.p2.data.area", "@config.dir/../../p2/");
     }
 
     /**
@@ -78,7 +79,7 @@ public class ProfileGenerator extends Generator {
      * @throws Exception
      */
     private void installFeatures(String installUIs) throws Exception {
-
+        getLog().info("Running Equinox P2 Director Application");
         P2ApplicationLaunchManager launcher = new P2ApplicationLaunchManager(resourceBundle.getLauncher());
         launcher.setWorkingDirectory(project.getBasedir());
         launcher.setApplicationName(PUBLISHER_APPLICATION);
@@ -110,6 +111,10 @@ public class ProfileGenerator extends Generator {
      * @throws MojoExecutionException
      */
     private void deleteOldProfiles() throws MojoExecutionException {
+        //In not specified to delete, then return the method.
+        if(!resourceBundle.isDeleteOldProfileFiles()) {
+            return;
+        }
         String destination = resourceBundle.getDestination();
         if (!destination.endsWith("/")) {
             destination = destination + "/";
@@ -143,7 +148,7 @@ public class ProfileGenerator extends Generator {
      *
      * @throws MojoExecutionException
      */
-    private void rewriteEclipseIni() throws MojoExecutionException {
+    private void writeEclipseIni() throws MojoExecutionException {
         String profileLocation = resourceBundle.getDestination() + File.separator + resourceBundle.getProfile();
 
         File eclipseIni = new File(profileLocation + File.separator + "null.ini");

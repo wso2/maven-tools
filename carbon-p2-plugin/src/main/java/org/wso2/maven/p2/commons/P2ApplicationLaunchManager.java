@@ -40,7 +40,8 @@ public class P2ApplicationLaunchManager {
         this.launcher.setApplicationName(applicationName);
     }
 
-    public void addRepoGenerationArguments(String sourceDir, String metadataRepoLocation, String metadataRepositoryName, String repositoryName) throws MojoExecutionException {
+    public void addRepoGenerationArguments(String sourceDir, String metadataRepoLocation, String metadataRepositoryName,
+                                           String repositoryName) throws MojoExecutionException {
         try {
             launcher.addArguments("-source", sourceDir,
                     "-metadataRepository", metadataRepoLocation,
@@ -56,7 +57,8 @@ public class P2ApplicationLaunchManager {
         }
     }
 
-    public void addUpdateRepoWithCategoryArguments(String metadataRepositoryLocation, String categoryDefinitionFile) throws MojoExecutionException {
+    public void addUpdateRepoWithCategoryArguments(String metadataRepositoryLocation, String categoryDefinitionFile)
+            throws MojoExecutionException {
         try {
             launcher.addArguments("-metadataRepository", metadataRepositoryLocation,
                     "-categoryDefinition", categoryDefinitionFile,
@@ -69,7 +71,8 @@ public class P2ApplicationLaunchManager {
     }
 
     public void addArgumentsToInstallFeatures(String metadataRepositoryLocation, String artifactRepositoryLocation,
-                                              String installUIs, String destination, String profile) throws MojoExecutionException {
+                                              String installUIs, String destination, String profile)
+            throws MojoExecutionException {
         try {
             launcher.addArguments(
                     "-metadataRepository", metadataRepositoryLocation,
