@@ -37,13 +37,6 @@ import java.util.List;
 @Mojo(name = "p2-repo-gen", defaultPhase = LifecyclePhase.PACKAGE)
 public class RepositoryGenMojo extends AbstractMojo {
 
-//    /**
-//     * URL of the Metadata Repository
-//     *
-//     * @parameter
-//     */
-//    private URL repository;
-
     /**
      * Name of the repository
      */
@@ -118,7 +111,6 @@ public class RepositoryGenMojo extends AbstractMojo {
     /**
      * Kill the forked test process after a certain number of seconds. If set to 0, wait forever for
      * the process, never timing out.
-     *
      */
     @Parameter(defaultValue = "${p2.timeout}")
     private int forkedProcessTimeoutInSeconds;

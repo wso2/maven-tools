@@ -54,7 +54,6 @@ public class RepositoryResourceBundle {
 
     /**
      * Type of Artifact (War,Jar,etc)
-     *
      */
     private boolean publishArtifactRepository;
 

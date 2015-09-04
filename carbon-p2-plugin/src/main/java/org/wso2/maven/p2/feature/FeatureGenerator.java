@@ -94,7 +94,8 @@ public class FeatureGenerator extends Generator {
     }
 
     /**
-     * Generates internal bean objects from the plugin configuration passed in through the pom.xml
+     * Generates internal bean objects from the plugin configuration passed in through the pom.xml.
+     *
      * @throws MojoExecutionException
      */
     private void generateBeansFromInputs() throws MojoExecutionException {
@@ -119,6 +120,7 @@ public class FeatureGenerator extends Generator {
 
     /**
      * Generates feature.xml, features.properties, manifest file for the feature and p2inf file.
+     *
      * @throws MojoExecutionException
      */
     private void generateFeatureOutputFiles() throws MojoExecutionException {
@@ -231,6 +233,7 @@ public class FeatureGenerator extends Generator {
 
     /**
      * Zip the created features folder.
+     *
      * @throws MojoExecutionException
      */
     private void createFeatureArchive() throws MojoExecutionException {
@@ -247,6 +250,7 @@ public class FeatureGenerator extends Generator {
 
     /**
      * Copy maven project resources into the output feature folder.
+     *
      * @throws MojoExecutionException
      */
     private void copyFeatureResources() throws MojoExecutionException {
@@ -279,7 +283,7 @@ public class FeatureGenerator extends Generator {
 
                     try {
                         if (fromPath.isDirectory() && !toPath.exists()) {
-                            if(!toPath.mkdirs()) {
+                            if (!toPath.mkdirs()) {
                                 throw new MojoExecutionException("Unable create directory: " + toPath.getAbsolutePath());
                             }
                         } else {

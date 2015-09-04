@@ -45,6 +45,7 @@ public class ProfileGenerator extends Generator {
 
     /**
      * ProfileGenerator constructor taking ProfileResourceBundle as a parameter.
+     *
      * @param resourceBundle ProfileResourceBundle
      */
     public ProfileGenerator(ProfileResourceBundle resourceBundle) {
@@ -75,6 +76,7 @@ public class ProfileGenerator extends Generator {
 
     /**
      * Calls the P2ApplicationLauncher and install the features.
+     *
      * @param installUIs String
      * @throws Exception
      */
@@ -108,11 +110,12 @@ public class ProfileGenerator extends Generator {
 
     /**
      * Delete old profile files located at ${destination}/p2/org.eclipse.equinox.p2.engine/profileRegistry
+     *
      * @throws MojoExecutionException
      */
     private void deleteOldProfiles() throws MojoExecutionException {
         //In not specified to delete, then return the method.
-        if(!resourceBundle.isDeleteOldProfileFiles()) {
+        if (!resourceBundle.isDeleteOldProfileFiles()) {
             return;
         }
         String destination = resourceBundle.getDestination();
@@ -152,7 +155,7 @@ public class ProfileGenerator extends Generator {
         String profileLocation = resourceBundle.getDestination() + File.separator + resourceBundle.getProfile();
 
         File eclipseIni = new File(profileLocation + File.separator + "null.ini");
-        if(!eclipseIni.exists()) {
+        if (!eclipseIni.exists()) {
             // null.ini does not exist. trying with eclipse.ini
             eclipseIni = new File(profileLocation + File.separator + "eclipse.ini");
         }

@@ -110,6 +110,11 @@ public class RepoGenerator extends Generator {
         }
     }
 
+    /**
+     * Generate the repository by calling P2ApplicationLauncher.
+     *
+     * @throws MojoExecutionException
+     */
     private void generateRepository() throws MojoExecutionException {
         getLog().info("Running Equinox P2 Publisher Application for Repository Generation");
         p2LaunchManager.setWorkingDirectory(project.getBasedir());
@@ -120,6 +125,11 @@ public class RepoGenerator extends Generator {
         getLog().info("Completed running Equinox P2 Publisher Application for Repository Generation");
     }
 
+    /**
+     * Unzip the given feature zip files into the output folder which will ultimately converted into P2 repo.
+     *
+     * @throws MojoExecutionException
+     */
     private void unzipFeaturesToOutputFolder() throws MojoExecutionException {
         ArrayList<FeatureArtifact> processedFeatureArtifacts = this.processedFeatureArtifacts;
         for (FeatureArtifact featureArtifact : processedFeatureArtifacts) {
@@ -132,6 +142,11 @@ public class RepoGenerator extends Generator {
         }
     }
 
+    /**
+     * Copy artfacts into the repository folder.
+     *
+     * @throws MojoExecutionException
+     */
     private void copyBundleArtifactsToOutputFolder() throws MojoExecutionException {
         ArrayList<Bundle> processedBundleArtifacts = this.processedBundleArtifacts;
         if (processedBundleArtifacts.size() > 0) {
@@ -151,6 +166,7 @@ public class RepoGenerator extends Generator {
 
     /**
      * Creates a zip archive from the generated repository and delete the repo.
+     *
      * @throws MojoExecutionException
      */
     private void archiveGeneratedRepo() throws MojoExecutionException {
@@ -196,6 +212,7 @@ public class RepoGenerator extends Generator {
 
     /**
      * Update the generated repository with categories.
+     *
      * @throws MojoExecutionException
      */
     private void updateRepositoryWithCategories() throws MojoExecutionException {
