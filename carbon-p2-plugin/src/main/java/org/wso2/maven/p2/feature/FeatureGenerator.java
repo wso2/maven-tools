@@ -84,8 +84,6 @@ public class FeatureGenerator extends Generator {
     public void generate() throws MojoExecutionException, MojoFailureException {
         //Generates bean classes from the xml configuration provided through the pom.xml in plugin configuration
         generateBeansFromInputs();
-
-        //Setup
         setupTempOutputFolderStructure();
         copyFeatureResources();
         generateFeatureOutputFiles();
@@ -119,6 +117,10 @@ public class FeatureGenerator extends Generator {
         resourceBundle.setProcessedAdviceProperties(processedAdviceProperties);
     }
 
+    /**
+     * Generates feature.xml, features.properties, manifest file for the feature and p2inf file.
+     * @throws MojoExecutionException
+     */
     private void generateFeatureOutputFiles() throws MojoExecutionException {
         FeatureFileGeneratorUtils.createFeatureXml(resourceBundle, featureXmlFile);
         FeatureFileGeneratorUtils.createPropertiesFile(resourceBundle, featurePropertyFile);
@@ -227,6 +229,10 @@ public class FeatureGenerator extends Generator {
         }
     }
 
+    /**
+     * Zip the created features folder.
+     * @throws MojoExecutionException
+     */
     private void createFeatureArchive() throws MojoExecutionException {
         getLog().info("Generating feature archive: " + featureZipFile.getAbsolutePath());
         FileManagementUtil.zipFolder(rowOutputFolder.getAbsolutePath(), featureZipFile.getAbsolutePath());

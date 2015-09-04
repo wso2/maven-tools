@@ -17,8 +17,11 @@ package org.wso2.maven.p2.profile;
 
 import org.wso2.maven.p2.utils.BundleUtils;
 
+/**
+ * Bean class representing a feature.
+ */
 public class Feature {
-    
+
     private String id;
     private String version;
 

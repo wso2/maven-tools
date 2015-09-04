@@ -33,7 +33,7 @@ public abstract class Generator {
      */
     public abstract void generate()  throws MojoExecutionException, MojoFailureException;
 
-    protected Log getLog() {
+    public Log getLog() {
         return this.log;
     }
 

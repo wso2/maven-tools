@@ -16,14 +16,11 @@
 
 package org.wso2.maven.p2.repo;
 
-import org.apache.maven.artifact.factory.ArtifactFactory;
 import org.apache.maven.artifact.repository.ArtifactRepository;
-import org.apache.maven.artifact.resolver.ArtifactResolver;
 import org.apache.maven.plugin.logging.Log;
 import org.apache.maven.project.MavenProject;
 import org.apache.maven.repository.RepositorySystem;
 import org.eclipse.tycho.p2.facade.internal.P2ApplicationLauncher;
-import org.wso2.maven.p2.profile.P2Profile;
 
 import java.net.URL;
 import java.util.ArrayList;
@@ -54,12 +51,6 @@ public class RepositoryResourceBundle {
      *
      */
     private boolean publishArtifactRepository;
-
-    /**
-     * Equinox p2 configuration path
-     *
-     */
-    private P2Profile p2Profile;
 
     private MavenProject project;
 
@@ -137,14 +128,6 @@ public class RepositoryResourceBundle {
 
     public void setPublishArtifactRepository(boolean publishArtifactRepository) {
         this.publishArtifactRepository = publishArtifactRepository;
-    }
-
-    public P2Profile getP2Profile() {
-        return p2Profile;
-    }
-
-    public void setP2Profile(P2Profile p2Profile) {
-        this.p2Profile = p2Profile;
     }
 
     public MavenProject getProject() {

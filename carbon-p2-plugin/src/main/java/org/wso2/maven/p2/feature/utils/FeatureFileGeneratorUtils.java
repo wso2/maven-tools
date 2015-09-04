@@ -86,7 +86,6 @@ public class FeatureFileGeneratorUtils {
                         propertyFileStream.close();
                     } catch (IOException e) {
                         resourceBundle.getLog().error("Unable to close the properties file");
-                        //throw new MojoExecutionException("Unable to close the properties file", e);
                     }
                 }
             }
@@ -111,7 +110,6 @@ public class FeatureFileGeneratorUtils {
                         propertyFileStream.close();
                     } catch (IOException e) {
                         resourceBundle.getLog().error("Unable to close the given properties file");
-                        //throw new MojoExecutionException("Unable to close the given properties file", e);
                     }
                 }
             }
@@ -201,6 +199,13 @@ public class FeatureFileGeneratorUtils {
         }
     }
 
+    /**
+     * Read a given advice file in the pom.xml and return the items in the advice file in a String list.
+     *
+     * @param absolutePath Path to the advice file
+     * @return List&lt;String&gt; containing items in the given advice file
+     * @throws MojoExecutionException
+     */
     private static List<String> readAdviceFile(String absolutePath) throws MojoExecutionException {
         List<String> stringList = new ArrayList<String>();
         String inputLine;
@@ -281,55 +286,50 @@ public class FeatureFileGeneratorUtils {
             rootElement.appendChild(license);
         }
 
-        ArrayList<Bundle> processedMissingPlugins = getMissingPlugins(resourceBundle, document);
-        ArrayList<Bundle> processedMissingImportPlugins = getMissingImportPlugins(resourceBundle, document);
-        ArrayList<Object> processedMissingImportFeatures = getMissingImportFeatures(resourceBundle, document);
+        ArrayList<Bundle> processedMissingPlugins = getMissingPlugins(resourceBundle.getProcessedBundles(), document);
+        ArrayList<Bundle> processedMissingImportPlugins = getMissingImportItems(resourceBundle.getProcessedImportBundles(), document, "plugin");//getMissingImportPlugins(resourceBundle.getProcessedImportBundles(), document);
+        ArrayList<ImportFeature> processedMissingImportFeatures = getMissingImportItems(resourceBundle.getProcessedImportFeatures(), document, "feature");
         ArrayList<IncludedFeature> includedFeatures = resourceBundle.getProcessedIncludedFeatures();
 
-        if (processedMissingPlugins != null) {
-            for (Bundle bundle : processedMissingPlugins) {
-                Element plugin = document.createElement("plugin");
-                plugin.setAttribute("id", bundle.getBundleSymbolicName());
-                plugin.setAttribute("version", bundle.getBundleVersion());
-                plugin.setAttribute("unpack", "false");
-                rootElement.appendChild(plugin);
-            }
+        //region Updating feature.xml with missing plugins
+        for (Bundle bundle : processedMissingPlugins) {
+            Element plugin = document.createElement("plugin");
+            plugin.setAttribute("id", bundle.getBundleSymbolicName());
+            plugin.setAttribute("version", bundle.getBundleVersion());
+            plugin.setAttribute("unpack", "false");
+            rootElement.appendChild(plugin);
+        }
+        //endregion
+
+        //region Updating feature.xml with missing  import plugins and features
+        NodeList requireNodes = document.getElementsByTagName("require");
+        Node require;
+        if (requireNodes == null || requireNodes.getLength() == 0) {
+            require = document.createElement("require");
+            rootElement.appendChild(require);
+        } else {
+            require = requireNodes.item(0);
         }
 
-        if (processedMissingImportPlugins != null || processedMissingImportFeatures != null) {
-            NodeList requireNodes = document.getElementsByTagName("require");
-            Node require;
-            if (requireNodes == null || requireNodes.getLength() == 0) {
-                require = document.createElement("require");
-                rootElement.appendChild(require);
-            } else {
-                require = requireNodes.item(0);
-            }
+        for (Bundle bundle : processedMissingImportPlugins) {
+            Element plugin = document.createElement("import");
+            plugin.setAttribute("plugin", bundle.getBundleSymbolicName());
+            plugin.setAttribute("version", bundle.getBundleVersion());
+            plugin.setAttribute("match", P2Utils.getMatchRule(bundle.getCompatibility()));
+            require.appendChild(plugin);
+        }
 
-            if (processedMissingImportPlugins != null) {
-                for (Bundle bundle : processedMissingImportPlugins) {
-                    Element plugin = document.createElement("import");
-                    plugin.setAttribute("plugin", bundle.getBundleSymbolicName());
-                    plugin.setAttribute("version", bundle.getBundleVersion());
-                    plugin.setAttribute("match", P2Utils.getMatchRule(bundle.getCompatibility()));
-                    require.appendChild(plugin);
+        for (ImportFeature feature : processedMissingImportFeatures) {
+            if (!feature.isOptional()) {
+                Element plugin = document.createElement("import");
+                plugin.setAttribute("feature", feature.getFeatureId());
+                plugin.setAttribute("version", feature.getFeatureVersion());
+                if (P2Utils.isPatch(feature.getCompatibility())) {
+                    plugin.setAttribute("patch", "true");
+                } else {
+                    plugin.setAttribute("match", P2Utils.getMatchRule(feature.getCompatibility()));
                 }
-            }
-            if (processedMissingImportFeatures != null) {
-                for (Object processedMissingImportFeature : processedMissingImportFeatures) {
-                    ImportFeature feature = (ImportFeature) processedMissingImportFeature;
-                    if (!feature.isOptional()) {
-                        Element plugin = document.createElement("import");
-                        plugin.setAttribute("feature", feature.getFeatureId());
-                        plugin.setAttribute("version", feature.getFeatureVersion());
-                        if (P2Utils.isPatch(feature.getCompatibility())) {
-                            plugin.setAttribute("patch", "true");
-                        } else {
-                            plugin.setAttribute("match", P2Utils.getMatchRule(feature.getCompatibility()));
-                        }
-                        require.appendChild(plugin);
-                    }
-                }
+                require.appendChild(plugin);
             }
         }
 
@@ -343,18 +343,17 @@ public class FeatureFileGeneratorUtils {
             }
         }
 
-        if (processedMissingImportFeatures != null) {
-            for (Object processedMissingImportFeature : processedMissingImportFeatures) {
-                ImportFeature feature = (ImportFeature) processedMissingImportFeature;
-                if (feature.isOptional()) {
-                    Element includeElement = document.createElement("includes");
-                    includeElement.setAttribute("id", feature.getFeatureId());
-                    includeElement.setAttribute("version", feature.getFeatureVersion());
-                    includeElement.setAttribute("optional", Boolean.toString(feature.isOptional()));
-                    rootElement.appendChild(includeElement);
-                }
+        for (ImportFeature feature : processedMissingImportFeatures) {
+            if (feature.isOptional()) {
+                Element includeElement = document.createElement("includes");
+                includeElement.setAttribute("id", feature.getFeatureId());
+                includeElement.setAttribute("version", feature.getFeatureVersion());
+                includeElement.setAttribute("optional", Boolean.toString(feature.isOptional()));
+                rootElement.appendChild(includeElement);
             }
         }
+        //endregion
+
 
         try {
             TransformerFactory transformerFactory = TransformerFactory.newInstance();
@@ -370,6 +369,14 @@ public class FeatureFileGeneratorUtils {
         }
     }
 
+    /**
+     * If a manfest file is given, parse the manifest file and return the Document object representing the file. Generates
+     * a new Document otherwise.
+     *
+     * @param manifest java.io.File pointing an existing manifest file.
+     * @return Document object representing a given manifest file or a newly generated manifest file
+     * @throws MojoExecutionException
+     */
     private static Document getManifestDocument(File manifest) throws MojoExecutionException {
         DocumentBuilderFactory documentBuilderFactory = DocumentBuilderFactory.newInstance();
         DocumentBuilder documentBuilder;
@@ -391,7 +398,6 @@ public class FeatureFileGeneratorUtils {
                     try {
                         manifestFileStream.close();
                     } catch (IOException e) {
-                        //throw new MojoExecutionException("Unable to close feature manifest file", e);
                         e.printStackTrace();
                     }
                 }
@@ -402,10 +408,18 @@ public class FeatureFileGeneratorUtils {
         return document;
     }
 
-    private static ArrayList<Bundle> getMissingPlugins(FeatureResourceBundle resourceBundle, Document document)
+    /**
+     * Cross check plugins given in the manifest file against the plugins configured in the pom.xml file. Returns a
+     * list of bundles found in the pom.xml but not in the manifest file.
+     *
+     * @param processedBundlesList list of bundles configured in the pom.xml
+     * @param document             Document representing the give manifest
+     * @return ArrayList&lt;Bundle&gt; missing plugins
+     * @throws MojoExecutionException
+     */
+    private static ArrayList<Bundle> getMissingPlugins(ArrayList<Bundle> processedBundlesList, Document document)
             throws MojoExecutionException {
         HashMap<String, Bundle> missingPlugins = new HashMap<String, Bundle>();
-        ArrayList<Bundle> processedBundlesList = resourceBundle.getProcessedBundles();
         if (processedBundlesList == null || processedBundlesList.size() == 0) {
             return new ArrayList<Bundle>();
         }
@@ -415,95 +429,64 @@ public class FeatureFileGeneratorUtils {
 
         NodeList existingPlugins = document.getDocumentElement().getElementsByTagName("plugin");
 
-        for (int i = 0; i < existingPlugins.getLength(); i++) {
-            Node node = existingPlugins.item(i);
-            Node namedItem = node.getAttributes().getNamedItem("id");
-            if (namedItem != null && namedItem.getTextContent() != null &&
-                    missingPlugins.containsKey(namedItem.getTextContent())) {
-                missingPlugins.remove(namedItem.getTextContent());
+        if (existingPlugins != null) {
+            for (int i = 0; i < existingPlugins.getLength(); i++) {
+                Node node = existingPlugins.item(i);
+                Node namedItem = node.getAttributes().getNamedItem("id");
+                if (namedItem != null && namedItem.getTextContent() != null &&
+                        missingPlugins.containsKey(namedItem.getTextContent())) {
+                    missingPlugins.remove(namedItem.getTextContent());
+                }
             }
         }
 
-//        return returnArrayList(missingPlugins.values().toArray());
         return new ArrayList<Bundle>(missingPlugins.values());
     }
 
-    //TODO Duplicate code in getMissingImportPlugins and getMissingImportFeatures method. extract and create a single method.
-    private static ArrayList<Bundle> getMissingImportPlugins(FeatureResourceBundle resourceBundle, Document document)
-            throws MojoExecutionException {
-        HashMap<String, Bundle> missingImportPlugins = new HashMap<String, Bundle>();
-        ArrayList<Bundle> processedImportBundlesList = resourceBundle.getProcessedImportBundles();
-
-        if (processedImportBundlesList == null) {
-            return null;
+    /**
+     * Cross check import bundles/import features in the given manifest file against the plugins configured in the pom.xml file. Returns a
+     * list of import bundles/import features  found in the pom.xml but not in the manifest file.
+     *
+     * @param processedImportItemsList list of import plugins/import features configured in the pom.xml
+     * @param document                 Document representing the give manifest
+     * @param itemType                 String type, either "feature" or "plugin"
+     * @param <T>                      ImportFeature or ImportBundle
+     * @return ArrayList<T>
+     */
+    private static <T> ArrayList<T> getMissingImportItems(ArrayList<T> processedImportItemsList, Document document, String itemType) {
+        HashMap<String, T> missingImportItems = new HashMap<String, T>();
+        if (processedImportItemsList == null) {
+            return new ArrayList<T>();
         }
-        for (Bundle bundle : processedImportBundlesList) {
-            missingImportPlugins.put(bundle.getArtifactId(), bundle);
+        for (T item : processedImportItemsList) {
+            if (item instanceof Bundle) {
+                missingImportItems.put(((Bundle) item).getArtifactId(), item);
+            } else if (item instanceof ImportFeature) {
+                missingImportItems.put(((ImportFeature) item).getFeatureId(), item);
+            }
         }
-
         NodeList requireNodeList = document.getDocumentElement().getElementsByTagName("require");
         if (requireNodeList == null || requireNodeList.getLength() == 0) {
-            return new ArrayList<Bundle>(missingImportPlugins.values());
+            return new ArrayList<T>(missingImportItems.values());
         }
 
         Node requireNode = requireNodeList.item(0);
         if (requireNode instanceof Element) {
             Element requireElement = (Element) requireNode;
             NodeList importNodes = requireElement.getElementsByTagName("import");
-            if (importNodes == null) {
-                return new ArrayList<Bundle>(missingImportPlugins.values());
-            }
+            //Findbugs finds the following code as an unnecessary null check
+//            if (importNodes == null) {
+//                return new ArrayList<T>(missingImportItems.values());
+//            }
             for (int i = 0; i < importNodes.getLength(); i++) {
                 Node node = importNodes.item(i);
-                Node namedItem = node.getAttributes().getNamedItem("plugin");
+                Node namedItem = node.getAttributes().getNamedItem(itemType);
                 if (namedItem != null && namedItem.getTextContent() != null &&
-                        missingImportPlugins.containsKey(namedItem.getTextContent())) {
-                    missingImportPlugins.remove(namedItem.getTextContent());
+                        missingImportItems.containsKey(namedItem.getTextContent())) {
+                    missingImportItems.remove(namedItem.getTextContent());
                 }
             }
         }
-        return new ArrayList<Bundle>(missingImportPlugins.values());
+        return new ArrayList<T>(missingImportItems.values());
     }
-
-    private static ArrayList<Object> getMissingImportFeatures(FeatureResourceBundle resourceBundle, Document document)
-            throws MojoExecutionException {
-        HashMap<String, ImportFeature> missingImportFeatures = new HashMap<String, ImportFeature>();
-        ArrayList<ImportFeature> processedImportFeaturesList = resourceBundle.getProcessedImportFeatures();
-        if (processedImportFeaturesList == null) {
-            return null;
-        }
-        for (ImportFeature feature : processedImportFeaturesList) {
-            missingImportFeatures.put(feature.getFeatureId(), feature);
-        }
-
-        NodeList requireNodeList = document.getDocumentElement().getElementsByTagName("require");
-        if (requireNodeList == null || requireNodeList.getLength() == 0) {
-            return new ArrayList<Object>(missingImportFeatures.values());
-        }
-        Node requireNode = requireNodeList.item(0);
-        if (requireNode instanceof Element) {
-            Element requireElement = (Element) requireNode;
-            NodeList importNodes = requireElement.getElementsByTagName("import");
-            if (importNodes == null) {
-                return new ArrayList<Object>(missingImportFeatures.values());
-            }
-            for (int i = 0; i < importNodes.getLength(); i++) {
-                Node node = importNodes.item(i);
-                Node namedItem = node.getAttributes().getNamedItem("feature");
-                if (namedItem != null && namedItem.getTextContent() != null &&
-                        missingImportFeatures.containsKey(namedItem.getTextContent())) {
-                    missingImportFeatures.remove(namedItem.getTextContent());
-                }
-            }
-        }
-        return new ArrayList<Object>(missingImportFeatures.values());
-    }
-
-//    private static ArrayList<Object> returnArrayList(Object[] arr) {
-//        ArrayList<Object> arrayList = new ArrayList<Object>();
-//        for (Object object : arr) {
-//            arrayList.add(object);
-//        }
-//        return arrayList;
-//    }
 }

@@ -32,6 +32,9 @@ import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
 import java.io.Writer;
 
+/**
+ * Generates the profile.
+ */
 public class ProfileGenerator extends Generator {
 
     private final ProfileResourceBundle resourceBundle;
@@ -40,6 +43,10 @@ public class ProfileGenerator extends Generator {
     private static final String PUBLISHER_APPLICATION = "org.eclipse.equinox.p2.director";
     private static final String DEFAULT_ENCODING = "UTF-8";
 
+    /**
+     * ProfileGenerator constructor taking ProfileResourceBundle as a parameter.
+     * @param resourceBundle ProfileResourceBundle
+     */
     public ProfileGenerator(ProfileResourceBundle resourceBundle) {
         this.resourceBundle = resourceBundle;
         this.project = resourceBundle.getProject();
@@ -65,6 +72,21 @@ public class ProfileGenerator extends Generator {
         }
     }
 
+    /**
+     * Calls the P2ApplicationLauncher and install the features.
+     * @param installUIs String
+     * @throws Exception
+     */
+    private void installFeatures(String installUIs) throws Exception {
+
+        P2ApplicationLaunchManager launcher = new P2ApplicationLaunchManager(resourceBundle.getLauncher());
+        launcher.setWorkingDirectory(project.getBasedir());
+        launcher.setApplicationName(PUBLISHER_APPLICATION);
+        launcher.addArgumentsToInstallFeatures(resourceBundle.getMetadataRepository().toExternalForm(),
+                resourceBundle.getArtifactRepository().toExternalForm(), installUIs, destination, resourceBundle.getProfile());
+        launcher.generateRepo(resourceBundle.getForkedProcessTimeoutInSeconds());
+    }
+
     private String getIUsToInstall() throws MojoExecutionException {
         StringBuffer installUIs = new StringBuffer();
         for (Object featureObj : resourceBundle.getFeatures()) {
@@ -82,16 +104,10 @@ public class ProfileGenerator extends Generator {
         return installUIs.toString();
     }
 
-    private void installFeatures(String installUIs) throws Exception {
-
-        P2ApplicationLaunchManager launcher = new P2ApplicationLaunchManager(resourceBundle.getLauncher());
-        launcher.setWorkingDirectory(project.getBasedir());
-        launcher.setApplicationName(PUBLISHER_APPLICATION);
-        launcher.addArgumentsToInstallFeatures(resourceBundle.getMetadataRepository().toExternalForm(),
-                resourceBundle.getArtifactRepository().toExternalForm(), installUIs, destination, resourceBundle.getProfile());
-        launcher.generateRepo(resourceBundle.getForkedProcessTimeoutInSeconds());
-    }
-
+    /**
+     * Delete old profile files located at ${destination}/p2/org.eclipse.equinox.p2.engine/profileRegistry
+     * @throws MojoExecutionException
+     */
     private void deleteOldProfiles() throws MojoExecutionException {
         String destination = resourceBundle.getDestination();
         if (!destination.endsWith("/")) {
@@ -109,14 +125,11 @@ public class ProfileGenerator extends Generator {
                 }
             });
 
-            if(profileFileList != null) {
-                //Arrays.sort(profileFileList);
-                //deleting old profile files
-                for (int i = 0; i < (profileFileList.length - 1); i++) {
-                    File profileFile = new File(profileFolderName, profileFileList[i]);
-                    if (profileFile.exists() && !profileFile.delete()) {
-                        throw new MojoExecutionException("Failed to delete old profile file: " + profileFile.getAbsolutePath());
-                    }
+            //deleting old profile files
+            for (int i = 0; i < (profileFileList.length - 1); i++) {
+                File profileFile = new File(profileFolderName, profileFileList[i]);
+                if (profileFile.exists() && !profileFile.delete()) {
+                    throw new MojoExecutionException("Failed to delete old profile file: " + profileFile.getAbsolutePath());
                 }
             }
 
@@ -129,10 +142,8 @@ public class ProfileGenerator extends Generator {
         File eclipseIni = new File(profileLocation + File.separator + "null.ini");
         if(!eclipseIni.exists()) {
             // null.ini does not exist. trying with eclipse.ini
-            eclipseIni = new File(profileLocation + File.separator + "eclipse.ini");        //String installUIs = "";
-
+            eclipseIni = new File(profileLocation + File.separator + "eclipse.ini");
         }
-
         if (eclipseIni.exists()) {
             rewriteFile(eclipseIni, profileLocation);
         }

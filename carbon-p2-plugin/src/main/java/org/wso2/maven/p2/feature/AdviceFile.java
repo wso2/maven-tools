@@ -24,11 +24,8 @@ public class AdviceFile {
     /**
      * define properties
      *
-     * @parameter
      */
     private ArrayList properties;
-
-    //Later touchpoint Advices can be added here. So leaving this file as it is.
 
     public ArrayList getProperties() {
         return this.properties;
