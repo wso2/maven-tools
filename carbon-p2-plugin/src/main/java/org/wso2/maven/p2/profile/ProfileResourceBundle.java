@@ -23,6 +23,11 @@ import org.eclipse.tycho.p2.facade.internal.P2ApplicationLauncher;
 import java.net.URL;
 import java.util.ArrayList;
 
+/**
+ * Bean class containing all the parameters entered to the mojo through plugin configuration.
+ * The purpose of this class is to make any configuration property accessible from any class by simply passing this
+ * bean as a parameter.
+ */
 public class ProfileResourceBundle {
 
     private String destination;

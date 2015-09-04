@@ -26,6 +26,12 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 
+
+/**
+ * Bean class containing all the parameters entered to the mojo through plugin configuration.
+ * The purpose of this class is to make any configuration property accessible from any class by simply passing this
+ * bean as a parameter.
+ */
 public class RepositoryResourceBundle {
 
     private String name;

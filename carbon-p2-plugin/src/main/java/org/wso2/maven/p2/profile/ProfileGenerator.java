@@ -33,7 +33,7 @@ import java.io.PrintWriter;
 import java.io.Writer;
 
 /**
- * Generates the profile.
+ * ProfileGenerator takes parameters from the pom.xml and generates the profile.
  */
 public class ProfileGenerator extends Generator {
 
@@ -87,6 +87,7 @@ public class ProfileGenerator extends Generator {
         launcher.generateRepo(resourceBundle.getForkedProcessTimeoutInSeconds());
     }
 
+    //Talk to SameeraJ and get the meaning of UIstoInstall
     private String getIUsToInstall() throws MojoExecutionException {
         StringBuffer installUIs = new StringBuffer();
         for (Object featureObj : resourceBundle.getFeatures()) {
@@ -136,6 +137,12 @@ public class ProfileGenerator extends Generator {
         }
     }
 
+    /**
+     * Truncate and write the null.ini file with the new profile location. If null.ini is not found, then truncate
+     * and write new profile location in eclipse.ini.
+     *
+     * @throws MojoExecutionException
+     */
     private void rewriteEclipseIni() throws MojoExecutionException {
         String profileLocation = resourceBundle.getDestination() + File.separator + resourceBundle.getProfile();
 

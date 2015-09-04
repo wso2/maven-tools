@@ -35,6 +35,9 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
+/**
+ * RepoGenerator takes parameters from the pom.xml and generates the repository.
+ */
 public class RepoGenerator extends Generator {
 
     private final RepositoryResourceBundle resourceBundle;
