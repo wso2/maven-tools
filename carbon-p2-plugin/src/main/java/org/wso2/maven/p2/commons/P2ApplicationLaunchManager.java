@@ -68,6 +68,26 @@ public class P2ApplicationLaunchManager {
         }
     }
 
+    public void addArgumentsToInstallFeatures(String metadataRepositoryLocation, String artifactRepositoryLocation,
+                                              String installUIs, String destination, String profile) throws MojoExecutionException {
+        try {
+            launcher.addArguments(
+                    "-metadataRepository", metadataRepositoryLocation,
+                    "-artifactRepository", artifactRepositoryLocation,
+                    "-profileProperties", "org.eclipse.update.install.features=true",
+                    "-installIU", installUIs,
+                    "-bundlepool", destination,
+                    //to support shared installation in carbon
+                    "-shared", destination + File.separator + "p2",
+                    //target is set to a separate directory per Profile
+                    "-destination", destination + File.separator + profile,
+                    "-profile", profile,
+                    "-roaming");
+        } catch (Exception e) {
+            throw new MojoExecutionException("Failed when configuring P2ApplicationLauncher", e);
+        }
+    }
+
     public void generateRepo(int forkedProcessTimeoutInSeconds) throws MojoExecutionException {
         int result = launcher.execute(forkedProcessTimeoutInSeconds);
         if (result != 0) {

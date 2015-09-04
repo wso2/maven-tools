@@ -25,6 +25,7 @@ import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.project.MavenProject;
 import org.apache.maven.project.MavenProjectHelper;
 import org.eclipse.tycho.p2.facade.internal.P2ApplicationLauncher;
+import org.wso2.maven.p2.utils.P2Constants;
 
 import java.net.URL;
 import java.util.ArrayList;
@@ -103,7 +104,7 @@ public class ProfileGenMojo extends AbstractMojo {
     private ProfileGenerator constructProfileGenerator() {
         ProfileResourceBundle resourceBundle = new ProfileResourceBundle();
         resourceBundle.setDestination(this.destination);
-        resourceBundle.setProfile(this.profile);
+        resourceBundle.setProfile(this.profile == null ? P2Constants.DEFAULT_PROFILE_ID : this.profile);
         resourceBundle.setMetadataRepository(this.metadataRepository);
         resourceBundle.setArtifactRepository(this.artifactRepository);
         resourceBundle.setFeatures(this.features);

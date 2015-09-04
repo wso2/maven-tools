@@ -19,12 +19,10 @@ package org.wso2.maven.p2.profile;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.project.MavenProject;
-import org.codehaus.plexus.util.FileUtils;
-import org.eclipse.tycho.p2.facade.internal.P2ApplicationLauncher;
 import org.wso2.maven.p2.commons.Generator;
+import org.wso2.maven.p2.commons.P2ApplicationLaunchManager;
 import org.wso2.maven.p2.utils.FeatureUtils;
 import org.wso2.maven.p2.utils.FileManagementUtil;
-import org.wso2.maven.p2.utils.P2Constants;
 
 import java.io.File;
 import java.io.FileWriter;
@@ -32,23 +30,23 @@ import java.io.FilenameFilter;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.Arrays;
-import java.util.Date;
 
 public class ProfileGenerator extends Generator {
 
 
-    private File FOLDER_TARGET;
-    private File FOLDER_TEMP;
-    private File FOLDER_TEMP_REPO_GEN;
-    private File FILE_FEATURE_PROFILE;
-    private File p2AgentDir;
+//    private File FOLDER_TARGET;
+//    private File FOLDER_TEMP;
+//    private File FOLDER_TEMP_REPO_GEN;
+//    private File FILE_FEATURE_PROFILE;
 
-    private final String STREAM_TYPE_IN = "inputStream";
-    private final String STREAM_TYPE_ERROR = "errorStream";
+   // private final String STREAM_TYPE_IN = "inputStream";
+    //private final String STREAM_TYPE_ERROR = "errorStream";
 
     private final ProfileResourceBundle resourceBundle;
     private final MavenProject project;
     private final String destination;
+    private static final String PUBLISHER_APPLICATION = "org.eclipse.equinox.p2.director";
+
 
     public ProfileGenerator(ProfileResourceBundle resourceBundle) {
         this.resourceBundle = resourceBundle;
@@ -59,10 +57,7 @@ public class ProfileGenerator extends Generator {
     @Override
     public void generate() throws MojoExecutionException, MojoFailureException {
         try {
-            if (resourceBundle.getProfile() == null) {
-                resourceBundle.setProfile(P2Constants.DEFAULT_PROFILE_ID);
-            }
-            createAndSetupPaths();
+  //          createAndSetupPaths();
             rewriteEclipseIni();
 //          	verifySetupP2RepositoryURL();
             this.getLog().info("Running Equinox P2 Director Application");
@@ -80,7 +75,7 @@ public class ProfileGenerator extends Generator {
         }
 //        createArchive();
 //        deployArtifact();
-        performMopUp();
+ //       performMopUp();
     }
 
     private String getIUsToInstall() throws MojoExecutionException {
@@ -102,82 +97,14 @@ public class ProfileGenerator extends Generator {
         return installUIs;
     }
 
-    private String getPublisherApplication() {
-        return "org.eclipse.equinox.p2.director";
-    }
-
     private void installFeatures(String installUIs) throws Exception {
-        P2ApplicationLauncher launcher = resourceBundle.getLauncher();
+
+        P2ApplicationLaunchManager launcher = new P2ApplicationLaunchManager(resourceBundle.getLauncher());
         launcher.setWorkingDirectory(project.getBasedir());
-        launcher.setApplicationName(getPublisherApplication());
-        addArguments(launcher, installUIs);
-        int result = launcher.execute(resourceBundle.getForkedProcessTimeoutInSeconds());
-        if (result != 0) {
-            throw new MojoFailureException("P2 publisher return code was " + result);
-        }
-    }
-
-    private void addArguments(P2ApplicationLauncher launcher, String installUIs) throws IOException {
-        launcher.addArguments(
-                "-metadataRepository", resourceBundle.getMetadataRepository().toExternalForm(),
-                "-artifactRepository", resourceBundle.getArtifactRepository().toExternalForm(),
-                "-profileProperties", "org.eclipse.update.install.features=true",
-                "-installIU", installUIs,
-                "-bundlepool", destination,
-                //to support shared installation in carbon
-                "-shared", destination + File.separator + "p2",
-                //target is set to a separate directory per Profile
-                "-destination", destination + File.separator + resourceBundle.getProfile(),
-                "-profile", resourceBundle.getProfile(),
-                "-roaming"
-        );
-    }
-
-//    public class InputStreamHandler implements Runnable {
-//        String streamType;
-//        InputStream inputStream;
-//
-//        public InputStreamHandler(String name, InputStream is) {
-//            this.streamType = name;
-//            this.inputStream = is;
-//        }
-//
-//        public void start() {
-//            Thread thread = new Thread(this);
-//            thread.start();
-//        }
-//
-//        public void run() {
-//            try {
-//                InputStreamReader inputStreamReader = new InputStreamReader(inputStream);
-//                BufferedReader bufferedReader = new BufferedReader(inputStreamReader);
-//
-//                while (true) {
-//                    String s = bufferedReader.readLine();
-//                    if (s == null) break;
-//                    if (STREAM_TYPE_IN.equals(streamType)) {
-//                        getLog().info(s);
-//                    } else if (STREAM_TYPE_ERROR.equals(streamType)) {
-//                        getLog().error(s);
-//                    }
-//                }
-//                inputStream.close();
-//            } catch (Exception ex) {
-//                getLog().error("Problem reading the " + streamType + ".", ex);
-//            }
-//        }
-//
-//    }
-
-
-    private void createAndSetupPaths() throws Exception {
-        FOLDER_TARGET = new File(project.getBasedir(), "target");
-        String timestampVal = String.valueOf((new Date()).getTime());
-        FOLDER_TEMP = new File(FOLDER_TARGET, "tmp." + timestampVal);
-        FOLDER_TEMP_REPO_GEN = new File(FOLDER_TEMP, "temp_repo");
-        FILE_FEATURE_PROFILE = new File(FOLDER_TARGET, project.getArtifactId() + "-" + project.getVersion() + ".zip");
-
-
+        launcher.setApplicationName(PUBLISHER_APPLICATION);
+        launcher.addArgumentsToInstallFeatures(resourceBundle.getMetadataRepository().toExternalForm(),
+                resourceBundle.getArtifactRepository().toExternalForm(), installUIs, destination, resourceBundle.getProfile());
+        launcher.generateRepo(resourceBundle.getForkedProcessTimeoutInSeconds());
     }
 
     private void deleteOldProfiles() {
@@ -240,18 +167,68 @@ public class ProfileGenerator extends Generator {
         }
     }
 
-    private void deployArtifact() {
+
+//    public class InputStreamHandler implements Runnable {
+//        String streamType;
+//        InputStream inputStream;
+//
+//        public InputStreamHandler(String name, InputStream is) {
+//            this.streamType = name;
+//            this.inputStream = is;
+//        }
+//
+//        public void start() {
+//            Thread thread = new Thread(this);
+//            thread.start();
+//        }
+//
+//        public void run() {
+//            try {
+//                InputStreamReader inputStreamReader = new InputStreamReader(inputStream);
+//                BufferedReader bufferedReader = new BufferedReader(inputStreamReader);
+//
+//                while (true) {
+//                    String s = bufferedReader.readLine();
+//                    if (s == null) break;
+//                    if (STREAM_TYPE_IN.equals(streamType)) {
+//                        getLog().info(s);
+//                    } else if (STREAM_TYPE_ERROR.equals(streamType)) {
+//                        getLog().error(s);
+//                    }
+//                }
+//                inputStream.close();
+//            } catch (Exception ex) {
+//                getLog().error("Problem reading the " + streamType + ".", ex);
+//            }
+//        }
+//
+//    }
+
+
+//    private void createAndSetupPaths() throws Exception {
+//        FOLDER_TARGET = new File(project.getBasedir(), "target");
+//        String timestampVal = String.valueOf((new Date()).getTime());
+//        FOLDER_TEMP = new File(FOLDER_TARGET, "tmp." + timestampVal);
+//        //FOLDER_TEMP_REPO_GEN = new File(FOLDER_TEMP, "temp_repo");
+//        //FILE_FEATURE_PROFILE = new File(FOLDER_TARGET, project.getArtifactId() + "-" + project.getVersion() + ".zip");
+//
+//
+//    }
+
+
+
+  /*  private void deployArtifact() {
         if (FILE_FEATURE_PROFILE != null && FILE_FEATURE_PROFILE.exists()) {
             project.getArtifact().setFile(FILE_FEATURE_PROFILE);
             resourceBundle.getProjectHelper().attachArtifact(project, "zip", null, FILE_FEATURE_PROFILE);
         }
-    }
+    }*/
 
-    private void performMopUp() {
-        try {
-            FileUtils.deleteDirectory(FOLDER_TEMP);
-        } catch (Exception e) {
-            getLog().warn(new MojoExecutionException("Unable complete mop up operation", e));
-        }
-    }
+//    private void performMopUp() {
+//        try {
+//            FileUtils.deleteDirectory(FOLDER_TEMP);
+//        } catch (Exception e) {
+//            getLog().warn(new MojoExecutionException("Unable complete mop up operation", e));
+//        }
+//    }
 }
