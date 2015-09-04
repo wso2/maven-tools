@@ -58,12 +58,12 @@ public class PropertyReplacer {
                     buffer.append(key);
                     buffer.append('}');
                 }
-                 start = i + 1;
-                 state = State.NORMAL;
+                start = i + 1;
+                state = State.NORMAL;
             }
         }
         // No properties hence returning the original string
-        if (properties == false) {
+        if (!properties) {
             return origString;
         }
         // Collect the trailing characters

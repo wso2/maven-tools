@@ -43,72 +43,6 @@ import java.util.regex.Pattern;
 public class P2Utils {
     private static String[] matchList = new String[]{"perfect", "equivalent", "compatible", "greaterOrEqual", "patch", "optional"};
 
-//	public static void setupLauncherLocation(P2Profile p2Profile, File p2LauncherDir, File p2LauncherPluginDir, EquinoxLauncher equinoxLauncher) throws MojoExecutionException {
-//        try {
-//            FileManagementUtil.unzip(p2Profile.getArtifact().getFile(), p2LauncherDir);
-//            String[] plugins = p2LauncherPluginDir.list();
-//            boolean found = false;
-//            for (String plugin : plugins) {
-//                if (equinoxLauncher.getLauncherJar().equals(plugin))
-//                    found = true;
-//            }
-//
-//            if (!found) {
-//                File[] listFiles = p2LauncherPluginDir.listFiles();
-//                for (File file : listFiles) {
-//                    JarFile jarFile = new JarFile(file);
-//                    String symbolicName = jarFile.getManifest().getMainAttributes().getValue(Bundle.BUNDLE_SYMBOLIC_NAME);
-//                    if (symbolicName != null && symbolicName.equals(equinoxLauncher.getLauncherJar())) {
-//                        equinoxLauncher.setLauncherJar(file.getName());
-//                        found = true;
-//                        break;
-//                    }
-//                }
-//                if (!found)
-//                    throw new MojoExecutionException("Lanucher jar was not found: " + equinoxLauncher.getLauncherJar());
-//            }
-//        } catch (Exception e) {
-//            throw new MojoExecutionException("Unable to setup p2 launcher location", e);
-//        }
-//    }
-
-//    public static ArrayList getProcessedP2LanucherFiles(ArrayList processedP2LauncherFiles, EquinoxLauncher equinoxLauncher, MavenProject project, ArtifactFactory artifactFactory, List remoteRepositories, ArtifactRepository localRepository, ArtifactResolver resolver) throws MojoExecutionException {
-//        if (processedP2LauncherFiles != null)
-//            return processedP2LauncherFiles;
-//        processedP2LauncherFiles = new ArrayList();
-//        Iterator iter = equinoxLauncher.getLauncherFiles().iterator();
-//        while (iter.hasNext()) {
-//            Object obj = iter.next();
-//            Bundle b;
-//            if (obj instanceof FeatureArtifact) {
-//                b = (Bundle) obj;
-//            } else if (obj instanceof String) {
-//                b = BundleUtils.getBundle(obj.toString());
-//            } else
-//                b = (Bundle) obj;
-//            try {
-//                BundleUtils.resolveVersionForBundle(b, project);//b.resolveVersion(project);
-//            } catch (MojoExecutionException e) {
-//                b.setVersion(P2Constants.getDefaultVersion(b.getGroupId(), b.getArtifactId()));
-//                if (b.getVersion() == null)
-//                    throw e;
-//            }
-//            b.setArtifact(MavenUtils.getResolvedArtifact(b, artifactFactory, remoteRepositories, localRepository, resolver));
-//            processedP2LauncherFiles.add(b);
-//        }
-//        return processedP2LauncherFiles;
-//    }
-
-//    public static File[] getEquinoxLogFiles(File equinoxLaunchLocation) {
-//        File configurationFolder = new File(equinoxLaunchLocation, "configuration");
-//        FilenameFilter filter = new FilenameFilter() {
-//            public boolean accept(File dir, String name) {
-//                return (dir.isFile() && name.endsWith(".log"));
-//            }
-//        };
-//        return configurationFolder.listFiles(filter);
-//    }
-
     public static int getLastIndexOfProperties(File p2InfFile) throws IOException {
         int min = -1;
         if (p2InfFile.exists()) {
@@ -133,28 +67,6 @@ public class P2Utils {
         }
         return min;
     }
-
-//    public static String getEquinoxLauncherJarLocation(File p2AgentDir) throws Exception {
-//        File p2AgentPluginsDir = new File(p2AgentDir, "plugins");
-//        if(!p2AgentPluginsDir.isDirectory()){
-//            throw new Exception("Please specify a valid location of a P2 Agent Distribution");
-//        }
-//
-//        File[] listFiles = p2AgentPluginsDir.listFiles();
-//        if(listFiles == null){
-//            throw new Exception("Please specify a valid location of a P2 Agent Distribution");
-//        }
-//
-//        for (File file : listFiles) {
-//            JarFile jarFile = new JarFile(file);
-//            String symbolicName = jarFile.getManifest().getMainAttributes().getValue(Bundle.BUNDLE_SYMBOLIC_NAME);
-//            if (symbolicName != null && symbolicName.equals("org.eclipse.equinox.launcher")) {
-//                return file.getAbsolutePath();
-//            }
-//        }
-//        //launcher jar is not found.
-//        throw new Exception("Please specify a valid location of a P2 Agent Distribution");
-//    }
 
     public static boolean isMatchString(String matchStr) {
         for (String match : matchList) {

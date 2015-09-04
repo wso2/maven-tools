@@ -108,14 +108,9 @@ public class BundleUtils {
         }
 
         Properties properties = project.getProperties();
-//        for(Map.Entry<Object, Object> obj : properties.entrySet()) {
-//            bundle.setVersion(bundle.getVersion().replaceAll(Pattern.quote("${" + obj.getKey() + "}"),
-//                    obj.getValue().toString()));
-//        }
-
-        for (Object key : properties.keySet()) {
-            bundle.setVersion(bundle.getVersion().replaceAll(Pattern.quote("${" + key + "}"),
-                    properties.get(key).toString()));
+        for(Map.Entry<Object, Object> obj : properties.entrySet()) {
+            bundle.setVersion(bundle.getVersion().replaceAll(Pattern.quote("${" + obj.getKey() + "}"),
+                    obj.getValue().toString()));
         }
     }
 
@@ -214,7 +209,7 @@ public class BundleUtils {
                     }
                     osgiVersion = getOSGIVersion(major, minor, service, null);
                 } else {
-                    osgiVersion = getOSGIVersion(major, minor, service, qualifier);
+                    osgiVersion = getOSGIVersion(major, minor, null, qualifier);
                 }
             }
         }
@@ -233,7 +228,7 @@ public class BundleUtils {
     }
 
     private static String getOSGIVersion(String major, String minor, String service, String qualifier) {
-        StringBuffer sb = new StringBuffer();
+        StringBuilder sb = new StringBuilder();
         sb.append(major != null ? major : "0");
         sb.append('.');
         sb.append(minor != null ? minor : "0");

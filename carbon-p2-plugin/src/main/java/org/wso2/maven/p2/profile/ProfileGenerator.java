@@ -25,28 +25,20 @@ import org.wso2.maven.p2.utils.FeatureUtils;
 import org.wso2.maven.p2.utils.FileManagementUtil;
 
 import java.io.File;
-import java.io.FileWriter;
+import java.io.FileOutputStream;
 import java.io.FilenameFilter;
 import java.io.IOException;
+import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
-import java.util.Arrays;
+import java.io.Writer;
 
 public class ProfileGenerator extends Generator {
-
-
-//    private File FOLDER_TARGET;
-//    private File FOLDER_TEMP;
-//    private File FOLDER_TEMP_REPO_GEN;
-//    private File FILE_FEATURE_PROFILE;
-
-   // private final String STREAM_TYPE_IN = "inputStream";
-    //private final String STREAM_TYPE_ERROR = "errorStream";
 
     private final ProfileResourceBundle resourceBundle;
     private final MavenProject project;
     private final String destination;
     private static final String PUBLISHER_APPLICATION = "org.eclipse.equinox.p2.director";
-
+    private static final String DEFAULT_ENCODING = "UTF-8";
 
     public ProfileGenerator(ProfileResourceBundle resourceBundle) {
         this.resourceBundle = resourceBundle;
@@ -57,9 +49,7 @@ public class ProfileGenerator extends Generator {
     @Override
     public void generate() throws MojoExecutionException, MojoFailureException {
         try {
-  //          createAndSetupPaths();
             rewriteEclipseIni();
-//          	verifySetupP2RepositoryURL();
             this.getLog().info("Running Equinox P2 Director Application");
             installFeatures(getIUsToInstall());
             //updating profile's config.ini p2.data.area property using relative path
@@ -73,28 +63,23 @@ public class ProfileGenerator extends Generator {
         } catch (Exception e) {
             throw new MojoExecutionException(e.getMessage(), e);
         }
-//        createArchive();
-//        deployArtifact();
- //       performMopUp();
     }
 
     private String getIUsToInstall() throws MojoExecutionException {
-        String installUIs = "";
+        StringBuffer installUIs = new StringBuffer();
         for (Object featureObj : resourceBundle.getFeatures()) {
             Feature f;
             if (featureObj instanceof Feature) {
                 f = (Feature) featureObj;
             } else if (featureObj instanceof String) {
                 f = FeatureUtils.getFeature(featureObj.toString());
-            } else
-                f = (Feature) featureObj;
-            installUIs = installUIs + f.getId().trim() + "/" + f.getVersion().trim() + ",";
+            } else {
+                throw new MojoExecutionException("Unknown feature definition: " + featureObj.toString());
+            }
+            installUIs.append(f.getId().trim() + "/" + f.getVersion().trim() + ",");
         }
 
-        if (installUIs.length() == 0) {
-            installUIs = installUIs.substring(0, installUIs.length() - 1);
-        }
-        return installUIs;
+        return installUIs.toString();
     }
 
     private void installFeatures(String installUIs) throws Exception {
@@ -107,7 +92,7 @@ public class ProfileGenerator extends Generator {
         launcher.generateRepo(resourceBundle.getForkedProcessTimeoutInSeconds());
     }
 
-    private void deleteOldProfiles() {
+    private void deleteOldProfiles() throws MojoExecutionException {
         String destination = resourceBundle.getDestination();
         if (!destination.endsWith("/")) {
             destination = destination + "/";
@@ -124,38 +109,46 @@ public class ProfileGenerator extends Generator {
                 }
             });
 
-            Arrays.sort(profileFileList);
+            if(profileFileList != null) {
+                //Arrays.sort(profileFileList);
+                //deleting old profile files
+                for (int i = 0; i < (profileFileList.length - 1); i++) {
+                    File profileFile = new File(profileFolderName, profileFileList[i]);
+                    if (profileFile.exists() && !profileFile.delete()) {
+                        throw new MojoExecutionException("Failed to delete old profile file: " + profileFile.getAbsolutePath());
+                    }
+                }
+            }
 
-            //deleting old profile files
-            for (int i = 0; i < (profileFileList.length - 1); i++) {
-                File profileFile = new File(profileFolderName, profileFileList[i]);
-                profileFile.delete();
+        }
+    }
+
+    private void rewriteEclipseIni() throws MojoExecutionException {
+        String profileLocation = resourceBundle.getDestination() + File.separator + resourceBundle.getProfile();
+
+        File eclipseIni = new File(profileLocation + File.separator + "null.ini");
+        if(!eclipseIni.exists()) {
+            // null.ini does not exist. trying with eclipse.ini
+            eclipseIni = new File(profileLocation + File.separator + "eclipse.ini");        //String installUIs = "";
+
+        }
+
+        if (eclipseIni.exists()) {
+            rewriteFile(eclipseIni, profileLocation);
+        }
+    }
+
+    private void rewriteFile(File file, String profileLocation) throws MojoExecutionException {
+        if (file.exists()) {
+            if (!file.delete()) {
+                throw new MojoExecutionException("Failed to delete " + file.getAbsolutePath());
             }
         }
-    }
 
-    private void rewriteEclipseIni() {
-        File eclipseIni = null;
-        String profileLocation = resourceBundle.getDestination() + File.separator + resourceBundle.getProfile();
-        // getting the file null.ini
-        eclipseIni = new File(profileLocation + File.separator + "null.ini");
-        if (eclipseIni.exists()) {
-            rewriteFile(eclipseIni, profileLocation);
-            return;
-        }
-        // null.ini does not exist. trying with eclipse.ini
-        eclipseIni = new File(profileLocation + File.separator + "eclipse.ini");
-        if (eclipseIni.exists()) {
-            rewriteFile(eclipseIni, profileLocation);
-            return;
-        }
-    }
-
-    private void rewriteFile(File file, String profileLocation) {
-        file.delete();
         PrintWriter pw = null;
         try {
-            pw = new PrintWriter(new FileWriter(file));
+            Writer writer = new OutputStreamWriter(new FileOutputStream(file), DEFAULT_ENCODING);
+            pw = new PrintWriter(writer);
             pw.write("-install\n");
             pw.write(profileLocation);
             pw.flush();
@@ -163,72 +156,9 @@ public class ProfileGenerator extends Generator {
             this.getLog().debug("Error while writing to file " + file.getName());
             e.printStackTrace();
         } finally {
-            pw.close();
+            if (pw != null) {
+                pw.close();
+            }
         }
     }
-
-
-//    public class InputStreamHandler implements Runnable {
-//        String streamType;
-//        InputStream inputStream;
-//
-//        public InputStreamHandler(String name, InputStream is) {
-//            this.streamType = name;
-//            this.inputStream = is;
-//        }
-//
-//        public void start() {
-//            Thread thread = new Thread(this);
-//            thread.start();
-//        }
-//
-//        public void run() {
-//            try {
-//                InputStreamReader inputStreamReader = new InputStreamReader(inputStream);
-//                BufferedReader bufferedReader = new BufferedReader(inputStreamReader);
-//
-//                while (true) {
-//                    String s = bufferedReader.readLine();
-//                    if (s == null) break;
-//                    if (STREAM_TYPE_IN.equals(streamType)) {
-//                        getLog().info(s);
-//                    } else if (STREAM_TYPE_ERROR.equals(streamType)) {
-//                        getLog().error(s);
-//                    }
-//                }
-//                inputStream.close();
-//            } catch (Exception ex) {
-//                getLog().error("Problem reading the " + streamType + ".", ex);
-//            }
-//        }
-//
-//    }
-
-
-//    private void createAndSetupPaths() throws Exception {
-//        FOLDER_TARGET = new File(project.getBasedir(), "target");
-//        String timestampVal = String.valueOf((new Date()).getTime());
-//        FOLDER_TEMP = new File(FOLDER_TARGET, "tmp." + timestampVal);
-//        //FOLDER_TEMP_REPO_GEN = new File(FOLDER_TEMP, "temp_repo");
-//        //FILE_FEATURE_PROFILE = new File(FOLDER_TARGET, project.getArtifactId() + "-" + project.getVersion() + ".zip");
-//
-//
-//    }
-
-
-
-  /*  private void deployArtifact() {
-        if (FILE_FEATURE_PROFILE != null && FILE_FEATURE_PROFILE.exists()) {
-            project.getArtifact().setFile(FILE_FEATURE_PROFILE);
-            resourceBundle.getProjectHelper().attachArtifact(project, "zip", null, FILE_FEATURE_PROFILE);
-        }
-    }*/
-
-//    private void performMopUp() {
-//        try {
-//            FileUtils.deleteDirectory(FOLDER_TEMP);
-//        } catch (Exception e) {
-//            getLog().warn(new MojoExecutionException("Unable complete mop up operation", e));
-//        }
-//    }
 }

@@ -23,6 +23,7 @@ public class PropertyUtils {
 
     /**
      * Generates a Property bean from the given advice property definition
+     *
      * @param advicePropertyDefinition String definition for a property
      * @return Property generated from the string definition
      * @throws MojoExecutionException
@@ -31,8 +32,10 @@ public class PropertyUtils {
         if (advicePropertyDefinition.trim().equalsIgnoreCase("")) {
             throw new MojoExecutionException("Invalid advice property definition.");
         }
+
         String[] propertyDefs = advicePropertyDefinition.split(":");
         Property property = new Property();
+
         if (propertyDefs.length > 1) {
             property.setKey(propertyDefs[0]);
             property.setValue(propertyDefs[1]);
