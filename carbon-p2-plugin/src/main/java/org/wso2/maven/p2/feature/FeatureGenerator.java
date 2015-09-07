@@ -227,7 +227,7 @@ public class FeatureGenerator extends Generator {
                     getLog().info("Extracting feature " + includedFeature.getGroupId() + ":" +
                             includedFeature.getArtifactId());
                     FileManagementUtil.unzip(includedFeature.getArtifact().getFile(), rowOutputFolder);
-                } catch (Exception e) {
+                } catch (IOException e) {
                     throw new MojoExecutionException("Error occurred when extracting the Feature Artifact: " +
                             includedFeature.getGroupId() + ":" + includedFeature.getArtifactId(), e);
                 }

@@ -147,7 +147,7 @@ public class RepoGenerator extends Generator {
                 getLog().info("Extracting feature " + featureArtifact.getGroupId() + ":" +
                         featureArtifact.getArtifactId());
                 FileManagementUtil.unzip(featureArtifact.getArtifact().getFile(), sourceDir);
-            } catch (Exception e) {
+            } catch (IOException e) {
                 throw new MojoExecutionException("Error occurred when extracting the Feature Artifact: " +
                         featureArtifact.toString(), e);
             }
@@ -187,7 +187,11 @@ public class RepoGenerator extends Generator {
             getLog().info("Generating repository archive...");
             FileManagementUtil.zipFolder(repoGenerationLocation.toString(), archiveFile.toString());
             getLog().info("Repository Archive: " + archiveFile.toString());
-            FileManagementUtil.deleteDirectories(repoGenerationLocation);
+            try {
+                FileManagementUtil.deleteDirectories(repoGenerationLocation);
+            } catch (IOException ex) {
+                throw new MojoExecutionException("Failed to delete " + repoGenerationLocation.getAbsolutePath(), ex);
+            }
         }
     }
 
