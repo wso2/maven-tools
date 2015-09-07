@@ -18,13 +18,6 @@
 package org.wso2.maven.p2.beans;
 
 import org.apache.maven.artifact.Artifact;
-import org.apache.maven.model.Dependency;
-import org.apache.maven.plugin.MojoExecutionException;
-import org.apache.maven.project.MavenProject;
-
-import java.util.List;
-import java.util.Properties;
-import java.util.regex.Pattern;
 
 public class FeatureArtifact {
 
@@ -32,8 +25,6 @@ public class FeatureArtifact {
     private String artifactId;
     private String version;
     private Artifact artifact;
-    private String featureId;
-    private String featureVersion;
 
     public void setGroupId(String groupId) {
         this.groupId = groupId;
@@ -65,48 +56,5 @@ public class FeatureArtifact {
 
     public Artifact getArtifact() {
         return artifact;
-    }
-
-    public void resolveVersion(MavenProject project) throws MojoExecutionException {
-        if (version == null) {
-            List<Dependency> dependencies = project.getDependencies();
-            for (Dependency dependency : dependencies) {
-                if (dependency.getGroupId().equalsIgnoreCase(getGroupId()) && dependency.getArtifactId().equalsIgnoreCase(getArtifactId())) {
-                    setVersion(dependency.getVersion());
-                }
-            }
-        }
-
-        if (version == null) {
-            List<Dependency> dependencies = project.getDependencyManagement().getDependencies();
-            for (Dependency dependency : dependencies) {
-                if (dependency.getGroupId().equalsIgnoreCase(getGroupId()) && dependency.getArtifactId().equalsIgnoreCase(getArtifactId())) {
-                    setVersion(dependency.getVersion());
-                }
-            }
-        }
-        if (version == null) {
-            throw new MojoExecutionException("Could not find the version for " + getGroupId() + ":" + getArtifactId());
-        }
-        Properties properties = project.getProperties();
-        for (Object key : properties.keySet()) {
-            version = version.replaceAll(Pattern.quote("${" + key + "}"), properties.get(key).toString());
-        }
-    }
-
-    public void setFeatureId(String featureId) {
-        this.featureId = featureId;
-    }
-
-    public String getFeatureId() {
-        return featureId;
-    }
-
-    public void setFeatureVersion(String featureVersion) {
-        this.featureVersion = featureVersion;
-    }
-
-    public String getFeatureVersion() {
-        return featureVersion;
     }
 }

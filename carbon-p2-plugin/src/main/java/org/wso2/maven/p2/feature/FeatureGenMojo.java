@@ -76,8 +76,7 @@ public class FeatureGenMojo extends AbstractMojo {
     private File propertiesFile;
 
     /**
-     * list of properties
-     * precedance over propertiesFile
+     * list of properties precedence over propertiesFile
      */
     @Parameter
     private Properties properties;

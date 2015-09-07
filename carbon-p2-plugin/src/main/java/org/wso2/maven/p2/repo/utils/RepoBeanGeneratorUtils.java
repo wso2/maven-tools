@@ -44,9 +44,10 @@ public class RepoBeanGeneratorUtils {
                 FeatureArtifact f = null;
                 if (obj instanceof String) {
                     f = FeatureUtils.getFeatureArtifact(obj.toString());
-                } else
+                } else {
                     f = (FeatureArtifact) obj;
-                f.resolveVersion(this.resourceBundle.getProject());
+                }
+                FeatureUtils.resolveVersion(f, this.resourceBundle.getProject());
                 f.setArtifact(MavenUtils.getResolvedArtifact(f, resourceBundle.getRepositorySystem(), resourceBundle.getRemoteRepositories(), resourceBundle.getLocalRepository()));
                 processedFeatureArtifacts.add(f);
             } catch (Exception e) {

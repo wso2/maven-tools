@@ -21,10 +21,6 @@ import java.util.ArrayList;
 
 public class AdviceFile {
 
-    /**
-     * define properties
-     *
-     */
     private ArrayList properties;
 
     public ArrayList getProperties() {

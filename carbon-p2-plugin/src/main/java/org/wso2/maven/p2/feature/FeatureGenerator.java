@@ -49,7 +49,7 @@ public class FeatureGenerator extends Generator {
     private final MavenProjectHelper projectHelper;
 
     private ArrayList<Bundle> processedBundles;
-    private ArrayList<Bundle> processedImportBundles;
+    //private ArrayList<Bundle> processedImportBundles;
     private ArrayList<IncludedFeature> processedIncludedFeatures;
 
     private File rowOutputFolder;
@@ -102,8 +102,9 @@ public class FeatureGenerator extends Generator {
         BeanGeneratorUtils paramProcessor = new BeanGeneratorUtils(this.resourceBundle);
         getLog().info("Processing bundles");
         processedBundles = paramProcessor.getProcessedBundlesList();
-        getLog().info("Processing import bundles");
-        processedImportBundles = paramProcessor.getProcessedImportBundlesList();
+//      Had a confusion whether import bundles are actually needed during the code review 01/09/2015. Thus commented this.
+//        getLog().info("Processing import bundles");
+//        processedImportBundles = paramProcessor.getProcessedImportBundlesList();
         getLog().info("Processing import features");
         ArrayList<ImportFeature> processedImportFeatures = paramProcessor.getProcessedImportFeaturesList();
         getLog().info("Processing include features");
@@ -112,7 +113,8 @@ public class FeatureGenerator extends Generator {
         ArrayList<Property> processedAdviceProperties = paramProcessor.getProcessedAdviceProperties();
 
         resourceBundle.setProcessedBundles(processedBundles);
-        resourceBundle.setProcessedImportBundles(processedImportBundles);
+//      Had a confusion whether import bundles are actually needed during the code review 01/09/2015. Thus commented this.
+//        resourceBundle.setProcessedImportBundles(processedImportBundles);
         resourceBundle.setProcessedImportFeatures(processedImportFeatures);
         resourceBundle.setProcessedIncludedFeatures(processedIncludedFeatures);
         resourceBundle.setProcessedAdviceProperties(processedAdviceProperties);
@@ -163,7 +165,8 @@ public class FeatureGenerator extends Generator {
      */
     private void copyAllIncludedArtifacts() throws MojoExecutionException {
         copyBundles();
-        //copyImportBundles(); Commented from code review
+//      Had a confusion whether import bundles are actually needed during the code review 01/09/2015. Thus commented this.
+//        copyImportBundles();
         copyIncludedFeatures();
     }
 
@@ -188,28 +191,29 @@ public class FeatureGenerator extends Generator {
         }
     }
 
-    /**
-     * Copy import bundles into plugins folder.
-     *
-     * @throws MojoExecutionException
-     */
-    private void copyImportBundles() throws MojoExecutionException {
-        ArrayList<Bundle> processedImportBundlesList = processedImportBundles;
-        if (processedImportBundlesList != null) {
-            getLog().info("Copying import bundle dependencies");
-            for (Bundle bundle : processedImportBundlesList) {
-                try {
-                    if (!bundle.isExclude()) {
-                        getLog().info("   " + bundle.toOSGIString());
-                        String bundleName = bundle.getBundleSymbolicName() + "-" + bundle.getBundleVersion() + ".jar";
-                        FileUtils.copyFile(bundle.getArtifact().getFile(), new File(pluginsFolder, bundleName));
-                    }
-                } catch (IOException e) {
-                    throw new MojoExecutionException("Unable copy import dependency: " + bundle.getArtifactId(), e);
-                }
-            }
-        }
-    }
+//      Had a confusion whether import bundles are actually needed during the code review 01/09/2015. Thus commented this.
+//    /**
+//     * Copy import bundles into plugins folder.
+//     *
+//     * @throws MojoExecutionException
+//     */
+//    private void copyImportBundles() throws MojoExecutionException {
+//        ArrayList<Bundle> processedImportBundlesList = processedImportBundles;
+//        if (processedImportBundlesList != null) {
+//            getLog().info("Copying import bundle dependencies");
+//            for (Bundle bundle : processedImportBundlesList) {
+//                try {
+//                    if (!bundle.isExclude()) {
+//                        getLog().info("   " + bundle.toOSGIString());
+//                        String bundleName = bundle.getBundleSymbolicName() + "-" + bundle.getBundleVersion() + ".jar";
+//                        FileUtils.copyFile(bundle.getArtifact().getFile(), new File(pluginsFolder, bundleName));
+//                    }
+//                } catch (IOException e) {
+//                    throw new MojoExecutionException("Unable copy import dependency: " + bundle.getArtifactId(), e);
+//                }
+//            }
+//        }
+//    }
 
     /**
      * Copying includedFeatures into the output folder.

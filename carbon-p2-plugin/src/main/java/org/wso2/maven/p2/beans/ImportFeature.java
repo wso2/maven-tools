@@ -53,9 +53,6 @@ public class ImportFeature {
 
     public void setFeatureVersion(String version) {
         this.featureVersion = version;
-//        if (featureVersion == null || featureVersion.equals("")) {
-//            featureVersion = BundleUtils.getOSGIVersion(version);
-//        }
     }
 
     public String getFeatureVersion() {

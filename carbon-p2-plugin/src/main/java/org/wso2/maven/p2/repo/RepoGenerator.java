@@ -53,7 +53,17 @@ public class RepoGenerator extends Generator {
     private File archiveFile;
     private File categoryDefinitionFile;
 
+    /**
+     * The features and bundles publisher application (org.eclipse.equinox.p2.publisher.FeaturesAndBundlesPublisher) is
+     * a command line application that is capable of generating metadata (p2 repositories) from pre-built Eclipse
+     * bundles and features.
+     */
     private static final String PUBLISHER_APPLICATION = "org.eclipse.equinox.p2.publisher.FeaturesAndBundlesPublisher";
+
+    /**
+     * The category publisher application (org.eclipse.equinox.p2.publisher.CategoryPublisher) is a command line
+     * application that is capable of categorizing a set of Installable Units in a given repository.
+     */
     private static final String CATEGORY_PUBLISHER_APPLICATION = "org.eclipse.equinox.p2.publisher.CategoryPublisher";
 
     private P2ApplicationLaunchManager p2LaunchManager;

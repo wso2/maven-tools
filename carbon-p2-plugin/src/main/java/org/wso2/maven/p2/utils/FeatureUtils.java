@@ -16,11 +16,17 @@
 
 package org.wso2.maven.p2.utils;
 
+import org.apache.maven.model.Dependency;
 import org.apache.maven.plugin.MojoExecutionException;
+import org.apache.maven.project.MavenProject;
 import org.wso2.maven.p2.profile.Feature;
 import org.wso2.maven.p2.beans.FeatureArtifact;
 import org.wso2.maven.p2.beans.ImportFeature;
 import org.wso2.maven.p2.beans.IncludedFeature;
+
+import java.util.List;
+import java.util.Properties;
+import java.util.regex.Pattern;
 
 public class FeatureUtils {
 
@@ -128,5 +134,34 @@ public class FeatureUtils {
             return featureArtifact;
         }
         throw new MojoExecutionException("Insufficient artifact information provided to determine the feature: " + featureArtifactDefinition);
+    }
+
+    public static void resolveVersion(FeatureArtifact feature, MavenProject project) throws MojoExecutionException {
+        if (feature.getVersion() == null) {
+            List<Dependency> dependencies = project.getDependencies();
+            for (Dependency dependency : dependencies) {
+                if (dependency.getGroupId().equalsIgnoreCase(feature.getGroupId()) && dependency.getArtifactId().
+                        equalsIgnoreCase(feature.getArtifactId())) {
+                    feature.setVersion(dependency.getVersion());
+                }
+            }
+        }
+
+        if (feature.getVersion() == null) {
+            List<Dependency> dependencies = project.getDependencyManagement().getDependencies();
+            for (Dependency dependency : dependencies) {
+                if (dependency.getGroupId().equalsIgnoreCase(feature.getGroupId()) && dependency.getArtifactId().
+                        equalsIgnoreCase(feature.getArtifactId())) {
+                    feature.setVersion(dependency.getVersion());
+                }
+            }
+        }
+        if (feature.getVersion() == null) {
+            throw new MojoExecutionException("Could not find the version for " + feature.getGroupId() + ":" + feature.getArtifactId());
+        }
+        Properties properties = project.getProperties();
+        for (Object key : properties.keySet()) {
+            feature.setVersion(feature.getVersion().replaceAll(Pattern.quote("${" + key + "}"), properties.get(key).toString()));
+        }
     }
 }

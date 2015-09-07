@@ -83,11 +83,6 @@ public class IncludedFeature {
     }
 
     public void setFeatureVersion(String version) {
-
         this.featureVersion = version;
-//        if (artifactVersion == null || artifactVersion.equals("")) {
-//            artifactVersion = version;
-//            featureVersion = BundleUtils.getOSGIVersion(version);
-//        }
     }
 }

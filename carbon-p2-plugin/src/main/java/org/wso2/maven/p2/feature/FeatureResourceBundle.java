@@ -32,9 +32,8 @@ import java.util.List;
 import java.util.Properties;
 
 /**
- * Bean class containing all the parameters entered to the mojo through plugin configuration.
- * The purpose of this class is to make any configuration property accessible from any class by simply passing this
- * bean as a parameter.
+ * Bean class containing all the parameters entered to the mojo through plugin configuration. The purpose of this class
+ * is to make any configuration property accessible from any class by simply passing this bean as a parameter.
  */
 public class FeatureResourceBundle {
 
@@ -56,18 +55,17 @@ public class FeatureResourceBundle {
     private AdviceFile adviceFile;
 
     private ArrayList<Bundle> processedBundles;
-
     private ArrayList<Bundle> processedImportBundles;
     private ArrayList<ImportFeature> processedImportFeatures;
     private ArrayList<Property> processedAdviceProperties;
     private ArrayList<IncludedFeature> processedIncludedFeatures;
 
-    private org.apache.maven.repository.RepositorySystem repositorySystem;
-
-    private org.apache.maven.artifact.repository.ArtifactRepository localRepository;
-    private java.util.List remoteRepositories;
+    private RepositorySystem repositorySystem;
     private MavenProject project;
+    private ArtifactRepository localRepository;
     private MavenProjectHelper projectHelper;
+    private List remoteRepositories;
+
     private Log log;
 
     public String getId() {

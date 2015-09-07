@@ -60,7 +60,8 @@ public class BeanGeneratorUtils {
     }
 
     /**
-     * Generates processed bundles taken from pom.xml configuration.
+     * Generates an ArrayList<Bundle> from bundle data passed into plugin through plugin configuration in pom.xml
+     * configuration.
      *
      * @return processed bundles in an ArrayList&lt;Bundle&gt;
      * @throws MojoExecutionException
@@ -69,19 +70,20 @@ public class BeanGeneratorUtils {
         return getProcessedBundlesList(this.resourceBundle.getBundles(), false);
     }
 
-    /**
-     * Generates processed import bundles taken from pom.xml configuration.
-     *
-     * @return processed import bundles in an ArrayList&lt;Bundle&gt;
-     * @throws MojoExecutionException
-     */
-    public ArrayList<Bundle> getProcessedImportBundlesList() throws MojoExecutionException {
-        return getProcessedBundlesList(this.resourceBundle.getImportBundles(), true);
-    }
+//    Had a confusion whether import bundles are actually needed during the code review[01/09/2015]. Thus commented this.
+//    /**
+//     * Generates processed import bundles taken from pom.xml configuration.
+//     *
+//     * @return processed import bundles in an ArrayList&lt;Bundle&gt;
+//     * @throws MojoExecutionException
+//     */
+//    public ArrayList<Bundle> getProcessedImportBundlesList() throws MojoExecutionException {
+//        return getProcessedBundlesList(this.resourceBundle.getImportBundles(), true);
+//    }
 
     /**
-     * Gets an object ArrayList and populate the content into a ArrayList<Bundle> by casting it properly. The object
-     * array may contain strings or Bundle objects.
+     * Takes an object ArrayList containing bundles data passed into the plugin through plugin configuration in pom.xml
+     * and populate the content into a ArrayList<Bundle> by casting it properly.
      *
      * @param bundles         ArrayList of bundles
      * @param isImportBundles set this true to get processed importBundles
@@ -119,7 +121,8 @@ public class BeanGeneratorUtils {
     }
 
     /**
-     * Generates the processed ImportFeatures from pom.xml configuration.
+     * Generates an ArrayList<ImportFeature> from import feature data passed into the plugin through plugin
+     * configuration in pom.xml configuration.
      *
      * @return processed import features in an ArrayList&lt;ImportFeature&gt;
      * @throws MojoExecutionException
@@ -144,7 +147,8 @@ public class BeanGeneratorUtils {
     }
 
     /**
-     * Generates the processed IncludedFeatures from an pom.xml configuration
+     * Generates an ArrayList<IncludedFeature> from included feature data passed into the plugin through plugin
+     * configuration in pom.xml configuration.
      *
      * @return processed included features in an ArrayList&lt;IncludedFeature&gt;
      * @throws MojoExecutionException
@@ -172,7 +176,8 @@ public class BeanGeneratorUtils {
     }
 
     /**
-     * Returns processed AdviceProperties from the row adviceFile.
+     * Generates an ArrayList<Property> from advice properties passed into the plugin through plugin
+     * configuration in pom.xml configuration.
      *
      * @return ArrayList&lt;Property&gt;
      * @throws MojoExecutionException
@@ -192,5 +197,4 @@ public class BeanGeneratorUtils {
         }
         return processedAdviceProperties;
     }
-
 }

@@ -49,6 +49,7 @@ import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
+import java.io.UnsupportedEncodingException;
 import java.io.Writer;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -92,6 +93,13 @@ public class FeatureFileGeneratorUtils {
         }
     }
 
+    /**
+     * Merge properties passed into the maven plugin as properties and via the properties file.
+     *
+     * @param resourceBundle containing the project resources
+     * @return Properties object containing properties passed in to the tool as properties and via the properties file
+     * @throws MojoExecutionException
+     */
     private static Properties getProperties(FeatureResourceBundle resourceBundle) throws MojoExecutionException {
         File propertiesFile = resourceBundle.getPropertiesFile();
         Properties properties = resourceBundle.getProperties();
@@ -180,17 +188,21 @@ public class FeatureFileGeneratorUtils {
                     pw.write(PropertyReplacer.replaceProperties(str, properties) + "\n");
                 }
             }
-            if (list.size() == 0) {
-                return;
+            if (list.size() != 0) {
+                int nextIndex = P2Utils.getLastIndexOfProperties(p2InfFile) + 1;
+                for (Object category : list) {
+                    Property cat = (Property) category;
+                    pw.write("\nproperties." + nextIndex + ".name=" + cat.getKey());
+                    pw.write("\nproperties." + nextIndex + ".value=" + cat.getValue());
+                    nextIndex++;
+                }
             }
-            int nextIndex = P2Utils.getLastIndexOfProperties(p2InfFile) + 1;
-            for (Object category : list) {
-                Property cat = (Property) category;
-                pw.write("\nproperties." + nextIndex + ".name=" + cat.getKey());
-                pw.write("\nproperties." + nextIndex + ".value=" + cat.getValue());
-                nextIndex++;
-            }
-        } catch (Exception e) {
+        } catch (FileNotFoundException e) {
+            throw new MojoExecutionException("Unable to create/open p2.inf file", e);
+        } catch (UnsupportedEncodingException e) {
+            throw new MojoExecutionException("Unable to read p2.inf file. Existing file is in an unsupported encoding",
+                    e);
+        } catch (IOException e) {
             throw new MojoExecutionException("Unable to create/open p2.inf file", e);
         } finally {
             if (pw != null) {
@@ -287,8 +299,12 @@ public class FeatureFileGeneratorUtils {
         }
 
         ArrayList<Bundle> processedMissingPlugins = getMissingPlugins(resourceBundle.getProcessedBundles(), document);
-        ArrayList<Bundle> processedMissingImportPlugins = getMissingImportItems(resourceBundle.getProcessedImportBundles(), document, "plugin");//getMissingImportPlugins(resourceBundle.getProcessedImportBundles(), document);
-        ArrayList<ImportFeature> processedMissingImportFeatures = getMissingImportItems(resourceBundle.getProcessedImportFeatures(), document, "feature");
+
+//    Had a confusion whether import bundles are actually needed during the code review[01/09/2015]. Thus commented this.
+//        ArrayList<Bundle> processedMissingImportPlugins = getMissingImportItems(resourceBundle.
+//                getProcessedImportBundles(), document, "plugin");
+        ArrayList<ImportFeature> processedMissingImportFeatures = getMissingImportItems(resourceBundle.
+                getProcessedImportFeatures(), document, "feature");
         ArrayList<IncludedFeature> includedFeatures = resourceBundle.getProcessedIncludedFeatures();
 
         //region Updating feature.xml with missing plugins
@@ -311,13 +327,14 @@ public class FeatureFileGeneratorUtils {
             require = requireNodes.item(0);
         }
 
-        for (Bundle bundle : processedMissingImportPlugins) {
-            Element plugin = document.createElement("import");
-            plugin.setAttribute("plugin", bundle.getBundleSymbolicName());
-            plugin.setAttribute("version", bundle.getBundleVersion());
-            plugin.setAttribute("match", P2Utils.getMatchRule(bundle.getCompatibility()));
-            require.appendChild(plugin);
-        }
+//    Had a confusion whether import bundles are actually needed during the code review[01/09/2015]. Thus commented this.
+//        for (Bundle bundle : processedMissingImportPlugins) {
+//            Element plugin = document.createElement("import");
+//            plugin.setAttribute("plugin", bundle.getBundleSymbolicName());
+//            plugin.setAttribute("version", bundle.getBundleVersion());
+//            plugin.setAttribute("match", P2Utils.getMatchRule(bundle.getCompatibility()));
+//            require.appendChild(plugin);
+//        }
 
         for (ImportFeature feature : processedMissingImportFeatures) {
             if (!feature.isOptional()) {
@@ -370,8 +387,8 @@ public class FeatureFileGeneratorUtils {
     }
 
     /**
-     * If a manfest file is given, parse the manifest file and return the Document object representing the file. Generates
-     * a new Document otherwise.
+     * If a manifest file is given, parse the manifest file and return the Document object representing the file.
+     * Generates a new Document otherwise.
      *
      * @param manifest java.io.File pointing an existing manifest file.
      * @return Document object representing a given manifest file or a newly generated manifest file
@@ -444,8 +461,8 @@ public class FeatureFileGeneratorUtils {
     }
 
     /**
-     * Cross check import bundles/import features in the given manifest file against the plugins configured in the pom.xml file. Returns a
-     * list of import bundles/import features  found in the pom.xml but not in the manifest file.
+     * Cross check import bundles/import features in the given manifest file against the plugins configured in the
+     * pom.xml file. Returns a list of import bundles/import features found in the pom.xml but not in the manifest file.
      *
      * @param processedImportItemsList list of import plugins/import features configured in the pom.xml
      * @param document                 Document representing the give manifest
@@ -453,7 +470,8 @@ public class FeatureFileGeneratorUtils {
      * @param <T>                      ImportFeature or ImportBundle
      * @return ArrayList<T>
      */
-    private static <T> ArrayList<T> getMissingImportItems(ArrayList<T> processedImportItemsList, Document document, String itemType) {
+    private static <T> ArrayList<T> getMissingImportItems(ArrayList<T> processedImportItemsList, Document document,
+                                                          String itemType) {
         HashMap<String, T> missingImportItems = new HashMap<String, T>();
         if (processedImportItemsList == null) {
             return new ArrayList<T>();
