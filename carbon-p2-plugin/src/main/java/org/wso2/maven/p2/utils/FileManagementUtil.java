@@ -89,23 +89,22 @@ public class FileManagementUtil {
      * @param destZipFile path to the output zip file
      */
     public static void zipFolder(String srcFolder, String destZipFile) {
-        ZipOutputStream zip;
-        FileOutputStream fileWriter;
+        ZipOutputStream zip = null;
         try {
-            fileWriter = new FileOutputStream(destZipFile);
+            FileOutputStream fileWriter = new FileOutputStream(destZipFile);
             zip = new ZipOutputStream(fileWriter);
+            addFolderContentsToZip(srcFolder, zip);
         } catch (Exception ex) {
             ex.printStackTrace();
-            return;
+        } finally {
+            try {
+                zip.flush();
+                zip.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
         }
 
-        addFolderContentsToZip(srcFolder, zip);
-        try {
-            zip.flush();
-            zip.close();
-        } catch (Exception ex) {
-            ex.printStackTrace();
-        }
     }
 
     private static void addToZip(String path, String srcFile, ZipOutputStream zip) {
