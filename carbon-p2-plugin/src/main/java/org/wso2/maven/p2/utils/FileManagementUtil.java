@@ -35,8 +35,8 @@ public class FileManagementUtil {
 
 
     /**
-     * @param destination
-     * @param profile
+     * @param destination path pointing the [carbon product]/repository/components folder
+     * @param profile     name of the profile
      * @return the config.ini file for the Profile
      */
     public static File getProfileConfigIniFile(String destination, String profile) {
@@ -44,6 +44,13 @@ public class FileManagementUtil {
                 File.separator + "config.ini");
     }
 
+    /**
+     * Updated the given config.ini file with a given key value pair.
+     *
+     * @param configIniFile File object representing the config.ini
+     * @param propKey       property key
+     * @param value         property value
+     */
     public static void changeConfigIniProperty(File configIniFile, String propKey, String value) {
         Properties prop = new Properties();
 
@@ -75,10 +82,15 @@ public class FileManagementUtil {
         }
     }
 
-
+    /**
+     * Zip a give folder to a give output zip file.
+     *
+     * @param srcFolder   source folder
+     * @param destZipFile path to the output zip file
+     */
     public static void zipFolder(String srcFolder, String destZipFile) {
-        ZipOutputStream zip = null;
-        FileOutputStream fileWriter = null;
+        ZipOutputStream zip;
+        FileOutputStream fileWriter;
         try {
             fileWriter = new FileOutputStream(destZipFile);
             zip = new ZipOutputStream(fileWriter);
@@ -97,8 +109,6 @@ public class FileManagementUtil {
     }
 
     private static void addToZip(String path, String srcFile, ZipOutputStream zip) {
-
-
         File folder = new File(srcFile);
         if (folder.isDirectory()) {
             addFolderToZip(path, srcFile, zip);
@@ -182,18 +192,23 @@ public class FileManagementUtil {
         }
     }
 
-
+    /**
+     * Delete a given directory.
+     *
+     * @param dir directory to be deleted
+     * @throws IOException
+     */
     public static void deleteDirectories(File dir) throws IOException {
         File[] children = dir.listFiles();
 
         if (children != null) {
-            for (int i = 0; i < children.length; i++) {
-                if (children[i] != null) {
-                    if (children[i].list() != null && children[i].list().length > 0) {
-                        deleteDirectories(children[i]);
+            for (File child : children) {
+                if (child != null) {
+                    if (child.list() != null && child.list().length > 0) {
+                        deleteDirectories(child);
                     } else {
-                        if (!children[i].delete()) {
-                            throw new IOException("Failed to delete " + children[i].getAbsolutePath());
+                        if (!child.delete()) {
+                            throw new IOException("Failed to delete " + child.getAbsolutePath());
                         }
                     }
                 }
@@ -204,9 +219,13 @@ public class FileManagementUtil {
         }
     }
 
-
-    //Copies all files under srcDir to dstDir.
-    // If dstDir does not exist, it will be created.
+    /**
+     * Copies all files under srcDir to dstDir. If dstDir does not exist, it will be created.
+     *
+     * @param srcDir source directory
+     * @param dstDir destination directory
+     * @throws IOException
+     */
     public static void copyDirectory(File srcDir, File dstDir) throws IOException {
         if (srcDir.isDirectory()) {
             if (!dstDir.exists()) {
@@ -217,9 +236,9 @@ public class FileManagementUtil {
 
             String[] children = srcDir.list();
             if (children != null) {
-                for (int i = 0; i < children.length; i++) {
-                    copyDirectory(new File(srcDir, children[i]),
-                            new File(dstDir, children[i]));
+                for (String child : children) {
+                    copyDirectory(new File(srcDir, child),
+                            new File(dstDir, child));
                 }
             }
         } else {
@@ -227,8 +246,13 @@ public class FileManagementUtil {
         }
     }
 
-    //Copies src file to dst file.
-    // If the dst file does not exist, it is created
+    /**
+     * Copies src file to dst file. If the dst file does not exist, it is created.
+     *
+     * @param src source file
+     * @param dst destination file
+     * @throws IOException
+     */
     public static void copy(File src, File dst) throws IOException {
         if (dst.getParentFile() != null && !dst.getParentFile().exists()) {
             if (!dst.getParentFile().mkdirs()) {
@@ -268,28 +292,36 @@ public class FileManagementUtil {
 
     }
 
-
+    /**
+     * Unzip a given archive to a given destination
+     *
+     * @param archiveFile archive file to be unzipped
+     * @param destination location to put the unzipped file
+     * @throws IOException
+     */
     public static void unzip(File archiveFile, File destination) throws IOException {
+        FileInputStream fis = null;
+        ZipInputStream zis = null;
+        BufferedOutputStream dest = null;
+
         try {
-            BufferedOutputStream dest = null;
-            FileInputStream fis = new FileInputStream(archiveFile);
-            ZipInputStream zis = new
+            fis = new FileInputStream(archiveFile);
+            zis = new
                     ZipInputStream(new BufferedInputStream(fis));
             ZipEntry entry;
-            File base = destination;
 
             while ((entry = zis.getNextEntry()) != null) {
                 int count;
                 byte data[] = new byte[BUFFER];
-                File file = new File(base, entry.getName());
+                File file = new File(destination, entry.getName());
                 if (entry.getName().endsWith("/")) {
-                    if (!file.mkdirs()) {
+                    if (!file.exists() && !file.mkdirs()) {
                         throw new IOException("Failed to create directories at " + file.getAbsolutePath());
                     }
                     continue;
                 }
                 if (file.getParentFile() != null && !file.getParentFile().exists()) {
-                    if (!file.getParentFile().mkdirs()) {
+                    if (!file.getParentFile().exists() && !file.getParentFile().mkdirs()) {
                         throw new IOException("Failed to create directories at " + file.getAbsolutePath());
                     }
                 }
@@ -301,10 +333,16 @@ public class FileManagementUtil {
                 dest.flush();
                 dest.close();
             }
-            zis.close();
-            fis.close();
-        } catch (IOException e) {
-            throw e;
+        } finally {
+            if (zis != null) {
+                zis.close();
+            }
+            if (fis != null) {
+                fis.close();
+            }
+            if (dest != null) {
+                dest.close();
+            }
         }
     }
 
