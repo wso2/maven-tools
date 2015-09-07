@@ -20,6 +20,9 @@ package org.wso2.maven.p2.materialize;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
+import org.apache.maven.plugins.annotations.Component;
+import org.apache.maven.plugins.annotations.Mojo;
+import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.project.MavenProject;
 import org.eclipse.tycho.model.ProductConfiguration;
 import org.eclipse.tycho.p2.facade.internal.P2ApplicationLauncher;
@@ -33,41 +36,34 @@ import java.net.URL;
 import java.util.Properties;
 
 
-
-
-/**
- * @goal materialize-product
- */
+@Mojo(name = "materialize-product")
 public class MaterializeProductMojo extends AbstractMojo {
-    /**
-     * @parameter expression="${project}"
-     * @required
-     */
+
+    @Parameter(required = true, defaultValue = "${project}")
     protected MavenProject project;
     /**
      * Metadata repository name
-     *     @parameter
      */
+    @Parameter
     private URL metadataRepository;
     /**
      * Artifact repository name
-     *      @parameter
      */
+    @Parameter
     private URL artifactRepository;
-
-
 
     /**
      * The product configuration, a .product file. This file manages all aspects
      * of a product definition from its constituent plug-ins to configuration
      * files to branding.
      *
-     * @parameter expression="${productConfiguration}"
      */
+    @Parameter(defaultValue = "${productConfiguration}")
     private File productConfigurationFile;
 
     /** @parameter */
     private URL targetPath;
+
     /**
      * Parsed product configuration file
      */
@@ -77,20 +73,20 @@ public class MaterializeProductMojo extends AbstractMojo {
      * The new profile to be created during p2 Director install &
      * the default profile for the the application which is set in config.ini
      *
-     * @parameter expression="${profile}"
      */
+    @Parameter(defaultValue = "${profile}")
     private String profile;
 
 
-    /** @component */
+    @Component
     private P2ApplicationLauncher launcher;
 
     /**
      * Kill the forked test process after a certain number of seconds. If set to 0, wait forever for
      * the process, never timing out.
      *
-     * @parameter expression="${p2.timeout}"
      */
+    @Parameter(defaultValue = "${p2.timeout}")
     private int forkedProcessTimeoutInSeconds;
 
     public void execute() throws MojoExecutionException, MojoFailureException {
@@ -181,7 +177,6 @@ public class MaterializeProductMojo extends AbstractMojo {
         if (result != 0) {
             throw new MojoFailureException("P2 publisher return code was " + result);
         }
-
     }
 
     private void setPropertyIfNotNull( Properties properties, String key, String value )
@@ -191,5 +186,4 @@ public class MaterializeProductMojo extends AbstractMojo {
             properties.setProperty( key, value );
         }
     }
-
 }
