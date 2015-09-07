@@ -49,77 +49,97 @@ public class FileManagementUtil {
     public static void changeConfigIniProperty(File configIniFile, String propKey, String value) {
         Properties prop = new Properties();
 
+        InputStream inputStream = null;
+        OutputStream outputStream = null;
         try {
-            prop.load(new FileInputStream(configIniFile));
+            inputStream = new FileInputStream(configIniFile);
+            outputStream = new FileOutputStream(configIniFile);
+            prop.load(inputStream);
             prop.setProperty(propKey, value);
-            prop.store(new FileOutputStream(configIniFile), null);
+            prop.store(outputStream, null);
         } catch (Exception ex) {
             ex.printStackTrace();
-        }
-    }
-
-    public static void copyDirectory(File srcPath, File dstPath, List filesToBeCopied) throws IOException{
-        if (srcPath.isDirectory()){
-            if (!dstPath.exists()){
-                dstPath.mkdir();
+        } finally {
+            if(inputStream != null){
+                try {
+                    inputStream.close();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+                ;
             }
-            String files[] = srcPath.list();
-            for(int i = 0; i < files.length; i++){
-                copyDirectory(new File(srcPath, files[i]),
-                        new File(dstPath, files[i]),filesToBeCopied);
-            }
-        }else{
-            if (!filesToBeCopied.contains(srcPath.getAbsolutePath()))
-                return;
-            if(!srcPath.exists()){
-                return;
-            }else{
-                FileManagementUtil.copy(srcPath, dstPath);
+            if(outputStream != null) {
+                try {
+                    outputStream.close();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
             }
         }
     }
 
-    public static List getAllFilesPresentInFolder(File srcPath){
-        List fileList=new ArrayList();
-        if (srcPath.isDirectory()){
-            String files[] = srcPath.list();
-            for(int i = 0; i < files.length; i++){
-                fileList.addAll(getAllFilesPresentInFolder(new File(srcPath, files[i])));
-            }
-        }else{
-            fileList.add(srcPath.getAbsolutePath());
-        }
-        return fileList;
-    }
-
-    public static void removeEmptyDirectories(File srcPath){
-        if (srcPath.isDirectory()){
-            String files[] = srcPath.list();
-            for(int i = 0; i < files.length; i++){
-                removeEmptyDirectories(new File(srcPath, files[i]));
-            }
-            if (srcPath.list().length==0){
-                srcPath.delete();
-            }
-        }
-    }
+//    public static void copyDirectory(File srcPath, File dstPath, List filesToBeCopied) throws IOException {
+//        if (srcPath.isDirectory()) {
+//            if (!dstPath.exists()) {
+//                dstPath.mkdir();
+//            }
+//            String files[] = srcPath.list();
+//            for (int i = 0; i < files.length; i++) {
+//                copyDirectory(new File(srcPath, files[i]),
+//                        new File(dstPath, files[i]), filesToBeCopied);
+//            }
+//        } else {
+//            if (!filesToBeCopied.contains(srcPath.getAbsolutePath()))
+//                return;
+//            if (!srcPath.exists()) {
+//                return;
+//            } else {
+//                FileManagementUtil.copy(srcPath, dstPath);
+//            }
+//        }
+//    }
+//
+//    public static List getAllFilesPresentInFolder(File srcPath) {
+//        List fileList = new ArrayList();
+//        if (srcPath.isDirectory()) {
+//            String files[] = srcPath.list();
+//            for (int i = 0; i < files.length; i++) {
+//                fileList.addAll(getAllFilesPresentInFolder(new File(srcPath, files[i])));
+//            }
+//        } else {
+//            fileList.add(srcPath.getAbsolutePath());
+//        }
+//        return fileList;
+//    }
+//
+//    public static void removeEmptyDirectories(File srcPath) {
+//        if (srcPath.isDirectory()) {
+//            String files[] = srcPath.list();
+//            for (int i = 0; i < files.length; i++) {
+//                removeEmptyDirectories(new File(srcPath, files[i]));
+//            }
+//            if (srcPath.list().length == 0) {
+//                srcPath.delete();
+//            }
+//        }
+//    }
 
     static public void zipFolder(String srcFolder, String destZipFile) {
         ZipOutputStream zip = null;
         FileOutputStream fileWriter = null;
-        try{
+        try {
             fileWriter = new FileOutputStream(destZipFile);
             zip = new ZipOutputStream(fileWriter);
-        }catch (Exception ex){
+        } catch (Exception ex) {
             ex.printStackTrace();
             return;
         }
 
-        addFolderContentsToZip( srcFolder, zip);
+        addFolderContentsToZip(srcFolder, zip);
         try {
             zip.flush();
             zip.close();
-        }catch (Exception ex) {
+        } catch (Exception ex) {
             ex.printStackTrace();
         }
     }
@@ -130,7 +150,7 @@ public class FileManagementUtil {
         File folder = new File(srcFile);
         if (folder.isDirectory()) {
             addFolderToZip(path, srcFile, zip);
-        }else {
+        } else {
             // Transfer bytes from in to out
             byte[] buf = new byte[1024];
             int len;
@@ -139,12 +159,12 @@ public class FileManagementUtil {
                 if (path.trim().equals(""))
                     zip.putNextEntry(new ZipEntry(folder.getName()));
                 else
-                    zip.putNextEntry(new ZipEntry(path +"/"+ folder.getName()));
+                    zip.putNextEntry(new ZipEntry(path + "/" + folder.getName()));
                 while ((len = in.read(buf)) > 0) {
                     zip.write(buf, 0, len);
                 }
                 in.close();
-            }catch (Exception ex){
+            } catch (Exception ex) {
                 ex.printStackTrace();
             }
         }
@@ -156,15 +176,15 @@ public class FileManagementUtil {
         try {
             int i = 0;
             while (true) {
-                if (fileListe.length==i) break;
-                if (new File(folder,fileListe[i]).isDirectory()){
-                    zip.putNextEntry(new ZipEntry(fileListe[i]+"/"));
+                if (fileListe.length == i) break;
+                if (new File(folder, fileListe[i]).isDirectory()) {
+                    zip.putNextEntry(new ZipEntry(fileListe[i] + "/"));
                     zip.closeEntry();
                 }
-                addToZip("", srcFolder+"/"+fileListe[i], zip);
+                addToZip("", srcFolder + "/" + fileListe[i], zip);
                 i++;
             }
-        }catch (Exception ex) {
+        } catch (Exception ex) {
         }
     }
 
@@ -174,18 +194,18 @@ public class FileManagementUtil {
         try {
             int i = 0;
             while (true) {
-                if (fileListe.length==i) break;
-                String newPath=folder.getName();
+                if (fileListe.length == i) break;
+                String newPath = folder.getName();
                 if (!path.equalsIgnoreCase(""))
-                    newPath=path+"/"+ newPath;
-                if (new File(folder,fileListe[i]).isDirectory()){
-                    zip.putNextEntry(new ZipEntry(newPath+"/"+fileListe[i]+"/"));
+                    newPath = path + "/" + newPath;
+                if (new File(folder, fileListe[i]).isDirectory()) {
+                    zip.putNextEntry(new ZipEntry(newPath + "/" + fileListe[i] + "/"));
 //					zip.closeEntry();
                 }
-                addToZip(newPath, srcFolder+"/"+fileListe[i], zip);
+                addToZip(newPath, srcFolder + "/" + fileListe[i], zip);
                 i++;
             }
-        }catch (Exception ex) {
+        } catch (Exception ex) {
         }
     }
 
@@ -193,25 +213,21 @@ public class FileManagementUtil {
         InputStream is = null;
         FileOutputStream fos = null;
 
-        try
-        {
+        try {
             is = new FileInputStream(src);
             fos = new FileOutputStream(dest);
             int c = 0;
             byte[] array = new byte[1024];
-            while ((c = is.read(array)) >= 0){
+            while ((c = is.read(array)) >= 0) {
                 fos.write(array, 0, c);
             }
-        }
-        catch (Exception e)	{
+        } catch (Exception e) {
             e.printStackTrace();
-        }
-        finally	{
-            try	{
+        } finally {
+            try {
                 fos.close();
                 is.close();
-            }
-            catch (Exception e)	{
+            } catch (Exception e) {
                 e.printStackTrace();
             }
         }
@@ -220,7 +236,7 @@ public class FileManagementUtil {
     public static File createFileAndParentDirectories(String fileName) throws Exception {
         File file = new File(fileName);
         File parent = file.getParentFile();
-        if (!parent.exists()){
+        if (!parent.exists()) {
             parent.mkdirs();
         }
         file.createNewFile();
@@ -230,7 +246,7 @@ public class FileManagementUtil {
     public static boolean deleteDir(File dir) {
         if (dir.isDirectory()) {
             String[] children = dir.list();
-            for (int i=0; i<children.length; i++) {
+            for (int i = 0; i < children.length; i++) {
                 boolean success = deleteDir(new File(dir, children[i]));
                 if (!success) {
                     return false;
@@ -242,15 +258,17 @@ public class FileManagementUtil {
 
     public static void deleteDirectories(File dir) {
         File[] children = dir.listFiles();
-        for (int i = 0; i < children.length; i++){
-            if (children[i].list() != null && children[i].list().length > 0){
-                deleteDirectories(children[i]);
+
+        if (children != null) {
+            for (int i = 0; i < children.length; i++) {
+                if (children[i].list() != null && children[i].list().length > 0) {
+                    deleteDirectories(children[i]);
+                } else {
+                    children[i].delete();
+                }
             }
-            else{
-                children[i].delete();
-            }
+            dir.delete();
         }
-        dir.delete();
     }
 
     public static void deleteDirectories(String dir) {
@@ -264,16 +282,15 @@ public class FileManagementUtil {
     }
 
     public static void createTargetFile(String sourceFileName, String targetFileName,
-                                        boolean overwrite) throws Exception{
+                                        boolean overwrite) throws Exception {
         File idealResultFile = new File(targetFileName);
-        if (overwrite || !idealResultFile.exists())
-        {
+        if (overwrite || !idealResultFile.exists()) {
             FileManagementUtil.createFileAndParentDirectories(targetFileName);
             FileManagementUtil.copyFile(sourceFileName, targetFileName);
         }
     }
 
-    public static boolean createDirectory(String directory){
+    public static boolean createDirectory(String directory) {
         // Create a directory; all ancestor directories must exist
         boolean success = (new File(directory)).mkdir();
         if (!success) {
@@ -282,7 +299,7 @@ public class FileManagementUtil {
         return success;
     }
 
-    public static boolean createDirectorys(String directory){
+    public static boolean createDirectorys(String directory) {
         // Create a directory; all ancestor directories must exist
         boolean success = (new File(directory)).mkdirs();
         if (!success) {
@@ -296,11 +313,13 @@ public class FileManagementUtil {
     public static void copyDirectory(File srcDir, File dstDir) throws IOException {
         if (srcDir.isDirectory()) {
             if (!dstDir.exists()) {
-                dstDir.mkdirs();
+                if (!dstDir.mkdirs()) {
+                    throw new IOException("Failed to delete " + dstDir.getAbsolutePath());
+                }
             }
 
             String[] children = srcDir.list();
-            for (int i=0; i<children.length; i++) {
+            for (int i = 0; i < children.length; i++) {
                 copyDirectory(new File(srcDir, children[i]),
                         new File(dstDir, children[i]));
             }
@@ -312,7 +331,7 @@ public class FileManagementUtil {
     //Copies src file to dst file.
     // If the dst file does not exist, it is created
     public static void copy(File src, File dst) throws IOException {
-        if (dst.getParentFile()!=null && !dst.getParentFile().exists()){
+        if (dst.getParentFile() != null && !dst.getParentFile().exists()) {
             dst.getParentFile().mkdirs();
         }
         InputStream in = new FileInputStream(src);
@@ -333,7 +352,7 @@ public class FileManagementUtil {
     }
 
     public static String addNodesToPath(String currentPath, String[] newNode) {
-        String returnPath=currentPath;
+        String returnPath = currentPath;
         for (int i = 0; i < newNode.length; i++) {
             returnPath = returnPath + File.separator + newNode[i];
         }
@@ -341,7 +360,7 @@ public class FileManagementUtil {
     }
 
     public static String addNodesToPath(StringBuffer currentPath, String[] pathNodes) {
-        for (int i = 0; i < pathNodes.length; i++){
+        for (int i = 0; i < pathNodes.length; i++) {
             currentPath.append(File.separator);
             currentPath.append(pathNodes[i]);
         }
@@ -349,7 +368,7 @@ public class FileManagementUtil {
     }
 
     public static String addNodesToURL(String currentPath, String[] newNode) {
-        String returnPath=currentPath;
+        String returnPath = currentPath;
         for (int i = 0; i < newNode.length; i++) {
             returnPath = returnPath + "/" + newNode[i];
         }
@@ -364,7 +383,7 @@ public class FileManagementUtil {
      * @param fileNamePrefix The prefix to look for
      * @param extension      The extension to look for
      * @return The list of file with a prefix of <code>fileNamePrefix</code> &amp; an extension of
-     *         <code>extension</code>
+     * <code>extension</code>
      */
     public static File[] getMatchingFiles(String sourceDir, String fileNamePrefix, String extension) {
         List fileList = new ArrayList();
@@ -398,11 +417,12 @@ public class FileManagementUtil {
     /**
      * Filter out files inside a <code>sourceDir</code> with matching <codefileNamePrefix></code>
      * and <code>extension</code>
-     * @param sourceDir 		The directory to filter the files
-     * @param fileNamePrefix	The filtering filename prefix 
-     * @param extension			The filtering file extension
+     *
+     * @param sourceDir      The directory to filter the files
+     * @param fileNamePrefix The filtering filename prefix
+     * @param extension      The filtering file extension
      */
-    public static void filterOutRestrictedFiles(String sourceDir, String fileNamePrefix, String extension){
+    public static void filterOutRestrictedFiles(String sourceDir, String fileNamePrefix, String extension) {
         File[] resultedMatchingFiles = getMatchingFiles(sourceDir, fileNamePrefix, extension);
         for (int i = 0; i < resultedMatchingFiles.length; i++) {
             File matchingFilePath = new File(resultedMatchingFiles[i].getAbsolutePath());
@@ -410,24 +430,24 @@ public class FileManagementUtil {
         }
     }
 
-    public static void unzip(File archiveFile,File destination) throws Exception{
+    public static void unzip(File archiveFile, File destination) throws Exception {
         try {
             BufferedOutputStream dest = null;
             FileInputStream fis = new FileInputStream(archiveFile);
             ZipInputStream zis = new
                     ZipInputStream(new BufferedInputStream(fis));
             ZipEntry entry;
-            File base=destination;
+            File base = destination;
 
-            while((entry = zis.getNextEntry()) != null) {
+            while ((entry = zis.getNextEntry()) != null) {
                 int count;
                 byte data[] = new byte[BUFFER];
-                File file = new File(base,entry.getName());
-                if (entry.getName().endsWith("/")){
+                File file = new File(base, entry.getName());
+                if (entry.getName().endsWith("/")) {
                     file.mkdirs();
                     continue;
                 }
-                if (file.getParentFile()!=null && !file.getParentFile().exists())
+                if (file.getParentFile() != null && !file.getParentFile().exists())
                     file.getParentFile().mkdirs();
                 FileOutputStream fos = new FileOutputStream(file);
                 dest = new BufferedOutputStream(fos, BUFFER);
@@ -440,7 +460,7 @@ public class FileManagementUtil {
             }
             zis.close();
             fis.close();
-        } catch(Exception e) {
+        } catch (Exception e) {
             throw e;
         }
     }

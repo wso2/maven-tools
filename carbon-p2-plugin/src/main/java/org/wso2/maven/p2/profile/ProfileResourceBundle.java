@@ -37,7 +37,6 @@ public class ProfileResourceBundle {
     private ArrayList features;
     private boolean deleteOldProfileFiles;
     private MavenProject project;
-    private MavenProjectHelper projectHelper;
     private P2ApplicationLauncher launcher;
     private int forkedProcessTimeoutInSeconds;
 
@@ -95,14 +94,6 @@ public class ProfileResourceBundle {
 
     public void setProject(MavenProject project) {
         this.project = project;
-    }
-
-    public MavenProjectHelper getProjectHelper() {
-        return projectHelper;
-    }
-
-    public void setProjectHelper(MavenProjectHelper projectHelper) {
-        this.projectHelper = projectHelper;
     }
 
     public P2ApplicationLauncher getLauncher() {

@@ -86,13 +86,20 @@ public class ProfileGenerator extends Generator {
         launcher.setWorkingDirectory(project.getBasedir());
         launcher.setApplicationName(PUBLISHER_APPLICATION);
         launcher.addArgumentsToInstallFeatures(resourceBundle.getMetadataRepository().toExternalForm(),
-                resourceBundle.getArtifactRepository().toExternalForm(), installUIs, destination, resourceBundle.getProfile());
+                resourceBundle.getArtifactRepository().toExternalForm(), installUIs, destination,
+                resourceBundle.getProfile());
         launcher.generateRepo(resourceBundle.getForkedProcessTimeoutInSeconds());
     }
 
-    //Talk to SameeraJ and get the meaning of UIstoInstall
+    /**
+     * Generate the formatted string representation of features from the features passed in through the pom.xml. This
+     * formatted string is passed into P2ApplicationLauncher to generate the profile.
+     *
+     * @return formatted string to pass into P2ApplicationLauncher
+     * @throws MojoExecutionException
+     */
     private String getIUsToInstall() throws MojoExecutionException {
-        StringBuffer installUIs = new StringBuffer();
+        StringBuilder installUIs = new StringBuilder();
         for (Object featureObj : resourceBundle.getFeatures()) {
             Feature f;
             if (featureObj instanceof Feature) {
@@ -102,7 +109,7 @@ public class ProfileGenerator extends Generator {
             } else {
                 throw new MojoExecutionException("Unknown feature definition: " + featureObj.toString());
             }
-            installUIs.append(f.getId().trim() + "/" + f.getVersion().trim() + ",");
+            installUIs.append(f.getId().trim()).append("/").append(f.getVersion().trim()).append(",");
         }
 
         return installUIs.toString();
@@ -135,10 +142,13 @@ public class ProfileGenerator extends Generator {
             });
 
             //deleting old profile files
-            for (int i = 0; i < (profileFileList.length - 1); i++) {
-                File profileFile = new File(profileFolderName, profileFileList[i]);
-                if (profileFile.exists() && !profileFile.delete()) {
-                    throw new MojoExecutionException("Failed to delete old profile file: " + profileFile.getAbsolutePath());
+            if (profileFileList != null) {
+                for (int i = 0; i < (profileFileList.length - 1); i++) {
+                    File profileFile = new File(profileFolderName, profileFileList[i]);
+                    if (profileFile.exists() && !profileFile.delete()) {
+                        throw new MojoExecutionException("Failed to delete old profile file: " +
+                                profileFile.getAbsolutePath());
+                    }
                 }
             }
 

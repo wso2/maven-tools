@@ -17,8 +17,8 @@
 package org.wso2.maven.p2.repo.utils;
 
 import org.apache.maven.plugin.MojoExecutionException;
-import org.wso2.maven.p2.beans.FeatureArtifact;
 import org.wso2.maven.p2.beans.Bundle;
+import org.wso2.maven.p2.beans.FeatureArtifact;
 import org.wso2.maven.p2.repo.RepositoryResourceBundle;
 import org.wso2.maven.p2.utils.BundleUtils;
 import org.wso2.maven.p2.utils.FeatureUtils;
@@ -26,6 +26,10 @@ import org.wso2.maven.p2.utils.MavenUtils;
 
 import java.util.ArrayList;
 
+/**
+ * This class takes the configuration data entered into the plugin and cast it to the internal
+ * data representation. This sole purpose of this is to reduce the complexity of the RepoGenerator.java.
+ */
 public class RepoBeanGeneratorUtils {
 
     private final RepositoryResourceBundle resourceBundle;
@@ -34,9 +38,16 @@ public class RepoBeanGeneratorUtils {
         this.resourceBundle = resourceBundle;
     }
 
+    /**
+     * Generates an ArrayList<FeatureArtifact> from feature artifact data passed into plugin through plugin
+     * configuration in pom.xml
+     *
+     * @return processed bundles in an ArrayList&lt;FeatureArtifact&gt;
+     * @throws MojoExecutionException
+     */
     public ArrayList<FeatureArtifact> getProcessedFeatureArtifacts() throws MojoExecutionException {
         ArrayList<FeatureArtifact> processedFeatureArtifacts = new ArrayList<FeatureArtifact>();
-        if(resourceBundle.getFeatureArtifacts() == null) {
+        if (resourceBundle.getFeatureArtifacts() == null) {
             return processedFeatureArtifacts;
         }
         for (Object obj : resourceBundle.getFeatureArtifacts()) {
@@ -48,18 +59,27 @@ public class RepoBeanGeneratorUtils {
                     f = (FeatureArtifact) obj;
                 }
                 FeatureUtils.resolveVersion(f, this.resourceBundle.getProject());
-                f.setArtifact(MavenUtils.getResolvedArtifact(f, resourceBundle.getRepositorySystem(), resourceBundle.getRemoteRepositories(), resourceBundle.getLocalRepository()));
+                f.setArtifact(MavenUtils.getResolvedArtifact(f, resourceBundle.getRepositorySystem(),
+                        resourceBundle.getRemoteRepositories(), resourceBundle.getLocalRepository()));
                 processedFeatureArtifacts.add(f);
             } catch (Exception e) {
-                throw new MojoExecutionException("Error occurred when processing the Feature Artifact: " + obj.toString(), e);
+                throw new MojoExecutionException("Error occurred when processing the Feature Artifact: " +
+                        obj.toString(), e);
             }
         }
         return processedFeatureArtifacts;
     }
 
+    /**
+     * Generates an ArrayList<Bundle> from feature artifact data passed into plugin through plugin
+     * configuration in pom.xml
+     *
+     * @return processed bundles in an ArrayList&lt;Bundle&gt;
+     * @throws MojoExecutionException
+     */
     public ArrayList<Bundle> getProcessedBundleArtifacts() throws MojoExecutionException {
         ArrayList<Bundle> processedBundleArtifacts = new ArrayList<Bundle>();
-        if(resourceBundle.getBundleArtifacts() == null) {
+        if (resourceBundle.getBundleArtifacts() == null) {
             return processedBundleArtifacts;
         }
         for (Object obj : resourceBundle.getBundleArtifacts()) {
@@ -69,8 +89,9 @@ public class RepoBeanGeneratorUtils {
             } else {
                 f = (Bundle) obj;
             }
-            BundleUtils.resolveVersionForBundle(f, this.resourceBundle.getProject());// f.resolveVersion(getProject());
-            f.setArtifact(MavenUtils.getResolvedArtifact(f, resourceBundle.getRepositorySystem(), resourceBundle.getRemoteRepositories(), resourceBundle.getLocalRepository()));
+            BundleUtils.resolveVersionForBundle(f, this.resourceBundle.getProject());
+            f.setArtifact(MavenUtils.getResolvedArtifact(f, resourceBundle.getRepositorySystem(),
+                    resourceBundle.getRemoteRepositories(), resourceBundle.getLocalRepository()));
             processedBundleArtifacts.add(f);
         }
         return processedBundleArtifacts;

@@ -48,7 +48,6 @@ public class RepositoryResourceBundle {
      * When this option is not specified, it is recommended to set the artifactRepository to be in the same location
      * as the source (-source)
      *
-     * @parameter
      */
     private boolean publishArtifacts;
 

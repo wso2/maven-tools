@@ -110,7 +110,7 @@ public class BundleUtils {
         }
 
         Properties properties = project.getProperties();
-        for(Map.Entry<Object, Object> obj : properties.entrySet()) {
+        for (Map.Entry<Object, Object> obj : properties.entrySet()) {
             bundle.setVersion(bundle.getVersion().replaceAll(Pattern.quote("${" + obj.getKey() + "}"),
                     obj.getValue().toString()));
         }
@@ -125,8 +125,15 @@ public class BundleUtils {
         }
     }
 
+    /**
+     * Returns the OSGI version for the given artifact version.
+     *
+     * @param version artifact version
+     * @return OSGI version
+     */
     public static String getOSGIVersion(String version) {
-        //A complex logic is added in this method. Thus during the architectural migration, this logic is kept as it is.
+        // This method is taken from org.apache.maven.shared.osgi.DefaultMaven2OsgiConverter to get the OSGI version
+        // from a give version artifact version.
         String osgiVersion;
 
         // Matcher m = P_VERSION.matcher(version);

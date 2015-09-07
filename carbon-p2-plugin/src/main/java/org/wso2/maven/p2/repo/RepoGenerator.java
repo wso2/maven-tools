@@ -144,10 +144,12 @@ public class RepoGenerator extends Generator {
         ArrayList<FeatureArtifact> processedFeatureArtifacts = this.processedFeatureArtifacts;
         for (FeatureArtifact featureArtifact : processedFeatureArtifacts) {
             try {
-                getLog().info("Extracting feature " + featureArtifact.getGroupId() + ":" + featureArtifact.getArtifactId());
+                getLog().info("Extracting feature " + featureArtifact.getGroupId() + ":" +
+                        featureArtifact.getArtifactId());
                 FileManagementUtil.unzip(featureArtifact.getArtifact().getFile(), sourceDir);
             } catch (Exception e) {
-                throw new MojoExecutionException("Error occurred when extracting the Feature Artifact: " + featureArtifact.toString(), e);
+                throw new MojoExecutionException("Error occurred when extracting the Feature Artifact: " +
+                        featureArtifact.toString(), e);
             }
         }
     }
@@ -169,7 +171,8 @@ public class RepoGenerator extends Generator {
                 File file = bundleArtifact.getArtifact().getFile();
                 FileManagementUtil.copy(file, new File(pluginsDir, file.getName()));
             } catch (Exception e) {
-                throw new MojoExecutionException("Error occurred when extracting the Feature Artifact: " + bundleArtifact.toString(), e);
+                throw new MojoExecutionException("Error occurred when extracting the Feature Artifact: " +
+                        bundleArtifact.toString(), e);
             }
         }
     }
@@ -212,7 +215,8 @@ public class RepoGenerator extends Generator {
                 resourceBundle.setArtifactRepository(repo.toURI().toURL());
             }
 
-            repoGenerationLocation = new File(resourceBundle.getMetadataRepository().getFile().replace("/", File.separator));
+            repoGenerationLocation = new File(resourceBundle.getMetadataRepository().getFile().replace("/",
+                    File.separator));
             archiveFile = new File(targetDir, project.getArtifactId() + "_" + project.getVersion() + ".zip");
             categoryDefinitionFile = File.createTempFile("equinox-p2", "category");
         } catch (IOException e) {
@@ -226,7 +230,10 @@ public class RepoGenerator extends Generator {
      * @throws MojoExecutionException
      */
     private void updateRepositoryWithCategories() throws MojoExecutionException {
-        if (isCategoriesAvailable()) {
+        boolean isCategoriesAvailable = resourceBundle.getCategories() != null &&
+                resourceBundle.getCategories().size() != 0;
+
+        if (isCategoriesAvailable) {
             getLog().info("Running Equinox P2 Category Publisher Application for the Generated Repository");
             P2Utils.createCategoryFile(project, resourceBundle.getCategories(), categoryDefinitionFile);
 
@@ -238,10 +245,6 @@ public class RepoGenerator extends Generator {
             p2LaunchManager.generateRepo(resourceBundle.getForkedProcessTimeoutInSeconds());
             getLog().info("Completed running Equinox P2 Category Publisher Application for the Generated Repository");
         }
-    }
-
-    private boolean isCategoriesAvailable() {
-        return !(resourceBundle.getCategories() == null || resourceBundle.getCategories().size() == 0);
     }
 
     /**

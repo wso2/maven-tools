@@ -19,12 +19,13 @@ package org.wso2.maven.p2.utils;
 import org.apache.maven.model.Dependency;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.project.MavenProject;
-import org.wso2.maven.p2.profile.Feature;
 import org.wso2.maven.p2.beans.FeatureArtifact;
 import org.wso2.maven.p2.beans.ImportFeature;
 import org.wso2.maven.p2.beans.IncludedFeature;
+import org.wso2.maven.p2.profile.Feature;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Properties;
 import java.util.regex.Pattern;
 
@@ -67,7 +68,6 @@ public class FeatureUtils {
             if ("optional".equals(segment))
                 feature.setOptional(true);
         }
-
         return feature;
     }
 
@@ -91,11 +91,9 @@ public class FeatureUtils {
                     }
                     if (split.length > 2) {
                         feature.setFeatureVersion(BundleUtils.getOSGIVersion(split[2]));
-//                        feature.setFeatureVersion(split[2]);
                     }
                 } else {
                     feature.setFeatureVersion(BundleUtils.getOSGIVersion(split[1]));
-//                    feature.setFeatureVersion(split[1]);
                     if (split.length > 2) {
                         if (P2Utils.isMatchString(split[2])) {
                             match = split[2].toUpperCase();
@@ -113,17 +111,30 @@ public class FeatureUtils {
                 + featureDefinition);
     }
 
-    public static Feature getFeature(String bundleDefinition) throws MojoExecutionException {
-        String[] split = bundleDefinition.split(":");
+    /**
+     * Generates a Feature bean from the given string definition for a feature.
+     *
+     * @param featureDefinition String Feature definition
+     * @return Feature bean
+     */
+    public static Feature getFeature(String featureDefinition) throws MojoExecutionException {
+        String[] split = featureDefinition.split(":");
         if (split.length > 1) {
             Feature feature = new Feature();
             feature.setId(split[0]);
             feature.setVersion(split[1]);
             return feature;
         }
-        throw new MojoExecutionException("Insufficient feature information provided to determine the feature: " + bundleDefinition);
+        throw new MojoExecutionException("Insufficient feature information provided to determine the feature: " +
+                featureDefinition);
     }
 
+    /**
+     * Generates a FeatureArtifact bean from the given string definition for a feature artifact.
+     *
+     * @param featureArtifactDefinition String feature artifact definition
+     * @return FeatureArtifact bean
+     */
     public static FeatureArtifact getFeatureArtifact(String featureArtifactDefinition) throws MojoExecutionException {
         String[] split = featureArtifactDefinition.split(":");
         if (split.length > 1) {
@@ -133,7 +144,8 @@ public class FeatureUtils {
             if (split.length == 3) featureArtifact.setVersion(split[2]);
             return featureArtifact;
         }
-        throw new MojoExecutionException("Insufficient artifact information provided to determine the feature: " + featureArtifactDefinition);
+        throw new MojoExecutionException("Insufficient artifact information provided to determine the feature: " +
+                featureArtifactDefinition);
     }
 
     public static void resolveVersion(FeatureArtifact feature, MavenProject project) throws MojoExecutionException {
@@ -157,11 +169,13 @@ public class FeatureUtils {
             }
         }
         if (feature.getVersion() == null) {
-            throw new MojoExecutionException("Could not find the version for " + feature.getGroupId() + ":" + feature.getArtifactId());
+            throw new MojoExecutionException("Could not find the version for " + feature.getGroupId() + ":" +
+                    feature.getArtifactId());
         }
         Properties properties = project.getProperties();
-        for (Object key : properties.keySet()) {
-            feature.setVersion(feature.getVersion().replaceAll(Pattern.quote("${" + key + "}"), properties.get(key).toString()));
+        for (Map.Entry<Object, Object> obj : properties.entrySet()) {
+            feature.setVersion(feature.getVersion().replaceAll(Pattern.quote("${" + obj.getKey() + "}"),
+                    obj.getValue().toString()));
         }
     }
 }

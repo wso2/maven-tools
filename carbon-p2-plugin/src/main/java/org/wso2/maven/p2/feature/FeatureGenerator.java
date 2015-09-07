@@ -28,7 +28,7 @@ import org.wso2.maven.p2.beans.ImportFeature;
 import org.wso2.maven.p2.beans.IncludedFeature;
 import org.wso2.maven.p2.beans.Property;
 import org.wso2.maven.p2.commons.Generator;
-import org.wso2.maven.p2.feature.utils.BeanGeneratorUtils;
+import org.wso2.maven.p2.feature.utils.FeatureBeanGeneratorUtils;
 import org.wso2.maven.p2.feature.utils.FeatureFileGeneratorUtils;
 import org.wso2.maven.p2.utils.BundleUtils;
 import org.wso2.maven.p2.utils.FileManagementUtil;
@@ -99,7 +99,7 @@ public class FeatureGenerator extends Generator {
      * @throws MojoExecutionException
      */
     private void generateBeansFromInputs() throws MojoExecutionException {
-        BeanGeneratorUtils paramProcessor = new BeanGeneratorUtils(this.resourceBundle);
+        FeatureBeanGeneratorUtils paramProcessor = new FeatureBeanGeneratorUtils(this.resourceBundle);
         getLog().info("Processing bundles");
         processedBundles = paramProcessor.getProcessedBundlesList();
 //      Had a confusion whether import bundles are actually needed during the code review 01/09/2015. Thus commented this.

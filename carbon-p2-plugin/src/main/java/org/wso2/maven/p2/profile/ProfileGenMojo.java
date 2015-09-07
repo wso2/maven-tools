@@ -79,12 +79,6 @@ public class ProfileGenMojo extends AbstractMojo {
     @Parameter(defaultValue = "${project}")
     private MavenProject project;
 
-    /**
-     * Maven ProjectHelper.
-     */
-    @Component
-    private MavenProjectHelper projectHelper;
-
     @Component
     private P2ApplicationLauncher launcher;
 
@@ -110,9 +104,9 @@ public class ProfileGenMojo extends AbstractMojo {
         resourceBundle.setFeatures(this.features);
         resourceBundle.setDeleteOldProfileFiles(this.deleteOldProfileFiles);
         resourceBundle.setProject(this.project);
-        resourceBundle.setProjectHelper(this.projectHelper);
         resourceBundle.setLauncher(this.launcher);
         resourceBundle.setForkedProcessTimeoutInSeconds(this.forkedProcessTimeoutInSeconds);
+
         ProfileGenerator generator = new ProfileGenerator(resourceBundle);
         generator.setLog(getLog());
         return generator;
