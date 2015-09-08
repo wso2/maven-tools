@@ -102,7 +102,7 @@ public class RepositoryGenMojo extends AbstractMojo {
 
 
     @Parameter(defaultValue = "${project.remoteArtifactRepositories}")
-    private List remoteRepositories;
+    private List<ArtifactRepository> remoteRepositories;
 
 
     @Component

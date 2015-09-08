@@ -64,7 +64,7 @@ public class FeatureResourceBundle {
     private MavenProject project;
     private ArtifactRepository localRepository;
     private MavenProjectHelper projectHelper;
-    private List remoteRepositories;
+    private List<ArtifactRepository> remoteRepositories;
 
     private Log log;
 
@@ -212,11 +212,11 @@ public class FeatureResourceBundle {
         this.localRepository = localRepository;
     }
 
-    public List getRemoteRepositories() {
+    public List<ArtifactRepository> getRemoteRepositories() {
         return remoteRepositories;
     }
 
-    public void setRemoteRepositories(List remoteRepositories) {
+    public void setRemoteRepositories(List<ArtifactRepository> remoteRepositories) {
         this.remoteRepositories = remoteRepositories;
     }
 

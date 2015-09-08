@@ -32,7 +32,7 @@ public class PropertyReplacer {
     public static String replaceProperties(final String origString, final Properties props) {
 
         final char[] chars = origString.toCharArray();
-        StringBuffer buffer = new StringBuffer();
+        StringBuilder buffer = new StringBuilder();
         boolean properties = false;
         State state = State.NORMAL;
         int start = 0;

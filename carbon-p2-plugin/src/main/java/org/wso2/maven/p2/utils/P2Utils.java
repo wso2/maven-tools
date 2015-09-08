@@ -31,7 +31,6 @@ import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
 import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -55,14 +54,15 @@ public class P2Utils {
                     String[] split2 = split[0].split(Pattern.quote("."));
                     if (split2[0].equalsIgnoreCase("properties")) {
                         int index = Integer.parseInt(split2[1]);
-                        if (index > min)
+                        if (index > min) {
                             min = index;
+                        }
                     }
                 }
-            } catch (FileNotFoundException e) {
-                throw e;
             } finally {
-                if (in != null) in.close();
+                if (in != null) {
+                    in.close();
+                }
             }
         }
         return min;

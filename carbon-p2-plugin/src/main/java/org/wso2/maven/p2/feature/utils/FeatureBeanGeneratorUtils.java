@@ -40,7 +40,7 @@ import java.util.List;
  */
 public class FeatureBeanGeneratorUtils {
 
-    private List remoteRepositories;
+    private List<ArtifactRepository> remoteRepositories;
     private ArtifactRepository localRepository;
     private RepositorySystem repositorySystem;
     private MavenProject project;

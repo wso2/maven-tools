@@ -17,7 +17,6 @@
 package org.wso2.maven.p2.profile;
 
 import org.apache.maven.project.MavenProject;
-import org.apache.maven.project.MavenProjectHelper;
 import org.eclipse.tycho.p2.facade.internal.P2ApplicationLauncher;
 
 import java.net.URL;

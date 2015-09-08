@@ -148,6 +148,13 @@ public class FeatureUtils {
                 featureArtifactDefinition);
     }
 
+    /**
+     * Sets the version of a given feature artifact by analyzing project dependencies.
+     *
+     * @param feature FeatureArtifact object
+     * @param project maven project
+     * @throws MojoExecutionException
+     */
     public static void resolveVersion(FeatureArtifact feature, MavenProject project) throws MojoExecutionException {
         if (feature.getVersion() == null) {
             List<Dependency> dependencies = project.getDependencies();

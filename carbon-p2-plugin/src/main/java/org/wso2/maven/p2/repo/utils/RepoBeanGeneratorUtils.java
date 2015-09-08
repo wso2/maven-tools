@@ -52,7 +52,7 @@ public class RepoBeanGeneratorUtils {
         }
         for (Object obj : resourceBundle.getFeatureArtifacts()) {
             try {
-                FeatureArtifact f = null;
+                FeatureArtifact f;
                 if (obj instanceof String) {
                     f = FeatureUtils.getFeatureArtifact(obj.toString());
                 } else {

@@ -98,8 +98,10 @@ public class FileManagementUtil {
             ex.printStackTrace();
         } finally {
             try {
-                zip.flush();
-                zip.close();
+                if(zip != null) {
+                    zip.flush();
+                    zip.close();
+                }
             } catch (IOException e) {
                 e.printStackTrace();
             }
@@ -203,8 +205,15 @@ public class FileManagementUtil {
         if (children != null) {
             for (File child : children) {
                 if (child != null) {
-                    if (child.list() != null && child.list().length > 0) {
-                        deleteDirectories(child);
+                    String[] childrenOfChild = child.list();
+                    if(childrenOfChild != null) {
+                        if(childrenOfChild.length > 0) {
+                            deleteDirectories(child);
+                        } else {
+                            if (!child.delete()) {
+                                throw new IOException("Failed to delete " + child.getAbsolutePath());
+                            }
+                        }
                     } else {
                         if (!child.delete()) {
                             throw new IOException("Failed to delete " + child.getAbsolutePath());

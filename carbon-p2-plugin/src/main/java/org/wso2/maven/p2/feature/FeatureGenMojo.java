@@ -31,6 +31,7 @@ import org.apache.maven.repository.RepositorySystem;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Properties;
 
 /**
@@ -118,7 +119,7 @@ public class FeatureGenMojo extends AbstractMojo {
     private ArtifactRepository localRepository;
 
     @Parameter(defaultValue = "${project.remoteArtifactRepositories}")
-    private java.util.List remoteRepositories;
+    private List<ArtifactRepository> remoteRepositories;
 
     @Parameter(defaultValue = "${project}")
     private MavenProject project;

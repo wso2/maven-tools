@@ -18,7 +18,7 @@
 package org.wso2.maven.p2.utils;
 
 public class P2Constants {
-    public static final String[] OSGI_FILES=new String[]{"org.eclipse.equinox:org.eclipse.equinox.common",
+    public static final String[] OSGI_FILES = new String[]{"org.eclipse.equinox:org.eclipse.equinox.common",
             "org.eclipse.equinox:org.eclipse.equinox.simpleconfigurator",
             "org.eclipse.equinox:org.eclipse.equinox.ds",
             "org.eclipse.equinox:org.eclipse.equinox.launcher",
@@ -70,7 +70,7 @@ public class P2Constants {
             "org.eclipse.equinox:org.eclipse.equinox.p2.repository",
             "org.eclipse.equinox:org.eclipse.equinox.p2.updatesite"};
 
-    public static final String[] OSGI_FILES_DEFAULT_VERSION=new String[]{"org.eclipse.equinox:org.eclipse.equinox.common:3.5.0.v20090520-1800",
+    public static final String[] OSGI_FILES_DEFAULT_VERSION = new String[]{"org.eclipse.equinox:org.eclipse.equinox.common:3.5.0.v20090520-1800",
             "org.eclipse.equinox:org.eclipse.equinox.simpleconfigurator:1.0.100.v20090520-1905",
             "org.eclipse.equinox:org.eclipse.equinox.ds:1.1.0.v20090520-1800",
             "org.eclipse.equinox:org.eclipse.equinox.launcher:1.0.200.v20090520",
@@ -126,8 +126,8 @@ public class P2Constants {
     public static final String SIMPLE_CONFIGURATOR = "org.eclipse.equinox.simpleconfigurator";
     public static final String PROFILE_KEY = "eclipse.p2.profile";
 
-    public static String getDefaultVersion(String groupId, String artifactId){
-        for(String osgiFile:OSGI_FILES_DEFAULT_VERSION){
+    public static String getDefaultVersion(String groupId, String artifactId) {
+        for (String osgiFile : OSGI_FILES_DEFAULT_VERSION) {
             String[] split = osgiFile.split(":");
             if (split[0].equalsIgnoreCase(groupId) && split[1].equalsIgnoreCase(artifactId))
                 return split[2];

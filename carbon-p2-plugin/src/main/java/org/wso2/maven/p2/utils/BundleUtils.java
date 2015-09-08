@@ -27,6 +27,9 @@ import java.util.Properties;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+/**
+ * Utility class composed of utility methods pertaining to u Bundles.
+ */
 public class BundleUtils {
 
     private static final Pattern OSGI_VERSION_PATTERN = Pattern.compile("[0-9]+\\.[0-9]+\\.[0-9]+(\\.[0-9A-Za-z_-]+)?");
@@ -69,6 +72,14 @@ public class BundleUtils {
                 "Insufficient artifact information provided to determine the bundle: " + bundleDefinition);
     }
 
+    /**
+     * Takes the string bundle artifact definition and returns the Bundle representing the string bundle artifact
+     * definition.
+     *
+     * @param bundleArtifactDefinition String definition for bundle artifact.
+     * @return Bundle
+     * @throws MojoExecutionException
+     */
     public static Bundle getBundleArtifact(String bundleArtifactDefinition) throws MojoExecutionException {
         Bundle bundleArtifact = new Bundle();
         String[] split = bundleArtifactDefinition.split(":");

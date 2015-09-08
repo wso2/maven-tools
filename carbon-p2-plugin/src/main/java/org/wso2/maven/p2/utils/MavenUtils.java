@@ -18,17 +18,13 @@
 package org.wso2.maven.p2.utils;
 
 import org.apache.maven.artifact.Artifact;
-import org.apache.maven.artifact.factory.ArtifactFactory;
 import org.apache.maven.artifact.repository.ArtifactRepository;
-import org.apache.maven.artifact.resolver.ArtifactNotFoundException;
-import org.apache.maven.artifact.resolver.ArtifactResolutionException;
 import org.apache.maven.artifact.resolver.ArtifactResolutionRequest;
-import org.apache.maven.artifact.resolver.ArtifactResolver;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.repository.RepositorySystem;
 import org.w3c.dom.Document;
-import org.wso2.maven.p2.beans.FeatureArtifact;
 import org.wso2.maven.p2.beans.Bundle;
+import org.wso2.maven.p2.beans.FeatureArtifact;
 import org.wso2.maven.p2.beans.IncludedFeature;
 
 import javax.xml.parsers.DocumentBuilder;
@@ -47,7 +43,8 @@ public class MavenUtils {
      * @param localRepository    local repository representation
      * @return the resolved Artifact
      */
-    public static Artifact getResolvedArtifact(Bundle bundle, RepositorySystem repositorySystem, List remoteRepositories,
+    public static Artifact getResolvedArtifact(Bundle bundle, RepositorySystem repositorySystem,
+                                               List<ArtifactRepository> remoteRepositories,
                                                ArtifactRepository localRepository) {
         return getResolvedArtifact(bundle.getGroupId(), bundle.getArtifactId(), bundle.getVersion(), repositorySystem,
                 remoteRepositories, localRepository, "jar");
@@ -63,7 +60,8 @@ public class MavenUtils {
      * @return the resolved Artifact
      */
     public static Artifact getResolvedArtifact(IncludedFeature feature, RepositorySystem repositorySystem,
-                                               List remoteRepositories, ArtifactRepository localRepository) {
+                                               List<ArtifactRepository> remoteRepositories,
+                                               ArtifactRepository localRepository) {
         return getResolvedArtifact(feature.getGroupId(), feature.getArtifactId(), feature.getArtifactVersion(),
                 repositorySystem, remoteRepositories, localRepository, "jar");
     }
@@ -71,20 +69,22 @@ public class MavenUtils {
     /**
      * Returns an artifact which represent by a bundle
      *
-     * @param feature             bundle which need to resolve the artifact
+     * @param feature            bundle which need to resolve the artifact
      * @param repositorySystem   RepositorySystem object
      * @param remoteRepositories collection of remote repositories
      * @param localRepository    local repository representation
      * @return the resolved Artifact
      */
-    public static Artifact getResolvedArtifact(FeatureArtifact feature, RepositorySystem repositorySystem, List remoteRepositories,
+    public static Artifact getResolvedArtifact(FeatureArtifact feature, RepositorySystem repositorySystem,
+                                               List<ArtifactRepository> remoteRepositories,
                                                ArtifactRepository localRepository) {
         return getResolvedArtifact(feature.getGroupId(), feature.getArtifactId(), feature.getVersion(), repositorySystem,
                 remoteRepositories, localRepository, "zip");
     }
 
     private static Artifact getResolvedArtifact(String groupId, String artifactId, String version,
-                                                RepositorySystem repositorySystem, List remoteRepositories,
+                                                RepositorySystem repositorySystem,
+                                                List<ArtifactRepository> remoteRepositories,
                                                 ArtifactRepository localRepository, String type) {
 
         Artifact artifact = repositorySystem.createArtifact(groupId, artifactId, version, Artifact.SCOPE_RUNTIME, type);
@@ -98,6 +98,12 @@ public class MavenUtils {
         return artifact;
     }
 
+    /**
+     * Returns a blank Document
+     *
+     * @return org.w3c.dom.Document object
+     * @throws MojoExecutionException
+     */
     public static Document getManifestDocument() throws MojoExecutionException {
         DocumentBuilderFactory documentBuilderFactory = DocumentBuilderFactory.newInstance();
         DocumentBuilder documentBuilder;
@@ -106,8 +112,6 @@ public class MavenUtils {
         } catch (ParserConfigurationException e1) {
             throw new MojoExecutionException("Unable to load feature manifest", e1);
         }
-        Document document;
-        document = documentBuilder.newDocument();
-        return document;
+        return documentBuilder.newDocument();
     }
 }

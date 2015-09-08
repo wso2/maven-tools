@@ -62,8 +62,8 @@ public class RepositoryResourceBundle {
     private boolean archive;
 
     private RepositorySystem repositorySystem;
-    private org.apache.maven.artifact.repository.ArtifactRepository localRepository;
-    private List remoteRepositories;
+    private ArtifactRepository localRepository;
+    private List<ArtifactRepository> remoteRepositories;
     private P2ApplicationLauncher launcher;
     private int forkedProcessTimeoutInSeconds;
 
@@ -166,11 +166,11 @@ public class RepositoryResourceBundle {
         this.localRepository = localRepository;
     }
 
-    public List getRemoteRepositories() {
+    public List<ArtifactRepository> getRemoteRepositories() {
         return remoteRepositories;
     }
 
-    public void setRemoteRepositories(List remoteRepositories) {
+    public void setRemoteRepositories(List<ArtifactRepository> remoteRepositories) {
         this.remoteRepositories = remoteRepositories;
     }
 
