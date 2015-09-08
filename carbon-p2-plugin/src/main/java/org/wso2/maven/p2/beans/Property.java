@@ -40,5 +40,4 @@ public class Property {
     public String getValue() {
         return value;
     }
-
 }

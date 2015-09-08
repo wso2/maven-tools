@@ -205,8 +205,7 @@ public class RepoGenerator extends Generator {
                 throw new MojoExecutionException("Error occurred while creating output folder structure");
             }
 
-            //Noted a weird assignment of values to metadataRepository and artifactRepository in the previous code.
-            //Kept it as it is.
+            //Should this be else if?
             if (resourceBundle.getArtifactRepository() != null) {
                 resourceBundle.setMetadataRepository(resourceBundle.getArtifactRepository());
             }

@@ -32,10 +32,20 @@ public class P2ApplicationLaunchManager {
         this.launcher = launcher;
     }
 
+    /**
+     * Sets the working directory of P2Applilcation launcher instance
+     *
+     * @param workingDir File object pointing the directory
+     */
     public void setWorkingDirectory(File workingDir) {
         this.launcher.setWorkingDirectory(workingDir);
     }
 
+    /**
+     * Sets the application name.
+     *
+     * @param applicationName name of the application
+     */
     public void setApplicationName(String applicationName) {
         this.launcher.setApplicationName(applicationName);
     }

@@ -58,7 +58,7 @@ public class ProfileGenerator extends Generator {
     public void generate() throws MojoExecutionException, MojoFailureException {
         try {
             writeEclipseIni();
-            installFeatures(getIUsToInstall());
+            installFeatures();
             updateProfileConfigIni();
             deleteOldProfiles();
         } catch (Exception e) {
@@ -77,10 +77,10 @@ public class ProfileGenerator extends Generator {
     /**
      * Calls the P2ApplicationLauncher and install the features.
      *
-     * @param installUIs String
      * @throws Exception
      */
-    private void installFeatures(String installUIs) throws Exception {
+    private void installFeatures() throws Exception {
+        String installUIs = extractIUsToInstall();
         getLog().info("Running Equinox P2 Director Application");
         P2ApplicationLaunchManager launcher = new P2ApplicationLaunchManager(resourceBundle.getLauncher());
         launcher.setWorkingDirectory(project.getBasedir());
@@ -98,7 +98,7 @@ public class ProfileGenerator extends Generator {
      * @return formatted string to pass into P2ApplicationLauncher
      * @throws MojoExecutionException
      */
-    private String getIUsToInstall() throws MojoExecutionException {
+    private String extractIUsToInstall() throws MojoExecutionException {
         StringBuilder installUIs = new StringBuilder();
         for (Object featureObj : resourceBundle.getFeatures()) {
             Feature f;

@@ -19,6 +19,10 @@ package org.wso2.maven.p2.feature;
 
 import java.util.ArrayList;
 
+/**
+ * Bean representing advice file properties. This bean needs to reside in the same package as the mojo class which
+ * uses this.
+ */
 public class AdviceFile {
 
     private ArrayList properties;

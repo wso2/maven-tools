@@ -19,6 +19,9 @@ package org.wso2.maven.p2.beans;
 
 import org.apache.maven.artifact.Artifact;
 
+/**
+ * Bean class representing a feature artifact.
+ */
 public class FeatureArtifact {
 
     private String groupId;

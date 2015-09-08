@@ -16,8 +16,10 @@
 
 package org.wso2.maven.p2.feature.utils;
 
+import org.apache.maven.artifact.repository.ArtifactRepository;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.project.MavenProject;
+import org.apache.maven.repository.RepositorySystem;
 import org.wso2.maven.p2.beans.Bundle;
 import org.wso2.maven.p2.beans.ImportFeature;
 import org.wso2.maven.p2.beans.IncludedFeature;
@@ -30,16 +32,17 @@ import org.wso2.maven.p2.utils.MavenUtils;
 import org.wso2.maven.p2.utils.PropertyUtils;
 
 import java.util.ArrayList;
+import java.util.List;
 
 /**
- * This class takes the configuration data entered into the plugin and cast it to the internal
- * data representation. This sole purpose of this is to reduce the complexity of the FeatureGenerator.java.
+ * Takes the configuration data entered into the plugin through pom.xml and cast it to the internal bean
+ * representation. The sole purpose of this is to reduce the complexity of the FeatureGenerator.java.
  */
 public class FeatureBeanGeneratorUtils {
 
-    private java.util.List remoteRepositories;
-    private org.apache.maven.artifact.repository.ArtifactRepository localRepository;
-    private org.apache.maven.repository.RepositorySystem repositorySystem;
+    private List remoteRepositories;
+    private ArtifactRepository localRepository;
+    private RepositorySystem repositorySystem;
     private MavenProject project;
     private AdviceFile adviceFile;
     private FeatureResourceBundle resourceBundle;
@@ -83,7 +86,7 @@ public class FeatureBeanGeneratorUtils {
 
     /**
      * Takes an object ArrayList containing bundles data passed into the plugin through plugin configuration in pom.xml
-     * and populate the content into a ArrayList<Bundle> by casting it properly.
+     * and populate the content into an ArrayList<Bundle> by casting it properly.
      *
      * @param bundles         ArrayList of bundles
      * @param isImportBundles set this true to get processed importBundles

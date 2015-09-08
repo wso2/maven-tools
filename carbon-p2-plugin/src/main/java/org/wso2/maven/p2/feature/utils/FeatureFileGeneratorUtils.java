@@ -57,12 +57,12 @@ import java.util.List;
 import java.util.Properties;
 
 /**
- * Utility class which will generate output files that are needed to generate a particular feature.
+ * Generate output files that are needed to generate a particular feature.
  */
 public class FeatureFileGeneratorUtils {
 
     private static final String DEFAULT_ENCODING = "UTF-8";
-
+    private static final String LINE_SEPARATOR = System.lineSeparator();
     /**
      * Generates the feature property file.
      *
@@ -146,7 +146,7 @@ public class FeatureFileGeneratorUtils {
             resourceBundle.getLog().info("Generating MANIFEST.MF");
             Writer writer = new OutputStreamWriter(new FileOutputStream(featureManifestFile), DEFAULT_ENCODING);
             pw = new PrintWriter(writer);
-            pw.print("Manifest-Version: 1.0\n\n");
+            pw.print("Manifest-Version: 1.0" + LINE_SEPARATOR + LINE_SEPARATOR);
         } catch (Exception e) {
             throw new MojoExecutionException("Unable to create manifest file", e);
         } finally {
@@ -185,15 +185,15 @@ public class FeatureFileGeneratorUtils {
             if (p2infStringList != null && p2infStringList.size() > 0) {
                 for (String str : p2infStringList) {
                     // writing the strings after replacing ${feature.version}
-                    pw.write(PropertyReplacer.replaceProperties(str, properties) + "\n");
+                    pw.write(PropertyReplacer.replaceProperties(str, properties) + LINE_SEPARATOR);
                 }
             }
             if (list.size() != 0) {
                 int nextIndex = P2Utils.getLastIndexOfProperties(p2InfFile) + 1;
                 for (Object category : list) {
                     Property cat = (Property) category;
-                    pw.write("\nproperties." + nextIndex + ".name=" + cat.getKey());
-                    pw.write("\nproperties." + nextIndex + ".value=" + cat.getValue());
+                    pw.write(LINE_SEPARATOR + "properties." + nextIndex + ".name=" + cat.getKey());
+                    pw.write(LINE_SEPARATOR + "properties." + nextIndex + ".value=" + cat.getValue());
                     nextIndex++;
                 }
             }
