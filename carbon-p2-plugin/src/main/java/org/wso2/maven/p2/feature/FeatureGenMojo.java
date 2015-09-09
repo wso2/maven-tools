@@ -30,7 +30,6 @@ import org.apache.maven.project.MavenProjectHelper;
 import org.apache.maven.repository.RepositorySystem;
 
 import java.io.File;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
 
@@ -86,25 +85,25 @@ public class FeatureGenMojo extends AbstractMojo {
      * Collection of bundles
      */
     @Parameter
-    private ArrayList bundles;
+    private List<String> bundles;
 
     /**
      * Collection of import bundles
      */
     @Parameter
-    private ArrayList importBundles;
+    private List<String> importBundles;
 
     /**
      * Collection of required Features
      */
     @Parameter
-    private ArrayList importFeatures;
+    private List<String> importFeatures;
 
     /**
      * Collection of required Features
      */
     @Parameter
-    private ArrayList includedFeatures;
+    private List<String> includedFeatures;
 
     /**
      * define advice file content

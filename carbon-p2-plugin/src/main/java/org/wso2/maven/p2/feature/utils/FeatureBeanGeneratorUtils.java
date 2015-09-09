@@ -103,20 +103,15 @@ public class FeatureBeanGeneratorUtils {
      * @throws IOException
      * @throws OSGIInformationExtractionException
      */
-    private ArrayList<Bundle> getProcessedBundlesList(ArrayList bundles, boolean isImportBundles)
+    private ArrayList<Bundle> getProcessedBundlesList(List<String> bundles, boolean isImportBundles)
             throws InvalidBeanDefinitionException, ArtifactVersionNotFoundException, IOException,
             OSGIInformationExtractionException {
         if (bundles == null || bundles.size() == 0) {
             return new ArrayList<>();
         }
-        ArrayList<Bundle> processedBundles = new ArrayList<Bundle>();
+        ArrayList<Bundle> processedBundles = new ArrayList<>();
         for (Object obj : bundles) {
-            Bundle bundle;
-            if (obj instanceof String) {
-                bundle = BundleUtils.getBundle(obj.toString());
-            } else {
-                throw new InvalidBeanDefinitionException("Unknown bundle definition: " + obj.toString());
-            }
+            Bundle bundle = BundleUtils.getBundle(obj.toString());
             BundleUtils.resolveVersionForBundle(bundle, this.project);
             bundle.setArtifact(MavenUtils.getResolvedArtifact(bundle, this.repositorySystem, this.remoteRepositories,
                     this.localRepository));
@@ -142,18 +137,13 @@ public class FeatureBeanGeneratorUtils {
      * @throws InvalidBeanDefinitionException
      */
     public ArrayList<ImportFeature> getProcessedImportFeaturesList() throws InvalidBeanDefinitionException {
-        ArrayList importFeatures = this.resourceBundle.getImportFeatures();
+        List<String> importFeatures = this.resourceBundle.getImportFeatures();
         if (importFeatures == null || importFeatures.size() == 0) {
             return new ArrayList<>();
         }
-        ArrayList<ImportFeature> processedImportFeatures = new ArrayList<ImportFeature>();
-        for (Object obj : importFeatures) {
-            ImportFeature feature;
-            if (obj instanceof String) {
-                feature = FeatureUtils.getImportFeature(obj.toString());
-            } else {
-                throw new InvalidBeanDefinitionException("Unknown ImportFeature definition: " + obj.toString());
-            }
+        ArrayList<ImportFeature> processedImportFeatures = new ArrayList<>();
+        for (String featureString : importFeatures) {
+            ImportFeature feature = FeatureUtils.getImportFeature(featureString);
             feature.setFeatureVersion(BundleUtils.getOSGIVersion(this.project.getVersion()));
             processedImportFeatures.add(feature);
         }
@@ -168,22 +158,20 @@ public class FeatureBeanGeneratorUtils {
      * @throws InvalidBeanDefinitionException
      */
     public ArrayList<IncludedFeature> getIncludedFeatures() throws InvalidBeanDefinitionException {
-        ArrayList includedFeatures = this.resourceBundle.getIncludedFeatures();
+        List<String> includedFeatures = this.resourceBundle.getIncludedFeatures();
         if (includedFeatures == null || includedFeatures.size() == 0) {
             return new ArrayList<>();
         }
 
-        ArrayList<IncludedFeature> processedIncludedFeatures = new ArrayList<IncludedFeature>();
-        for (Object obj : includedFeatures) {
-            if (obj instanceof String) {
-                IncludedFeature includedFeature = FeatureUtils.getIncludedFeature((String) obj);
-                if (includedFeature != null) {
-                    includedFeature.setArtifactVersion(this.project.getVersion());
-                    includedFeature.setFeatureVersion(BundleUtils.getOSGIVersion(this.project.getVersion()));
-                    includedFeature.setArtifact(MavenUtils.getResolvedArtifact(includedFeature, this.repositorySystem,
-                            this.remoteRepositories, this.localRepository));
-                    processedIncludedFeatures.add(includedFeature);
-                }
+        ArrayList<IncludedFeature> processedIncludedFeatures = new ArrayList<>();
+        for (String featureString : includedFeatures) {
+            IncludedFeature includedFeature = FeatureUtils.getIncludedFeature(featureString);
+            if (includedFeature != null) {
+                includedFeature.setArtifactVersion(this.project.getVersion());
+                includedFeature.setFeatureVersion(BundleUtils.getOSGIVersion(this.project.getVersion()));
+                includedFeature.setArtifact(MavenUtils.getResolvedArtifact(includedFeature, this.repositorySystem,
+                        this.remoteRepositories, this.localRepository));
+                processedIncludedFeatures.add(includedFeature);
             }
         }
         return processedIncludedFeatures;
@@ -197,7 +185,7 @@ public class FeatureBeanGeneratorUtils {
      * @throws InvalidBeanDefinitionException
      */
     public ArrayList<Property> getProcessedAdviceProperties() throws InvalidBeanDefinitionException {
-        ArrayList<Property> processedAdviceProperties = new ArrayList<Property>();
+        ArrayList<Property> processedAdviceProperties = new ArrayList<>();
         if (adviceFile != null && adviceFile.getProperties() != null) {
             for (Object property : adviceFile.getProperties()) {
                 Property prop;

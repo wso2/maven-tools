@@ -31,7 +31,7 @@ import java.util.ArrayList;
 
 /**
  * This class takes the configuration data entered into the plugin and cast it to the internal
- * data representation. This sole purpose of this is to reduce the complexity of the RepoGenerator.java.
+ * data representation. This sole purpose of this is to reduce the complexity of the RepositoryGenerator.java.
  */
 public class RepoBeanGeneratorUtils {
 

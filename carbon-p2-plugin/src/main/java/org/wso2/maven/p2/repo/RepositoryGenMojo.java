@@ -116,11 +116,11 @@ public class RepositoryGenMojo extends AbstractMojo {
     private int forkedProcessTimeoutInSeconds;
 
     public void execute() throws MojoExecutionException, MojoFailureException {
-        RepoGenerator generator = constructRepoGenerator();
+        RepositoryGenerator generator = constructRepoGenerator();
         generator.generate();
     }
 
-    private RepoGenerator constructRepoGenerator() {
+    private RepositoryGenerator constructRepoGenerator() {
         RepositoryResourceBundle resourceBundle = new RepositoryResourceBundle();
         resourceBundle.setName(this.name);
         resourceBundle.setMetadataRepository(this.metadataRepository);
@@ -139,7 +139,7 @@ public class RepositoryGenMojo extends AbstractMojo {
         resourceBundle.setForkedProcessTimeoutInSeconds(this.forkedProcessTimeoutInSeconds);
         resourceBundle.setLog(getLog());
 
-        RepoGenerator generator = new RepoGenerator(resourceBundle);
+        RepositoryGenerator generator = new RepositoryGenerator(resourceBundle);
         generator.setLog(getLog());
         return generator;
     }

@@ -41,9 +41,9 @@ import java.util.Date;
 import java.util.List;
 
 /**
- * RepoGenerator takes parameters from the pom.xml and generates the repository.
+ * RepositoryGenerator takes parameters from the pom.xml and generates the repository.
  */
-public class RepoGenerator extends Generator {
+public class RepositoryGenerator extends Generator {
 
     private final RepositoryResourceBundle resourceBundle;
     private final MavenProject project;
@@ -73,7 +73,7 @@ public class RepoGenerator extends Generator {
 
     private P2ApplicationLaunchManager p2LaunchManager;
 
-    public RepoGenerator(RepositoryResourceBundle resourceBundle) {
+    public RepositoryGenerator(RepositoryResourceBundle resourceBundle) {
         this.resourceBundle = resourceBundle;
         this.project = this.resourceBundle.getProject();
         p2LaunchManager = new P2ApplicationLaunchManager(resourceBundle.getLauncher());

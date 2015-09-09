@@ -48,10 +48,10 @@ public class FeatureResourceBundle {
     private File manifest;
     private File propertiesFile;
     private Properties properties;
-    private ArrayList bundles;
-    private ArrayList importBundles;
-    private ArrayList importFeatures;
-    private ArrayList includedFeatures;
+    private List<String> bundles;
+    private List<String> importBundles;
+    private List<String> importFeatures;
+    private List<String> includedFeatures;
     private AdviceFile adviceFile;
 
     private ArrayList<Bundle> processedBundles;
@@ -156,35 +156,35 @@ public class FeatureResourceBundle {
         this.properties = properties;
     }
 
-    public ArrayList getBundles() {
+    public List<String> getBundles() {
         return bundles;
     }
 
-    public void setBundles(ArrayList bundles) {
+    public void setBundles(List<String> bundles) {
         this.bundles = bundles;
     }
 
-    public ArrayList getImportBundles() {
+    public List<String> getImportBundles() {
         return importBundles;
     }
 
-    public void setImportBundles(ArrayList importBundles) {
+    public void setImportBundles(List<String> importBundles) {
         this.importBundles = importBundles;
     }
 
-    public ArrayList getImportFeatures() {
+    public List<String> getImportFeatures() {
         return importFeatures;
     }
 
-    public void setImportFeatures(ArrayList importFeatures) {
+    public void setImportFeatures(List<String> importFeatures) {
         this.importFeatures = importFeatures;
     }
 
-    public ArrayList getIncludedFeatures() {
+    public List<String> getIncludedFeatures() {
         return includedFeatures;
     }
 
-    public void setIncludedFeatures(ArrayList includedFeatures) {
+    public void setIncludedFeatures(List<String> includedFeatures) {
         this.includedFeatures = includedFeatures;
     }
 
