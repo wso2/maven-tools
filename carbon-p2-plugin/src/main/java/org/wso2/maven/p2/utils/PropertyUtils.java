@@ -16,7 +16,6 @@
 
 package org.wso2.maven.p2.utils;
 
-import org.apache.maven.plugin.MojoExecutionException;
 import org.wso2.maven.p2.beans.Property;
 import org.wso2.maven.p2.exceptions.InvalidBeanDefinitionException;
 

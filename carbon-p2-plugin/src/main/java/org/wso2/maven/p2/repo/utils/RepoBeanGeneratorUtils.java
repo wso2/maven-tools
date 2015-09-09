@@ -64,7 +64,8 @@ public class RepoBeanGeneratorUtils {
                     featureArtifact = (FeatureArtifact) obj;
                 }
                 FeatureUtils.resolveVersion(featureArtifact, this.resourceBundle.getProject());
-                featureArtifact.setArtifact(MavenUtils.getResolvedArtifact(featureArtifact, resourceBundle.getRepositorySystem(),
+                featureArtifact.setArtifact(MavenUtils.getResolvedArtifact(featureArtifact,
+                        resourceBundle.getRepositorySystem(),
                         resourceBundle.getRemoteRepositories(), resourceBundle.getLocalRepository()));
                 processedFeatureArtifacts.add(featureArtifact);
             } catch (InvalidBeanDefinitionException | ArtifactVersionNotFoundException e) {
@@ -104,7 +105,8 @@ public class RepoBeanGeneratorUtils {
                 bundleArtifact = (Bundle) obj;
             }
             BundleUtils.resolveVersionForBundle(bundleArtifact, this.resourceBundle.getProject());
-            bundleArtifact.setArtifact(MavenUtils.getResolvedArtifact(bundleArtifact, resourceBundle.getRepositorySystem(),
+            bundleArtifact.setArtifact(MavenUtils.getResolvedArtifact(bundleArtifact,
+                    resourceBundle.getRepositorySystem(),
                     resourceBundle.getRemoteRepositories(), resourceBundle.getLocalRepository()));
             processedBundleArtifacts.add(bundleArtifact);
         }

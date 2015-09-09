@@ -120,7 +120,8 @@ public class FeatureGenerator extends Generator {
         getLog().info("Processing bundles");
 
         processedBundles = paramProcessor.getProcessedBundlesList();
-//      Had a confusion whether import bundles are actually needed during the code review 01/09/2015. Thus commented this.
+//      Had a confusion whether import bundles are actually needed during the code review 01/09/2015. Thus commented
+//      this.
 //        getLog().info("Processing import bundles");
 //        processedImportBundles = paramProcessor.getProcessedImportBundlesList();
         getLog().info("Processing import features");
@@ -131,7 +132,8 @@ public class FeatureGenerator extends Generator {
         ArrayList<Property> processedAdviceProperties = paramProcessor.getProcessedAdviceProperties();
 
         resourceBundle.setProcessedBundles(processedBundles);
-//      Had a confusion whether import bundles are actually needed during the code review 01/09/2015. Thus commented this.
+//      Had a confusion whether import bundles are actually needed during the code review 01/09/2015. Thus commented
+//      this.
 //        resourceBundle.setProcessedImportBundles(processedImportBundles);
         resourceBundle.setProcessedImportFeatures(processedImportFeatures);
         resourceBundle.setProcessedIncludedFeatures(processedIncludedFeatures);
@@ -187,7 +189,8 @@ public class FeatureGenerator extends Generator {
      */
     private void copyAllIncludedArtifacts() throws IOException {
         copyBundles();
-//      Had a confusion whether import bundles are actually needed during the code review 01/09/2015. Thus commented this.
+//      Had a confusion whether import bundles are actually needed during the code review 01/09/2015. Thus commented
+//      this.
 //        copyImportBundles();
         copyIncludedFeatures();
     }
@@ -213,7 +216,8 @@ public class FeatureGenerator extends Generator {
         }
     }
 
-//      Had a confusion whether import bundles are actually needed during the code review 01/09/2015. Thus commented this.
+//      Had a confusion whether import bundles are actually needed during the code review 01/09/2015. Thus commented
+//      this.
 //    /**
 //     * Copy import bundles into plugins folder.
 //     *
