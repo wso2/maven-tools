@@ -21,6 +21,7 @@ import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.project.MavenProject;
 import org.wso2.maven.p2.commons.Generator;
 import org.wso2.maven.p2.commons.P2ApplicationLaunchManager;
+import org.wso2.maven.p2.exceptions.InvalidBeanDefinitionException;
 import org.wso2.maven.p2.utils.FeatureUtils;
 import org.wso2.maven.p2.utils.FileManagementUtil;
 
@@ -80,13 +81,13 @@ public class ProfileGenerator extends Generator {
      * @throws Exception
      */
     private void installFeatures() throws Exception {
-        String installUIs = extractIUsToInstall();
+        String installIUs = extractIUsToInstall();
         getLog().info("Running Equinox P2 Director Application");
         P2ApplicationLaunchManager launcher = new P2ApplicationLaunchManager(resourceBundle.getLauncher());
         launcher.setWorkingDirectory(project.getBasedir());
         launcher.setApplicationName(PUBLISHER_APPLICATION);
         launcher.addArgumentsToInstallFeatures(resourceBundle.getMetadataRepository().toExternalForm(),
-                resourceBundle.getArtifactRepository().toExternalForm(), installUIs, destination,
+                resourceBundle.getArtifactRepository().toExternalForm(), installIUs, destination,
                 resourceBundle.getProfile());
         launcher.generateRepo(resourceBundle.getForkedProcessTimeoutInSeconds());
     }
@@ -98,8 +99,8 @@ public class ProfileGenerator extends Generator {
      * @return formatted string to pass into P2ApplicationLauncher
      * @throws MojoExecutionException
      */
-    private String extractIUsToInstall() throws MojoExecutionException {
-        StringBuilder installUIs = new StringBuilder();
+    private String extractIUsToInstall() throws InvalidBeanDefinitionException {
+        StringBuilder installIUs = new StringBuilder();
         for (Object featureObj : resourceBundle.getFeatures()) {
             Feature f;
             if (featureObj instanceof Feature) {
@@ -107,12 +108,12 @@ public class ProfileGenerator extends Generator {
             } else if (featureObj instanceof String) {
                 f = FeatureUtils.getFeature(featureObj.toString());
             } else {
-                throw new MojoExecutionException("Unknown feature definition: " + featureObj.toString());
+                throw new InvalidBeanDefinitionException("Unknown feature definition: " + featureObj.toString());
             }
-            installUIs.append(f.getId().trim()).append("/").append(f.getVersion().trim()).append(",");
+            installIUs.append(f.getId().trim()).append("/").append(f.getVersion().trim()).append(",");
         }
 
-        return installUIs.toString();
+        return installIUs.toString();
     }
 
     /**
@@ -166,7 +167,6 @@ public class ProfileGenerator extends Generator {
 
         File eclipseIni = new File(profileLocation + File.separator + "null.ini");
         if (!eclipseIni.exists()) {
-            // null.ini does not exist. trying with eclipse.ini
             eclipseIni = new File(profileLocation + File.separator + "eclipse.ini");
         }
         if (eclipseIni.exists()) {

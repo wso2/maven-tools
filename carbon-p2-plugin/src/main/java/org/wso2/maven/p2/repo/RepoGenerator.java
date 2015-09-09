@@ -19,16 +19,22 @@ package org.wso2.maven.p2.repo;
 import org.apache.maven.model.Resource;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
+import org.apache.maven.plugin.logging.Log;
 import org.apache.maven.project.MavenProject;
 import org.codehaus.plexus.util.FileUtils;
 import org.wso2.maven.p2.beans.Bundle;
 import org.wso2.maven.p2.beans.FeatureArtifact;
 import org.wso2.maven.p2.commons.Generator;
 import org.wso2.maven.p2.commons.P2ApplicationLaunchManager;
+import org.wso2.maven.p2.exceptions.ArtifactVersionNotFoundException;
+import org.wso2.maven.p2.exceptions.InvalidBeanDefinitionException;
+import org.wso2.maven.p2.exceptions.OSGIInformationExtractionException;
 import org.wso2.maven.p2.repo.utils.RepoBeanGeneratorUtils;
 import org.wso2.maven.p2.utils.FileManagementUtil;
 import org.wso2.maven.p2.utils.P2Utils;
 
+import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.transform.TransformerException;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -76,18 +82,24 @@ public class RepoGenerator extends Generator {
 
     @Override
     public void generate() throws MojoExecutionException, MojoFailureException {
-        generateBeansFromInputs();
-        setupTempOutputFolderStructure();
-        unzipFeaturesToOutputFolder();
-        copyBundleArtifactsToOutputFolder();
-        copyProjectResourcesToOutputFolder();
-        generateRepository();
-        updateRepositoryWithCategories();
-        archiveGeneratedRepo();
-        performMopUp();
+        try {
+            generateBeansFromInputs();
+            setupTempOutputFolderStructure();
+            unzipFeaturesToOutputFolder();
+            copyBundleArtifactsToOutputFolder();
+            copyProjectResourcesToOutputFolder();
+            generateRepository();
+            updateRepositoryWithCategories();
+            archiveGeneratedRepo();
+            performMopUp();
+        } catch (InvalidBeanDefinitionException | ArtifactVersionNotFoundException | OSGIInformationExtractionException
+                | IOException | TransformerException | ParserConfigurationException e) {
+            e.printStackTrace();
+        }
     }
 
-    private void generateBeansFromInputs() throws MojoExecutionException {
+    private void generateBeansFromInputs() throws InvalidBeanDefinitionException, ArtifactVersionNotFoundException,
+            OSGIInformationExtractionException, IOException {
         getLog().info("Generating beans from input configuration");
         RepoBeanGeneratorUtils beanGenerator = new RepoBeanGeneratorUtils(this.resourceBundle);
         processedFeatureArtifacts = beanGenerator.getProcessedFeatureArtifacts();
@@ -97,9 +109,9 @@ public class RepoGenerator extends Generator {
     /**
      * Copy maven project resources located in the resources folder into mata repository.
      *
-     * @throws MojoExecutionException
+     * @throws IOException
      */
-    private void copyProjectResourcesToOutputFolder() throws MojoExecutionException {
+    private void copyProjectResourcesToOutputFolder() throws IOException {
         List resources = project.getResources();
         if (resources != null) {
             getLog().info("Copying resources");
@@ -113,7 +125,7 @@ public class RepoGenerator extends Generator {
                             FileManagementUtil.copyDirectory(resourceFolder, repoGenerationLocation);
                         }
                     } catch (IOException e) {
-                        throw new MojoExecutionException("Unable copy resources: " + resource.getDirectory(), e);
+                        throw new IOException("Unable copy resources: " + resource.getDirectory(), e);
                     }
                 }
             }
@@ -138,9 +150,9 @@ public class RepoGenerator extends Generator {
     /**
      * Unzip the given feature zip files into the output folder which will ultimately converted into P2 repo.
      *
-     * @throws MojoExecutionException
+     * @throws IOException
      */
-    private void unzipFeaturesToOutputFolder() throws MojoExecutionException {
+    private void unzipFeaturesToOutputFolder() throws IOException {
         ArrayList<FeatureArtifact> processedFeatureArtifacts = this.processedFeatureArtifacts;
         for (FeatureArtifact featureArtifact : processedFeatureArtifacts) {
             try {
@@ -148,7 +160,7 @@ public class RepoGenerator extends Generator {
                         featureArtifact.getArtifactId());
                 FileManagementUtil.unzip(featureArtifact.getArtifact().getFile(), sourceDir);
             } catch (IOException e) {
-                throw new MojoExecutionException("Error occurred when extracting the Feature Artifact: " +
+                throw new IOException("Error occurred when extracting the Feature Artifact: " +
                         featureArtifact.toString(), e);
             }
         }
@@ -157,9 +169,9 @@ public class RepoGenerator extends Generator {
     /**
      * Copy artfacts into the repository folder.
      *
-     * @throws MojoExecutionException
+     * @throws IOException
      */
-    private void copyBundleArtifactsToOutputFolder() throws MojoExecutionException {
+    private void copyBundleArtifactsToOutputFolder() throws IOException {
         ArrayList<Bundle> processedBundleArtifacts = this.processedBundleArtifacts;
         if (processedBundleArtifacts.size() > 0) {
             getLog().info("Copying bundle artifacts.");
@@ -170,8 +182,8 @@ public class RepoGenerator extends Generator {
                 getLog().info("Copying bundle artifact:" + bundleArtifact.getBundleSymbolicName());
                 File file = bundleArtifact.getArtifact().getFile();
                 FileManagementUtil.copy(file, new File(pluginsDir, file.getName()));
-            } catch (Exception e) {
-                throw new MojoExecutionException("Error occurred when extracting the Feature Artifact: " +
+            } catch (IOException e) {
+                throw new IOException("Error occurred when extracting the Feature Artifact: " +
                         bundleArtifact.toString(), e);
             }
         }
@@ -195,14 +207,14 @@ public class RepoGenerator extends Generator {
         }
     }
 
-    private void setupTempOutputFolderStructure() throws MojoExecutionException {
+    private void setupTempOutputFolderStructure() throws IOException {
         try {
             File targetDir = new File(project.getBasedir(), "target");
             String timestampVal = String.valueOf((new Date()).getTime());
             tempDir = new File(targetDir, "tmp." + timestampVal);
             sourceDir = new File(tempDir, "featureExtract");
             if (!sourceDir.mkdirs()) {
-                throw new MojoExecutionException("Error occurred while creating output folder structure");
+                throw new IOException("Error occurred while creating output folder structure");
             }
 
             //Should this be else if?
@@ -223,7 +235,7 @@ public class RepoGenerator extends Generator {
             archiveFile = new File(targetDir, project.getArtifactId() + "_" + project.getVersion() + ".zip");
             categoryDefinitionFile = File.createTempFile("equinox-p2", "category");
         } catch (IOException e) {
-            throw new MojoExecutionException("Error occurred while creating output folder structure", e);
+            throw new IOException("Error occurred while creating output folder structure", e);
         }
     }
 
@@ -232,7 +244,7 @@ public class RepoGenerator extends Generator {
      *
      * @throws MojoExecutionException
      */
-    private void updateRepositoryWithCategories() throws MojoExecutionException {
+    private void updateRepositoryWithCategories() throws TransformerException, ParserConfigurationException, MojoExecutionException {
         boolean isCategoriesAvailable = resourceBundle.getCategories() != null &&
                 resourceBundle.getCategories().size() != 0;
 

@@ -20,6 +20,8 @@ import org.apache.maven.model.Dependency;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.project.MavenProject;
 import org.wso2.maven.p2.beans.Bundle;
+import org.wso2.maven.p2.exceptions.ArtifactVersionNotFoundException;
+import org.wso2.maven.p2.exceptions.InvalidBeanDefinitionException;
 
 import java.util.List;
 import java.util.Map;
@@ -40,9 +42,9 @@ public class BundleUtils {
      *
      * @param bundleDefinition String
      * @return Bundle
-     * @throws MojoExecutionException
+     * @throws InvalidBeanDefinitionException
      */
-    public static Bundle getBundle(String bundleDefinition) throws MojoExecutionException {
+    public static Bundle getBundle(String bundleDefinition) throws InvalidBeanDefinitionException {
         Bundle bundle = new Bundle();
         String[] split = bundleDefinition.split(":");
         if (split.length > 1) {
@@ -68,7 +70,7 @@ public class BundleUtils {
             bundle.setCompatibility(match);
             return bundle;
         }
-        throw new MojoExecutionException(
+        throw new InvalidBeanDefinitionException(
                 "Insufficient artifact information provided to determine the bundle: " + bundleDefinition);
     }
 
@@ -78,9 +80,9 @@ public class BundleUtils {
      *
      * @param bundleArtifactDefinition String definition for bundle artifact.
      * @return Bundle
-     * @throws MojoExecutionException
+     * @throws InvalidBeanDefinitionException
      */
-    public static Bundle getBundleArtifact(String bundleArtifactDefinition) throws MojoExecutionException {
+    public static Bundle getBundleArtifact(String bundleArtifactDefinition) throws InvalidBeanDefinitionException {
         Bundle bundleArtifact = new Bundle();
         String[] split = bundleArtifactDefinition.split(":");
         if (split.length > 1) {
@@ -91,7 +93,7 @@ public class BundleUtils {
             }
             return bundleArtifact;
         }
-        throw new MojoExecutionException("Insufficient artifact information provided to determine the feature: "
+        throw new InvalidBeanDefinitionException("Insufficient artifact information provided to determine the feature: "
                 + bundleArtifactDefinition);
     }
 
@@ -100,9 +102,10 @@ public class BundleUtils {
      *
      * @param bundle  Bundle
      * @param project MavenProject
-     * @throws MojoExecutionException
+     * @throws ArtifactVersionNotFoundException
      */
-    public static void resolveVersionForBundle(Bundle bundle, MavenProject project) throws MojoExecutionException {
+    public static void resolveVersionForBundle(Bundle bundle, MavenProject project)
+            throws ArtifactVersionNotFoundException {
         if (bundle.getVersion() == null) {
             List<Dependency> dependencies = project.getDependencies();
             setVersionForBundle(bundle, dependencies);
@@ -116,7 +119,7 @@ public class BundleUtils {
         }
 
         if (bundle.getVersion() == null) {
-            throw new MojoExecutionException("Could not find the version for " + bundle.getGroupId() + ":"
+            throw new ArtifactVersionNotFoundException("Could not find the version for " + bundle.getGroupId() + ":"
                     + bundle.getArtifactId());
         }
 

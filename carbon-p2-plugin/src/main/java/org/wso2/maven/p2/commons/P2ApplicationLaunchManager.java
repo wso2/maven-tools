@@ -58,23 +58,18 @@ public class P2ApplicationLaunchManager {
      * @param metadataRepoLocation   the URI to the metadata repository where the installable units should be published
      * @param metadataRepositoryName metadata repository name
      * @param repositoryName         name of the artifact repository where the artifacts should be published
-     * @throws MojoExecutionException
      */
     public void addRepoGenerationArguments(String sourceDir, String metadataRepoLocation, String metadataRepositoryName,
-                                           String repositoryName) throws MojoExecutionException {
-        try {
-            launcher.addArguments("-source", sourceDir,
-                    "-metadataRepository", metadataRepoLocation,
-                    "-metadataRepositoryName", metadataRepositoryName,
-                    "-artifactRepository", metadataRepoLocation,
-                    "-artifactRepositoryName", repositoryName,
-                    "-publishArtifacts",
-                    "-publishArtifactRepository",
-                    "-compress",
-                    "-append");
-        } catch (Exception e) {
-            throw new MojoExecutionException("Failed when configuring P2ApplicationLauncher", e);
-        }
+                                           String repositoryName) {
+        launcher.addArguments("-source", sourceDir,
+                "-metadataRepository", metadataRepoLocation,
+                "-metadataRepositoryName", metadataRepositoryName,
+                "-artifactRepository", metadataRepoLocation,
+                "-artifactRepositoryName", repositoryName,
+                "-publishArtifacts",
+                "-publishArtifactRepository",
+                "-compress",
+                "-append");
     }
 
     /**
@@ -85,19 +80,14 @@ public class P2ApplicationLaunchManager {
      *                                   installed can be found.
      * @param categoryDefinitionFile     The category file which drives the categorization of installable units in the
      *                                   repository
-     * @throws MojoExecutionException
      */
-    public void addUpdateRepoWithCategoryArguments(String metadataRepositoryLocation, String categoryDefinitionFile)
-            throws MojoExecutionException {
-        try {
-            launcher.addArguments("-metadataRepository", metadataRepositoryLocation,
-                    "-categoryDefinition", categoryDefinitionFile,
-                    "-categoryQualifier",
-                    "-compress",
-                    "-append");
-        } catch (Exception e) {
-            throw new MojoExecutionException("Failed when configuring P2ApplicationLauncher", e);
-        }
+    public void addUpdateRepoWithCategoryArguments(String metadataRepositoryLocation, String categoryDefinitionFile) {
+        launcher.addArguments("-metadataRepository", metadataRepositoryLocation,
+                "-categoryDefinition", categoryDefinitionFile,
+                "-categoryQualifier",
+                "-compress",
+                "-append");
+
     }
 
     /**
@@ -107,36 +97,37 @@ public class P2ApplicationLaunchManager {
      *                                   installed can be found.
      * @param artifactRepositoryLocation a comma separated list of artifact repository URLs where the software artifacts
      *                                   can be found.
-     * @param installUIs                 a comma separated list of IUs to install. Each entry in the list is in the form
+     * @param installIUs                 a comma separated list of IUs to install. Each entry in the list is in the form
      *                                   <id> [ '/' <version> ]. If you are looking to install a feature, the identifier
      *                                   of the feature has to be suffixed with ".feature.group".
      * @param destination                the path of a folder in which the targeted product is located.
      * @param profile                    the profile id containing the description of the targeted product. This ID is
      *                                   defined by the eclipse.p2.profile property contained in the config.ini of the
      *                                   targeted product.
-     * @throws MojoExecutionException
      */
     public void addArgumentsToInstallFeatures(String metadataRepositoryLocation, String artifactRepositoryLocation,
-                                              String installUIs, String destination, String profile)
-            throws MojoExecutionException {
-        try {
-            launcher.addArguments(
-                    "-metadataRepository", metadataRepositoryLocation,
-                    "-artifactRepository", artifactRepositoryLocation,
-                    "-profileProperties", "org.eclipse.update.install.features=true",
-                    "-installIU", installUIs,
-                    "-bundlepool", destination,
-                    //to support shared installation in carbon
-                    "-shared", destination + File.separator + "p2",
-                    //target is set to a separate directory per Profile
-                    "-destination", destination + File.separator + profile,
-                    "-profile", profile,
-                    "-roaming");
-        } catch (Exception e) {
-            throw new MojoExecutionException("Failed when configuring P2ApplicationLauncher", e);
-        }
+                                              String installIUs, String destination, String profile) {
+
+        launcher.addArguments(
+                "-metadataRepository", metadataRepositoryLocation,
+                "-artifactRepository", artifactRepositoryLocation,
+                "-profileProperties", "org.eclipse.update.install.features=true",
+                "-installIU", installIUs,
+                "-bundlepool", destination,
+                //to support shared installation in carbon
+                "-shared", destination + File.separator + "p2",
+                //target is set to a separate directory per Profile
+                "-destination", destination + File.separator + profile,
+                "-profile", profile,
+                "-roaming");
     }
 
+    /**
+     * Generate/update the repository.
+     *
+     * @param forkedProcessTimeoutInSeconds int
+     * @throws MojoExecutionException
+     */
     public void generateRepo(int forkedProcessTimeoutInSeconds) throws MojoExecutionException {
         int result = launcher.execute(forkedProcessTimeoutInSeconds);
         if (result != 0) {

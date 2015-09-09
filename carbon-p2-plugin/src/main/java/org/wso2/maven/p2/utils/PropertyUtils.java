@@ -18,6 +18,7 @@ package org.wso2.maven.p2.utils;
 
 import org.apache.maven.plugin.MojoExecutionException;
 import org.wso2.maven.p2.beans.Property;
+import org.wso2.maven.p2.exceptions.InvalidBeanDefinitionException;
 
 public class PropertyUtils {
 
@@ -26,9 +27,9 @@ public class PropertyUtils {
      *
      * @param advicePropertyDefinition String definition for a property
      * @return Property generated from the string definition
-     * @throws MojoExecutionException
+     * @throws InvalidBeanDefinitionException
      */
-    public static Property getProperty(String advicePropertyDefinition) throws MojoExecutionException {
+    public static Property getProperty(String advicePropertyDefinition) throws InvalidBeanDefinitionException {
         String[] propertyDefs = advicePropertyDefinition.split(":");
         Property property = new Property();
 
@@ -36,7 +37,7 @@ public class PropertyUtils {
             property.setKey(propertyDefs[0]);
             property.setValue(propertyDefs[1]);
         } else {
-            throw new MojoExecutionException("Invalid advice property definition: " + advicePropertyDefinition);
+            throw new InvalidBeanDefinitionException("Invalid advice property definition: " + advicePropertyDefinition);
         }
         return property;
     }

@@ -102,16 +102,15 @@ public class MavenUtils {
      * Returns a blank Document
      *
      * @return org.w3c.dom.Document object
-     * @throws MojoExecutionException
+     * @throws ParserConfigurationException
      */
-    public static Document getManifestDocument() throws MojoExecutionException {
+    public static Document getManifestDocument() throws ParserConfigurationException {
         DocumentBuilderFactory documentBuilderFactory = DocumentBuilderFactory.newInstance();
         DocumentBuilder documentBuilder;
-        try {
-            documentBuilder = documentBuilderFactory.newDocumentBuilder();
-        } catch (ParserConfigurationException e1) {
-            throw new MojoExecutionException("Unable to load feature manifest", e1);
-        }
+        documentBuilder = documentBuilderFactory.newDocumentBuilder();
+//        } catch (ParserConfigurationException e1) {
+//            throw new MojoExecutionException("Unable to load feature manifest", e1);
+//        }
         return documentBuilder.newDocument();
     }
 }

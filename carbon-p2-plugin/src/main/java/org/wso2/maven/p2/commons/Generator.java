@@ -16,9 +16,9 @@
 
 package org.wso2.maven.p2.commons;
 
-import org.apache.maven.plugin.logging.Log;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
+import org.apache.maven.plugin.logging.Log;
 
 /**
  * The Generator class must be extended by all the generator classes which implement the the maven goal logic.
@@ -28,10 +28,11 @@ public abstract class Generator {
 
     /**
      * Override generate method in the Generator child classes and insert the maven goal generation logic.
+     *
      * @throws MojoExecutionException
      * @throws MojoFailureException
      */
-    public abstract void generate()  throws MojoExecutionException, MojoFailureException;
+    public abstract void generate() throws MojoExecutionException, MojoFailureException;
 
     public Log getLog() {
         return this.log;

@@ -24,8 +24,11 @@ import org.w3c.dom.Element;
 import org.wso2.maven.p2.repo.CatFeature;
 import org.wso2.maven.p2.repo.Category;
 
+import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.transform.OutputKeys;
 import javax.xml.transform.Transformer;
+import javax.xml.transform.TransformerConfigurationException;
+import javax.xml.transform.TransformerException;
 import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
@@ -93,7 +96,8 @@ public class P2Utils {
         return matchStr.equalsIgnoreCase("patch");
     }
 
-    public static void createCategoryFile(MavenProject project, ArrayList categories, File categoryFile) throws MojoExecutionException {
+    public static void createCategoryFile(MavenProject project, ArrayList categories, File categoryFile)
+            throws ParserConfigurationException, TransformerException, MojoExecutionException {
 
         Map featureCategories = new HashMap();
 
@@ -156,8 +160,13 @@ public class P2Utils {
             transformer.setOutputProperty(OutputKeys.INDENT, "yes");
             transformer.setOutputProperty("{http://xml.apache.org/xslt}indent-amount", "2");
             transformer.transform(source, result);
-        } catch (Exception e) {
-            throw new MojoExecutionException("Unable to create feature manifest", e);
+        } catch (TransformerConfigurationException e) {
+            throw new TransformerConfigurationException("Unable to create feature manifest", e);
+        } catch (TransformerException e) {
+            throw new TransformerException("Unable to create feature manifest", e);
         }
+//        } catch (Exception e) {
+//            throw new MojoExecutionException("Unable to create feature manifest", e);
+//        }
     }
 }

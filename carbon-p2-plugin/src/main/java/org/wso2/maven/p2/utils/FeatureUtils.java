@@ -17,11 +17,12 @@
 package org.wso2.maven.p2.utils;
 
 import org.apache.maven.model.Dependency;
-import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.project.MavenProject;
 import org.wso2.maven.p2.beans.FeatureArtifact;
 import org.wso2.maven.p2.beans.ImportFeature;
 import org.wso2.maven.p2.beans.IncludedFeature;
+import org.wso2.maven.p2.exceptions.ArtifactVersionNotFoundException;
+import org.wso2.maven.p2.exceptions.InvalidBeanDefinitionException;
 import org.wso2.maven.p2.profile.Feature;
 
 import java.util.List;
@@ -35,9 +36,10 @@ public class FeatureUtils {
      * Generates IncludedFeature bean class from the given string definition for an included feature.
      *
      * @param definition String IncludeFeature definition
-     * @return IncludedFeature bean
+     * @return
+     * @throws InvalidBeanDefinitionException
      */
-    public static IncludedFeature getIncludedFeature(String definition) {
+    public static IncludedFeature getIncludedFeature(String definition) throws InvalidBeanDefinitionException {
         IncludedFeature feature;
         String segment;
         String[] segments = definition.split(":");
@@ -50,7 +52,8 @@ public class FeatureUtils {
                 feature.setFeatureId(segments[1].substring(0, segments[1].lastIndexOf(".feature")));
             }
         } else {
-            return null;
+            throw new InvalidBeanDefinitionException("Insufficient IncludeFeature information provided to determine " +
+                    "the IncludeFeature");
         }
 
         if (segments.length >= 3) {
@@ -73,11 +76,11 @@ public class FeatureUtils {
 
     /**
      * Generates ImportFeature bean class from the given string definition for an import feature.
-     *
      * @param featureDefinition String ImportFeature definition
-     * @return ImportFeature bean
+     * @return ImportFeature
+     * @throws InvalidBeanDefinitionException
      */
-    public static ImportFeature getImportFeature(String featureDefinition) throws MojoExecutionException {
+    public static ImportFeature getImportFeature(String featureDefinition) throws InvalidBeanDefinitionException {
         String[] split = featureDefinition.split(":");
         ImportFeature feature = new ImportFeature();
         if (split.length > 0) {
@@ -107,17 +110,18 @@ public class FeatureUtils {
             feature.setCompatibility(match);
             return feature;
         }
-        throw new MojoExecutionException("Insufficient feature artifact information provided to determine the feature: "
-                + featureDefinition);
+        throw new InvalidBeanDefinitionException("Insufficient feature artifact information provided to determine the" +
+                " feature: " + featureDefinition);
     }
 
     /**
      * Generates a Feature bean from the given string definition for a feature.
      *
      * @param featureDefinition String Feature definition
-     * @return Feature bean
+     * @return Feature
+     * @throws InvalidBeanDefinitionException
      */
-    public static Feature getFeature(String featureDefinition) throws MojoExecutionException {
+    public static Feature getFeature(String featureDefinition) throws InvalidBeanDefinitionException {
         String[] split = featureDefinition.split(":");
         if (split.length > 1) {
             Feature feature = new Feature();
@@ -125,17 +129,19 @@ public class FeatureUtils {
             feature.setVersion(split[1]);
             return feature;
         }
-        throw new MojoExecutionException("Insufficient feature information provided to determine the feature: " +
-                featureDefinition);
+        throw new InvalidBeanDefinitionException("Insufficient feature information provided to determine the feature: "
+                + featureDefinition);
     }
 
     /**
      * Generates a FeatureArtifact bean from the given string definition for a feature artifact.
      *
-     * @param featureArtifactDefinition String feature artifact definition
-     * @return FeatureArtifact bean
+     * @param featureArtifactDefinition String definition for feature artifact
+     * @return String feature artifact definition
+     * @throws InvalidBeanDefinitionException
      */
-    public static FeatureArtifact getFeatureArtifact(String featureArtifactDefinition) throws MojoExecutionException {
+    public static FeatureArtifact getFeatureArtifact(String featureArtifactDefinition)
+            throws InvalidBeanDefinitionException {
         String[] split = featureArtifactDefinition.split(":");
         if (split.length > 1) {
             FeatureArtifact featureArtifact = new FeatureArtifact();
@@ -144,8 +150,8 @@ public class FeatureUtils {
             if (split.length == 3) featureArtifact.setVersion(split[2]);
             return featureArtifact;
         }
-        throw new MojoExecutionException("Insufficient artifact information provided to determine the feature: " +
-                featureArtifactDefinition);
+        throw new InvalidBeanDefinitionException("Insufficient artifact information provided to determine the feature: "
+                + featureArtifactDefinition);
     }
 
     /**
@@ -153,9 +159,10 @@ public class FeatureUtils {
      *
      * @param feature FeatureArtifact object
      * @param project maven project
-     * @throws MojoExecutionException
+     * @throws ArtifactVersionNotFoundException
      */
-    public static void resolveVersion(FeatureArtifact feature, MavenProject project) throws MojoExecutionException {
+    public static void resolveVersion(FeatureArtifact feature, MavenProject project)
+            throws ArtifactVersionNotFoundException {
         if (feature.getVersion() == null) {
             List<Dependency> dependencies = project.getDependencies();
             for (Dependency dependency : dependencies) {
@@ -176,7 +183,7 @@ public class FeatureUtils {
             }
         }
         if (feature.getVersion() == null) {
-            throw new MojoExecutionException("Could not find the version for " + feature.getGroupId() + ":" +
+            throw new ArtifactVersionNotFoundException("Could not find the version for " + feature.getGroupId() + ":" +
                     feature.getArtifactId());
         }
         Properties properties = project.getProperties();

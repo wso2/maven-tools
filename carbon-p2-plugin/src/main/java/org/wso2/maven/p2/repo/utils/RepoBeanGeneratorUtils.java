@@ -19,11 +19,15 @@ package org.wso2.maven.p2.repo.utils;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.wso2.maven.p2.beans.Bundle;
 import org.wso2.maven.p2.beans.FeatureArtifact;
+import org.wso2.maven.p2.exceptions.ArtifactVersionNotFoundException;
+import org.wso2.maven.p2.exceptions.InvalidBeanDefinitionException;
+import org.wso2.maven.p2.exceptions.OSGIInformationExtractionException;
 import org.wso2.maven.p2.repo.RepositoryResourceBundle;
 import org.wso2.maven.p2.utils.BundleUtils;
 import org.wso2.maven.p2.utils.FeatureUtils;
 import org.wso2.maven.p2.utils.MavenUtils;
 
+import java.io.IOException;
 import java.util.ArrayList;
 
 /**
@@ -45,7 +49,8 @@ public class RepoBeanGeneratorUtils {
      * @return processed bundles in an ArrayList&lt;FeatureArtifact&gt;
      * @throws MojoExecutionException
      */
-    public ArrayList<FeatureArtifact> getProcessedFeatureArtifacts() throws MojoExecutionException {
+    public ArrayList<FeatureArtifact> getProcessedFeatureArtifacts() throws
+            InvalidBeanDefinitionException, ArtifactVersionNotFoundException {
         ArrayList<FeatureArtifact> processedFeatureArtifacts = new ArrayList<FeatureArtifact>();
         if (resourceBundle.getFeatureArtifacts() == null) {
             return processedFeatureArtifacts;
@@ -62,9 +67,14 @@ public class RepoBeanGeneratorUtils {
                 f.setArtifact(MavenUtils.getResolvedArtifact(f, resourceBundle.getRepositorySystem(),
                         resourceBundle.getRemoteRepositories(), resourceBundle.getLocalRepository()));
                 processedFeatureArtifacts.add(f);
-            } catch (Exception e) {
-                throw new MojoExecutionException("Error occurred when processing the Feature Artifact: " +
+            } catch (InvalidBeanDefinitionException | ArtifactVersionNotFoundException e) {
+                if(e instanceof InvalidBeanDefinitionException) {
+                    throw new InvalidBeanDefinitionException("Error occurred when processing the Feature Artifact: " +
                         obj.toString(), e);
+                } else {
+                    throw new ArtifactVersionNotFoundException("Error occurred when processing the Feature Artifact: " +
+                            obj.toString(), e);
+                }
             }
         }
         return processedFeatureArtifacts;
@@ -77,7 +87,8 @@ public class RepoBeanGeneratorUtils {
      * @return processed bundles in an ArrayList&lt;Bundle&gt;
      * @throws MojoExecutionException
      */
-    public ArrayList<Bundle> getProcessedBundleArtifacts() throws MojoExecutionException {
+    public ArrayList<Bundle> getProcessedBundleArtifacts() throws InvalidBeanDefinitionException,
+            ArtifactVersionNotFoundException, IOException, OSGIInformationExtractionException {
         ArrayList<Bundle> processedBundleArtifacts = new ArrayList<Bundle>();
         if (resourceBundle.getBundleArtifacts() == null) {
             return processedBundleArtifacts;

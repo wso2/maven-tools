@@ -18,7 +18,7 @@
 package org.wso2.maven.p2.beans;
 
 import org.apache.maven.artifact.Artifact;
-import org.apache.maven.plugin.MojoExecutionException;
+import org.wso2.maven.p2.exceptions.OSGIInformationExtractionException;
 
 import java.io.IOException;
 import java.util.jar.JarFile;
@@ -78,7 +78,7 @@ public class Bundle {
         return this.compatibility;
     }
 
-    public void setArtifact(Artifact artifact) throws MojoExecutionException {
+    public void setArtifact(Artifact artifact) throws OSGIInformationExtractionException, IOException {
         this.artifact = artifact;
         resolveOSGIInfo();
     }
@@ -117,7 +117,7 @@ public class Bundle {
         return bundleString;
     }
 
-    private void resolveOSGIInfo() throws MojoExecutionException {
+    private void resolveOSGIInfo() throws OSGIInformationExtractionException, IOException {
         String bundleVersionStr = "Bundle-Version";
         String bundleSymbolicNameStr = "Bundle-SymbolicName";
         JarFile jarFile = null;
@@ -127,7 +127,7 @@ public class Bundle {
             if (getBundleSymbolicName() == null) {
                 String value = manifest.getMainAttributes().getValue(bundleSymbolicNameStr);
                 if (value == null) {
-                    throw new MojoExecutionException(bundleSymbolicNameStr +
+                    throw new OSGIInformationExtractionException(bundleSymbolicNameStr +
                             " cannot be found in the bundle: " + getArtifact().getFile());
                 }
                 String[] split = value.split(";");
@@ -137,11 +137,11 @@ public class Bundle {
                 setBundleVersion(manifest.getMainAttributes().getValue(bundleVersionStr));
             }
             if (getBundleSymbolicName() == null || getBundleVersion() == null) {
-                throw new MojoExecutionException("Artifact doesn't contain OSGI info: " + getGroupId() + ":" +
-                        getArtifactId() + ":" + getVersion());
+                throw new OSGIInformationExtractionException("Artifact doesn't contain OSGI info: " + getGroupId() +
+                        ":" + getArtifactId() + ":" + getVersion());
             }
         } catch (IOException e) {
-            throw new MojoExecutionException("Unable to retrieve OSGI bundle info: " + getGroupId() +
+            throw new IOException("Unable to retrieve OSGI bundle info: " + getGroupId() +
                     ":" + getArtifactId() + ":" + getVersion(), e);
         } finally {
             if (jarFile != null) {

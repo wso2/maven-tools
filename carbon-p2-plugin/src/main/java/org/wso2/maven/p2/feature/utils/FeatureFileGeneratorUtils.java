@@ -16,7 +16,6 @@
 
 package org.wso2.maven.p2.feature.utils;
 
-import org.apache.maven.plugin.MojoExecutionException;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
@@ -29,19 +28,21 @@ import org.wso2.maven.p2.feature.FeatureResourceBundle;
 import org.wso2.maven.p2.utils.BundleUtils;
 import org.wso2.maven.p2.utils.P2Utils;
 import org.wso2.maven.p2.utils.PropertyReplacer;
+import org.xml.sax.SAXException;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.transform.OutputKeys;
 import javax.xml.transform.Transformer;
+import javax.xml.transform.TransformerConfigurationException;
+import javax.xml.transform.TransformerException;
 import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -63,32 +64,23 @@ public class FeatureFileGeneratorUtils {
 
     private static final String DEFAULT_ENCODING = "UTF-8";
     private static final String LINE_SEPARATOR = System.lineSeparator();
+
     /**
      * Generates the feature property file.
      *
      * @param resourceBundle      containing the project resources
      * @param featurePropertyFile File Object representing the feature property file
-     * @throws MojoExecutionException
+     * @throws IOException
      */
     public static void createPropertiesFile(FeatureResourceBundle resourceBundle, File featurePropertyFile)
-            throws MojoExecutionException {
+            throws IOException {
         Properties props = getProperties(resourceBundle);
-        OutputStream propertyFileStream = null;
         if (props != null && !props.isEmpty()) {
-            try {
+            try (OutputStream propertyFileStream = new FileOutputStream(featurePropertyFile)) {
                 resourceBundle.getLog().info("Generating feature properties");
-                propertyFileStream = new FileOutputStream(featurePropertyFile);
                 props.store(propertyFileStream, "Properties of " + resourceBundle.getId());
-            } catch (Exception e) {
-                throw new MojoExecutionException("Unable to create the feature properties", e);
-            } finally {
-                if (propertyFileStream != null) {
-                    try {
-                        propertyFileStream.close();
-                    } catch (IOException e) {
-                        resourceBundle.getLog().error("Unable to close the properties file");
-                    }
-                }
+            } catch (IOException e) {
+                throw new IOException("Unable to create the feature properties", e);
             }
         }
     }
@@ -98,28 +90,18 @@ public class FeatureFileGeneratorUtils {
      *
      * @param resourceBundle containing the project resources
      * @return Properties object containing properties passed in to the tool as properties and via the properties file
-     * @throws MojoExecutionException
+     * @throws IOException
      */
-    private static Properties getProperties(FeatureResourceBundle resourceBundle) throws MojoExecutionException {
+    private static Properties getProperties(FeatureResourceBundle resourceBundle) throws IOException {
         File propertiesFile = resourceBundle.getPropertiesFile();
         Properties properties = resourceBundle.getProperties();
 
-        InputStream propertyFileStream = null;
         if (propertiesFile != null && propertiesFile.exists()) {
             Properties props = new Properties();
-            try {
-                propertyFileStream = new FileInputStream(propertiesFile);
+            try (InputStream propertyFileStream = new FileInputStream(propertiesFile)) {
                 props.load(propertyFileStream);
-            } catch (Exception e) {
-                throw new MojoExecutionException("Unable to load the given properties file", e);
-            } finally {
-                if (propertyFileStream != null) {
-                    try {
-                        propertyFileStream.close();
-                    } catch (IOException e) {
-                        resourceBundle.getLog().error("Unable to close the given properties file");
-                    }
-                }
+            } catch (IOException e) {
+                throw new IOException("Unable to load the given properties file", e);
             }
             if (properties != null) {
                 for (Object key : properties.keySet().toArray()) {
@@ -137,22 +119,16 @@ public class FeatureFileGeneratorUtils {
      *
      * @param resourceBundle      containing the project resources
      * @param featureManifestFile File Object representing the manifest file
-     * @throws MojoExecutionException
+     * @throws IOException
      */
     public static void createManifestMFFile(FeatureResourceBundle resourceBundle, File featureManifestFile)
-            throws MojoExecutionException {
-        PrintWriter pw = null;
-        try {
+            throws IOException {
+        try (Writer writer = new OutputStreamWriter(new FileOutputStream(featureManifestFile), DEFAULT_ENCODING);
+             PrintWriter pw = new PrintWriter(writer)) {
             resourceBundle.getLog().info("Generating MANIFEST.MF");
-            Writer writer = new OutputStreamWriter(new FileOutputStream(featureManifestFile), DEFAULT_ENCODING);
-            pw = new PrintWriter(writer);
             pw.print("Manifest-Version: 1.0" + LINE_SEPARATOR + LINE_SEPARATOR);
-        } catch (Exception e) {
-            throw new MojoExecutionException("Unable to create manifest file", e);
-        } finally {
-            if (pw != null) {
-                pw.close();
-            }
+        } catch (IOException e) {
+            throw new IOException("Unable to create manifest file", e);
         }
     }
 
@@ -161,13 +137,12 @@ public class FeatureFileGeneratorUtils {
      *
      * @param resourceBundle containing the project resources
      * @param p2InfFile      File object representing the p2inf file
-     * @throws MojoExecutionException
+     * @throws IOException
      */
-    public static void createP2Inf(FeatureResourceBundle resourceBundle, File p2InfFile) throws MojoExecutionException {
-        PrintWriter pw = null;
-
+    public static void createP2Inf(FeatureResourceBundle resourceBundle, File p2InfFile) throws IOException {
         List<String> p2infStringList = null;
-        try {
+        try (Writer writer = new OutputStreamWriter(new FileOutputStream(p2InfFile.getAbsolutePath()), DEFAULT_ENCODING);
+             PrintWriter pw = new PrintWriter(writer)) {
             ArrayList<Property> list = resourceBundle.getProcessedAdviceProperties();
 
             if (p2InfFile.exists()) {
@@ -177,9 +152,6 @@ public class FeatureFileGeneratorUtils {
                 resourceBundle.getLog().info("Generating Advice file (p2.inf)");
             }
 
-            Writer writer = new OutputStreamWriter(new FileOutputStream(p2InfFile.getAbsolutePath()), DEFAULT_ENCODING);
-            pw = new PrintWriter(writer);
-            //re-writing the already availabled p2.inf lines
             Properties properties = new Properties();
             properties.setProperty("feature.version", BundleUtils.getOSGIVersion(resourceBundle.getVersion()));
             if (p2infStringList != null && p2infStringList.size() > 0) {
@@ -197,17 +169,11 @@ public class FeatureFileGeneratorUtils {
                     nextIndex++;
                 }
             }
-        } catch (FileNotFoundException e) {
-            throw new MojoExecutionException("Unable to create/open p2.inf file", e);
         } catch (UnsupportedEncodingException e) {
-            throw new MojoExecutionException("Unable to read p2.inf file. Existing file is in an unsupported encoding",
-                    e);
+            resourceBundle.getLog().error("Unable to read p2.inf file. Existing file is in an unsupported encoding");
+            throw e;
         } catch (IOException e) {
-            throw new MojoExecutionException("Unable to create/open p2.inf file", e);
-        } finally {
-            if (pw != null) {
-                pw.close();
-            }
+            throw new IOException("Unable to create/open p2.inf file", e);
         }
     }
 
@@ -216,33 +182,19 @@ public class FeatureFileGeneratorUtils {
      *
      * @param absolutePath Path to the advice file
      * @return List&lt;String&gt; containing items in the given advice file
-     * @throws MojoExecutionException
+     * @throws IOException
      */
-    private static List<String> readAdviceFile(String absolutePath) throws MojoExecutionException {
-        List<String> stringList = new ArrayList<String>();
+    private static List<String> readAdviceFile(String absolutePath) throws IOException {
+        List<String> stringList = new ArrayList<>();
         String inputLine;
-        BufferedReader br = null;
 
-        InputStreamReader reader = null;
-        try {
-            reader = new InputStreamReader(new FileInputStream(absolutePath), DEFAULT_ENCODING);
-            br = new BufferedReader(reader);
+        try (InputStreamReader reader = new InputStreamReader(new FileInputStream(absolutePath), DEFAULT_ENCODING);
+             BufferedReader br = new BufferedReader(reader)) {
             while ((inputLine = br.readLine()) != null) {
                 stringList.add(inputLine);
             }
-        } catch (FileNotFoundException e) {
-            throw new MojoExecutionException("Unable to create/open p2.inf file", e);
         } catch (IOException e) {
-            throw new MojoExecutionException("Error while reading from p2.inf file", e);
-        } finally {
-            if (br != null) {
-                try {
-                    br.close();
-                    reader.close();
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-            }
+            throw new IOException("Error while reading from p2.inf file", e);
         }
         return stringList;
     }
@@ -252,10 +204,13 @@ public class FeatureFileGeneratorUtils {
      *
      * @param resourceBundle containing the project resources
      * @param featureXmlFile File object representing the feature xml file
-     * @throws MojoExecutionException
+     * @throws TransformerException
+     * @throws IOException
+     * @throws SAXException
+     * @throws ParserConfigurationException
      */
     public static void createFeatureXml(FeatureResourceBundle resourceBundle, File featureXmlFile)
-            throws MojoExecutionException {
+            throws TransformerException, IOException, SAXException, ParserConfigurationException {
         resourceBundle.getLog().info("Generating feature manifest");
         Document document = getManifestDocument(resourceBundle.getManifest());
         Element rootElement = document.getDocumentElement();
@@ -381,8 +336,10 @@ public class FeatureFileGeneratorUtils {
             transformer.setOutputProperty(OutputKeys.INDENT, "yes");
             transformer.setOutputProperty("{http://xml.apache.org/xslt}indent-amount", "2");
             transformer.transform(source, result);
-        } catch (Exception e) {
-            throw new MojoExecutionException("Unable to create feature manifest", e);
+        } catch (TransformerConfigurationException e) {
+            throw new TransformerConfigurationException("Unable to create feature manifest", e);
+        } catch (TransformerException e) {
+            throw new TransformerException("Unable to create feature manifest", e);
         }
     }
 
@@ -392,32 +349,27 @@ public class FeatureFileGeneratorUtils {
      *
      * @param manifest java.io.File pointing an existing manifest file.
      * @return Document object representing a given manifest file or a newly generated manifest file
-     * @throws MojoExecutionException
+     * @throws ParserConfigurationException
+     * @throws SAXException
+     * @throws IOException
      */
-    private static Document getManifestDocument(File manifest) throws MojoExecutionException {
+    private static Document getManifestDocument(File manifest) throws ParserConfigurationException,
+            SAXException, IOException {
         DocumentBuilderFactory documentBuilderFactory = DocumentBuilderFactory.newInstance();
         DocumentBuilder documentBuilder;
         try {
             documentBuilder = documentBuilderFactory.newDocumentBuilder();
-        } catch (ParserConfigurationException e1) {
-            throw new MojoExecutionException("Unable to load feature manifest", e1);
+        } catch (ParserConfigurationException e) {
+            throw new ParserConfigurationException("Unable to load feature manifest");
         }
         Document document;
-        InputStream manifestFileStream = null;
         if (manifest != null && manifest.exists()) {
-            try {
-                manifestFileStream = new FileInputStream(manifest);
+            try (InputStream manifestFileStream = new FileInputStream(manifest)) {
                 document = documentBuilder.parse(manifestFileStream);
-            } catch (Exception e) {
-                throw new MojoExecutionException("Unable to load feature manifest", e);
-            } finally {
-                if (manifestFileStream != null) {
-                    try {
-                        manifestFileStream.close();
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }
-                }
+            } catch (SAXException e) {
+                throw new SAXException("Unable to parse feature manifest", e);
+            } catch (IOException e) {
+                throw new IOException("Unable to load feature manifest", e);
             }
         } else {
             document = documentBuilder.newDocument();
@@ -432,13 +384,11 @@ public class FeatureFileGeneratorUtils {
      * @param processedBundlesList list of bundles configured in the pom.xml
      * @param document             Document representing the give manifest
      * @return ArrayList&lt;Bundle&gt; missing plugins
-     * @throws MojoExecutionException
      */
-    private static ArrayList<Bundle> getMissingPlugins(ArrayList<Bundle> processedBundlesList, Document document)
-            throws MojoExecutionException {
-        HashMap<String, Bundle> missingPlugins = new HashMap<String, Bundle>();
+    private static ArrayList<Bundle> getMissingPlugins(ArrayList<Bundle> processedBundlesList, Document document) {
+        HashMap<String, Bundle> missingPlugins = new HashMap<>();
         if (processedBundlesList == null || processedBundlesList.size() == 0) {
-            return new ArrayList<Bundle>();
+            return new ArrayList<>();
         }
         for (Bundle bundle : processedBundlesList) {
             missingPlugins.put(bundle.getArtifactId(), bundle);
@@ -457,7 +407,7 @@ public class FeatureFileGeneratorUtils {
             }
         }
 
-        return new ArrayList<Bundle>(missingPlugins.values());
+        return new ArrayList<>(missingPlugins.values());
     }
 
     /**
@@ -472,9 +422,9 @@ public class FeatureFileGeneratorUtils {
      */
     private static <T> ArrayList<T> getMissingImportItems(ArrayList<T> processedImportItemsList, Document document,
                                                           String itemType) {
-        HashMap<String, T> missingImportItems = new HashMap<String, T>();
+        HashMap<String, T> missingImportItems = new HashMap<>();
         if (processedImportItemsList == null) {
-            return new ArrayList<T>();
+            return new ArrayList<>();
         }
         for (T item : processedImportItemsList) {
             if (item instanceof Bundle) {
@@ -485,7 +435,7 @@ public class FeatureFileGeneratorUtils {
         }
         NodeList requireNodeList = document.getDocumentElement().getElementsByTagName("require");
         if (requireNodeList == null || requireNodeList.getLength() == 0) {
-            return new ArrayList<T>(missingImportItems.values());
+            return new ArrayList<>(missingImportItems.values());
         }
 
         Node requireNode = requireNodeList.item(0);
@@ -505,6 +455,6 @@ public class FeatureFileGeneratorUtils {
                 }
             }
         }
-        return new ArrayList<T>(missingImportItems.values());
+        return new ArrayList<>(missingImportItems.values());
     }
 }

@@ -28,11 +28,17 @@ import org.wso2.maven.p2.beans.ImportFeature;
 import org.wso2.maven.p2.beans.IncludedFeature;
 import org.wso2.maven.p2.beans.Property;
 import org.wso2.maven.p2.commons.Generator;
+import org.wso2.maven.p2.exceptions.ArtifactVersionNotFoundException;
+import org.wso2.maven.p2.exceptions.InvalidBeanDefinitionException;
+import org.wso2.maven.p2.exceptions.OSGIInformationExtractionException;
 import org.wso2.maven.p2.feature.utils.FeatureBeanGeneratorUtils;
 import org.wso2.maven.p2.feature.utils.FeatureFileGeneratorUtils;
 import org.wso2.maven.p2.utils.BundleUtils;
 import org.wso2.maven.p2.utils.FileManagementUtil;
+import org.xml.sax.SAXException;
 
+import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.transform.TransformerException;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -83,24 +89,36 @@ public class FeatureGenerator extends Generator {
     @Override
     public void generate() throws MojoExecutionException, MojoFailureException {
         //Generates bean classes from the xml configuration provided through the pom.xml in plugin configuration
-        generateBeansFromInputs();
-        setupTempOutputFolderStructure();
-        copyFeatureResources();
-        generateFeatureOutputFiles();
-        copyAllIncludedArtifacts();
-        createFeatureArchive();
-        deployArtifact();
-        performMopUp();
+        try {
+            generateBeansFromInputs();
+            setupTempOutputFolderStructure();
+            copyFeatureResources();
+            generateFeatureOutputFiles();
+            copyAllIncludedArtifacts();
+            createFeatureArchive();
+            deployArtifact();
+            performMopUp();
+        } catch (IOException | TransformerException | ParserConfigurationException | SAXException e) {
+            throw new MojoFailureException(e.getMessage(), e);
+        } catch (InvalidBeanDefinitionException | ArtifactVersionNotFoundException |
+                OSGIInformationExtractionException e) {
+            throw new MojoExecutionException(e.getMessage(), e);
+        }
     }
 
     /**
      * Generates internal bean objects from the plugin configuration passed in through the pom.xml.
      *
-     * @throws MojoExecutionException
+     * @throws InvalidBeanDefinitionException
+     * @throws ArtifactVersionNotFoundException
+     * @throws OSGIInformationExtractionException
+     * @throws IOException
      */
-    private void generateBeansFromInputs() throws MojoExecutionException {
+    private void generateBeansFromInputs() throws InvalidBeanDefinitionException, ArtifactVersionNotFoundException,
+            OSGIInformationExtractionException, IOException {
         FeatureBeanGeneratorUtils paramProcessor = new FeatureBeanGeneratorUtils(this.resourceBundle);
         getLog().info("Processing bundles");
+
         processedBundles = paramProcessor.getProcessedBundlesList();
 //      Had a confusion whether import bundles are actually needed during the code review 01/09/2015. Thus commented this.
 //        getLog().info("Processing import bundles");
@@ -123,9 +141,13 @@ public class FeatureGenerator extends Generator {
     /**
      * Generates feature.xml, features.properties, manifest file for the feature and p2inf file.
      *
-     * @throws MojoExecutionException
+     * @throws IOException
+     * @throws ParserConfigurationException
+     * @throws SAXException
+     * @throws TransformerException
      */
-    private void generateFeatureOutputFiles() throws MojoExecutionException {
+    private void generateFeatureOutputFiles() throws IOException, ParserConfigurationException, SAXException,
+            TransformerException {
         FeatureFileGeneratorUtils.createFeatureXml(resourceBundle, featureXmlFile);
         FeatureFileGeneratorUtils.createPropertiesFile(resourceBundle, featurePropertyFile);
         FeatureFileGeneratorUtils.createManifestMFFile(resourceBundle, featureManifestFile);
@@ -135,7 +157,7 @@ public class FeatureGenerator extends Generator {
     /**
      * Set up the temporary output folder structure.
      */
-    private void setupTempOutputFolderStructure() throws MojoExecutionException {
+    private void setupTempOutputFolderStructure() throws IOException {
         getLog().info("Setting up folder structure");
         File destFolder = new File(project.getBasedir(), "target");
         rowOutputFolder = new File(destFolder, "raw");
@@ -150,10 +172,10 @@ public class FeatureGenerator extends Generator {
         featureManifestFile = new File(featureMetaInfFolder, "MANIFEST.MF");
         featureZipFile = new File(destFolder, project.getArtifactId() + "-" + project.getVersion() + ".zip");
         if (!featureMetaInfFolder.mkdirs()) {
-            throw new MojoExecutionException("Unable to create folder " + featureMetaInfFolder.getAbsolutePath());
+            throw new IOException("Unable to create folder " + featureMetaInfFolder.getAbsolutePath());
         }
         if (!pluginsFolder.mkdirs()) {
-            throw new MojoExecutionException("Unable to create folder " + pluginsFolder.getAbsolutePath());
+            throw new IOException("Unable to create folder " + pluginsFolder.getAbsolutePath());
         }
 
     }
@@ -161,9 +183,9 @@ public class FeatureGenerator extends Generator {
     /**
      * Copy all the dependencies into output folder.
      *
-     * @throws MojoExecutionException
+     * @throws IOException
      */
-    private void copyAllIncludedArtifacts() throws MojoExecutionException {
+    private void copyAllIncludedArtifacts() throws IOException {
         copyBundles();
 //      Had a confusion whether import bundles are actually needed during the code review 01/09/2015. Thus commented this.
 //        copyImportBundles();
@@ -173,9 +195,9 @@ public class FeatureGenerator extends Generator {
     /**
      * Copy bundles into plugins folder.
      *
-     * @throws MojoExecutionException
+     * @throws IOException
      */
-    private void copyBundles() throws MojoExecutionException {
+    private void copyBundles() throws IOException {
         ArrayList<Bundle> processedBundlesList = processedBundles;
         if (processedBundlesList != null) {
             getLog().info("Copying bundle dependencies");
@@ -185,7 +207,7 @@ public class FeatureGenerator extends Generator {
                     String bundleName = bundle.getBundleSymbolicName() + "-" + bundle.getBundleVersion() + ".jar";
                     FileUtils.copyFile(bundle.getArtifact().getFile(), new File(pluginsFolder, bundleName));
                 } catch (IOException e) {
-                    throw new MojoExecutionException("Unable copy dependency: " + bundle.getArtifactId(), e);
+                    throw new IOException("Unable copy dependency: " + bundle.getArtifactId(), e);
                 }
             }
         }
@@ -218,9 +240,9 @@ public class FeatureGenerator extends Generator {
     /**
      * Copying includedFeatures into the output folder.
      *
-     * @throws MojoExecutionException
+     * @throws IOException
      */
-    private void copyIncludedFeatures() throws MojoExecutionException {
+    private void copyIncludedFeatures() throws IOException {
         if (processedIncludedFeatures != null) {
             for (IncludedFeature includedFeature : processedIncludedFeatures) {
                 try {
@@ -228,7 +250,7 @@ public class FeatureGenerator extends Generator {
                             includedFeature.getArtifactId());
                     FileManagementUtil.unzip(includedFeature.getArtifact().getFile(), rowOutputFolder);
                 } catch (IOException e) {
-                    throw new MojoExecutionException("Error occurred when extracting the Feature Artifact: " +
+                    throw new IOException("Error occurred when extracting the Feature Artifact: " +
                             includedFeature.getGroupId() + ":" + includedFeature.getArtifactId(), e);
                 }
             }
@@ -238,9 +260,8 @@ public class FeatureGenerator extends Generator {
     /**
      * Zip the created features folder.
      *
-     * @throws MojoExecutionException
      */
-    private void createFeatureArchive() throws MojoExecutionException {
+    private void createFeatureArchive() {
         getLog().info("Generating feature archive: " + featureZipFile.getAbsolutePath());
         FileManagementUtil.zipFolder(rowOutputFolder.getAbsolutePath(), featureZipFile.getAbsolutePath());
     }
@@ -255,9 +276,9 @@ public class FeatureGenerator extends Generator {
     /**
      * Copy maven project resources into the output feature folder.
      *
-     * @throws MojoExecutionException
+     * @throws IOException
      */
-    private void copyFeatureResources() throws MojoExecutionException {
+    private void copyFeatureResources() throws IOException {
         //The following code was taken from the maven bundle plugin and updated suit the purpose
         List<Resource> resources = project.getResources();
         for (Resource resource : resources) {
@@ -288,13 +309,13 @@ public class FeatureGenerator extends Generator {
                     try {
                         if (fromPath.isDirectory() && !toPath.exists()) {
                             if (!toPath.mkdirs()) {
-                                throw new MojoExecutionException("Unable create directory: " + toPath.getAbsolutePath());
+                                throw new IOException("Unable create directory: " + toPath.getAbsolutePath());
                             }
                         } else {
                             FileManagementUtil.copy(fromPath, toPath);
                         }
                     } catch (IOException e) {
-                        throw new MojoExecutionException("Unable copy resources: " + resource.getDirectory(), e);
+                        throw new IOException("Unable copy resources: " + resource.getDirectory(), e);
                     }
                 }
             }
@@ -307,8 +328,8 @@ public class FeatureGenerator extends Generator {
     private void performMopUp() {
         try {
             FileUtils.deleteDirectory(rowOutputFolder);
-        } catch (Exception e) {
-            getLog().warn(new MojoExecutionException("Unable complete mop up operation", e));
+        } catch (IOException e) {
+            getLog().warn(new IOException("Unable complete mop up operation", e));
         }
     }
 }

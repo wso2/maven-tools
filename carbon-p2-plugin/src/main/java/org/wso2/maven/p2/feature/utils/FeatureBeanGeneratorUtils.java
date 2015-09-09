@@ -17,13 +17,15 @@
 package org.wso2.maven.p2.feature.utils;
 
 import org.apache.maven.artifact.repository.ArtifactRepository;
-import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.project.MavenProject;
 import org.apache.maven.repository.RepositorySystem;
 import org.wso2.maven.p2.beans.Bundle;
 import org.wso2.maven.p2.beans.ImportFeature;
 import org.wso2.maven.p2.beans.IncludedFeature;
 import org.wso2.maven.p2.beans.Property;
+import org.wso2.maven.p2.exceptions.ArtifactVersionNotFoundException;
+import org.wso2.maven.p2.exceptions.InvalidBeanDefinitionException;
+import org.wso2.maven.p2.exceptions.OSGIInformationExtractionException;
 import org.wso2.maven.p2.feature.AdviceFile;
 import org.wso2.maven.p2.feature.FeatureResourceBundle;
 import org.wso2.maven.p2.utils.BundleUtils;
@@ -31,6 +33,7 @@ import org.wso2.maven.p2.utils.FeatureUtils;
 import org.wso2.maven.p2.utils.MavenUtils;
 import org.wso2.maven.p2.utils.PropertyUtils;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -67,9 +70,13 @@ public class FeatureBeanGeneratorUtils {
      * configuration.
      *
      * @return processed bundles in an ArrayList&lt;Bundle&gt;
-     * @throws MojoExecutionException
+     * @throws InvalidBeanDefinitionException
+     * @throws OSGIInformationExtractionException
+     * @throws IOException
+     * @throws ArtifactVersionNotFoundException
      */
-    public ArrayList<Bundle> getProcessedBundlesList() throws MojoExecutionException {
+    public ArrayList<Bundle> getProcessedBundlesList() throws InvalidBeanDefinitionException,
+            OSGIInformationExtractionException, IOException, ArtifactVersionNotFoundException {
         return getProcessedBundlesList(this.resourceBundle.getBundles(), false);
     }
 
@@ -91,34 +98,38 @@ public class FeatureBeanGeneratorUtils {
      * @param bundles         ArrayList of bundles
      * @param isImportBundles set this true to get processed importBundles
      * @return ArrayList<Bundle>
-     * @throws MojoExecutionException
+     * @throws InvalidBeanDefinitionException
+     * @throws ArtifactVersionNotFoundException
+     * @throws IOException
+     * @throws OSGIInformationExtractionException
      */
     private ArrayList<Bundle> getProcessedBundlesList(ArrayList bundles, boolean isImportBundles)
-            throws MojoExecutionException {
+            throws InvalidBeanDefinitionException, ArtifactVersionNotFoundException, IOException,
+            OSGIInformationExtractionException {
         if (bundles == null || bundles.size() == 0) {
-            return new ArrayList<Bundle>();
+            return new ArrayList<>();
         }
         ArrayList<Bundle> processedBundles = new ArrayList<Bundle>();
         for (Object obj : bundles) {
-            Bundle b;
+            Bundle bundle;
             if (obj instanceof String) {
-                b = BundleUtils.getBundle(obj.toString());
+                bundle = BundleUtils.getBundle(obj.toString());
             } else {
-                throw new MojoExecutionException("Unknown bundle definition: " + obj.toString());
+                throw new InvalidBeanDefinitionException("Unknown bundle definition: " + obj.toString());
             }
-            BundleUtils.resolveVersionForBundle(b, this.project);
-            b.setArtifact(MavenUtils.getResolvedArtifact(b, this.repositorySystem, this.remoteRepositories,
+            BundleUtils.resolveVersionForBundle(bundle, this.project);
+            bundle.setArtifact(MavenUtils.getResolvedArtifact(bundle, this.repositorySystem, this.remoteRepositories,
                     this.localRepository));
 
 /*            if (isImportBundles) {
                 //TODO: The code throws an null pointer exception when isExclude is true. Check with SameeraJ.
-            if (!b.isExclude()) {
-                b.setArtifact(getResolvedArtifact(b));
+            if (!bundle.isExclude()) {
+                bundle.setArtifact(getResolvedArtifact(bundle));
             } else {
-                b.resolveOSGIInfo();
+                bundle.resolveOSGIInfo();
             }
             }*/
-            processedBundles.add(b);
+            processedBundles.add(bundle);
         }
         return processedBundles;
     }
@@ -128,23 +139,23 @@ public class FeatureBeanGeneratorUtils {
      * configuration in pom.xml configuration.
      *
      * @return processed import features in an ArrayList&lt;ImportFeature&gt;
-     * @throws MojoExecutionException
+     * @throws InvalidBeanDefinitionException
      */
-    public ArrayList<ImportFeature> getProcessedImportFeaturesList() throws MojoExecutionException {
+    public ArrayList<ImportFeature> getProcessedImportFeaturesList() throws InvalidBeanDefinitionException {
         ArrayList importFeatures = this.resourceBundle.getImportFeatures();
         if (importFeatures == null || importFeatures.size() == 0) {
-            return new ArrayList<ImportFeature>();
+            return new ArrayList<>();
         }
         ArrayList<ImportFeature> processedImportFeatures = new ArrayList<ImportFeature>();
         for (Object obj : importFeatures) {
-            ImportFeature f;
+            ImportFeature feature;
             if (obj instanceof String) {
-                f = FeatureUtils.getImportFeature(obj.toString());
+                feature = FeatureUtils.getImportFeature(obj.toString());
             } else {
-                throw new MojoExecutionException("Unknown ImportFeature definition: " + obj.toString());
+                throw new InvalidBeanDefinitionException("Unknown ImportFeature definition: " + obj.toString());
             }
-            f.setFeatureVersion(BundleUtils.getOSGIVersion(this.project.getVersion()));
-            processedImportFeatures.add(f);
+            feature.setFeatureVersion(BundleUtils.getOSGIVersion(this.project.getVersion()));
+            processedImportFeatures.add(feature);
         }
         return processedImportFeatures;
     }
@@ -154,12 +165,12 @@ public class FeatureBeanGeneratorUtils {
      * configuration in pom.xml configuration.
      *
      * @return processed included features in an ArrayList&lt;IncludedFeature&gt;
-     * @throws MojoExecutionException
+     * @throws InvalidBeanDefinitionException
      */
-    public ArrayList<IncludedFeature> getIncludedFeatures() throws MojoExecutionException {
+    public ArrayList<IncludedFeature> getIncludedFeatures() throws InvalidBeanDefinitionException {
         ArrayList includedFeatures = this.resourceBundle.getIncludedFeatures();
         if (includedFeatures == null || includedFeatures.size() == 0) {
-            return new ArrayList<IncludedFeature>();
+            return new ArrayList<>();
         }
 
         ArrayList<IncludedFeature> processedIncludedFeatures = new ArrayList<IncludedFeature>();
@@ -183,9 +194,9 @@ public class FeatureBeanGeneratorUtils {
      * configuration in pom.xml configuration.
      *
      * @return ArrayList&lt;Property&gt;
-     * @throws MojoExecutionException
+     * @throws InvalidBeanDefinitionException
      */
-    public ArrayList<Property> getProcessedAdviceProperties() throws MojoExecutionException {
+    public ArrayList<Property> getProcessedAdviceProperties() throws InvalidBeanDefinitionException {
         ArrayList<Property> processedAdviceProperties = new ArrayList<Property>();
         if (adviceFile != null && adviceFile.getProperties() != null) {
             for (Object property : adviceFile.getProperties()) {
@@ -193,7 +204,7 @@ public class FeatureBeanGeneratorUtils {
                 if (property instanceof String) {
                     prop = PropertyUtils.getProperty(property.toString());
                 } else {
-                    throw new MojoExecutionException("Unknown advice property definition: " + property.toString());
+                    throw new InvalidBeanDefinitionException("Unknown advice property definition: " + property.toString());
                 }
                 processedAdviceProperties.add(prop);
             }
