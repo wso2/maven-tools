@@ -62,7 +62,7 @@ public class ProfileGenerator extends Generator {
             installFeatures();
             updateProfileConfigIni();
             deleteOldProfiles();
-        } catch (Exception e) {
+        } catch (InvalidBeanDefinitionException e) {
             throw new MojoExecutionException(e.getMessage(), e);
         }
     }
@@ -78,9 +78,10 @@ public class ProfileGenerator extends Generator {
     /**
      * Calls the P2ApplicationLauncher and install the features.
      *
-     * @throws Exception
+     * @throws InvalidBeanDefinitionException
+     * @throws MojoFailureException
      */
-    private void installFeatures() throws Exception {
+    private void installFeatures() throws InvalidBeanDefinitionException, MojoFailureException {
         String installIUs = extractIUsToInstall();
         getLog().info("Running Equinox P2 Director Application");
         P2ApplicationLaunchManager launcher = new P2ApplicationLaunchManager(resourceBundle.getLauncher());
@@ -97,20 +98,20 @@ public class ProfileGenerator extends Generator {
      * formatted string is passed into P2ApplicationLauncher to generate the profile.
      *
      * @return formatted string to pass into P2ApplicationLauncher
-     * @throws MojoExecutionException
+     * @throws InvalidBeanDefinitionException
      */
     private String extractIUsToInstall() throws InvalidBeanDefinitionException {
         StringBuilder installIUs = new StringBuilder();
         for (Object featureObj : resourceBundle.getFeatures()) {
-            Feature f;
+            Feature feature;
             if (featureObj instanceof Feature) {
-                f = (Feature) featureObj;
+                feature = (Feature) featureObj;
             } else if (featureObj instanceof String) {
-                f = FeatureUtils.getFeature(featureObj.toString());
+                feature = FeatureUtils.getFeature(featureObj.toString());
             } else {
                 throw new InvalidBeanDefinitionException("Unknown feature definition: " + featureObj.toString());
             }
-            installIUs.append(f.getId().trim()).append("/").append(f.getVersion().trim()).append(",");
+            installIUs.append(feature.getId().trim()).append("/").append(feature.getVersion().trim()).append(",");
         }
 
         return installIUs.toString();
@@ -181,20 +182,14 @@ public class ProfileGenerator extends Generator {
             }
         }
 
-        PrintWriter pw = null;
-        try {
-            Writer writer = new OutputStreamWriter(new FileOutputStream(file), DEFAULT_ENCODING);
-            pw = new PrintWriter(writer);
+        try (Writer writer = new OutputStreamWriter(new FileOutputStream(file), DEFAULT_ENCODING);
+             PrintWriter pw = new PrintWriter(writer)){
             pw.write("-install\n");
             pw.write(profileLocation);
             pw.flush();
         } catch (IOException e) {
             this.getLog().debug("Error while writing to file " + file.getName());
             e.printStackTrace();
-        } finally {
-            if (pw != null) {
-                pw.close();
-            }
         }
     }
 }

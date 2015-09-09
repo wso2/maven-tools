@@ -16,7 +16,6 @@
 
 package org.wso2.maven.p2.repo.utils;
 
-import org.apache.maven.plugin.MojoExecutionException;
 import org.wso2.maven.p2.beans.Bundle;
 import org.wso2.maven.p2.beans.FeatureArtifact;
 import org.wso2.maven.p2.exceptions.ArtifactVersionNotFoundException;
@@ -47,26 +46,27 @@ public class RepoBeanGeneratorUtils {
      * configuration in pom.xml
      *
      * @return processed bundles in an ArrayList&lt;FeatureArtifact&gt;
-     * @throws MojoExecutionException
+     * @throws InvalidBeanDefinitionException
+     * @throws ArtifactVersionNotFoundException
      */
     public ArrayList<FeatureArtifact> getProcessedFeatureArtifacts() throws
             InvalidBeanDefinitionException, ArtifactVersionNotFoundException {
-        ArrayList<FeatureArtifact> processedFeatureArtifacts = new ArrayList<FeatureArtifact>();
+        ArrayList<FeatureArtifact> processedFeatureArtifacts = new ArrayList<>();
         if (resourceBundle.getFeatureArtifacts() == null) {
             return processedFeatureArtifacts;
         }
         for (Object obj : resourceBundle.getFeatureArtifacts()) {
             try {
-                FeatureArtifact f;
+                FeatureArtifact featureArtifact;
                 if (obj instanceof String) {
-                    f = FeatureUtils.getFeatureArtifact(obj.toString());
+                    featureArtifact = FeatureUtils.getFeatureArtifact(obj.toString());
                 } else {
-                    f = (FeatureArtifact) obj;
+                    featureArtifact = (FeatureArtifact) obj;
                 }
-                FeatureUtils.resolveVersion(f, this.resourceBundle.getProject());
-                f.setArtifact(MavenUtils.getResolvedArtifact(f, resourceBundle.getRepositorySystem(),
+                FeatureUtils.resolveVersion(featureArtifact, this.resourceBundle.getProject());
+                featureArtifact.setArtifact(MavenUtils.getResolvedArtifact(featureArtifact, resourceBundle.getRepositorySystem(),
                         resourceBundle.getRemoteRepositories(), resourceBundle.getLocalRepository()));
-                processedFeatureArtifacts.add(f);
+                processedFeatureArtifacts.add(featureArtifact);
             } catch (InvalidBeanDefinitionException | ArtifactVersionNotFoundException e) {
                 if(e instanceof InvalidBeanDefinitionException) {
                     throw new InvalidBeanDefinitionException("Error occurred when processing the Feature Artifact: " +
@@ -85,25 +85,28 @@ public class RepoBeanGeneratorUtils {
      * configuration in pom.xml
      *
      * @return processed bundles in an ArrayList&lt;Bundle&gt;
-     * @throws MojoExecutionException
+     * @throws InvalidBeanDefinitionException
+     * @throws ArtifactVersionNotFoundException
+     * @throws IOException
+     * @throws OSGIInformationExtractionException
      */
     public ArrayList<Bundle> getProcessedBundleArtifacts() throws InvalidBeanDefinitionException,
             ArtifactVersionNotFoundException, IOException, OSGIInformationExtractionException {
-        ArrayList<Bundle> processedBundleArtifacts = new ArrayList<Bundle>();
+        ArrayList<Bundle> processedBundleArtifacts = new ArrayList<>();
         if (resourceBundle.getBundleArtifacts() == null) {
             return processedBundleArtifacts;
         }
         for (Object obj : resourceBundle.getBundleArtifacts()) {
-            Bundle f;
+            Bundle bundleArtifact;
             if (obj instanceof String) {
-                f = BundleUtils.getBundleArtifact(obj.toString());
+                bundleArtifact = BundleUtils.getBundleArtifact(obj.toString());
             } else {
-                f = (Bundle) obj;
+                bundleArtifact = (Bundle) obj;
             }
-            BundleUtils.resolveVersionForBundle(f, this.resourceBundle.getProject());
-            f.setArtifact(MavenUtils.getResolvedArtifact(f, resourceBundle.getRepositorySystem(),
+            BundleUtils.resolveVersionForBundle(bundleArtifact, this.resourceBundle.getProject());
+            bundleArtifact.setArtifact(MavenUtils.getResolvedArtifact(bundleArtifact, resourceBundle.getRepositorySystem(),
                     resourceBundle.getRemoteRepositories(), resourceBundle.getLocalRepository()));
-            processedBundleArtifacts.add(f);
+            processedBundleArtifacts.add(bundleArtifact);
         }
         return processedBundleArtifacts;
     }

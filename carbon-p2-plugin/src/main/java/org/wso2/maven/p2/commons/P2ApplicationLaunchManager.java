@@ -17,6 +17,7 @@
 package org.wso2.maven.p2.commons;
 
 import org.apache.maven.plugin.MojoExecutionException;
+import org.apache.maven.plugin.MojoFailureException;
 import org.eclipse.tycho.p2.facade.internal.P2ApplicationLauncher;
 
 import java.io.File;
@@ -126,12 +127,12 @@ public class P2ApplicationLaunchManager {
      * Generate/update the repository.
      *
      * @param forkedProcessTimeoutInSeconds int
-     * @throws MojoExecutionException
+     * @throws MojoFailureException
      */
-    public void generateRepo(int forkedProcessTimeoutInSeconds) throws MojoExecutionException {
+    public void generateRepo(int forkedProcessTimeoutInSeconds) throws MojoFailureException {
         int result = launcher.execute(forkedProcessTimeoutInSeconds);
         if (result != 0) {
-            throw new MojoExecutionException("P2 publisher return code was " + result);
+            throw new MojoFailureException("P2 publisher return code was " + result);
         }
     }
 

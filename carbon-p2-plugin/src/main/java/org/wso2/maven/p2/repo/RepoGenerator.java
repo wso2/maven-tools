@@ -19,7 +19,6 @@ package org.wso2.maven.p2.repo;
 import org.apache.maven.model.Resource;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
-import org.apache.maven.plugin.logging.Log;
 import org.apache.maven.project.MavenProject;
 import org.codehaus.plexus.util.FileUtils;
 import org.wso2.maven.p2.beans.Bundle;
@@ -92,9 +91,11 @@ public class RepoGenerator extends Generator {
             updateRepositoryWithCategories();
             archiveGeneratedRepo();
             performMopUp();
-        } catch (InvalidBeanDefinitionException | ArtifactVersionNotFoundException | OSGIInformationExtractionException
-                | IOException | TransformerException | ParserConfigurationException e) {
-            e.printStackTrace();
+        } catch (IOException | TransformerException | ParserConfigurationException e) {
+            throw new MojoFailureException(e.getMessage(), e);
+        } catch (InvalidBeanDefinitionException | ArtifactVersionNotFoundException |
+                OSGIInformationExtractionException e) {
+            throw new MojoExecutionException(e.getMessage(), e);
         }
     }
 
@@ -135,9 +136,9 @@ public class RepoGenerator extends Generator {
     /**
      * Generate the repository by calling P2ApplicationLauncher.
      *
-     * @throws MojoExecutionException
+     * @throws MojoFailureException
      */
-    private void generateRepository() throws MojoExecutionException {
+    private void generateRepository() throws MojoFailureException {
         getLog().info("Running Equinox P2 Publisher Application for Repository Generation");
         p2LaunchManager.setWorkingDirectory(project.getBasedir());
         p2LaunchManager.setApplicationName(PUBLISHER_APPLICATION);
@@ -201,8 +202,8 @@ public class RepoGenerator extends Generator {
             getLog().info("Repository Archive: " + archiveFile.toString());
             try {
                 FileManagementUtil.deleteDirectories(repoGenerationLocation);
-            } catch (IOException ex) {
-                throw new MojoExecutionException("Failed to delete " + repoGenerationLocation.getAbsolutePath(), ex);
+            } catch (IOException e) {
+                throw new MojoExecutionException("Failed to delete " + repoGenerationLocation.getAbsolutePath(), e);
             }
         }
     }
@@ -244,7 +245,8 @@ public class RepoGenerator extends Generator {
      *
      * @throws MojoExecutionException
      */
-    private void updateRepositoryWithCategories() throws TransformerException, ParserConfigurationException, MojoExecutionException {
+    private void updateRepositoryWithCategories() throws TransformerException, ParserConfigurationException,
+            MojoExecutionException, MojoFailureException {
         boolean isCategoriesAvailable = resourceBundle.getCategories() != null &&
                 resourceBundle.getCategories().size() != 0;
 
