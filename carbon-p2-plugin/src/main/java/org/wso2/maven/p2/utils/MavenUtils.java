@@ -20,7 +20,6 @@ package org.wso2.maven.p2.utils;
 import org.apache.maven.artifact.Artifact;
 import org.apache.maven.artifact.repository.ArtifactRepository;
 import org.apache.maven.artifact.resolver.ArtifactResolutionRequest;
-import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.repository.RepositorySystem;
 import org.w3c.dom.Document;
 import org.wso2.maven.p2.beans.Bundle;
@@ -108,9 +107,6 @@ public class MavenUtils {
         DocumentBuilderFactory documentBuilderFactory = DocumentBuilderFactory.newInstance();
         DocumentBuilder documentBuilder;
         documentBuilder = documentBuilderFactory.newDocumentBuilder();
-//        } catch (ParserConfigurationException e1) {
-//            throw new MojoExecutionException("Unable to load feature manifest", e1);
-//        }
         return documentBuilder.newDocument();
     }
 }

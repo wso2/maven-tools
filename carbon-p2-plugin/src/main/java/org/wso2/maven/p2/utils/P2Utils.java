@@ -43,14 +43,14 @@ import java.util.Map;
 import java.util.regex.Pattern;
 
 public class P2Utils {
-    private static String[] matchList = new String[]{"perfect", "equivalent", "compatible", "greaterOrEqual", "patch", "optional"};
+    private static String[] matchList = new String[]{"perfect", "equivalent", "compatible", "greaterOrEqual", "patch",
+            "optional"};
 
     public static int getLastIndexOfProperties(File p2InfFile) throws IOException {
         int min = -1;
         if (p2InfFile.exists()) {
-            BufferedReader in = null;
-            try {
-                in = new BufferedReader(new FileReader(p2InfFile));
+
+            try (BufferedReader in =  new BufferedReader(new FileReader(p2InfFile))){
                 String line;
                 while ((line = in.readLine()) != null) {
                     String[] split = line.split("=");
@@ -61,10 +61,6 @@ public class P2Utils {
                             min = index;
                         }
                     }
-                }
-            } finally {
-                if (in != null) {
-                    in.close();
                 }
             }
         }

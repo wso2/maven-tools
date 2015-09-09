@@ -36,7 +36,7 @@ public class FeatureUtils {
      * Generates IncludedFeature bean class from the given string definition for an included feature.
      *
      * @param definition String IncludeFeature definition
-     * @return
+     * @return IncludedFeature generated from string included feature definition
      * @throws InvalidBeanDefinitionException
      */
     public static IncludedFeature getIncludedFeature(String definition) throws InvalidBeanDefinitionException {

@@ -54,31 +54,13 @@ public class FileManagementUtil {
     public static void changeConfigIniProperty(File configIniFile, String propKey, String value) {
         Properties prop = new Properties();
 
-        InputStream inputStream = null;
-        OutputStream outputStream = null;
-        try {
-            inputStream = new FileInputStream(configIniFile);
-            outputStream = new FileOutputStream(configIniFile);
+        try (InputStream inputStream = new FileInputStream(configIniFile);
+             OutputStream outputStream = new FileOutputStream(configIniFile)){
             prop.load(inputStream);
             prop.setProperty(propKey, value);
             prop.store(outputStream, null);
-        } catch (Exception ex) {
-            ex.printStackTrace();
-        } finally {
-            if (inputStream != null) {
-                try {
-                    inputStream.close();
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-            }
-            if (outputStream != null) {
-                try {
-                    outputStream.close();
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-            }
+        } catch (IOException e) {
+            e.printStackTrace();
         }
     }
 
@@ -89,23 +71,13 @@ public class FileManagementUtil {
      * @param destZipFile path to the output zip file
      */
     public static void zipFolder(String srcFolder, String destZipFile) {
-        ZipOutputStream zip = null;
-        try {
-            FileOutputStream fileWriter = new FileOutputStream(destZipFile);
-            zip = new ZipOutputStream(fileWriter);
+        try(FileOutputStream fileWriter = new FileOutputStream(destZipFile);
+            ZipOutputStream zip = new ZipOutputStream(fileWriter)) {
             addFolderContentsToZip(srcFolder, zip);
-        } catch (Exception ex) {
-            ex.printStackTrace();
-        } finally {
-            try {
-                if(zip != null) {
-                    zip.flush();
-                    zip.close();
-                }
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
+        } catch (IOException e) {
+            e.printStackTrace();
         }
+
 
     }
 
@@ -117,9 +89,8 @@ public class FileManagementUtil {
             // Transfer bytes from in to out
             byte[] buf = new byte[1024];
             int len;
-            FileInputStream inputStream = null;
-            try {
-                inputStream = new FileInputStream(srcFile);
+            try (FileInputStream inputStream = new FileInputStream(srcFile)){
+
                 if (path.trim().equals("")) {
                     zip.putNextEntry(new ZipEntry(folder.getName()));
                 } else {
@@ -129,16 +100,8 @@ public class FileManagementUtil {
                     zip.write(buf, 0, len);
                 }
                 inputStream.close();
-            } catch (Exception ex) {
-                ex.printStackTrace();
-            } finally {
-                if (inputStream != null) {
-                    try {
-                        inputStream.close();
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }
-                }
+            } catch (IOException e) {
+                e.printStackTrace();
             }
         }
     }
@@ -160,8 +123,8 @@ public class FileManagementUtil {
                     addToZip("", srcFolder + "/" + fileList[i], zip);
                     i++;
                 }
-            } catch (Exception ex) {
-                ex.printStackTrace();
+            } catch (IOException e) {
+                e.printStackTrace();
             }
         }
     }
@@ -187,8 +150,8 @@ public class FileManagementUtil {
                     addToZip(newPath, srcFolder + "/" + fileList[i], zip);
                     i++;
                 }
-            } catch (Exception ex) {
-                ex.printStackTrace();
+            } catch (IOException e) {
+                e.printStackTrace();
             }
         }
     }
@@ -267,12 +230,9 @@ public class FileManagementUtil {
                 throw new IOException("Failed to create " + dst.getAbsolutePath());
             }
         }
-        InputStream in = null;
-        OutputStream out = null;
-        try {
-            in = new FileInputStream(src);
-            out = new FileOutputStream(dst);
 
+        try (InputStream in = new FileInputStream(src);
+             OutputStream out = new FileOutputStream(dst)){
             // Transfer bytes from in to out
             byte[] buf = new byte[1024];
             int len;
@@ -281,23 +241,7 @@ public class FileManagementUtil {
             }
         } catch (IOException e) {
             e.printStackTrace();
-        } finally {
-            if (in != null) {
-                try {
-                    in.close();
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-            }
-            if (out != null) {
-                try {
-                    out.close();
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-            }
         }
-
     }
 
     /**
@@ -308,14 +252,10 @@ public class FileManagementUtil {
      * @throws IOException
      */
     public static void unzip(File archiveFile, File destination) throws IOException {
-        FileInputStream fis = null;
-        ZipInputStream zis = null;
-        BufferedOutputStream dest = null;
 
-        try {
-            fis = new FileInputStream(archiveFile);
-            zis = new
-                    ZipInputStream(new BufferedInputStream(fis));
+        try(FileInputStream fis = new FileInputStream(archiveFile);
+            ZipInputStream zis = new
+                    ZipInputStream(new BufferedInputStream(fis))) {
             ZipEntry entry;
 
             while ((entry = zis.getNextEntry()) != null) {
@@ -333,23 +273,12 @@ public class FileManagementUtil {
                         throw new IOException("Failed to create directories at " + file.getAbsolutePath());
                     }
                 }
-                FileOutputStream fos = new FileOutputStream(file);
-                dest = new BufferedOutputStream(fos, BUFFER);
-                while ((count = zis.read(data, 0, BUFFER)) != -1) {
-                    dest.write(data, 0, count);
+                try(FileOutputStream fos = new FileOutputStream(file);
+                    BufferedOutputStream dest = new BufferedOutputStream(fos, BUFFER)) {
+                    while ((count = zis.read(data, 0, BUFFER)) != -1) {
+                        dest.write(data, 0, count);
+                    }
                 }
-                dest.flush();
-                dest.close();
-            }
-        } finally {
-            if (zis != null) {
-                zis.close();
-            }
-            if (fis != null) {
-                fis.close();
-            }
-            if (dest != null) {
-                dest.close();
             }
         }
     }
