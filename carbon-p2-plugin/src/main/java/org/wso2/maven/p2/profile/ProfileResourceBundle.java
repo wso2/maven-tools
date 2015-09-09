@@ -20,7 +20,7 @@ import org.apache.maven.project.MavenProject;
 import org.eclipse.tycho.p2.facade.internal.P2ApplicationLauncher;
 
 import java.net.URL;
-import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Bean class containing all the parameters entered to the mojo through plugin configuration.
@@ -33,7 +33,7 @@ public class ProfileResourceBundle {
     private String profile;
     private URL metadataRepository;
     private URL artifactRepository;
-    private ArrayList features;
+    private List features;
     private boolean deleteOldProfileFiles;
     private MavenProject project;
     private P2ApplicationLauncher launcher;
@@ -71,11 +71,11 @@ public class ProfileResourceBundle {
         this.artifactRepository = artifactRepository;
     }
 
-    public ArrayList getFeatures() {
+    public List getFeatures() {
         return features;
     }
 
-    public void setFeatures(ArrayList features) {
+    public void setFeatures(List features) {
         this.features = features;
     }
 

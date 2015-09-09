@@ -54,11 +54,12 @@ public class FileManagementUtil {
     public static void changeConfigIniProperty(File configIniFile, String propKey, String value) {
         Properties prop = new Properties();
 
-        try (InputStream inputStream = new FileInputStream(configIniFile);
-             OutputStream outputStream = new FileOutputStream(configIniFile)){
+        try (InputStream inputStream = new FileInputStream(configIniFile)){
             prop.load(inputStream);
             prop.setProperty(propKey, value);
-            prop.store(outputStream, null);
+            try(OutputStream outputStream = new FileOutputStream(configIniFile)) {
+                prop.store(outputStream, null);
+            }
         } catch (IOException e) {
             e.printStackTrace();
         }

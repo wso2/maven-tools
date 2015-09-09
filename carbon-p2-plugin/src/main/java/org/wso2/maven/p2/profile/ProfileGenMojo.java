@@ -23,12 +23,11 @@ import org.apache.maven.plugins.annotations.LifecyclePhase;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.project.MavenProject;
-import org.apache.maven.project.MavenProjectHelper;
 import org.eclipse.tycho.p2.facade.internal.P2ApplicationLauncher;
 import org.wso2.maven.p2.utils.P2Constants;
 
 import java.net.URL;
-import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Write environment information for the current build to file.
@@ -67,7 +66,7 @@ public class ProfileGenMojo extends AbstractMojo {
      * List of features
      */
     @Parameter(required = true)
-    private ArrayList features;
+    private List features;
 
     /**
      * Flag to indicate whether to delete old profile files
