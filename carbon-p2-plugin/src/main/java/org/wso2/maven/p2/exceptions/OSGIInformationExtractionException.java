@@ -16,8 +16,15 @@
 
 package org.wso2.maven.p2.exceptions;
 
+/**
+ * OSGIInformationExtractionException is thrown when unable to extract OSGI information for a given artifact.
+ */
 public class OSGIInformationExtractionException extends Exception {
     public OSGIInformationExtractionException(String message) {
         super(message);
+    }
+
+    public OSGIInformationExtractionException(String message, Throwable cause) {
+        super(message, cause);
     }
 }

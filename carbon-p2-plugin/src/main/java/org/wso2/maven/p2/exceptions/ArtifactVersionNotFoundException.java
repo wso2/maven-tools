@@ -16,6 +16,9 @@
 
 package org.wso2.maven.p2.exceptions;
 
+/**
+ * ArtifactVersionNotFoundException is thrown when a version is found for an artifact which requires the version.
+ */
 public class ArtifactVersionNotFoundException extends Exception {
     public ArtifactVersionNotFoundException(String message) {
         super(message);

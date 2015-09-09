@@ -16,6 +16,9 @@
 
 package org.wso2.maven.p2.exceptions;
 
+/**
+ * InvalidBeanDefinitionException is thrown when an invalid string definition for an artifact is passed in to the mojo.
+ */
 public class InvalidBeanDefinitionException extends Exception {
 
     public InvalidBeanDefinitionException(String message) {
