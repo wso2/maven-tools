@@ -59,13 +59,13 @@ public class RepositoryGenMojo extends AbstractMojo {
      * Source folder
      */
     @Parameter(required = true)
-    private ArrayList featureArtifacts;
+    private List featureArtifacts;
 
     /**
      * Source folder
      */
     @Parameter
-    private ArrayList bundleArtifacts;
+    private List bundleArtifacts;
 
     /**
      * Source folder

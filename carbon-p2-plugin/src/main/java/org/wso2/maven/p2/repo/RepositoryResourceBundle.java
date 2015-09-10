@@ -38,9 +38,9 @@ public class RepositoryResourceBundle {
     private URL metadataRepository;
     private URL artifactRepository;
 
-    private ArrayList featureArtifacts;
+    private List featureArtifacts;
 
-    private ArrayList bundleArtifacts;
+    private List bundleArtifacts;
     private ArrayList categories;
     /**
      * flag indicating whether the artifacts should be published to the repository. When this flag is not set,
@@ -94,19 +94,19 @@ public class RepositoryResourceBundle {
         this.artifactRepository = artifactRepository;
     }
 
-    public ArrayList getFeatureArtifacts() {
+    public List getFeatureArtifacts() {
         return featureArtifacts;
     }
 
-    public void setFeatureArtifacts(ArrayList featureArtifacts) {
+    public void setFeatureArtifacts(List featureArtifacts) {
         this.featureArtifacts = featureArtifacts;
     }
 
-    public ArrayList getBundleArtifacts() {
+    public List getBundleArtifacts() {
         return bundleArtifacts;
     }
 
-    public void setBundleArtifacts(ArrayList bundleArtifacts) {
+    public void setBundleArtifacts(List bundleArtifacts) {
         this.bundleArtifacts = bundleArtifacts;
     }
 
