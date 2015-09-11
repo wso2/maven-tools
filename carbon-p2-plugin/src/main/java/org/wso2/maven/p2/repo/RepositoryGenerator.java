@@ -113,21 +113,18 @@ public class RepositoryGenerator extends Generator {
      * @throws IOException
      */
     private void copyProjectResourcesToOutputFolder() throws IOException {
-        List resources = project.getResources();
+        List<Resource> resources = project.getResources();
         if (resources != null) {
             getLog().info("Copying resources");
-            for (Object obj : resources) {
-                if (obj instanceof Resource) {
-                    Resource resource = (Resource) obj;
-                    try {
-                        File resourceFolder = new File(resource.getDirectory());
-                        if (resourceFolder.exists()) {
-                            getLog().info("   " + resource.getDirectory());
-                            FileManagementUtil.copyDirectory(resourceFolder, repoGenerationLocation);
-                        }
-                    } catch (IOException e) {
-                        throw new IOException("Unable copy resources: " + resource.getDirectory(), e);
+            for (Resource resource : resources) {
+                try {
+                    File resourceFolder = new File(resource.getDirectory());
+                    if (resourceFolder.exists()) {
+                        getLog().info("   " + resource.getDirectory());
+                        FileManagementUtil.copyDirectory(resourceFolder, repoGenerationLocation);
                     }
+                } catch (IOException e) {
+                    throw new IOException("Unable copy resources: " + resource.getDirectory(), e);
                 }
             }
         }
