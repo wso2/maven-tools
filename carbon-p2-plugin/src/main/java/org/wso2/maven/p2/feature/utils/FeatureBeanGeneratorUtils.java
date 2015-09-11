@@ -169,8 +169,8 @@ public class FeatureBeanGeneratorUtils {
         for (String featureString : includedFeatures) {
             IncludedFeature includedFeature = FeatureUtils.getIncludedFeature(featureString);
             if (includedFeature != null) {
-                includedFeature.setArtifactVersion(this.project.getVersion());
-                if(includedFeature.getFeatureVersion() == null || includedFeature.getFeatureVersion().equals("")) {
+                if(includedFeature.getArtifactVersion() == null || includedFeature.getArtifactVersion().equals("")) {
+                    includedFeature.setArtifactVersion(this.project.getVersion());
                     includedFeature.setFeatureVersion(BundleUtils.getOSGIVersion(this.project.getVersion()));
                 }
                 includedFeature.setArtifact(MavenUtils.getResolvedArtifact(includedFeature, this.repositorySystem,

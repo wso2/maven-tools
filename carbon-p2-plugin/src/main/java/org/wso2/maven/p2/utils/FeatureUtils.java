@@ -148,7 +148,9 @@ public class FeatureUtils {
             FeatureArtifact featureArtifact = new FeatureArtifact();
             featureArtifact.setGroupId(split[0]);
             featureArtifact.setArtifactId(split[1]);
-            if (split.length == 3) featureArtifact.setVersion(split[2]);
+            if (split.length == 3) {
+                featureArtifact.setVersion(split[2]);
+            }
             return featureArtifact;
         }
         throw new InvalidBeanDefinitionException("Insufficient artifact information provided to determine the feature: "
