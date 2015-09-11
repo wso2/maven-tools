@@ -144,7 +144,9 @@ public class FeatureBeanGeneratorUtils {
         ArrayList<ImportFeature> processedImportFeatures = new ArrayList<>();
         for (String featureString : importFeatures) {
             ImportFeature feature = FeatureUtils.getImportFeature(featureString);
-            feature.setFeatureVersion(BundleUtils.getOSGIVersion(this.project.getVersion()));
+            if(feature.getFeatureVersion() == null || feature.getFeatureVersion() == "") {
+                feature.setFeatureVersion(BundleUtils.getOSGIVersion(this.project.getVersion()));
+            }
             processedImportFeatures.add(feature);
         }
         return processedImportFeatures;
