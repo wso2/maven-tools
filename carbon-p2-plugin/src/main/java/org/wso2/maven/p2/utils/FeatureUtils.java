@@ -68,8 +68,9 @@ public class FeatureUtils {
 
         if (segments.length == 4) {
             segment = segments[3];
-            if ("optional".equals(segment))
+            if ("optional".equals(segment)) {
                 feature.setOptional(true);
+            }
         }
         return feature;
     }
