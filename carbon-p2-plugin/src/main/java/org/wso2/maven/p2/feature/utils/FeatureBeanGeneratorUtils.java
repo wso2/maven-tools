@@ -144,7 +144,7 @@ public class FeatureBeanGeneratorUtils {
         ArrayList<ImportFeature> processedImportFeatures = new ArrayList<>();
         for (String featureString : importFeatures) {
             ImportFeature feature = FeatureUtils.getImportFeature(featureString);
-            if(feature.getFeatureVersion() == null || feature.getFeatureVersion() == "") {
+            if(feature.getFeatureVersion() == null || feature.getFeatureVersion().equals("")) {
                 feature.setFeatureVersion(BundleUtils.getOSGIVersion(this.project.getVersion()));
             }
             processedImportFeatures.add(feature);
@@ -170,7 +170,9 @@ public class FeatureBeanGeneratorUtils {
             IncludedFeature includedFeature = FeatureUtils.getIncludedFeature(featureString);
             if (includedFeature != null) {
                 includedFeature.setArtifactVersion(this.project.getVersion());
-                includedFeature.setFeatureVersion(BundleUtils.getOSGIVersion(this.project.getVersion()));
+                if(includedFeature.getFeatureVersion() == null || includedFeature.getFeatureVersion().equals("")) {
+                    includedFeature.setFeatureVersion(BundleUtils.getOSGIVersion(this.project.getVersion()));
+                }
                 includedFeature.setArtifact(MavenUtils.getResolvedArtifact(includedFeature, this.repositorySystem,
                         this.remoteRepositories, this.localRepository));
                 processedIncludedFeatures.add(includedFeature);
