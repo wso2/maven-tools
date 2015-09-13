@@ -23,7 +23,6 @@ import org.apache.maven.repository.RepositorySystem;
 import org.eclipse.tycho.p2.facade.internal.P2ApplicationLauncher;
 
 import java.net.URL;
-import java.util.ArrayList;
 import java.util.List;
 
 
@@ -39,9 +38,8 @@ public class RepositoryResourceBundle {
     private URL artifactRepository;
 
     private List featureArtifacts;
-
     private List bundleArtifacts;
-    private ArrayList categories;
+    private List categories;
     /**
      * flag indicating whether the artifacts should be published to the repository. When this flag is not set,
      * the actual bytes underlying the artifact will not be copied, but the repository index will be created.
@@ -110,11 +108,11 @@ public class RepositoryResourceBundle {
         this.bundleArtifacts = bundleArtifacts;
     }
 
-    public ArrayList getCategories() {
+    public List getCategories() {
         return categories;
     }
 
-    public void setCategories(ArrayList categories) {
+    public void setCategories(List categories) {
         this.categories = categories;
     }
 

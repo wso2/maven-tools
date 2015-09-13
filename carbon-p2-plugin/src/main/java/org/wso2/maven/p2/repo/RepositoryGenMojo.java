@@ -28,7 +28,6 @@ import org.apache.maven.repository.RepositorySystem;
 import org.eclipse.tycho.p2.facade.internal.P2ApplicationLauncher;
 
 import java.net.URL;
-import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -71,7 +70,7 @@ public class RepositoryGenMojo extends AbstractMojo {
      * Source folder
      */
     @Parameter
-    private ArrayList categories;
+    private List categories;
 
     /**
      * flag indicating whether the artifacts should be published to the repository. When this flag is not set,

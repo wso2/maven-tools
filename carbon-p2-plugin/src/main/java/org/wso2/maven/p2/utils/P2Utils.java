@@ -92,7 +92,7 @@ public class P2Utils {
         return matchStr.equalsIgnoreCase("patch");
     }
 
-    public static void createCategoryFile(MavenProject project, ArrayList categories, File categoryFile)
+    public static void createCategoryFile(MavenProject project, List categories, File categoryFile)
             throws ParserConfigurationException, TransformerException, MojoExecutionException {
 
         Map featureCategories = new HashMap();
