@@ -54,9 +54,8 @@ public class FeatureGenerator extends Generator {
     private final MavenProject project;
     private final MavenProjectHelper projectHelper;
 
-    private ArrayList<Bundle> processedBundles;
-    //private ArrayList<Bundle> processedImportBundles;
-    private ArrayList<IncludedFeature> processedIncludedFeatures;
+    private List<Bundle> processedBundles;
+    private List<IncludedFeature> processedIncludedFeatures;
 
     private File rowOutputFolder;
     private File featureIdFolder;
@@ -120,10 +119,6 @@ public class FeatureGenerator extends Generator {
         getLog().info("Processing bundles");
 
         processedBundles = paramProcessor.getProcessedBundlesList();
-//      Had a confusion whether import bundles are actually needed during the code review 01/09/2015. Thus commented
-//      this.
-//        getLog().info("Processing import bundles");
-//        processedImportBundles = paramProcessor.getProcessedImportBundlesList();
         getLog().info("Processing import features");
         ArrayList<ImportFeature> processedImportFeatures = paramProcessor.getProcessedImportFeaturesList();
         getLog().info("Processing include features");
@@ -132,9 +127,6 @@ public class FeatureGenerator extends Generator {
         ArrayList<Property> processedAdviceProperties = paramProcessor.getProcessedAdviceProperties();
 
         resourceBundle.setProcessedBundles(processedBundles);
-//      Had a confusion whether import bundles are actually needed during the code review 01/09/2015. Thus commented
-//      this.
-//        resourceBundle.setProcessedImportBundles(processedImportBundles);
         resourceBundle.setProcessedImportFeatures(processedImportFeatures);
         resourceBundle.setProcessedIncludedFeatures(processedIncludedFeatures);
         resourceBundle.setProcessedAdviceProperties(processedAdviceProperties);
@@ -189,9 +181,6 @@ public class FeatureGenerator extends Generator {
      */
     private void copyAllIncludedArtifacts() throws IOException {
         copyBundles();
-//      Had a confusion whether import bundles are actually needed during the code review 01/09/2015. Thus commented
-//      this.
-//        copyImportBundles();
         copyIncludedFeatures();
     }
 
@@ -201,7 +190,7 @@ public class FeatureGenerator extends Generator {
      * @throws IOException
      */
     private void copyBundles() throws IOException {
-        ArrayList<Bundle> processedBundlesList = processedBundles;
+        List<Bundle> processedBundlesList = processedBundles;
         if (processedBundlesList != null) {
             getLog().info("Copying bundle dependencies");
             for (Bundle bundle : processedBundlesList) {
@@ -215,31 +204,6 @@ public class FeatureGenerator extends Generator {
             }
         }
     }
-
-//      Had a confusion whether import bundles are actually needed during the code review 01/09/2015. Thus commented
-//      this.
-//    /**
-//     * Copy import bundles into plugins folder.
-//     *
-//     * @throws MojoExecutionException
-//     */
-//    private void copyImportBundles() throws MojoExecutionException {
-//        ArrayList<Bundle> processedImportBundlesList = processedImportBundles;
-//        if (processedImportBundlesList != null) {
-//            getLog().info("Copying import bundle dependencies");
-//            for (Bundle bundle : processedImportBundlesList) {
-//                try {
-//                    if (!bundle.isExclude()) {
-//                        getLog().info("   " + bundle.toOSGIString());
-//                        String bundleName = bundle.getBundleSymbolicName() + "-" + bundle.getBundleVersion() + ".jar";
-//                        FileUtils.copyFile(bundle.getArtifact().getFile(), new File(pluginsFolder, bundleName));
-//                    }
-//                } catch (IOException e) {
-//                    throw new MojoExecutionException("Unable copy import dependency: " + bundle.getArtifactId(), e);
-//                }
-//            }
-//        }
-//    }
 
     /**
      * Copying includedFeatures into the output folder.

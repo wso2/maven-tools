@@ -88,12 +88,6 @@ public class FeatureGenMojo extends AbstractMojo {
     private List<String> bundles;
 
     /**
-     * Collection of import bundles
-     */
-    @Parameter
-    private List<String> importBundles;
-
-    /**
      * Collection of required Features
      */
     @Parameter
@@ -150,7 +144,6 @@ public class FeatureGenMojo extends AbstractMojo {
         resourceBundle.setPropertiesFile(propertiesFile);
         resourceBundle.setProperties(properties);
         resourceBundle.setBundles(bundles);
-        resourceBundle.setImportBundles(importBundles);
         resourceBundle.setImportFeatures(importFeatures);
         resourceBundle.setIncludedFeatures(includedFeatures);
         resourceBundle.setAdviceFile(adviceFile);

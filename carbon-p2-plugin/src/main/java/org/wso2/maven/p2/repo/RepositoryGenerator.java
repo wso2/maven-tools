@@ -36,7 +36,6 @@ import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.transform.TransformerException;
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
@@ -48,8 +47,8 @@ public class RepositoryGenerator extends Generator {
     private final RepositoryResourceBundle resourceBundle;
     private final MavenProject project;
 
-    private ArrayList<FeatureArtifact> processedFeatureArtifacts;
-    private ArrayList<Bundle> processedBundleArtifacts;
+    private List<FeatureArtifact> processedFeatureArtifacts;
+    private List<Bundle> processedBundleArtifacts;
 
     private File tempDir;
     private File sourceDir;
@@ -151,7 +150,7 @@ public class RepositoryGenerator extends Generator {
      * @throws IOException
      */
     private void unzipFeaturesToOutputFolder() throws IOException {
-        ArrayList<FeatureArtifact> processedFeatureArtifacts = this.processedFeatureArtifacts;
+        List<FeatureArtifact> processedFeatureArtifacts = this.processedFeatureArtifacts;
         for (FeatureArtifact featureArtifact : processedFeatureArtifacts) {
             try {
                 getLog().info("Extracting feature " + featureArtifact.getGroupId() + ":" +
@@ -170,7 +169,7 @@ public class RepositoryGenerator extends Generator {
      * @throws IOException
      */
     private void copyBundleArtifactsToOutputFolder() throws IOException {
-        ArrayList<Bundle> processedBundleArtifacts = this.processedBundleArtifacts;
+        List<Bundle> processedBundleArtifacts = this.processedBundleArtifacts;
         if (processedBundleArtifacts.size() > 0) {
             getLog().info("Copying bundle artifacts.");
         }

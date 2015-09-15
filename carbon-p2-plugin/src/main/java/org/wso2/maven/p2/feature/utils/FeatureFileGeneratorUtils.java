@@ -143,7 +143,7 @@ public class FeatureFileGeneratorUtils {
         List<String> p2infStringList = null;
         try (Writer writer = new OutputStreamWriter(new FileOutputStream(p2InfFile.getAbsolutePath()), DEFAULT_ENCODING);
              PrintWriter pw = new PrintWriter(writer)) {
-            ArrayList<Property> list = resourceBundle.getProcessedAdviceProperties();
+            List<Property> list = resourceBundle.getProcessedAdviceProperties();
 
             if (p2InfFile.exists()) {
                 p2infStringList = readAdviceFile(p2InfFile.getAbsolutePath());
@@ -255,12 +255,9 @@ public class FeatureFileGeneratorUtils {
 
         ArrayList<Bundle> processedMissingPlugins = getMissingPlugins(resourceBundle.getProcessedBundles(), document);
 
-//    Had a confusion whether import bundles are actually needed during the code review[01/09/2015]. Thus commented this.
-//        ArrayList<Bundle> processedMissingImportPlugins = getMissingImportItems(resourceBundle.
-//                getProcessedImportBundles(), document, "plugin");
-        ArrayList<ImportFeature> processedMissingImportFeatures = getMissingImportItems(resourceBundle.
+        List<ImportFeature> processedMissingImportFeatures = getMissingImportItems(resourceBundle.
                 getProcessedImportFeatures(), document, "feature");
-        ArrayList<IncludedFeature> includedFeatures = resourceBundle.getProcessedIncludedFeatures();
+        List<IncludedFeature> includedFeatures = resourceBundle.getProcessedIncludedFeatures();
 
         //region Updating feature.xml with missing plugins
         for (Bundle bundle : processedMissingPlugins) {
@@ -281,15 +278,6 @@ public class FeatureFileGeneratorUtils {
         } else {
             require = requireNodes.item(0);
         }
-
-//    Had a confusion whether import bundles are actually needed during the code review[01/09/2015]. Thus commented this.
-//        for (Bundle bundle : processedMissingImportPlugins) {
-//            Element plugin = document.createElement("import");
-//            plugin.setAttribute("plugin", bundle.getBundleSymbolicName());
-//            plugin.setAttribute("version", bundle.getBundleVersion());
-//            plugin.setAttribute("match", P2Utils.getMatchRule(bundle.getCompatibility()));
-//            require.appendChild(plugin);
-//        }
 
         for (ImportFeature feature : processedMissingImportFeatures) {
             if (!feature.isOptional()) {
@@ -385,7 +373,7 @@ public class FeatureFileGeneratorUtils {
      * @param document             Document representing the give manifest
      * @return ArrayList&lt;Bundle&gt; missing plugins
      */
-    private static ArrayList<Bundle> getMissingPlugins(ArrayList<Bundle> processedBundlesList, Document document) {
+    private static ArrayList<Bundle> getMissingPlugins(List<Bundle> processedBundlesList, Document document) {
         HashMap<String, Bundle> missingPlugins = new HashMap<>();
         if (processedBundlesList == null || processedBundlesList.size() == 0) {
             return new ArrayList<>();
@@ -420,7 +408,7 @@ public class FeatureFileGeneratorUtils {
      * @param <T>                      ImportFeature or ImportBundle
      * @return ArrayList<T>
      */
-    private static <T> ArrayList<T> getMissingImportItems(ArrayList<T> processedImportItemsList, Document document,
+    private static <T> ArrayList<T> getMissingImportItems(List<T> processedImportItemsList, Document document,
                                                           String itemType) {
         HashMap<String, T> missingImportItems = new HashMap<>();
         if (processedImportItemsList == null) {

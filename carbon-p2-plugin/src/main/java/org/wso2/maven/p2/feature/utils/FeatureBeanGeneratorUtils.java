@@ -77,35 +77,7 @@ public class FeatureBeanGeneratorUtils {
      */
     public ArrayList<Bundle> getProcessedBundlesList() throws InvalidBeanDefinitionException,
             OSGIInformationExtractionException, IOException, ArtifactVersionNotFoundException {
-        return getProcessedBundlesList(this.resourceBundle.getBundles(), false);
-    }
-
-//    Had a confusion whether import bundles are actually needed during the code review[01/09/2015]. Thus commented this.
-//    /**
-//     * Generates processed import bundles taken from pom.xml configuration.
-//     *
-//     * @return processed import bundles in an ArrayList&lt;Bundle&gt;
-//     * @throws MojoExecutionException
-//     */
-//    public ArrayList<Bundle> getProcessedImportBundlesList() throws MojoExecutionException {
-//        return getProcessedBundlesList(this.resourceBundle.getImportBundles(), true);
-//    }
-
-    /**
-     * Takes an object ArrayList containing bundles data passed into the plugin through plugin configuration in pom.xml
-     * and populate the content into an ArrayList<Bundle> by casting it properly.
-     *
-     * @param bundles         ArrayList of bundles
-     * @param isImportBundles set this true to get processed importBundles
-     * @return ArrayList<Bundle>
-     * @throws InvalidBeanDefinitionException
-     * @throws ArtifactVersionNotFoundException
-     * @throws IOException
-     * @throws OSGIInformationExtractionException
-     */
-    private ArrayList<Bundle> getProcessedBundlesList(List<String> bundles, boolean isImportBundles)
-            throws InvalidBeanDefinitionException, ArtifactVersionNotFoundException, IOException,
-            OSGIInformationExtractionException {
+        List<String> bundles = this.resourceBundle.getBundles();
         if (bundles == null || bundles.size() == 0) {
             return new ArrayList<>();
         }
@@ -115,15 +87,6 @@ public class FeatureBeanGeneratorUtils {
             BundleUtils.resolveVersionForBundle(bundle, this.project);
             bundle.setArtifact(MavenUtils.getResolvedArtifact(bundle, this.repositorySystem, this.remoteRepositories,
                     this.localRepository));
-
-/*            if (isImportBundles) {
-                //TODO: The code throws an null pointer exception when isExclude is true. Check with SameeraJ.
-            if (!bundle.isExclude()) {
-                bundle.setArtifact(getResolvedArtifact(bundle));
-            } else {
-                bundle.resolveOSGIInfo();
-            }
-            }*/
             processedBundles.add(bundle);
         }
         return processedBundles;

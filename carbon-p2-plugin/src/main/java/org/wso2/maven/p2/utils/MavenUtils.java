@@ -62,7 +62,7 @@ public class MavenUtils {
                                                List<ArtifactRepository> remoteRepositories,
                                                ArtifactRepository localRepository) {
         return getResolvedArtifact(feature.getGroupId(), feature.getArtifactId(), feature.getArtifactVersion(),
-                repositorySystem, remoteRepositories, localRepository, "jar");
+                repositorySystem, remoteRepositories, localRepository, "zip");
     }
 
     /**

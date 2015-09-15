@@ -27,7 +27,6 @@ import org.wso2.maven.p2.beans.IncludedFeature;
 import org.wso2.maven.p2.beans.Property;
 
 import java.io.File;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
 
@@ -49,16 +48,14 @@ public class FeatureResourceBundle {
     private File propertiesFile;
     private Properties properties;
     private List<String> bundles;
-    private List<String> importBundles;
     private List<String> importFeatures;
     private List<String> includedFeatures;
     private AdviceFile adviceFile;
 
-    private ArrayList<Bundle> processedBundles;
-    private ArrayList<Bundle> processedImportBundles;
-    private ArrayList<ImportFeature> processedImportFeatures;
-    private ArrayList<Property> processedAdviceProperties;
-    private ArrayList<IncludedFeature> processedIncludedFeatures;
+    private List<Bundle> processedBundles;
+    private List<ImportFeature> processedImportFeatures;
+    private List<Property> processedAdviceProperties;
+    private List<IncludedFeature> processedIncludedFeatures;
 
     private RepositorySystem repositorySystem;
     private MavenProject project;
@@ -164,14 +161,6 @@ public class FeatureResourceBundle {
         this.bundles = bundles;
     }
 
-    public List<String> getImportBundles() {
-        return importBundles;
-    }
-
-    public void setImportBundles(List<String> importBundles) {
-        this.importBundles = importBundles;
-    }
-
     public List<String> getImportFeatures() {
         return importFeatures;
     }
@@ -244,43 +233,35 @@ public class FeatureResourceBundle {
         return this.log;
     }
 
-    public ArrayList<Bundle> getProcessedBundles() {
+    public List<Bundle> getProcessedBundles() {
         return processedBundles;
     }
 
-    public void setProcessedBundles(ArrayList<Bundle> processedBundles) {
+    public void setProcessedBundles(List<Bundle> processedBundles) {
         this.processedBundles = processedBundles;
     }
 
-    public ArrayList<Bundle> getProcessedImportBundles() {
-        return processedImportBundles;
-    }
-
-    public void setProcessedImportBundles(ArrayList<Bundle> processedImportBundles) {
-        this.processedImportBundles = processedImportBundles;
-    }
-
-    public ArrayList<ImportFeature> getProcessedImportFeatures() {
+    public List<ImportFeature> getProcessedImportFeatures() {
         return processedImportFeatures;
     }
 
-    public void setProcessedImportFeatures(ArrayList<ImportFeature> processedImportFeatures) {
+    public void setProcessedImportFeatures(List<ImportFeature> processedImportFeatures) {
         this.processedImportFeatures = processedImportFeatures;
     }
 
-    public ArrayList<Property> getProcessedAdviceProperties() {
+    public List<Property> getProcessedAdviceProperties() {
         return processedAdviceProperties;
     }
 
-    public void setProcessedAdviceProperties(ArrayList<Property> processedAdviceProperties) {
+    public void setProcessedAdviceProperties(List<Property> processedAdviceProperties) {
         this.processedAdviceProperties = processedAdviceProperties;
     }
 
-    public ArrayList<IncludedFeature> getProcessedIncludedFeatures() {
+    public List<IncludedFeature> getProcessedIncludedFeatures() {
         return processedIncludedFeatures;
     }
 
-    public void setProcessedIncludedFeatures(ArrayList<IncludedFeature> processedIncludedFeatures) {
+    public void setProcessedIncludedFeatures(List<IncludedFeature> processedIncludedFeatures) {
         this.processedIncludedFeatures = processedIncludedFeatures;
     }
 }
