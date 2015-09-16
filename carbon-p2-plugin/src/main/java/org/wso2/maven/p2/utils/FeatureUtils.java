@@ -176,7 +176,7 @@ public class FeatureUtils {
             }
         }
 
-        if (feature.getVersion() == null) {
+        if (feature.getVersion() == null && project.getDependencyManagement() != null) {
             List<Dependency> dependencies = project.getDependencyManagement().getDependencies();
             for (Dependency dependency : dependencies) {
                 if (dependency.getGroupId().equalsIgnoreCase(feature.getGroupId()) && dependency.getArtifactId().
