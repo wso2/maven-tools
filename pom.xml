@@ -51,6 +51,7 @@
 		<module>org.wso2.maven.core</module>
 		<module>org.wso2.maven.capp</module>
 		<module>org.wso2.maven.esb</module>
+		<module>org.wso2.maven.analytics</module>
 		<module>org.wso2.maven.general</module>
 		<module>org.wso2.maven.qos</module>
 		<module>maven-sequence-plugin</module>
@@ -66,6 +67,10 @@
 		<module>wso2-esb-template-plugin</module>
 		<module>wso2-esb-messagestore-plugin</module>
 		<module>wso2-esb-messageprocessor-plugin</module>
+		<module>maven-executionplan-plugin</module>
+		<module>maven-eventstream-plugin</module>
+		<module>maven-eventpublisher-plugin</module>
+		<module>maven-eventreceiver-plugin</module>
 		<module>wso2-esb-connector-plugin</module>
 		<module>maven-proxy-plugin</module>
 		<module>maven-localentry-plugin</module>
@@ -87,7 +92,6 @@
 		<module>maven-car-plugin</module>
 		<module>maven-endpoint-plugin</module>
 		<module>maven-stratos-plugin</module>
-		<module>maven-cep-plugin</module>
 		<module>maven-brs-plugin</module>
 		<module>maven-car-deploy-plugin</module>
 		<module>maven-qos-plugin</module>
