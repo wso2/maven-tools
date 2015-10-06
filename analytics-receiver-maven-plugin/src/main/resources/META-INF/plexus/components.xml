@@ -47,7 +47,7 @@
       <configuration>
         <type>event/receiver</type>
         <includesDependencies>false</includesDependencies>
-        <extension>json</extension>
+        <extension>xml</extension>
         <addedToClasspath>false</addedToClasspath>
       </configuration>
     </component>
