@@ -44,6 +44,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.regex.Pattern;
 
+/**
+ * This class will be refactored in CARBON-15478
+ */
 public class P2Utils {
     private static String[] matchList = new String[]{"perfect", "equivalent", "compatible", "greaterOrEqual", "patch",
             "optional"};
