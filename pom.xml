@@ -529,7 +529,7 @@
 		<org.wso2.maven.capp.version>2.1.0-SNAPSHOT</org.wso2.maven.capp.version>
 		<org.wso2.maven.core.version>2.1.0-SNAPSHOT</org.wso2.maven.core.version>
 		<org.wso2.maven.esb.version>2.1.0-SNAPSHOT</org.wso2.maven.esb.version>
-		<org.wso2.maven.analytics.version>1.0.0</org.wso2.maven.analytics.version>
+		<org.wso2.maven.analytics.version>1.0.0-SNAPSHOT</org.wso2.maven.analytics.version>
 		<org.wso2.maven.utils.version>2.1.0-SNAPSHOT</org.wso2.maven.utils.version>
 		<org.wso2.maven.registry.version>2.1.0-SNAPSHOT</org.wso2.maven.registry.version>
 	</properties>

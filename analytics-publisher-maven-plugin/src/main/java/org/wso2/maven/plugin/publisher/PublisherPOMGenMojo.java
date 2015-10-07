@@ -1,18 +1,20 @@
 /*
- * Copyright (c) 2010, WSO2 Inc. (http://www.wso2.org) All Rights Reserved.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- * 
- * http://www.apache.org/licenses/LICENSE-2.0
- * 
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
+*  Copyright (c) 2005-2015, WSO2 Inc. (http://www.wso2.org) All Rights Reserved.
+*
+*  WSO2 Inc. licenses this file to you under the Apache License,
+*  Version 2.0 (the "License"); you may not use this file except
+*  in compliance with the License.
+*  You may obtain a copy of the License at
+*
+*    http://www.apache.org/licenses/LICENSE-2.0
+*
+* Unless required by applicable law or agreed to in writing,
+* software distributed under the License is distributed on an
+* "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+* KIND, either express or implied.  See the License for the
+* specific language governing permissions and limitations
+* under the License.
+*/
 
 package org.wso2.maven.plugin.publisher;
 
@@ -39,7 +41,7 @@ import org.wso2.maven.analytics.AnalyticsArtifact;
 import org.wso2.maven.analytics.utils.AnalyticsMavenUtils;
 
 /**
- * This is the Maven Mojo used for generating a pom for a sequence artifact 
+ * This is the Maven Mojo used for generating a pom for a publisher artifact 
  * from the old CApp project structure
  * 
  * @goal pom-gen
@@ -102,13 +104,13 @@ public class PublisherPOMGenMojo extends AbstractPOMGenMojo {
 	}
 	
 	public void execute() throws MojoExecutionException, MojoFailureException {
-		//Retrieving all the existing ESB Artifacts for the given Maven project 
+		//Retrieving all the existing Analytics Artifacts for the given Maven project 
 		List<AnalyticsArtifact> artifacts = retrieveArtifacts();
 		
 		//Artifact list
 		List<Artifact> mappedArtifacts=new ArrayList<Artifact>();
 		
-		//Mapping ESBArtifacts to C-App artifacts so that we can reuse the maven-sequence-plugin
+		//Mapping Analytics Artifacts to C-App artifacts so that we can reuse the analytics-publisher-maven-plugin
 		for (AnalyticsArtifact analyticsArtifact : artifacts) {
 	        Artifact artifact=new Artifact();
 	        artifact.setName(analyticsArtifact.getName());
@@ -127,11 +129,11 @@ public class PublisherPOMGenMojo extends AbstractPOMGenMojo {
 	
 	protected void copyResources(MavenProject project, File projectLocation, Artifact artifact)throws IOException {
 		ITemporaryFileTag newTag = org.wso2.developerstudio.eclipse.utils.file.FileUtils.createNewTempTag();
-		File sequenceArtifact = processTokenReplacement(artifact);
-		if (sequenceArtifact == null) {
-			sequenceArtifact = artifact.getFile();
+		File publisherArtifact = processTokenReplacement(artifact);
+		if (publisherArtifact == null) {
+			publisherArtifact = artifact.getFile();
 		}
-		FileUtils.copyFile(sequenceArtifact, new File(projectLocation, artifact.getFile().getName()));
+		FileUtils.copyFile(publisherArtifact, new File(projectLocation, artifact.getFile().getName()));
 		newTag.clearAndEnd();
 	}
 	protected void addPlugins(MavenProject artifactMavenProject, Artifact artifact) {
