@@ -36,9 +36,9 @@ import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.project.MavenProject;
 import org.codehaus.plexus.util.FileUtils;
 import org.eclipse.tycho.p2.facade.internal.P2ApplicationLauncher;
-import org.wso2.maven.p2.generate.utils.FileManagementUtil;
-import org.wso2.maven.p2.generate.utils.MavenUtils;
-import org.wso2.maven.p2.generate.utils.P2Utils;
+import org.wso2.maven.p2.utils.FileManagementUtil;
+import org.wso2.maven.p2.utils.MavenUtils;
+import org.wso2.maven.p2.utils.P2Utils;
 
 /**
  * Write environment information for the current build to file.
@@ -90,7 +90,7 @@ public class RepositoryGenMojo extends AbstractMojo {
      * @parameter
      */
     private ArrayList bundleArtifacts;
-    
+
     /**
      * Source folder
      *
@@ -134,7 +134,7 @@ public class RepositoryGenMojo extends AbstractMojo {
      * @parameter default-value="${project}"
      */
     private MavenProject project;
-    
+
     /**
      * @parameter default-value="false"
      */
@@ -182,7 +182,7 @@ public class RepositoryGenMojo extends AbstractMojo {
 	private ArrayList processedBundleArtifacts;
 
 	private File REPO_GEN_LOCATION;
-	
+
 	private File categoryDeinitionFile;
 
 	private File ARCHIVE_FILE;
@@ -267,7 +267,7 @@ public class RepositoryGenMojo extends AbstractMojo {
                 "-compress",
                 "-append");
     }
-    
+
     private void extractFeatures() throws MojoExecutionException {
         ArrayList processedFeatureArtifacts = getProcessedFeatureArtifacts();
         if (processedFeatureArtifacts == null) return;
@@ -291,8 +291,9 @@ public class RepositoryGenMojo extends AbstractMojo {
                 .hasNext();) {
             BundleArtifact bundleArtifact = (BundleArtifact) iterator.next();
             try {
-            	File file = bundleArtifact.getArtifact().getFile();
-                FileManagementUtil.copy(file, new File(pluginsDir,file.getName()));
+            	//This will be fixed in a different jira
+                //File file = bundleArtifact.getArtifact().getFile();
+                //FileManagementUtil.copy(file, new File(pluginsDir,file.getName()));
             } catch (Exception e) {
                 throw new MojoExecutionException("Error occured when extracting the Feature Artifact: " + bundleArtifact.toString(), e);
             }
@@ -316,7 +317,6 @@ public class RepositoryGenMojo extends AbstractMojo {
                 } else
                     f = (FeatureArtifact) obj;
                 f.resolveVersion(getProject());
-                f.setArtifact(MavenUtils.getResolvedArtifact(f, getArtifactFactory(), remoteRepositories, getLocalRepository(), getResolver()));
                 processedFeatureArtifacts.add(f);
         	} catch (Exception e) {
                 throw new MojoExecutionException("Error occured when processing the Feature Artifact: " + obj.toString(), e);
@@ -324,16 +324,15 @@ public class RepositoryGenMojo extends AbstractMojo {
         }
         return processedFeatureArtifacts;
     }
-    
+
     private void archiveRepo() throws MojoExecutionException {
     	if (isArchive()){
     		getLog().info("Generating repository archive...");
     		FileManagementUtil.zipFolder(REPO_GEN_LOCATION.toString(), ARCHIVE_FILE.toString());
     		getLog().info("Repository Archive: "+ARCHIVE_FILE.toString());
-    		FileManagementUtil.deleteDirectories(REPO_GEN_LOCATION);
     	}
     }
-    
+
     private ArrayList getProcessedBundleArtifacts() throws MojoExecutionException {
         if (processedBundleArtifacts != null)
             return processedBundleArtifacts;
@@ -349,8 +348,6 @@ public class RepositoryGenMojo extends AbstractMojo {
                 f = BundleArtifact.getBundleArtifact(obj.toString());
             } else
                 f = (BundleArtifact) obj;
-            f.resolveVersion(getProject());
-            f.setArtifact(MavenUtils.getResolvedArtifact(f, getArtifactFactory(), remoteRepositories, getLocalRepository(), getResolver()));
             processedBundleArtifacts.add(f);
         }
         return processedBundleArtifacts;
@@ -364,7 +361,7 @@ public class RepositoryGenMojo extends AbstractMojo {
         tempDir = new File(targetDir, "tmp." + timestampVal);
         sourceDir = new File(tempDir, "featureExtract");
         sourceDir.mkdirs();
-        
+
 		metadataRepository=(artifactRepository==null? metadataRepository:artifactRepository);
 		artifactRepository=(metadataRepository==null? artifactRepository:metadataRepository);
 		if (metadataRepository == null) {
@@ -381,16 +378,17 @@ public class RepositoryGenMojo extends AbstractMojo {
 		if (!isCategoriesAvailable()) {
 			return;
 		} else {
-			P2Utils.createCategoryFile(getProject(), categories, categoryDeinitionFile,
-			                           getArtifactFactory(), getRemoteRepositories(),
-			                           getLocalRepository(), getResolver());
+            //This will be fixed in the task related to refactoring repositorygenmojo
+//			P2Utils.createCategoryFile(getProject(), categories, categoryDeinitionFile,
+//			                           getArtifactFactory(), getRemoteRepositories(),
+//			                           getLocalRepository(), getResolver());
 			P2ApplicationLauncher launcher = this.launcher;
 			launcher.setWorkingDirectory(project.getBasedir());
 			launcher.setApplicationName("org.eclipse.equinox.p2.publisher.CategoryPublisher");
 			launcher.addArguments("-metadataRepository", metadataRepository.toString(),
 			                      "-categoryDefinition", categoryDeinitionFile.toURI().toString(),
-			                      "-categoryQualifier", 
-			                      "-compress", 
+			                      "-categoryQualifier",
+			                      "-compress",
 			                      "-append");
 
 			int result = launcher.execute(forkedProcessTimeoutInSeconds);
@@ -399,14 +397,14 @@ public class RepositoryGenMojo extends AbstractMojo {
 			}
 		}
 	}
-    
+
 	private boolean isCategoriesAvailable() {
 		if (categories == null || categories.size() == 0) {
 			return false;
 		}
 		return true;
 	}
-    
+
     private void performMopUp() {
         try {
             // we want this temp file, in order to debug some errors. since this is in target, it will

@@ -17,7 +17,7 @@ package org.wso2.maven.p2;
 
 import java.util.ArrayList;
 
-import org.wso2.maven.p2.generate.utils.P2Constants;
+import org.wso2.maven.p2.utils.P2Constants;
 
 public class EquinoxLauncher {
 
