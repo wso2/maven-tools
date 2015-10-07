@@ -16,6 +16,9 @@
 
 package org.wso2.maven.p2.exceptions;
 
+/**
+ * MissingRequiredPropertyException is thrown if required property keys are missing when generating a carbon feature.
+ */
 public class MissingRequiredPropertyException extends Exception {
 
     public MissingRequiredPropertyException(String message) {
