@@ -27,6 +27,7 @@ import org.apache.maven.artifact.resolver.ArtifactResolver;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.project.MavenProject;
 
+// This class will be refactored in CARBON-15478 and CARBON-15479
 public class Category {
 	
     /**

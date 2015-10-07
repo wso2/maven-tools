@@ -42,6 +42,7 @@ import org.wso2.maven.p2.utils.P2Utils;
 
 /**
  * Write environment information for the current build to file.
+ * REFACTORING RELATED TO THIS CLASS WILL BE CARRIED OUT IN CARBON-15478
  *
  * @goal p2-repo-gen
  * @phase package
@@ -329,7 +330,7 @@ public class RepositoryGenMojo extends AbstractMojo {
     	if (isArchive()){
     		getLog().info("Generating repository archive...");
     		FileManagementUtil.zipFolder(REPO_GEN_LOCATION.toString(), ARCHIVE_FILE.toString());
-    		getLog().info("Repository Archive: "+ARCHIVE_FILE.toString());
+    		getLog().info("Repository Archive: " + ARCHIVE_FILE.toString());
     	}
     }
 

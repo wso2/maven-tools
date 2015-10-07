@@ -19,6 +19,7 @@ package org.wso2.maven.p2;
 
 import org.apache.maven.plugin.MojoExecutionException;
 
+// This class will be refactored in CARBON-15478 and CARBON-15479
 public class BundleArtifact {
 	protected static BundleArtifact getBundleArtifact(String bundleArtifactDefinition, BundleArtifact bundleArtifact) throws MojoExecutionException{
 		String[] split = bundleArtifactDefinition.split(":");
