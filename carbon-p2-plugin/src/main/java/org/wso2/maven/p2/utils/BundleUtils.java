@@ -20,7 +20,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
- * Utility class composed of utility methods pertaining to u Bundles.
+ * Utility class composed of utility methods pertaining to a Bundles.
  */
 public class BundleUtils {
 

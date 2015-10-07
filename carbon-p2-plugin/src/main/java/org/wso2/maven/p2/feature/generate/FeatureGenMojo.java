@@ -35,7 +35,7 @@ import java.util.List;
 import java.util.Properties;
 
 /**
- * Write environment information for the current build to file.
+ * Mojo class that act as the <I>generate</I> maven goal.
  */
 @Mojo(name = "generate", defaultPhase = LifecyclePhase.PACKAGE)
 public class FeatureGenMojo extends AbstractMojo {

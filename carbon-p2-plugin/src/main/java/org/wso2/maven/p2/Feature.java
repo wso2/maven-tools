@@ -17,6 +17,7 @@ package org.wso2.maven.p2;
 
 import org.apache.maven.plugin.MojoExecutionException;
 
+//REFACTORING RELATED TO THIS CLASS WILL BE CARRIED OUT IN CARBON-15479
 public class Feature {
     
     /**

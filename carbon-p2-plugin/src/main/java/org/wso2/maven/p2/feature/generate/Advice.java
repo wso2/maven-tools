@@ -16,6 +16,9 @@
 
 package org.wso2.maven.p2.feature.generate;
 
+/**
+ * Bean class to represent an AdviceFile Entry.
+ */
 public class Advice {
     private String name;
     private String value;

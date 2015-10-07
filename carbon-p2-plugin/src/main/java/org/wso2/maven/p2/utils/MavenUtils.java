@@ -25,6 +25,9 @@ import org.wso2.maven.p2.beans.CarbonArtifact;
 
 import java.util.List;
 
+/**
+ * Util class responsible for resolving maven artifacts.
+ */
 public class MavenUtils {
 
     /**
