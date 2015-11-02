@@ -51,9 +51,14 @@
 		<module>org.wso2.maven.core</module>
 		<module>org.wso2.maven.capp</module>
 		<module>org.wso2.maven.esb</module>
+		<module>org.wso2.maven.analytics</module>
 		<module>org.wso2.maven.general</module>
 		<module>org.wso2.maven.qos</module>
 		<module>maven-sequence-plugin</module>
+		<module>analytics-execution-plan-maven-plugin</module>
+		<module>analytics-publisher-maven-plugin</module>
+		<module>analytics-receiver-maven-plugin</module>
+		<module>analytics-stream-maven-plugin</module>
 		<module>wso2-esb-endpoint-plugin</module>
 		<module>wso2-esb-inboundendpoint-plugin</module>
 		<module>wso2-esb-sequence-plugin</module>
@@ -87,7 +92,6 @@
 		<module>maven-car-plugin</module>
 		<module>maven-endpoint-plugin</module>
 		<module>maven-stratos-plugin</module>
-		<module>maven-cep-plugin</module>
 		<module>maven-brs-plugin</module>
 		<module>maven-car-deploy-plugin</module>
 		<module>maven-qos-plugin</module>
@@ -525,6 +529,7 @@
 		<org.wso2.maven.capp.version>2.1.0-SNAPSHOT</org.wso2.maven.capp.version>
 		<org.wso2.maven.core.version>2.1.0-SNAPSHOT</org.wso2.maven.core.version>
 		<org.wso2.maven.esb.version>2.1.0-SNAPSHOT</org.wso2.maven.esb.version>
+		<org.wso2.maven.analytics.version>1.0.0-SNAPSHOT</org.wso2.maven.analytics.version>
 		<org.wso2.maven.utils.version>2.1.0-SNAPSHOT</org.wso2.maven.utils.version>
 		<org.wso2.maven.registry.version>2.1.0-SNAPSHOT</org.wso2.maven.registry.version>
 	</properties>
