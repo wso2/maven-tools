@@ -17,8 +17,9 @@ package org.wso2.maven.p2;
 
 import java.util.ArrayList;
 
-import org.wso2.maven.p2.generate.utils.P2Constants;
+import org.wso2.maven.p2.utils.P2Constants;
 
+// This class will be refactored in CARBON-15478 and CARBON-15479
 public class EquinoxLauncher {
 
     /**

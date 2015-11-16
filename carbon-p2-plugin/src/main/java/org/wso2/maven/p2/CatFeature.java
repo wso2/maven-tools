@@ -21,8 +21,8 @@ import java.util.regex.Pattern;
 
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.project.MavenProject;
-import org.wso2.maven.p2.generate.feature.Bundle;
 
+// This class will be refactored in CARBON-15478 and CARBON-15479
 public class CatFeature {
     
     /**
@@ -64,7 +64,8 @@ public class CatFeature {
     	if (!versionReplaced) {
     		replaceProjectKeysInVersion(project);
     	}
-        return Bundle.getOSGIVersion(version);
+        //return Bundle.getOSGIVersion(version);
+        return "";
     }
 
     public void setVersion(String version) {

@@ -16,9 +16,8 @@
 package org.wso2.maven.p2;
 
 import org.apache.maven.plugin.MojoExecutionException;
-import org.wso2.maven.p2.generate.feature.Bundle;
-import org.wso2.maven.p2.generate.feature.ImportFeature;
 
+//REFACTORING RELATED TO THIS CLASS WILL BE CARRIED OUT IN CARBON-15479
 public class Feature {
     
     /**
@@ -50,7 +49,7 @@ public class Feature {
     }
 
     public String getVersion() {
-        return Bundle.getOSGIVersion(version);
+        return "";
     }
 
     public void setVersion(String version) {

@@ -27,6 +27,7 @@ import org.apache.maven.artifact.resolver.ArtifactResolver;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.project.MavenProject;
 
+// This class will be refactored in CARBON-15478 and CARBON-15479
 public class Category {
 	
     /**
@@ -65,17 +66,17 @@ public class Category {
 		return features;
 	}
 	
-    public ArrayList<CatFeature> getProcessedFeatures(MavenProject project, ArtifactFactory artifactFactory, List remoteRepositories, ArtifactRepository localRepository, ArtifactResolver resolver) throws MojoExecutionException{
+    public ArrayList<CatFeature> getProcessedFeatures(MavenProject project) throws MojoExecutionException{
         if (processedFeatures != null)
             return processedFeatures;
         if (features == null || features.size() == 0) return null;
         processedFeatures = new ArrayList<CatFeature>();
         Iterator<CatFeature> iter = features.iterator();
         while (iter.hasNext()) {
-            CatFeature f = (CatFeature)iter.next();       
+            CatFeature f = (CatFeature)iter.next();
             processedFeatures.add(f);
-            f.replaceProjectKeysInVersion(project); 
-        }        
+            f.replaceProjectKeysInVersion(project);
+        }
         return processedFeatures;
     }
 

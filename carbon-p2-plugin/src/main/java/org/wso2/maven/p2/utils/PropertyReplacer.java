@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.wso2.maven.p2.generate.utils;
+package org.wso2.maven.p2.utils;
 
 
 import java.util.Properties;
@@ -32,7 +32,7 @@ public class PropertyReplacer {
     public static String replaceProperties(final String origString, final Properties props) {
 
         final char[] chars = origString.toCharArray();
-        StringBuffer buffer = new StringBuffer();
+        StringBuilder buffer = new StringBuilder();
         boolean properties = false;
         State state = State.NORMAL;
         int start = 0;
@@ -58,12 +58,12 @@ public class PropertyReplacer {
                     buffer.append(key);
                     buffer.append('}');
                 }
-                 start = i + 1;
-                 state = State.NORMAL;
+                start = i + 1;
+                state = State.NORMAL;
             }
         }
         // No properties hence returning the original string
-        if (properties == false) {
+        if (!properties) {
             return origString;
         }
         // Collect the trailing characters
