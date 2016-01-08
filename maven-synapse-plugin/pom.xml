@@ -19,7 +19,7 @@
 	<groupId>org.wso2.maven</groupId>
 	<modelVersion>4.0.0</modelVersion>
 	<artifactId>maven-synapse-plugin</artifactId>
-	<version>2.2.0</version>
+	<version>2.1.0-SNAPSHOT</version>
 	<packaging>maven-plugin</packaging>
 
 	<name>Maven ESB Synapse Configuration Plugin</name>
