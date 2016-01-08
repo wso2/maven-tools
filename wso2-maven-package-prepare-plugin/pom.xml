@@ -2,16 +2,15 @@
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 
 	<parent>
-		<groupId>org.wso2.maven</groupId>
-		<artifactId>maven-tools</artifactId>
-		<version>5.0.0-SNAPSHOT</version>
-		<relativePath>../pom.xml</relativePath>
+		<groupId>org.wso2</groupId>
+		<artifactId>wso2</artifactId>
+		<version>1</version>
 	</parent>
-
+	<groupId>org.wso2.maven</groupId>
 	<modelVersion>4.0.0</modelVersion>
 	<artifactId>wso2-maven-package-prepare-plugin</artifactId>
 	<packaging>maven-plugin</packaging>
-	<version>1.0.0-SNAPSHOT</version>
+	<version>1.0.0</version>
 	<name>wso2-maven-package-prepare-plugin Maven Mojo</name>
 	<url>http://maven.apache.org</url>
 	<build>
@@ -42,67 +41,105 @@
 			</extension>
 		</extensions>
 	</build>
+	<repositories>
+		<repository>
+			<id>wso2-nexus</id>
+			<name>WSO2 internal Repository</name>
+			<url>http://maven.wso2.org/nexus/content/groups/wso2-public/</url>
+			<releases>
+				<enabled>true</enabled>
+				<updatePolicy>daily</updatePolicy>
+				<checksumPolicy>ignore</checksumPolicy>
+			</releases>
+		</repository>
+	</repositories>
 	<dependencies>
 		<dependency>
 			<groupId>org.apache.maven</groupId>
 			<artifactId>maven-project</artifactId>
+			<version>${org.apache.maven.project.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>org.codehaus.plexus</groupId>
 			<artifactId>plexus-interactivity-api</artifactId>
+			<version>${plexus.interactivity.api.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>org.mockito</groupId>
 			<artifactId>mockito-core</artifactId>
+			<version>${mockito.core.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>org.apache.maven</groupId>
 			<artifactId>maven-plugin-api</artifactId>
+			<version>${org.apache.maven.plugin.api.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>org.wso2.maven</groupId>
 			<artifactId>org.wso2.maven.registry</artifactId>
+			<version>${org.wso2.maven.registry.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>org.wso2.maven</groupId>
 			<artifactId>org.wso2.maven.esb</artifactId>
+			<version>${org.wso2.maven.esb.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>org.apache.maven.scm</groupId>
 			<artifactId>maven-scm-api</artifactId>
+			<version>${org.apache.maven.scm.api.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>org.apache.maven.scm</groupId>
 			<artifactId>maven-scm-provider-svnexe</artifactId>
+			<version>${org.apache.maven.scm.provider.svnexe.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>org.codehaus.plexus</groupId>
 			<artifactId>plexus-utils</artifactId>
+			<version>${plexus.utils.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>org.apache.maven.scm</groupId>
 			<artifactId>maven-scm-provider-svn-commons</artifactId>
+			<version>${org.apache.maven.scm.provider.svn.commons.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>junit</groupId>
 			<artifactId>junit</artifactId>
+			<version>${junit.version}</version>
 			<scope>test</scope>
 		</dependency>
 		<dependency>
 			<groupId>org.sonatype.plexus</groupId>
 			<artifactId>plexus-sec-dispatcher</artifactId>
+			<version>${plexus.sec.dispatcher.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>org.sonatype.plexus</groupId>
 			<artifactId>plexus-cipher</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>org.apache.maven</groupId>
-			<artifactId>maven-project</artifactId>
+			<version>${plexus.cipher.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>org.wso2.maven</groupId>
 			<artifactId>org.wso2.maven.core</artifactId>
+			<version>${org.wso2.maven.core.version}</version>
 		</dependency>
 	</dependencies>
+	<properties>
+		<mockito.core.version>1.9.5</mockito.core.version>
+		<org.apache.maven.project.version>2.2.1</org.apache.maven.project.version>
+		<plexus.interactivity.api.version>1.0-alpha-6</plexus.interactivity.api.version>
+		<org.apache.maven.plugin.api.version>3.0</org.apache.maven.plugin.api.version>
+		<org.wso2.maven.esb.version>2.1.0</org.wso2.maven.esb.version>
+		<org.wso2.maven.registry.version>2.1.0</org.wso2.maven.registry.version>
+		<org.apache.maven.scm.api.version>1.9.1</org.apache.maven.scm.api.version>
+		<org.apache.maven.scm.provider.svnexe.version>1.9.1</org.apache.maven.scm.provider.svnexe.version>
+		<plexus.utils.version>2.0.1</plexus.utils.version>
+		<org.apache.maven.scm.provider.svn.commons.version>1.9.1</org.apache.maven.scm.provider.svn.commons.version>
+		<junit.version>3.8.1</junit.version>
+		<plexus.sec.dispatcher.version>1.4</plexus.sec.dispatcher.version>
+		<plexus.cipher.version>1.7</plexus.cipher.version>
+		<org.wso2.maven.core.version>2.1.0</org.wso2.maven.core.version>
+	</properties>
 </project>
