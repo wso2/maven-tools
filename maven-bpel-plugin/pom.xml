@@ -236,6 +236,5 @@
 		<org.wso2.maven.utils.version>2.1.0</org.wso2.maven.utils.version>		
 		<org.wso2.maven.capp.version>2.1.0</org.wso2.maven.capp.version>
 		<org.wso2.maven.core.version>2.1.0</org.wso2.maven.core.version>
-
 	</properties>
 </project>

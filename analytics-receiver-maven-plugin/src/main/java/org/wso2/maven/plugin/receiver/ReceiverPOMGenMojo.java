@@ -36,7 +36,7 @@ import org.wso2.developerstudio.eclipse.utils.data.ITemporaryFileTag;
 import org.wso2.maven.capp.model.Artifact;
 import org.wso2.maven.capp.mojo.AbstractPOMGenMojo;
 import org.wso2.maven.capp.utils.CAppMavenUtils;
-import org.wso2.maven.capp.utils.WSO2MavenPluginConstantants;
+import org.wso2.maven.analytics.utils.WSO2MavenAnalyticsPluginConstantants;
 import org.wso2.maven.analytics.AnalyticsArtifact;
 import org.wso2.maven.analytics.utils.AnalyticsMavenUtils;
 
@@ -137,7 +137,7 @@ public class ReceiverPOMGenMojo extends AbstractPOMGenMojo {
 		newTag.clearAndEnd();
 	}
 	protected void addPlugins(MavenProject artifactMavenProject, Artifact artifact) {
-		Plugin plugin = CAppMavenUtils.createPluginEntry(artifactMavenProject,"org.wso2.maven","analytics-receiver-maven-plugin",WSO2MavenPluginConstantants.MAVEN_ANALYTICS_PLUGIN_VERSION,true);
+		Plugin plugin = CAppMavenUtils.createPluginEntry(artifactMavenProject,"org.wso2.maven","analytics-receiver-maven-plugin",WSO2MavenAnalyticsPluginConstantants.MAVEN_ANALYTICS_PLUGIN_VERSION,true);
 		Xpp3Dom configuration = (Xpp3Dom)plugin.getConfiguration();
 		//add configuration
 		Xpp3Dom aritfact = CAppMavenUtils.createConfigurationNode(configuration,"artifact");
