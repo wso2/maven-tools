@@ -12,15 +12,14 @@
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 
 	<parent>
-		<groupId>org.wso2.maven</groupId>
-		<artifactId>maven-tools</artifactId>
-		<version>5.0.0-SNAPSHOT</version>
-		<relativePath>../pom.xml</relativePath>
+		<groupId>org.wso2</groupId>
+		<artifactId>wso2</artifactId>
+		<version>1</version>
 	</parent>
-
+	<groupId>org.wso2.maven</groupId>
 	<modelVersion>4.0.0</modelVersion>
 	<artifactId>org.wso2.maven.analytics</artifactId>
-	<version>1.0.0-SNAPSHOT</version>
+	<version>1.1.0</version>
 	<packaging>jar</packaging>
 
 	<name>CApp Maven</name>
@@ -50,38 +49,58 @@
 		<dependency>
 			<groupId>org.apache.ws.commons.axiom.wso2</groupId>
 			<artifactId>axiom</artifactId>
+			<version>${org.apache.ws.commons.axiom.wso2.axiom.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>org.wso2.maven</groupId>
 			<artifactId>org.wso2.maven.utils</artifactId>
+			<version>${org.wso2.maven.utils.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>org.apache.maven</groupId>
 			<artifactId>maven-project</artifactId>
+			<version>${org.apache.maven.project.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>org.apache.maven</groupId>
 			<artifactId>maven-model</artifactId>
+			<version>${org.apache.maven.model.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>org.apache.maven</groupId>
 			<artifactId>maven-plugin-api</artifactId>
+			<version>${org.apache.maven.plugin.api.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>org.apache.maven</groupId>
 			<artifactId>maven-artifact</artifactId>
+			<version>${org.apache.maven.artifact.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>org.apache.maven</groupId>
 			<artifactId>maven-archiver</artifactId>
+			<version>${org.apache.maven.archiver.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>org.wso2.maven</groupId>
 			<artifactId>org.wso2.maven.core</artifactId>
+			<version>${org.wso2.maven.core.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>org.wso2.maven</groupId>
 			<artifactId>org.wso2.maven.capp</artifactId>
+			<version>${org.wso2.maven.capp.version}</version>
 		</dependency>
 	</dependencies>
+	<properties>
+		<org.apache.maven.project.version>2.2.1</org.apache.maven.project.version>
+		<org.apache.maven.model.version>3.0.2</org.apache.maven.model.version>
+		<org.apache.maven.plugin.api.version>3.0</org.apache.maven.plugin.api.version>
+		<org.apache.maven.artifact.version>2.0.7</org.apache.maven.artifact.version>
+		<org.apache.maven.archiver.version>2.2</org.apache.maven.archiver.version>
+		<org.apache.ws.commons.axiom.wso2.axiom.version>1.2.11.wso2v4</org.apache.ws.commons.axiom.wso2.axiom.version>	
+		<org.wso2.maven.utils.version>2.1.0</org.wso2.maven.utils.version>
+		<org.wso2.maven.core.version>2.1.0</org.wso2.maven.core.version>
+		<org.wso2.maven.capp.version>2.1.0</org.wso2.maven.capp.version>
+	</properties>
 </project>

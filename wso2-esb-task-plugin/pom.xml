@@ -10,17 +10,15 @@
 	language governing permissions and limitations under the License. -->
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
-
 	<parent>
-		<groupId>org.wso2.maven</groupId>
-		<artifactId>maven-tools</artifactId>
-		<version>5.0.0-SNAPSHOT</version>
-		<relativePath>../pom.xml</relativePath>
+		<groupId>org.wso2</groupId>
+		<artifactId>wso2</artifactId>
+		<version>1</version>
 	</parent>
-
+	<groupId>org.wso2.maven</groupId>
 	<modelVersion>4.0.0</modelVersion>
 	<artifactId>wso2-esb-task-plugin</artifactId>
-	<version>2.1.0-SNAPSHOT</version>
+	<version>2.1.0</version>
 	<packaging>maven-plugin</packaging>
 	<name>Maven Task Plugin</name>
 
@@ -49,83 +47,126 @@
 		<dependency>
 			<groupId>biz.aQute</groupId>
 			<artifactId>bndlib</artifactId>
+			<version>${bndlib.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>net.sf.kxml</groupId>
 			<artifactId>kxml2</artifactId>
+			<version>${kxml2.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>org.apache.felix</groupId>
 			<artifactId>org.apache.felix.bundlerepository</artifactId>
+			<version>${org.apache.felix.bundlerepository.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>org.apache.felix</groupId>
 			<artifactId>org.osgi.core</artifactId>
+			<version>${org.apache.felix.org.osgi.core.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>org.apache.felix</groupId>
 			<artifactId>org.osgi.service.obr</artifactId>
+			<version>${org.apache.felix.org.osgi.service.obr.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>org.apache.maven</groupId>
 			<artifactId>maven-project</artifactId>
+			<version>${org.apache.maven.project.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>org.apache.maven</groupId>
 			<artifactId>maven-model</artifactId>
+			<version>${org.apache.maven.model.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>org.apache.maven</groupId>
 			<artifactId>maven-plugin-api</artifactId>
+			<version>${org.apache.maven.plugin.api.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>org.apache.maven</groupId>
 			<artifactId>maven-artifact</artifactId>
+			<version>${org.apache.maven.artifact.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>org.apache.maven</groupId>
 			<artifactId>maven-archiver</artifactId>
+			<version>${org.apache.maven.archiver.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>org.apache.maven</groupId>
 			<artifactId>maven-artifact-manager</artifactId>
+			<version>${org.apache.maven.artifact.manager.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>org.apache.maven</groupId>
 			<artifactId>maven-settings</artifactId>
+			<version>${org.apache.maven.settings.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>org.apache.maven.shared</groupId>
 			<artifactId>maven-dependency-tree</artifactId>
+			<version>${org.apache.maven.dependency.tree.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>org.apache.maven.wagon</groupId>
 			<artifactId>wagon-provider-api</artifactId>
+			<version>${org.apache.maven.wagon.provider.api.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>org.codehaus.plexus</groupId>
 			<artifactId>plexus-container-default</artifactId>
+			<version>${plexus.container.default.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>org.codehaus.plexus</groupId>
 			<artifactId>plexus-archiver</artifactId>
+			<version>${plexus.archiver.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>org.codehaus.plexus</groupId>
 			<artifactId>plexus-utils</artifactId>
+			<version>${plexus.utils.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>org.apache.maven.shared</groupId>
 			<artifactId>maven-plugin-testing-harness</artifactId>
+			<version>${org.apache.maven.plugin.testing.harness.version}</version>
 			<scope>test</scope>
 		</dependency>
 		<dependency>
 			<groupId>org.wso2.maven</groupId>
 			<artifactId>org.wso2.maven.capp</artifactId>
+			<version>${org.wso2.maven.capp.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>org.wso2.maven</groupId>
 			<artifactId>org.wso2.maven.esb</artifactId>
+			<version>${org.wso2.maven.esb.version}</version>
 		</dependency>
 	</dependencies>
+	<properties>
+		<bndlib.version>0.0.357</bndlib.version>
+		<kxml2.version>2.2.2</kxml2.version>
+		<org.apache.felix.bundlerepository.version>1.6.2</org.apache.felix.bundlerepository.version>
+		<org.apache.felix.org.osgi.core.version>1.0.0</org.apache.felix.org.osgi.core.version>
+		<org.apache.felix.org.osgi.service.obr.version>1.0.1</org.apache.felix.org.osgi.service.obr.version>
+		<org.apache.maven.project.version>2.2.1</org.apache.maven.project.version>
+		<org.apache.maven.model.version>3.0.2</org.apache.maven.model.version>
+		<org.apache.maven.plugin.api.version>3.0</org.apache.maven.plugin.api.version>
+		<org.apache.maven.artifact.version>2.0.7</org.apache.maven.artifact.version>
+		<org.apache.maven.archiver.version>2.2</org.apache.maven.archiver.version>
+		<org.apache.maven.artifact.manager.version>2.0.7</org.apache.maven.artifact.manager.version>
+		<org.apache.maven.settings.version>2.0.7</org.apache.maven.settings.version>
+		<org.apache.maven.dependency.tree.version>1.2</org.apache.maven.dependency.tree.version>
+		<org.apache.maven.wagon.provider.api.version>1.0-beta-2</org.apache.maven.wagon.provider.api.version>
+		<plexus.container.default.version>1.5.4</plexus.container.default.version>
+		<plexus.archiver.version>1.0-alpha-7</plexus.archiver.version>
+		<plexus.utils.version>2.0.1</plexus.utils.version>
+		<org.apache.maven.plugin.testing.harness.version>1.1</org.apache.maven.plugin.testing.harness.version>
+		<org.wso2.maven.capp.version>2.1.0</org.wso2.maven.capp.version>
+		<org.wso2.maven.utils.version>2.1.0</org.wso2.maven.utils.version>
+		<org.wso2.maven.esb.version>2.1.0</org.wso2.maven.esb.version>
+	</properties>
 </project>
