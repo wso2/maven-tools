@@ -12,19 +12,39 @@
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 
 	<parent>
-		<groupId>org.wso2.maven</groupId>
-		<artifactId>maven-tools</artifactId>
-		<version>5.0.0-SNAPSHOT</version>
-		<relativePath>../pom.xml</relativePath>
+		<groupId>org.wso2</groupId>
+		<artifactId>wso2</artifactId>
+		<version>1</version>
 	</parent>
 
 	<modelVersion>4.0.0</modelVersion>
+	<groupId>org.wso2.maven</groupId>
 	<artifactId>maven-brs-plugin</artifactId>
 	<packaging>maven-plugin</packaging>
 	<version>1.1.0-SNAPSHOT</version>
 	<name>Maven BRS Plugin</name>
 
 	<description>Maven plugin which creates and builds BRS artifacts</description>
+
+        <repositories>
+		<repository>
+			<id>wso2-nexus</id>
+			<name>WSO2 internal Repository</name>
+			<url>http://maven.wso2.org/nexus/content/groups/wso2-public/</url>
+			<releases>
+				<enabled>true</enabled>
+				<updatePolicy>daily</updatePolicy>
+				<checksumPolicy>ignore</checksumPolicy>
+			</releases>
+		</repository>
+	</repositories>
+
+	<scm>
+		<url>https://github.com/wso2/maven-tools.git</url>
+		<developerConnection>scm:git:https://github.com/wso2/maven-tools.git</developerConnection>
+		<connection>scm:git:https://github.com/wso2/maven-tools.git</connection>
+		<tag>HEAD</tag>
+	</scm>
 
 	<build>
 		<extensions>
@@ -50,23 +70,40 @@
 		<dependency>
 			<groupId>org.apache.maven</groupId>
 			<artifactId>maven-plugin-api</artifactId>
+			<version>${org.apache.maven.plugin.api.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>junit</groupId>
 			<artifactId>junit</artifactId>
+			<version>${junit.version}</version>
 			<scope>test</scope>
 		</dependency>
 		<dependency>
 			<groupId>org.apache.maven</groupId>
 			<artifactId>maven-project</artifactId>
+			<version>${org.apache.maven.project.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>org.codehaus.plexus</groupId>
 			<artifactId>plexus-archiver</artifactId>
+			<version>${plexus.archiver.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>org.apache.maven</groupId>
 			<artifactId>maven-archiver</artifactId>
+			<version>${org.apache.maven.archiver.version}</version>
 		</dependency>
 	</dependencies>
+
+	<properties>
+
+		
+
+
+		<org.apache.maven.project.version>2.2.1</org.apache.maven.project.version>
+		<org.apache.maven.plugin.api.version>3.0</org.apache.maven.plugin.api.version>
+		<junit.version>3.8.1</junit.version>
+		<plexus.archiver.version>1.0-alpha-7</plexus.archiver.version>
+		<org.apache.maven.archiver.version>2.2</org.apache.maven.archiver.version>
+	</properties>
 </project>
