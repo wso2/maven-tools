@@ -15,6 +15,7 @@
 		<groupId>org.wso2.maven</groupId>
 		<artifactId>maven-esb-tools</artifactId>
 		<version>5.0.0-SNAPSHOT</version>
+		<relativePath>../pom.xml</relativePath>
 	</parent>
 	<modelVersion>4.0.0</modelVersion>
 	<artifactId>org.wso2.maven.esb</artifactId>
@@ -98,14 +99,5 @@
 			<version>${org.wso2.maven.core.version}</version>
 		</dependency>
 	</dependencies>
-	<properties>
-		<org.apache.maven.project.version>2.2.1</org.apache.maven.project.version>
-		<org.apache.maven.model.version>3.0.2</org.apache.maven.model.version>
-		<org.apache.maven.plugin.api.version>3.0</org.apache.maven.plugin.api.version>
-		<org.apache.maven.artifact.version>2.0.7</org.apache.maven.artifact.version>
-		<org.apache.maven.archiver.version>2.2</org.apache.maven.archiver.version>
-		<org.apache.ws.commons.axiom.wso2.axiom.version>1.2.11.wso2v4</org.apache.ws.commons.axiom.wso2.axiom.version>	
-		<org.wso2.maven.utils.version>2.1.0</org.wso2.maven.utils.version>
-		<org.wso2.maven.core.version>2.1.0</org.wso2.maven.core.version>
-	</properties>
+
 </project>

@@ -15,6 +15,7 @@
 		<groupId>org.wso2.maven</groupId>
 		<artifactId>maven-esb-tools</artifactId>
 		<version>5.0.0-SNAPSHOT</version>
+		<relativePath>../pom.xml</relativePath>
 	</parent>
 	<modelVersion>4.0.0</modelVersion>
 	<artifactId>wso2-esb-sequence-plugin</artifactId>
@@ -159,29 +160,7 @@
 			<version>${org.wso2.maven.esb.version}</version>
 		</dependency>
 	</dependencies>
-	<properties>
-		<bndlib.version>0.0.357</bndlib.version>
-		<kxml2.version>2.2.2</kxml2.version>
-		<org.apache.felix.bundlerepository.version>1.6.2</org.apache.felix.bundlerepository.version>
-		<org.apache.felix.org.osgi.core.version>1.0.0</org.apache.felix.org.osgi.core.version>
-		<org.apache.felix.org.osgi.service.obr.version>1.0.1</org.apache.felix.org.osgi.service.obr.version>
-		<org.apache.maven.project.version>2.2.1</org.apache.maven.project.version>
-		<org.apache.maven.model.version>3.0.2</org.apache.maven.model.version>
-		<org.apache.maven.plugin.api.version>3.0</org.apache.maven.plugin.api.version>
-		<org.apache.maven.artifact.version>2.0.7</org.apache.maven.artifact.version>
-		<org.apache.maven.archiver.version>2.2</org.apache.maven.archiver.version>
-		<org.apache.maven.artifact.manager.version>2.0.7</org.apache.maven.artifact.manager.version>
-		<org.apache.maven.settings.version>2.0.7</org.apache.maven.settings.version>
-		<org.apache.maven.dependency.tree.version>1.2</org.apache.maven.dependency.tree.version>
-		<org.apache.maven.wagon.provider.api.version>1.0-beta-2</org.apache.maven.wagon.provider.api.version>
-		<plexus.container.default.version>1.5.4</plexus.container.default.version>
-		<plexus.archiver.version>1.0-alpha-7</plexus.archiver.version>
-		<plexus.utils.version>2.0.1</plexus.utils.version>
-		<org.apache.maven.plugin.testing.harness.version>1.1</org.apache.maven.plugin.testing.harness.version>
-		<org.wso2.maven.capp.version>2.1.0</org.wso2.maven.capp.version>
-		<org.wso2.maven.utils.version>2.1.0</org.wso2.maven.utils.version>
-		<org.wso2.maven.esb.version>2.1.0</org.wso2.maven.esb.version>
-	</properties>
+
 	<profiles>
 		<profile>
 			<id>run-its</id>
