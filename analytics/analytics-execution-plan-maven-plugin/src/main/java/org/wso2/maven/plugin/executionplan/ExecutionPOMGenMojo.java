@@ -37,7 +37,6 @@ import org.wso2.developerstudio.eclipse.utils.data.ITemporaryFileTag;
 import org.wso2.maven.capp.model.Artifact;
 import org.wso2.maven.capp.mojo.AbstractPOMGenMojo;
 import org.wso2.maven.capp.utils.CAppMavenUtils;
-import org.wso2.maven.capp.utils.WSO2MavenPluginConstantants;
 import org.wso2.maven.analytics.AnalyticsArtifact;
 import org.wso2.maven.analytics.utils.AnalyticsMavenUtils;
 import org.wso2.maven.analytics.utils.WSO2MavenAnalyticsPluginConstantants;
