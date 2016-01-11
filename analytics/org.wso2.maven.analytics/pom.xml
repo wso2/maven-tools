@@ -10,41 +10,17 @@
 	language governing permissions and limitations under the License. -->
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
-		
 	<parent>
-		<groupId>org.wso2</groupId>
-		<artifactId>wso2</artifactId>
-		<version>1</version>
+		<groupId>org.wso2.maven</groupId>
+		<artifactId>maven-analytics-tools</artifactId>
+		<version>1.0.0-SNAPSHOT</version>
+		<relativePath>../pom.xml</relativePath>
 	</parent>
 	<modelVersion>4.0.0</modelVersion>
-	<groupId>org.wso2.maven</groupId>
 	<artifactId>org.wso2.maven.analytics</artifactId>
 	<version>1.0.0-SNAPSHOT</version>
 	<packaging>jar</packaging>
 	<name>CApp Maven</name>
-	<url>http://wso2.org</url>
-
-	<repositories>
-		<repository>
-			<id>wso2-nexus</id>
-			<name>WSO2 internal Repository</name>
-			<url>http://maven.wso2.org/nexus/content/groups/wso2-public/</url>
-			<releases>
-				<enabled>true</enabled>
-				<updatePolicy>daily</updatePolicy>
-				<checksumPolicy>ignore</checksumPolicy>
-			</releases>
-		</repository>
-	</repositories>
-
-	<scm>
-		<url>https://github.com/wso2/maven-tools.git</url>
-		<developerConnection>scm:git:https://github.com/wso2/maven-tools.git</developerConnection>
-		<connection>scm:git:https://github.com/wso2/maven-tools.git</connection>
-		<tag>HEAD</tag>
-	</scm>
-
-
 	<description>Library to work with CApp artifacts</description>
 	<build>
 		<extensions>
@@ -113,17 +89,4 @@
 			<version>${org.wso2.maven.capp.version}</version>
 		</dependency>
 	</dependencies>
-
-
-	<properties>
-		<org.apache.ws.commons.axiom.wso2.axiom.version>1.2.11.wso2v4</org.apache.ws.commons.axiom.wso2.axiom.version>
-		<org.apache.maven.project.version>2.2.1</org.apache.maven.project.version>
-		<org.apache.maven.model.version>3.0.2</org.apache.maven.model.version>
-		<org.apache.maven.artifact.version>2.0.7</org.apache.maven.artifact.version>
-		<org.apache.maven.plugin.api.version>3.0</org.apache.maven.plugin.api.version>
-		<org.apache.maven.archiver.version>2.2</org.apache.maven.archiver.version>
-		<org.wso2.maven.utils.version>2.1.0</org.wso2.maven.utils.version>		
-		<org.wso2.maven.capp.version>2.1.0</org.wso2.maven.capp.version>
-		<org.wso2.maven.core.version>2.1.0</org.wso2.maven.core.version>
-	</properties>
 </project>

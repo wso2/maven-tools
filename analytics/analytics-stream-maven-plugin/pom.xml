@@ -10,44 +10,19 @@
 	language governing permissions and limitations under the License. -->
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
-
 	<parent>
-		<groupId>org.wso2</groupId>
-		<artifactId>wso2</artifactId>
-		<version>1</version>
+		<groupId>org.wso2.maven</groupId>
+		<artifactId>maven-analytics-tools</artifactId>
+		<version>1.0.0-SNAPSHOT</version>
+		<relativePath>../pom.xml</relativePath>
 	</parent>
-
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>org.wso2.maven</groupId>
 	<artifactId>analytics-stream-maven-plugin</artifactId>
 	<version>1.0.0-SNAPSHOT</version>
 	<packaging>maven-plugin</packaging>
-	<url>http://wso2.org</url>
-
 	<name>Maven Analytics Stream Plugin</name>
-
 	<description>Maven plugin which creates and builds Analytics Stream artifacts</description>
-
-        <repositories>
-		<repository>
-			<id>wso2-nexus</id>
-			<name>WSO2 internal Repository</name>
-			<url>http://maven.wso2.org/nexus/content/groups/wso2-public/</url>
-			<releases>
-				<enabled>true</enabled>
-				<updatePolicy>daily</updatePolicy>
-				<checksumPolicy>ignore</checksumPolicy>
-			</releases>
-		</repository>
-	</repositories>
-
-	<scm>
-		<url>https://github.com/wso2/maven-tools.git</url>
-		<developerConnection>scm:git:https://github.com/wso2/maven-tools.git</developerConnection>
-		<connection>scm:git:https://github.com/wso2/maven-tools.git</connection>
-		<tag>HEAD</tag>
-	</scm>
-
 	<build>
 		<extensions>
 			<extension>
@@ -168,10 +143,9 @@
 		<dependency>
 			<groupId>org.wso2.maven</groupId>
 			<artifactId>org.wso2.maven.analytics</artifactId>
-			 <version>${org.wso2.maven.analytics.version}</version>
+			<version>${org.wso2.maven.analytics.version}</version>
 		</dependency>
 	</dependencies>
-
 	<profiles>
 		<profile>
 			<id>run-its</id>
@@ -209,28 +183,4 @@
 			</build>
 		</profile>
 	</profiles>
-
-        <properties>
-		<plexus.utils.version>2.0.1</plexus.utils.version>
-		<kxml2.version>2.2.2</kxml2.version>
-		<org.apache.felix.bundlerepository.version>1.6.2</org.apache.felix.bundlerepository.version>
-		<org.apache.felix.org.osgi.core.version>1.0.0</org.apache.felix.org.osgi.core.version>
-		<org.apache.felix.org.osgi.service.obr.version>1.0.1</org.apache.felix.org.osgi.service.obr.version>
-		<org.apache.maven.core.version>3.0</org.apache.maven.core.version>
-		<org.apache.maven.project.version>2.2.1</org.apache.maven.project.version>
-		<org.apache.maven.model.version>3.0.2</org.apache.maven.model.version>
-		<org.apache.maven.artifact.version>2.0.7</org.apache.maven.artifact.version>
-		<org.wso2.maven.analytics.version>1.0.0-SNAPSHOT</org.wso2.maven.analytics.version>
-		<org.apache.maven.archiver.version>2.2</org.apache.maven.archiver.version>
-		<org.apache.maven.artifact.manager.version>2.0.7</org.apache.maven.artifact.manager.version>
-		<org.apache.maven.settings.version>2.0.7</org.apache.maven.settings.version>
-		<org.apache.maven.dependency.tree.version>1.2</org.apache.maven.dependency.tree.version>
-		<org.apache.maven.wagon.provider.api.version>1.0-beta-2</org.apache.maven.wagon.provider.api.version>
-		<org.apache.maven.plugin.api.version>3.0</org.apache.maven.plugin.api.version>
-		<plexus.container.default.version>1.5.4</plexus.container.default.version>
-		<plexus.archiver.version>1.0-alpha-7</plexus.archiver.version>
-		<org.apache.maven.plugin.testing.harness.version>1.1</org.apache.maven.plugin.testing.harness.version>
-		<org.wso2.maven.capp.version>2.1.0</org.wso2.maven.capp.version>
-		<bndlib.version>0.0.357</bndlib.version>
-	</properties>
 </project>
