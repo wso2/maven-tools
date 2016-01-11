@@ -23,15 +23,8 @@
 	<version>2.1.0-SNAPSHOT</version>
 	<packaging>maven-plugin</packaging>
 	<name>Maven Axis2 Plugin</name>
-	<url>http://wso2.org</url>
 
 	<description>Maven plugin which does axis2 actions</description>
-	<scm>
-		<url>https://github.com/wso2/maven-tools.git</url>
-		<developerConnection>scm:git:https://github.com/wso2/maven-tools.git</developerConnection>
-		<connection>scm:git:https://github.com/wso2/maven-tools.git</connection>
-		<tag>HEAD</tag>
-	</scm>
 
 	<build>
 		<extensions>
@@ -147,25 +140,5 @@
 		</dependency>
 	</dependencies>
 
-	<properties>
-		<org.apache.maven.project.version>2.2.1</org.apache.maven.project.version>
-		<org.apache.maven.model.version>3.0.2</org.apache.maven.model.version>
-		<org.apache.maven.artifact.version>2.0.7</org.apache.maven.artifact.version>
-		<org.apache.maven.archiver.version>2.2</org.apache.maven.archiver.version>
-		<org.apache.maven.artifact.manager.version>2.0.7</org.apache.maven.artifact.manager.version>
-		<org.apache.maven.settings.version>2.0.7</org.apache.maven.settings.version>
-		<org.apache.maven.dependency.tree.version>1.2</org.apache.maven.dependency.tree.version>
-		<org.apache.maven.wagon.provider.api.version>1.0-beta-2</org.apache.maven.wagon.provider.api.version>
-		<org.apache.maven.plugin.api.version>3.0</org.apache.maven.plugin.api.version>
-		<plexus.container.default.version>1.5.4</plexus.container.default.version>
-		<plexus.archiver.version>1.0-alpha-7</plexus.archiver.version>
-		<org.wso2.maven.capp.version>2.1.0</org.wso2.maven.capp.version>
-		<org.apache.commons.io.version>1.3.2</org.apache.commons.io.version>
-		<org.wso2.maven.utils.version>2.1.0</org.wso2.maven.utils.version>
-		<org.apache.axis2.aar.maven.plugin.version>1.6-wso2v4</org.apache.axis2.aar.maven.plugin.version>
-		<org.apache.axis2.wsdl2code.maven.plugin.version>1.6.1-wso2v12</org.apache.axis2.wsdl2code.maven.plugin.version>
-		<org.apache.axis2.client.version>1.6.1.wso2v9</org.apache.axis2.client.version>
-		<plexus.utils.version>2.0.1</plexus.utils.version>
 
-	</properties>
 </project>

@@ -38,7 +38,7 @@ import org.wso2.maven.capp.bundleartifact.AbstractBundlePOMGenMojo;
 import org.wso2.maven.capp.model.Artifact;
 import org.wso2.maven.capp.model.BundlesDataInfo;
 import org.wso2.maven.capp.utils.CAppMavenUtils;
-import org.wso2.maven.capp.utils.WSO2MavenPluginConstantants;
+import org.wso2.maven.war.utils.WSO2MavenWarPluginConstantants;
 
 /**
  * This is the Maven Mojo used for generating a pom for a War artifact 
@@ -162,7 +162,7 @@ public class WarPOMGenMojo extends AbstractBundlePOMGenMojo {
 		                     CAppMavenUtils.createPluginEntry(artifactMavenProject,
 		                                                      "org.wso2.maven",
 		                                                      "maven-war-plugin",
-		                                                      WSO2MavenPluginConstantants.MAVEN_WAR_PLUGIN_VERSION,
+		                                                      WSO2MavenWarPluginConstantants.MAVEN_WAR_PLUGIN_VERSION,
 		                                                      true);
 //		PluginExecution executionAxis2 = new PluginExecution();
 //		executionAxis2.setId("package-war");

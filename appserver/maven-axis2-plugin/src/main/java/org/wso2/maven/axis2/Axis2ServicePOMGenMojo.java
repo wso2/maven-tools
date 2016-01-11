@@ -40,7 +40,7 @@ import org.wso2.maven.capp.model.Artifact;
 import org.wso2.maven.capp.model.BundlesDataInfo;
 import org.wso2.maven.capp.model.ProjectMapping;
 import org.wso2.maven.capp.utils.CAppMavenUtils;
-import org.wso2.maven.capp.utils.WSO2MavenPluginConstantants;
+import org.wso2.maven.axis2.utils.WSO2MavenAxis2PluginConstantants;
 import org.wso2.maven.capp.bundleartifact.AbstractBundlePOMGenMojo;
 
 /**
@@ -300,7 +300,7 @@ public class Axis2ServicePOMGenMojo extends AbstractBundlePOMGenMojo {
 	                             CAppMavenUtils.createPluginEntry(artifactMavenProject,
 	                                                              "org.wso2.maven",
 	                                                              "maven-axis2-plugin",
-	                                                              WSO2MavenPluginConstantants.MAVEN_AXIS2_PLUGIN_VERSION,
+	                                                              WSO2MavenAxis2PluginConstantants.MAVEN_AXIS2_PLUGIN_VERSION,
 	                                                              true);
 	        PluginExecution executionAxis2 = new PluginExecution();
 	        executionAxis2.setId("aar");
@@ -316,7 +316,7 @@ public class Axis2ServicePOMGenMojo extends AbstractBundlePOMGenMojo {
 	                             CAppMavenUtils.createPluginEntry(artifactMavenProject,
 	                                                              "org.wso2.maven",
 	                                                              "maven-axis2-plugin",
-	                                                              WSO2MavenPluginConstantants.MAVEN_AXIS2_PLUGIN_VERSION,
+	                                                              WSO2MavenAxis2PluginConstantants.MAVEN_AXIS2_PLUGIN_VERSION,
 	                                                              true);
 	        PluginExecution executionAxis2 = new PluginExecution();
 	        executionAxis2.setId("package-aar");

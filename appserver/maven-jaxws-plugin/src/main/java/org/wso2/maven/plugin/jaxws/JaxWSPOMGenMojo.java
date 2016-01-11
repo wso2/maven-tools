@@ -36,7 +36,7 @@ import org.wso2.maven.capp.model.Artifact;
 import org.wso2.maven.capp.mojo.AbstractPOMGenMojo;
 import org.wso2.maven.capp.utils.CAppMavenUtils;
 import org.wso2.maven.capp.utils.CAppUtils;
-import org.wso2.maven.capp.utils.WSO2MavenPluginConstantants;
+import org.wso2.maven.plugin.jaxws.utils.WSO2MavenJaxWSPluginConstantants;
 import org.wso2.maven.capp.model.BundlesDataInfo;
 import org.wso2.maven.capp.model.ProjectMapping;
 import org.wso2.maven.core.utils.MavenUtils;
@@ -166,7 +166,7 @@ public class JaxWSPOMGenMojo extends AbstractPOMGenMojo {
 	}
 	protected void addPlugins(MavenProject artifactMavenProject, Artifact artifact) {
 		if (artifact.getFile().getPath().endsWith(".jar")) {
-			Plugin plugin = CAppMavenUtils.createPluginEntry(artifactMavenProject,"org.wso2.maven","maven-jaxws-plugin",WSO2MavenPluginConstantants.MAVEN_JAXWS_PLUGIN_VERSION,true);
+			Plugin plugin = CAppMavenUtils.createPluginEntry(artifactMavenProject,"org.wso2.maven","maven-jaxws-plugin",WSO2MavenJaxWSPluginConstantants.MAVEN_JAXWS_PLUGIN_VERSION,true);
 		//	Plugin plugin = CAppMavenUtils.createPluginEntry(artifactMavenProject,"org.apache.maven.plugins","maven-jar-plugin","2.3.1",true);
 			Xpp3Dom configuration = (Xpp3Dom)plugin.getConfiguration();
 			//add configuration
