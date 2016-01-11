@@ -1,10 +1,10 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 	<parent>
-		<groupId>org.wso2</groupId>
-		<artifactId>wso2</artifactId>
-		<version>1</version>
-	</parent>
+		<groupId>org.wso2.maven</groupId>
+		<artifactId>maven-common-tools</artifactId>
+		<version>1.0.0-SNAPSHOT</version>
+  	</parent>
 	<groupId>org.wso2.maven</groupId>
 	<modelVersion>4.0.0</modelVersion>
 	<artifactId>wso2-release-pre-prepare-plugin</artifactId>
@@ -125,20 +125,4 @@
 			</releases>
 		</repository>
 	</repositories>
-<properties>
-		<org.apache.maven.project.version>2.2.1</org.apache.maven.project.version>
-		<org.apache.maven.plugin.api.version>3.0</org.apache.maven.plugin.api.version>
-		<org.apache.maven.scm.api.version>1.9.1</org.apache.maven.scm.api.version>
-		<org.apache.maven.scm.provider.svnexe.version>1.9.1</org.apache.maven.scm.provider.svnexe.version>
-		<org.apache.maven.scm.provider.gitexe.version>1.9.1</org.apache.maven.scm.provider.gitexe.version>
-		<org.apache.maven.scm.provider.svn.commons.version>1.9.1</org.apache.maven.scm.provider.svn.commons.version>
-		<junit.version>3.8.1</junit.version>
-		<plexus.utils.version>2.0.1</plexus.utils.version>
-		<plexus.interactivity.api.version>1.0-alpha-6</plexus.interactivity.api.version>
-		<mockito.core.version>1.9.5</mockito.core.version>
-		<plexus.sec.dispatcher.version>1.4</plexus.sec.dispatcher.version>
-		<plexus.cipher.version>1.7</plexus.cipher.version>
-		<org.wso2.maven.esb.version>2.1.0</org.wso2.maven.esb.version>
-		<org.wso2.maven.registry.version>2.1.0</org.wso2.maven.registry.version>
-	</properties>
 </project>
