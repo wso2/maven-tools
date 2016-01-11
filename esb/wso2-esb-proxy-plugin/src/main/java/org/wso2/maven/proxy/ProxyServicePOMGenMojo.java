@@ -34,7 +34,7 @@ import org.wso2.developerstudio.eclipse.utils.data.ITemporaryFileTag;
 import org.wso2.maven.capp.model.Artifact;
 import org.wso2.maven.capp.mojo.AbstractPOMGenMojo;
 import org.wso2.maven.capp.utils.CAppMavenUtils;
-import org.wso2.maven.capp.utils.WSO2MavenPluginConstantants;
+import org.wso2.maven.esb.utils.WSO2MavenESBPluginConstantants;
 import org.wso2.maven.esb.ESBArtifact;
 import org.wso2.maven.esb.utils.ESBMavenUtils;
 
@@ -138,7 +138,7 @@ public class ProxyServicePOMGenMojo extends AbstractPOMGenMojo {
 	}
 	
 	protected void addPlugins(MavenProject artifactMavenProject, Artifact artifact) {
-		Plugin plugin = CAppMavenUtils.createPluginEntry(artifactMavenProject,"org.wso2.maven","maven-proxy-plugin",WSO2MavenPluginConstantants.MAVEN_PROXY_PLUGIN_VERSION,true);
+		Plugin plugin = CAppMavenUtils.createPluginEntry(artifactMavenProject,"org.wso2.maven","maven-proxy-plugin",WSO2MavenESBPluginConstantants.MAVEN_PROXY_PLUGIN_VERSION,true);
 		Xpp3Dom configuration = (Xpp3Dom)plugin.getConfiguration();
 		//add configuration
 		Xpp3Dom aritfact = CAppMavenUtils.createConfigurationNode(configuration,"artifact");
