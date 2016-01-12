@@ -31,7 +31,7 @@ import org.codehaus.plexus.util.xml.Xpp3Dom;
 import org.wso2.maven.capp.model.Artifact;
 import org.wso2.maven.capp.mojo.AbstractPOMGenMojo;
 import org.wso2.maven.capp.utils.CAppMavenUtils;
-import org.wso2.maven.capp.utils.WSO2MavenPluginConstantants;
+import org.wso2.maven.plugin.dataservice.utils.WSO2MavenDSSPluginConstantants;
 import org.wso2.maven.plugin.dataservice.utils.DSSMavenUtils;
 
 /**
@@ -129,7 +129,7 @@ public class DataServicePOMGenMojo extends AbstractPOMGenMojo {
 			Artifact artifact) {
 		Plugin plugin = CAppMavenUtils.createPluginEntry(artifactMavenProject,
 				"org.wso2.maven", "maven-dataservice-plugin",
-				WSO2MavenPluginConstantants.MAVEN_DATA_SERVICE_PLUGIN_VERSION,
+				WSO2MavenDSSPluginConstantants.MAVEN_DATA_SERVICE_PLUGIN_VERSION,
 				true);
 		Xpp3Dom configuration = (Xpp3Dom) plugin.getConfiguration();
 		// add configuration
