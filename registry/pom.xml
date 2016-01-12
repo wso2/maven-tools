@@ -37,11 +37,11 @@
 		<tag>HEAD</tag>
 	</scm>
 	<modules>
+		<module>org.wso2.maven.general</module>
 		<module>wso2-general-project-plugin</module>
 		<module>maven-registry-filter-plugin</module>
 		<module>maven-registry-handler-plugin</module>
 		<module>maven-registry-plugin</module>
-		<module>org.wso2.maven.general</module>
 	</modules>
 	<build>
 		<extensions>
@@ -87,14 +87,16 @@
 		<plexus.archiver.version>1.0-alpha-7</plexus.archiver.version>
 		<plexus.utils.version>2.0.1</plexus.utils.version>
 		<org.apache.maven.plugin.testing.harness.version>1.1</org.apache.maven.plugin.testing.harness.version>
-		<org.wso2.maven.capp.version>2.1.0</org.wso2.maven.capp.version>
+		<org.wso2.maven.capp.version>2.1.0-SNAPSHOT</org.wso2.maven.capp.version>
 		<org.wso2.maven.utils.version>2.1.0</org.wso2.maven.utils.version>
 		<bndlib.version>0.0.357</bndlib.version>
 		<kxml2.version>2.2.2</kxml2.version>
 		<org.apache.felix.bundlerepository.version>1.6.2</org.apache.felix.bundlerepository.version>
 		<org.apache.felix.org.osgi.core.version>1.0.0</org.apache.felix.org.osgi.core.version>
 		<org.apache.felix.org.osgi.service.obr.version>1.0.1</org.apache.felix.org.osgi.service.obr.version>
-		<org.wso2.maven.registry.version>2.1.0</org.wso2.maven.registry.version>
+		<org.wso2.maven.registry.version>2.1.0-SNAPSHOT</org.wso2.maven.registry.version>
 		<org.apache.felix.maven.bundle.plugin.version>2.3.7</org.apache.felix.maven.bundle.plugin.version>
+		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 	</properties>
 </project>
+	

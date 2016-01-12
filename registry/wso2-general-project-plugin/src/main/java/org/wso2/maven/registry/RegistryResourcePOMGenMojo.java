@@ -25,7 +25,7 @@ import org.codehaus.plexus.util.xml.Xpp3Dom;
 import org.wso2.developerstudio.eclipse.utils.file.FileUtils;
 import org.wso2.maven.capp.model.Artifact;
 import org.wso2.maven.capp.mojo.AbstractPOMGenMojo;
-import org.wso2.maven.capp.utils.WSO2MavenPluginConstantants;
+import org.wso2.maven.registry.utils.WSO2MavenRegistryPluginConstantants;
 import org.wso2.maven.core.utils.MavenUtils;
 import org.wso2.maven.registry.beans.RegistryCollection;
 import org.wso2.maven.registry.beans.RegistryElement;
@@ -264,7 +264,7 @@ public class RegistryResourcePOMGenMojo extends AbstractPOMGenMojo {
 	}
 	
 	protected void addPlugins(MavenProject artifactMavenProject, Artifact artifact) {
-		Plugin plugin = MavenUtils.createPluginEntry(artifactMavenProject,"org.wso2.maven","maven-registry-plugin",WSO2MavenPluginConstantants.MAVEN_REGISTRY_PLUGIN_VERSION,true);
+		Plugin plugin = MavenUtils.createPluginEntry(artifactMavenProject,"org.wso2.maven","maven-registry-plugin",WSO2MavenRegistryPluginConstantants.MAVEN_REGISTRY_PLUGIN_VERSION,true);
 		Xpp3Dom configuration = (Xpp3Dom)plugin.getConfiguration();
 		//add configuration
 		Xpp3Dom aritfact = MavenUtils.createConfigurationNode(configuration,"artifact");
