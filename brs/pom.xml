@@ -18,9 +18,7 @@
 	<version>1.0.0-SNAPSHOT</version>
 	<name>Maven BRS Tool Aggregator Pom</name>
 	<url>http://wso2.org</url>
-	<modules>
-		<module>maven-brs-plugin</module>
-	</modules>
+
 	<repositories>
 		<repository>
 			<id>wso2-nexus</id>
@@ -33,12 +31,18 @@
 			</releases>
 		</repository>
 	</repositories>
+
 	<scm>
 		<url>https://github.com/wso2/maven-tools.git</url>
 		<developerConnection>scm:git:https://github.com/wso2/maven-tools.git</developerConnection>
 		<connection>scm:git:https://github.com/wso2/maven-tools.git</connection>
 		<tag>HEAD</tag>
 	</scm>
+
+	<modules>
+		<module>maven-brs-plugin</module>
+	</modules>
+
 	<build>
 		<extensions>
 			<extension>
