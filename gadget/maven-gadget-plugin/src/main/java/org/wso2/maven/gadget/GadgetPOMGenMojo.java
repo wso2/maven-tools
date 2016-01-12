@@ -27,7 +27,7 @@ import org.wso2.developerstudio.eclipse.utils.file.FileUtils;
 import org.wso2.maven.capp.model.Artifact;
 import org.wso2.maven.capp.mojo.AbstractPOMGenMojo;
 import org.wso2.maven.capp.utils.CAppMavenUtils;
-import org.wso2.maven.capp.utils.WSO2MavenPluginConstantants;
+import org.wso2.maven.gadget.utils.WSO2MavenGadgetPluginConstantants;
 
 /**
  * This is the Maven Mojo used for generating a pom for a gadget artifact
@@ -94,7 +94,7 @@ public class GadgetPOMGenMojo extends AbstractPOMGenMojo {
 		FileUtils.copyDirectory(gadgetArtifact, new File(projectLocation, gadgetArtifact.getName()));
 	}
 	protected void addPlugins(MavenProject artifactMavenProject, Artifact artifact) {
-		Plugin plugin = CAppMavenUtils.createPluginEntry(artifactMavenProject,"org.wso2.maven","maven-gadget-plugin",WSO2MavenPluginConstantants.MAVEN_GADGET_PLUGIN_VERSION,true);
+		Plugin plugin = CAppMavenUtils.createPluginEntry(artifactMavenProject,"org.wso2.maven","maven-gadget-plugin",WSO2MavenGadgetPluginConstantants.MAVEN_GADGET_PLUGIN_VERSION,true);
 		Xpp3Dom configuration = (Xpp3Dom)plugin.getConfiguration();
 		//add configuration
 		Xpp3Dom aritfact = CAppMavenUtils.createConfigurationNode(configuration,"artifact");
