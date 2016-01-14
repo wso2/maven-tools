@@ -87,10 +87,5 @@
 			<artifactId>org.wso2.maven.core</artifactId>
 			<version>${org.wso2.maven.core.version}</version>
 		</dependency>
-		<dependency>
-			<groupId>org.wso2.maven</groupId>
-			<artifactId>org.wso2.maven.registry</artifactId>
-			<version>${org.wso2.maven.registry.version}</version>
-		</dependency>
 	</dependencies>
 </project>
