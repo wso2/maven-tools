@@ -14,7 +14,7 @@
 	<artifactId>maven-appserver-tools</artifactId>
 	<groupId>org.wso2.maven</groupId>
 	<packaging>pom</packaging>
-	<version>5.0.0-SNAPSHOT</version>
+	<version>5.1.0-SNAPSHOT</version>
 	<name>Maven Tool Aggregator Pom</name>
 	<url>http://wso2.org</url>
 

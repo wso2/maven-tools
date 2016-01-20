@@ -15,7 +15,7 @@
 	<groupId>org.wso2.maven</groupId>
 	<artifactId>maven-bpel-tools</artifactId>
 	<packaging>pom</packaging>
-	<version>2.1.0-SNAPSHOT</version>
+	<version>5.1.0-SNAPSHOT</version>
 	<url>http://wso2.org</url>
 
 	<name>Maven BPEL Aggregator POM</name>
