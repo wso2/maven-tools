@@ -73,6 +73,9 @@
 	</build>
 	<properties>
         	<commons-io.version>2.4</commons-io.version>
+		<commons.logging.version>1.1.1</commons.logging.version>
+		<commons.codec.wso2.commons.codec.version>1.4.0.wso2v1</commons.codec.wso2.commons.codec.version>
+		<commons.httpclient.version>3.1</commons.httpclient.version>
         	<mojo-executor.version>2.2.0</mojo-executor.version>
 		<org.apache.maven.core.version>3.0</org.apache.maven.core.version>
 		<org.apache.maven.project.version>2.2.1</org.apache.maven.project.version>
@@ -109,18 +112,15 @@
 		<plexus.container.default.version>1.5.4</plexus.container.default.version>
 		<plexus.archiver.version>1.0-alpha-7</plexus.archiver.version>
 		<plexus.utils.version>2.0.1</plexus.utils.version>
-		<bndlib.version>0.0.357</bndlib.version>
-		<kxml2.version>2.2.2</kxml2.version>
 		<plexus.interactivity.api.version>1.0-alpha-6</plexus.interactivity.api.version>
-		<mockito.core.version>1.9.5</mockito.core.version>
 		<plexus.sec.dispatcher.version>1.4</plexus.sec.dispatcher.version>
 		<plexus.cipher.version>1.7</plexus.cipher.version>
-		<commons.logging.version>1.1.1</commons.logging.version>
+		<bndlib.version>0.0.357</bndlib.version>
+		<kxml2.version>2.2.2</kxml2.version>
+		<mockito.core.version>1.9.5</mockito.core.version>
 		<log4j.version>1.2.14</log4j.version>
-		<commons.httpclient.version>3.1</commons.httpclient.version>
 		<wsdl4j.version>1.6.2.wso2v2</wsdl4j.version>
 		<org.wso2.securevault.version>1.0.0</org.wso2.securevault.version>
-		<commons.codec.wso2.commons.codec.version>1.4.0.wso2v1</commons.codec.wso2.commons.codec.version>
 		<org.wso2.carbon.authenticator.stub.version>3.2.0</org.wso2.carbon.authenticator.stub.version>
 		<org.wso2.carbon.roles.mgt.stub.version>3.2.0</org.wso2.carbon.roles.mgt.stub.version>
 		<org.wso2.maven.synapse.plugin.version>2.1.0</org.wso2.maven.synapse.plugin.version>
@@ -128,7 +128,6 @@
 		<org.wso2.maven.capp.version>2.2.0-SNAPSHOT</org.wso2.maven.capp.version>
 		<org.wso2.maven.core.version>2.2.0-SNAPSHOT</org.wso2.maven.core.version>
 		<org.wso2.maven.esb.version>2.1.0</org.wso2.maven.esb.version>
-		<org.wso2.maven.analytics.version>1.0.0</org.wso2.maven.analytics.version>
 		<org.wso2.maven.utils.version>2.2.0-SNAPSHOT</org.wso2.maven.utils.version>
 		<org.wso2.maven.registry.version>2.1.0</org.wso2.maven.registry.version>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
