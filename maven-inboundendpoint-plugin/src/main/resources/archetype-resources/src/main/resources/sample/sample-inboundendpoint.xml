@@ -1,8 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<inboundEndpoint name="${artifactId}" onError="Sequence"
-	protocol="http" sequence="Sequence" suspend="false"
-	xmlns="http://ws.apache.org/ns/synapse">
-	<parameters>
-		<parameter name="api.dispatching.enabled">false</parameter>
-	</parameters>
-</inboundEndpoint>

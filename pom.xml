@@ -11,20 +11,13 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 
-	<parent>
-		<groupId>org.wso2</groupId>
-		<artifactId>wso2</artifactId>
-		<version>1</version>
-	</parent>
-
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>org.wso2.maven</groupId>
-	<artifactId>maven-tools</artifactId>
+	<artifactId>maven-common-tools</artifactId>
 	<packaging>pom</packaging>
-	<version>5.0.0-SNAPSHOT</version>
-	<name>Maven Tool Aggregator Pom</name>
+	<version>5.1.0-SNAPSHOT</version>
+	<name>Maven Commons Tools Aggregator Pom</name>
 	<url>http://wso2.org</url>
-
 	<repositories>
 		<repository>
 			<id>wso2-nexus</id>
@@ -37,418 +30,25 @@
 			</releases>
 		</repository>
 	</repositories>
-
 	<scm>
 		<url>https://github.com/wso2/maven-tools.git</url>
 		<developerConnection>scm:git:https://github.com/wso2/maven-tools.git</developerConnection>
 		<connection>scm:git:https://github.com/wso2/maven-tools.git</connection>
 		<tag>HEAD</tag>
 	</scm>
-
 	<modules>
-		<module>carbon-p2-plugin</module>
+		<module>wso2-release-pre-prepare-plugin</module>
+		<module>wso2-release-helper-plugin</module>
+		<module>wso2-maven-package-prepare-plugin</module>
 		<module>org.wso2.maven.utils</module>
 		<module>org.wso2.maven.core</module>
 		<module>org.wso2.maven.capp</module>
-		<module>org.wso2.maven.esb</module>
-		<module>org.wso2.maven.analytics</module>
-		<module>org.wso2.maven.general</module>
-		<module>org.wso2.maven.qos</module>
-		<module>maven-sequence-plugin</module>
-		<module>analytics-execution-plan-maven-plugin</module>
-		<module>analytics-publisher-maven-plugin</module>
-		<module>analytics-receiver-maven-plugin</module>
-		<module>analytics-stream-maven-plugin</module>
-		<module>wso2-esb-endpoint-plugin</module>
-		<module>wso2-esb-inboundendpoint-plugin</module>
-		<module>wso2-esb-sequence-plugin</module>
-		<module>wso2-esb-proxy-plugin</module>
-		<module>wso2-esb-localentry-plugin</module>
-		<module>wso2-general-project-plugin</module>
-		<module>wso2-esb-synapse-plugin</module>
-		<module>wso2-esb-api-plugin</module>
-		<module>wso2-esb-task-plugin</module>
-		<module>wso2-esb-template-plugin</module>
-		<module>wso2-esb-messagestore-plugin</module>
-		<module>wso2-esb-messageprocessor-plugin</module>
-		<module>wso2-esb-connector-plugin</module>
-		<module>maven-proxy-plugin</module>
-		<module>maven-localentry-plugin</module>
-		<module>maven-registry-plugin</module>
-		<module>maven-synapse-mediator-plugin</module>
-		<module>maven-registry-handler-plugin</module>
-		<module>maven-registry-filter-plugin</module>
 		<module>maven-library-plugin</module>
-		<module>maven-axis2-plugin</module>
-		<module>maven-war-plugin</module>
-		<module>maven-dataservice-plugin</module>
-		<module>maven-bpel-plugin</module>
-		<module>maven-ds-validator-plugin</module>
-		<module>maven-gadget-plugin</module>
-		<module>maven-inboundendpoint-plugin</module>
-		<module>maven-jaxws-plugin</module>
-		<module>maven-synapse-plugin</module>
-		<module>maven-carbon-ui-plugin</module>
-		<module>maven-car-plugin</module>
-		<module>maven-endpoint-plugin</module>
-		<module>maven-stratos-plugin</module>
-		<module>maven-brs-plugin</module>
 		<module>maven-car-deploy-plugin</module>
-		<module>maven-qos-plugin</module>
-		<module>wso2-maven-package-prepare-plugin</module>
-		<module>wso2-release-pre-prepare-plugin</module>
-        <module>wso2-release-helper-plugin</module>
-    </modules>
-
-	<dependencyManagement>
-		<dependencies>
-			<!-- org.apache dependencies -->
-			<dependency>
-				<groupId>org.apache.maven</groupId>
-				<artifactId>maven-core</artifactId>
-				<version>${org.apache.maven.core.version}</version>
-			</dependency>
-			<dependency>
-				<groupId>org.apache.maven</groupId>
-				<artifactId>maven-project</artifactId>
-				<version>${org.apache.maven.project.version}</version>
-			</dependency>
-			<dependency>
-				<groupId>org.apache.maven</groupId>
-				<artifactId>maven-model</artifactId>
-				<version>${org.apache.maven.model.version}</version>
-			</dependency>
-			<dependency>
-				<groupId>org.apache.maven</groupId>
-				<artifactId>maven-artifact</artifactId>
-				<version>${org.apache.maven.artifact.version}</version>
-			</dependency>
-			<dependency>
-				<groupId>org.apache.maven</groupId>
-				<artifactId>maven-archiver</artifactId>
-				<version>${org.apache.maven.archiver.version}</version>
-			</dependency>
-			<dependency>
-				<groupId>org.apache.maven</groupId>
-				<artifactId>maven-artifact-manager</artifactId>
-				<version>${org.apache.maven.artifact.manager.version}</version>
-			</dependency>
-			<dependency>
-				<groupId>org.apache.maven</groupId>
-				<artifactId>maven-settings</artifactId>
-				<version>${org.apache.maven.settings.version}</version>
-			</dependency>
-			<dependency>
-				<groupId>org.apache.maven.shared</groupId>
-				<artifactId>maven-dependency-tree</artifactId>
-				<version>${org.apache.maven.dependency.tree.version}</version>
-			</dependency>
-			<dependency>
-				<groupId>org.apache.maven.shared</groupId>
-				<artifactId>maven-plugin-testing-harness</artifactId>
-				<version>${org.apache.maven.plugin.testing.harness.version}</version>
-				<scope>test</scope>
-			</dependency>
-			<dependency>
-				<groupId>org.apache.maven.wagon</groupId>
-				<artifactId>wagon-provider-api</artifactId>
-				<version>${org.apache.maven.wagon.provider.api.version}</version>
-			</dependency>
-			<dependency>
-				<groupId>org.apache.axis2</groupId>
-				<artifactId>axis2-aar-maven-plugin</artifactId>
-				<version>${org.apache.axis2.aar.maven.plugin.version}</version>
-			</dependency>
-			<dependency>
-				<groupId>org.apache.axis2</groupId>
-				<artifactId>axis2-wsdl2code-maven-plugin</artifactId>
-				<version>${org.apache.axis2.wsdl2code.maven.plugin.version}</version>
-			</dependency>
-			<dependency>
-				<groupId>org.apache.axis2.wso2</groupId>
-				<artifactId>axis2-client</artifactId>
-				<version>${org.apache.axis2.client.version}</version>
-			</dependency>
-			<dependency>
-				<groupId>org.apache.felix</groupId>
-				<artifactId>org.apache.felix.bundlerepository</artifactId>
-				<version>${org.apache.felix.bundlerepository.version}</version>
-			</dependency>
-			<dependency>
-				<groupId>org.apache.felix</groupId>
-				<artifactId>org.osgi.core</artifactId>
-				<version>${org.apache.felix.org.osgi.core.version}</version>
-			</dependency>
-			<dependency>
-				<groupId>org.apache.felix</groupId>
-				<artifactId>org.osgi.service.obr</artifactId>
-				<version>${org.apache.felix.org.osgi.service.obr.version}</version>
-			</dependency>
-			<dependency>
-				<groupId>org.apache.ws.commons.axiom.wso2</groupId>
-				<artifactId>axiom</artifactId>
-				<version>${org.apache.ws.commons.axiom.wso2.axiom.version}</version>
-			</dependency>
-			<dependency>
-				<groupId>org.apache.axis2.wso2</groupId>
-				<artifactId>axis2</artifactId>
-				<version>${org.apache.axis2.wso2.axis2.version}</version>
-			</dependency>
-			<dependency>
-				<groupId>org.apache.geronimo.specs.wso2</groupId>
-				<artifactId>geronimo-stax-api_1.0_spec</artifactId>
-				<version>${org.apache.geronimo.specs.wso2.geronimo.stax.api_1.0_spec.version}</version>
-			</dependency>
-			<dependency>
-				<groupId>org.apache.neethi.wso2</groupId>
-				<artifactId>neethi</artifactId>
-				<version>${org.apache.neethi.wso2.neethi.version}</version>
-				<exclusions>
-					<exclusion>
-						<groupId>org.apache.neethi</groupId>
-						<artifactId>neethi</artifactId>
-					</exclusion>
-				</exclusions>
-			</dependency>
-			<dependency>
-				<groupId>org.apache.ws.commons.schema.wso2</groupId>
-				<artifactId>XmlSchema</artifactId>
-				<version>${org.apache.ws.commons.schema.wso2.xmlschema.version}</version>
-			</dependency>
-			<dependency>
-				<groupId>org.apache.httpcomponents</groupId>
-				<artifactId>httpcore</artifactId>
-				<version>${org.apache.httpcomponents.httpcore.version}</version>
-				<exclusions>
-					<exclusion>
-						<groupId>*</groupId>
-						<artifactId>*</artifactId>
-					</exclusion>
-				</exclusions>
-			</dependency>
-			<dependency>
-				<groupId>org.apache.felix</groupId>
-				<artifactId>maven-bundle-plugin</artifactId>
-				<version>${org.apache.felix.maven.bundle.plugin.version}</version>
-			</dependency>
-			<dependency>
-				<groupId>org.apache.maven</groupId>
-				<artifactId>maven-plugin-api</artifactId>
-				<version>${org.apache.maven.plugin.api.version}</version>
-			</dependency>
-			<dependency>
-				<groupId>org.apache.commons</groupId>
-				<artifactId>commons-io</artifactId>
-				<version>${org.apache.commons.io.version}</version>
-			</dependency>
-			<dependency>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-war-plugin</artifactId>
-				<version>${org.apache.maven.war.plugins.version}</version>
-			</dependency>
-			<dependency>
-				<groupId>org.apache.maven.scm</groupId>
-				<artifactId>maven-scm-api</artifactId>
-				<version>${org.apache.maven.scm.api.version}</version>
-			</dependency>
-			<dependency>
-				<groupId>org.apache.maven.scm</groupId>
-				<artifactId>maven-scm-provider-gitexe</artifactId>
-				<version>${org.apache.maven.scm.provider.gitexe.version}</version>
-			</dependency>
-			<dependency>
-				<groupId>org.apache.maven.scm</groupId>
-				<artifactId>maven-scm-provider-svnexe</artifactId>
-				<version>${org.apache.maven.scm.provider.svnexe.version}</version>
-			</dependency>
-			<dependency>
-				<groupId>org.apache.maven.scm</groupId>
-				<artifactId>maven-scm-provider-svn-commons</artifactId>
-				<version>${org.apache.maven.scm.provider.svn.commons.version}</version>
-			</dependency>
-
-			<!-- Other dependencies -->
-            <dependency>
-                <groupId>commons-io</groupId>
-                <artifactId>commons-io</artifactId>
-                <version>${commons-io.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.twdata.maven</groupId>
-                <artifactId>mojo-executor</artifactId>
-                <version>${mojo-executor.version}</version>
-            </dependency>
-			<dependency>
-				<groupId>org.eclipse.tycho</groupId>
-				<artifactId>tycho-equinox</artifactId>
-				<version>${tycho.version}</version>
-			</dependency>
-			<dependency>
-				<groupId>org.eclipse.tycho</groupId>
-				<artifactId>tycho-equinox-launching</artifactId>
-				<version>${tycho.version}</version>
-			</dependency>
-			<dependency>
-				<groupId>org.eclipse.tycho</groupId>
-				<artifactId>tycho-p2-facade</artifactId>
-				<version>${tycho.version}</version>
-			</dependency>
-			<dependency>
-				<groupId>junit</groupId>
-				<artifactId>junit</artifactId>
-				<version>${junit.version}</version>
-				<scope>test</scope>
-			</dependency>
-			<dependency>
-				<groupId>org.codehaus.plexus</groupId>
-				<artifactId>plexus-container-default</artifactId>
-				<version>${plexus.container.default.version}</version>
-			</dependency>
-			<dependency>
-				<groupId>org.codehaus.plexus</groupId>
-				<artifactId>plexus-archiver</artifactId>
-				<version>${plexus.archiver.version}</version>
-			</dependency>
-			<dependency>
-				<groupId>org.codehaus.plexus</groupId>
-				<artifactId>plexus-utils</artifactId>
-				<version>${plexus.utils.version}</version>
-			</dependency>
-			<dependency>
-				<groupId>biz.aQute</groupId>
-				<artifactId>bndlib</artifactId>
-				<version>${bndlib.version}</version>
-			</dependency>
-			<dependency>
-				<groupId>net.sf.kxml</groupId>
-				<artifactId>kxml2</artifactId>
-				<version>${kxml2.version}</version>
-			</dependency>
-			<dependency>
-				<groupId>org.codehaus.plexus</groupId>
-				<artifactId>plexus-interactivity-api</artifactId>
-				<version>${plexus.interactivity.api.version}</version>
-			</dependency>
-			<dependency>
-				<groupId>org.mockito</groupId>
-				<artifactId>mockito-core</artifactId>
-				<version>${mockito.core.version}</version>
-			</dependency>
-			<dependency>
-				<groupId>org.sonatype.plexus</groupId>
-				<artifactId>plexus-sec-dispatcher</artifactId>
-				<version>${plexus.sec.dispatcher.version}</version>
-			</dependency>
-			<dependency>
-				<groupId>org.sonatype.plexus</groupId>
-				<artifactId>plexus-cipher</artifactId>
-				<version>${plexus.cipher.version}</version>
-			</dependency>
-			<dependency>
-				<groupId>commons-logging</groupId>
-				<artifactId>commons-logging</artifactId>
-				<version>${commons.logging.version}</version>
-			</dependency>
-			<dependency>
-				<groupId>log4j</groupId>
-				<artifactId>log4j</artifactId>
-				<version>${log4j.version}</version>
-				<exclusions>
-					<exclusion>
-						<groupId>*</groupId>
-						<artifactId>*</artifactId>
-					</exclusion>
-				</exclusions>
-			</dependency>
-			<dependency>
-				<groupId>commons-httpclient</groupId>
-				<artifactId>commons-httpclient</artifactId>
-				<version>${commons.httpclient.version}</version>
-				<exclusions>
-					<exclusion>
-						<groupId>*</groupId>
-						<artifactId>*</artifactId>
-					</exclusion>
-				</exclusions>
-			</dependency>
-
-			<!-- wso2 dependencies -->
-			<dependency>
-				<groupId>org.wso2.maven</groupId>
-				<artifactId>org.wso2.maven.capp</artifactId>
-				<version>${org.wso2.maven.capp.version}</version>
-			</dependency>
-			<dependency>
-				<groupId>org.wso2.maven</groupId>
-				<artifactId>maven-synapse-plugin</artifactId>
-				<version>${org.wso2.maven.synapse.plugin.version}</version>
-			</dependency>
-			<dependency>
-				<groupId>org.wso2.maven</groupId>
-				<artifactId>maven-stratos-plugin</artifactId>
-				<version>${org.wso2.maven.stratos.plugin.version}</version>
-			</dependency>
-			<dependency>
-				<groupId>org.wso2.maven</groupId>
-				<artifactId>org.wso2.maven.core</artifactId>
-				<version>${org.wso2.maven.core.version}</version>
-			</dependency>
-			<dependency>
-				<groupId>org.wso2.maven</groupId>
-				<artifactId>org.wso2.maven.esb</artifactId>
-				<version>${org.wso2.maven.esb.version}</version>
-			</dependency>
-			<dependency>
-				<groupId>org.wso2.maven</groupId>
-				<artifactId>org.wso2.maven.utils</artifactId>
-				<version>${org.wso2.maven.utils.version}</version>
-			</dependency>
-			<dependency>
-				<groupId>org.wso2.maven</groupId>
-				<artifactId>org.wso2.maven.registry</artifactId>
-				<version>${org.wso2.maven.registry.version}</version>
-			</dependency>
-			
-			<dependency>
-				<groupId>wsdl4j.wso2</groupId>
-				<artifactId>wsdl4j</artifactId>
-				<version>${wsdl4j.version}</version>
-			</dependency>
-			<dependency>
-				<groupId>org.wso2.securevault</groupId>
-				<artifactId>org.wso2.securevault</artifactId>
-				<version>${org.wso2.securevault.version}</version>
-				<exclusions>
-					<exclusion>
-						<groupId>*</groupId>
-						<artifactId>*</artifactId>
-					</exclusion>
-				</exclusions>
-			</dependency>
-			<dependency>
-				<groupId>commons-codec.wso2</groupId>
-				<artifactId>commons-codec</artifactId>
-				<version>${commons.codec.wso2.commons.codec.version}</version>
-				<exclusions>
-					<exclusion>
-						<groupId>*</groupId>
-						<artifactId>*</artifactId>
-					</exclusion>
-				</exclusions>
-			</dependency>
-			<dependency>
-				<groupId>org.wso2.carbon</groupId>
-				<artifactId>org.wso2.carbon.authenticator.stub</artifactId>
-				<version>${org.wso2.carbon.authenticator.stub.version}</version>
-			</dependency>
-			<dependency>
-				<groupId>org.wso2.carbon</groupId>
-				<artifactId>org.wso2.carbon.roles.mgt.stub</artifactId>
-				<version>${org.wso2.carbon.roles.mgt.stub.version}</version>
-			</dependency>
-		</dependencies>
-	</dependencyManagement>
-
+		<module>maven-carbon-ui-plugin</module>
+		<module>carbon-p2-plugin</module>
+		<module>maven-car-plugin</module>
+	</modules>
 	<build>
 		<extensions>
 			<extension>
@@ -471,10 +71,12 @@
 			</plugin>
 		</plugins>
 	</build>
-
 	<properties>
-        <commons-io.version>2.4</commons-io.version>
-        <mojo-executor.version>2.2.0</mojo-executor.version>
+        	<commons-io.version>2.4</commons-io.version>
+		<commons.logging.version>1.1.1</commons.logging.version>
+		<commons.codec.wso2.commons.codec.version>1.4.0.wso2v1</commons.codec.wso2.commons.codec.version>
+		<commons.httpclient.version>3.1</commons.httpclient.version>
+        	<mojo-executor.version>2.2.0</mojo-executor.version>
 		<org.apache.maven.core.version>3.0</org.apache.maven.core.version>
 		<org.apache.maven.project.version>2.2.1</org.apache.maven.project.version>
 		<org.apache.maven.model.version>3.0.2</org.apache.maven.model.version>
@@ -510,27 +112,25 @@
 		<plexus.container.default.version>1.5.4</plexus.container.default.version>
 		<plexus.archiver.version>1.0-alpha-7</plexus.archiver.version>
 		<plexus.utils.version>2.0.1</plexus.utils.version>
-		<bndlib.version>0.0.357</bndlib.version>
-		<kxml2.version>2.2.2</kxml2.version>
 		<plexus.interactivity.api.version>1.0-alpha-6</plexus.interactivity.api.version>
-		<mockito.core.version>1.9.5</mockito.core.version>
 		<plexus.sec.dispatcher.version>1.4</plexus.sec.dispatcher.version>
 		<plexus.cipher.version>1.7</plexus.cipher.version>
-		<commons.logging.version>1.1.1</commons.logging.version>
+		<bndlib.version>0.0.357</bndlib.version>
+		<kxml2.version>2.2.2</kxml2.version>
+		<mockito.core.version>1.9.5</mockito.core.version>
 		<log4j.version>1.2.14</log4j.version>
-		<commons.httpclient.version>3.1</commons.httpclient.version>
 		<wsdl4j.version>1.6.2.wso2v2</wsdl4j.version>
 		<org.wso2.securevault.version>1.0.0</org.wso2.securevault.version>
-		<commons.codec.wso2.commons.codec.version>1.4.0.wso2v1</commons.codec.wso2.commons.codec.version>
 		<org.wso2.carbon.authenticator.stub.version>3.2.0</org.wso2.carbon.authenticator.stub.version>
 		<org.wso2.carbon.roles.mgt.stub.version>3.2.0</org.wso2.carbon.roles.mgt.stub.version>
-		<org.wso2.maven.synapse.plugin.version>2.1.0-SNAPSHOT</org.wso2.maven.synapse.plugin.version>
-		<org.wso2.maven.stratos.plugin.version>2.1.0-SNAPSHOT</org.wso2.maven.stratos.plugin.version>
-		<org.wso2.maven.capp.version>2.1.0-SNAPSHOT</org.wso2.maven.capp.version>
-		<org.wso2.maven.core.version>2.1.0-SNAPSHOT</org.wso2.maven.core.version>
-		<org.wso2.maven.esb.version>2.1.0-SNAPSHOT</org.wso2.maven.esb.version>
-		<org.wso2.maven.analytics.version>1.0.0-SNAPSHOT</org.wso2.maven.analytics.version>
-		<org.wso2.maven.utils.version>2.1.0-SNAPSHOT</org.wso2.maven.utils.version>
-		<org.wso2.maven.registry.version>2.1.0-SNAPSHOT</org.wso2.maven.registry.version>
+		<org.wso2.maven.synapse.plugin.version>2.1.0</org.wso2.maven.synapse.plugin.version>
+		<org.wso2.maven.stratos.plugin.version>2.1.0</org.wso2.maven.stratos.plugin.version>
+		<org.wso2.maven.capp.version>2.2.0-SNAPSHOT</org.wso2.maven.capp.version>
+		<org.wso2.maven.core.version>2.2.0-SNAPSHOT</org.wso2.maven.core.version>
+		<org.wso2.maven.esb.version>2.1.0</org.wso2.maven.esb.version>
+		<org.wso2.maven.utils.version>2.2.0-SNAPSHOT</org.wso2.maven.utils.version>
+		<org.wso2.maven.registry.version>2.1.0</org.wso2.maven.registry.version>
+		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 	</properties>
+
 </project>

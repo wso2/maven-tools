@@ -21,46 +21,54 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 
     <parent>
-        <groupId>org.wso2.maven</groupId>
-        <artifactId>maven-tools</artifactId>
-        <version>5.0.0-SNAPSHOT</version>
-        <relativePath>../pom.xml</relativePath>
+		<groupId>org.wso2.maven</groupId>
+		<artifactId>maven-common-tools</artifactId>
+		<version>5.1.0-SNAPSHOT</version>
+		<relativePath>../pom.xml</relativePath>
     </parent>
 
     <modelVersion>4.0.0</modelVersion>
+    <groupId>org.wso2.maven</groupId>
     <artifactId>carbon-p2-plugin</artifactId>
     <packaging>maven-plugin</packaging>
-    <version>1.5.6-SNAPSHOT</version>
+    <version>1.6.0-SNAPSHOT</version>
     <name>Maven P2 Profile Generation Plugin</name>
 
     <dependencies>
         	<dependency>
 			<groupId>org.apache.maven</groupId>
 			<artifactId>maven-plugin-api</artifactId>
+			<version>${org.apache.maven.plugin.api.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>org.apache.maven</groupId>
 			<artifactId>maven-core</artifactId>
+			<version>${org.apache.maven.core.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>org.eclipse.tycho</groupId>
 			<artifactId>tycho-equinox</artifactId>
+			<version>${tycho.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>org.eclipse.tycho</groupId>
 			<artifactId>tycho-equinox-launching</artifactId>
+			<version>${tycho.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>org.eclipse.tycho</groupId>
 			<artifactId>tycho-p2-facade</artifactId>
+			<version>${tycho.version}</version>
 		</dependency>
         	<dependency>
             		<groupId>org.apache.maven</groupId>
             		<artifactId>maven-project</artifactId>
+			<version>${org.apache.maven.project.version}</version>
         	</dependency>
         	<dependency>
             		<groupId>junit</groupId>
             		<artifactId>junit</artifactId>
+			<version>${junit.version}</version>
             		<scope>test</scope>
         	</dependency>
     </dependencies>
@@ -121,5 +129,4 @@
       </plugin>
         </plugins>
     </build>
-
 </project>
