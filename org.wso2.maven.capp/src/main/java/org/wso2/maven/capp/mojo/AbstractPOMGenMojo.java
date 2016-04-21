@@ -384,12 +384,14 @@ public abstract class AbstractPOMGenMojo extends AbstractMojo {
 	protected File processTokenReplacement(File file) throws IOException {
 		if (file.exists()) {
 			Properties mavenProperties = getProject().getModel().getProperties();
-
 			String fileContent = org.wso2.developerstudio.eclipse.utils.file.FileUtils.getContentAsString(file);
-			String newFileContent = replaceTokens(fileContent, mavenProperties);
-			File tempFile = org.wso2.developerstudio.eclipse.utils.file.FileUtils.createTempFile();
-			org.wso2.developerstudio.eclipse.utils.file.FileUtils.writeContent(tempFile, newFileContent);
-			return tempFile;
+			boolean hasMatch = hasMatchingTokens(fileContent, mavenProperties);
+			if (hasMatch) {
+				String newFileContent = replaceTokens(fileContent, mavenProperties);
+				File tempFile = org.wso2.developerstudio.eclipse.utils.file.FileUtils.createTempFile();
+				org.wso2.developerstudio.eclipse.utils.file.FileUtils.writeContent(tempFile, newFileContent);
+				return tempFile;
+			}
 		}
 		return file;
 	}
@@ -415,5 +417,19 @@ public abstract class AbstractPOMGenMojo extends AbstractMojo {
 		}
 		matcher.appendTail(sb);
 		return sb.toString();
+	}
+
+	private boolean hasMatchingTokens(String content, Properties mavenProperties) {
+		Pattern pattern = Pattern.compile("\\$\\{(.*?)\\}");
+		Matcher matcher = pattern.matcher(content);
+		while (matcher.find()) {
+			String match = matcher.group(0).replaceAll("^\\$\\{", "");
+			match = match.replaceAll("\\}$", "");
+			String value = (String) mavenProperties.get(match);
+			if(value != null && !value.trim().equals("")){
+				return true;
+			}
+		}
+		return false;
 	}
 }

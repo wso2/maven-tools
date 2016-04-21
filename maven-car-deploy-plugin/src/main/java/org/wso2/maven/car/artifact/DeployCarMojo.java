@@ -339,6 +339,8 @@ public class DeployCarMojo extends AbstractMojo {
 		if (existingApplications!=null && Arrays.asList(existingApplications).contains(project.getArtifactId()+"_"+project.getVersion())){
 			appAdminStub.deleteApplication(project.getArtifactId() + "_" + project.getVersion());
 			getLog().info("Located the C-App "+project.getArtifactId()+"_"+project.getVersion()+ " and undeployed...");
+		} else {
+			throw new MojoExecutionException("Undeploy failure, could not find " + project.getArtifactId() + "_" + project.getVersion() + " to undeploy");
 		}
 	}
 
