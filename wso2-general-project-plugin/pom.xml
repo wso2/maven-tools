@@ -118,10 +118,6 @@
 		</dependency>
 		<dependency>
 			<groupId>org.wso2.maven</groupId>
-			<artifactId>org.wso2.maven.capp</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>org.wso2.maven</groupId>
 			<artifactId>org.wso2.maven.registry</artifactId>
 		</dependency>
 	</dependencies>
