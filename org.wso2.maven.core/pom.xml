@@ -13,13 +13,13 @@
 	<parent>
 		<groupId>org.wso2.maven</groupId>
 		<artifactId>maven-tools</artifactId>
-		<version>5.0.1-SNAPSHOT</version>
+		<version>5.0.1</version>
 		<relativePath>../pom.xml</relativePath>
 	</parent>
 
 	<modelVersion>4.0.0</modelVersion>
 	<artifactId>org.wso2.maven.core</artifactId>
-	<version>2.1.1-SNAPSHOT</version>
+	<version>2.1.1</version>
 	<packaging>jar</packaging>
 
 	<name>WSO2 Maven Core</name>
