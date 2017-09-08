@@ -58,6 +58,7 @@ public abstract class AbstractMavenReleaseMojo extends AbstractMojo {
     protected static final String EMPTY_STRING = "";
     protected static final String POM_XML = "pom.xml";
     protected static final String PROJECT_PREFIX = "project.";
+    protected static final String ARTIFACT_XML_TMP_FILE = "artifact.xml.tmp";
     protected static final String RELEASE_PROPERTIES = "release.properties";
     protected static final String WSO2_RELEASE_PLUGIN_PREFIX = "[wso2-release-plugin]";
 	protected static final String ARTIFACT = "artifact";
@@ -236,30 +237,38 @@ public abstract class AbstractMavenReleaseMojo extends AbstractMojo {
      * @throws Exception
      */
     protected void updateArtifactVersions(File artifactXml, String newVersion) throws Exception {
-	    InputStream inputStream = new FileInputStream(artifactXml);
-	    XMLStreamReader xmlStreamReader = XMLInputFactory.newInstance().createXMLStreamReader(inputStream);
-	    StAXOMBuilder builder = new StAXOMBuilder(xmlStreamReader);
-	    OMElement documentElement = builder.getDocumentElement();
-	    Iterator artifacts = documentElement.getChildrenWithName(new QName(ARTIFACT));
-	    while (artifacts.hasNext()) {
-		    OMElement artifact = (OMElement) artifacts.next();
-		    OMAttribute version = artifact.getAttribute(new QName(VERSION));
-		    if (version != null) {
-			    version.setAttributeValue(newVersion);
-		    }
-	    }
-	    if(isInDryRunMode()){
-		    artifactXml = new File(artifactXml.getPath() + getDryRunFilePrefix());
-	    }
-	    FileOutputStream outputStream = new FileOutputStream(artifactXml);
-	    XMLStreamWriter xmlStreamWriter =
-			    XMLOutputFactory.newInstance().createXMLStreamWriter(outputStream);
-	    builder.getDocument().serialize(xmlStreamWriter);
-	    inputStream.close();
-	    xmlStreamReader.close();
-	    outputStream.close();
-	    xmlStreamWriter.close();
+        InputStream inputStream = new FileInputStream(artifactXml);
+        XMLStreamReader xmlStreamReader = XMLInputFactory.newInstance().createXMLStreamReader(inputStream);
+        StAXOMBuilder builder = new StAXOMBuilder(xmlStreamReader);
+        OMElement documentElement = builder.getDocumentElement();
+        Iterator artifacts = documentElement.getChildrenWithName(new QName(ARTIFACT));
+        while (artifacts.hasNext()) {
+            OMElement artifact = (OMElement) artifacts.next();
+            OMAttribute version = artifact.getAttribute(new QName(VERSION));
+            if (version != null) {
+                version.setAttributeValue(newVersion);
+            }
+        }
+        if(isInDryRunMode()){
+            artifactXml = new File(artifactXml.getPath() + getDryRunFilePrefix());
+        }
+        File artifactXmlTemp = new File(artifactXml.getParentFile().getPath(),ARTIFACT_XML_TMP_FILE);
+        FileOutputStream outputStream = new FileOutputStream(artifactXmlTemp);
+
+        XMLStreamWriter xmlStreamWriter =
+                XMLOutputFactory.newInstance().createXMLStreamWriter(outputStream);
+        builder.getDocument().serialize(xmlStreamWriter);
+        String artifactXmlPath = artifactXml.getPath();
+        artifactXml.delete();
+        artifactXmlTemp.renameTo(new File(artifactXmlPath));
+        inputStream.close();
+        xmlStreamReader.close();
+        outputStream.close();
+        xmlStreamWriter.flush();
+        xmlStreamWriter.close();
     }
+
+
 
     /**
      * Method to check  whether release plugin is running in dryRunMode.

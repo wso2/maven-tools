@@ -50,6 +50,11 @@
 	    <version>${org.apache.commons.io.version}</version>		
         </dependency>
         <dependency>
+            <groupId>commons-logging</groupId>
+            <artifactId>commons-logging</artifactId>
+            <version>${org.apache.commons.logging.version}</version>
+        </dependency>
+        <dependency>
             <groupId>org.twdata.maven</groupId>
             <artifactId>mojo-executor</artifactId>
 	    <version>${mojo-executor.version}</version>
