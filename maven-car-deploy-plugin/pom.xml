@@ -241,17 +241,14 @@
 		<dependency>
 			<groupId>org.wso2.maven</groupId>
 			<artifactId>org.wso2.maven.capp</artifactId>
-			<version>${org.wso2.maven.capp.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>org.wso2.maven</groupId>
 			<artifactId>org.wso2.maven.core</artifactId>
-			<version>${org.wso2.maven.core.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>org.wso2.maven</groupId>
 			<artifactId>org.wso2.maven.utils</artifactId>
-			<version>${org.wso2.maven.utils.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>wsdl4j.wso2</groupId>

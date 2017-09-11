@@ -71,6 +71,25 @@
 			</plugin>
 		</plugins>
 	</build>
+       <dependencyManagement>
+           <dependencies>
+               <dependency>
+                   <groupId>org.wso2.maven</groupId>
+                   <artifactId>org.wso2.maven.utils</artifactId>
+                   <version>${org.wso2.maven.utils.version}</version>
+               </dependency>
+               <dependency>
+                   <groupId>org.wso2.maven</groupId>
+                   <artifactId>org.wso2.maven.capp</artifactId>
+                   <version>${org.wso2.maven.capp.version}</version>
+               </dependency>
+               <dependency>
+                   <groupId>org.wso2.maven</groupId>
+                   <artifactId>org.wso2.maven.core</artifactId>
+                   <version>${org.wso2.maven.core.version}</version>
+               </dependency>
+           </dependencies>
+       </dependencyManagement>
 	<properties>
         	<commons-io.version>2.4</commons-io.version>
 		<commons.logging.version>1.1.1</commons.logging.version>
