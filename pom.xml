@@ -37,11 +37,11 @@
 		<tag>HEAD</tag>
 	</scm>
 	<modules>
+               <module>org.wso2.maven.utils</module>
+               <module>org.wso2.maven.core</module>
 		<module>wso2-release-pre-prepare-plugin</module>
 		<module>wso2-release-helper-plugin</module>
 		<module>wso2-maven-package-prepare-plugin</module>
-		<module>org.wso2.maven.utils</module>
-		<module>org.wso2.maven.core</module>
 		<module>org.wso2.maven.capp</module>
 		<module>maven-library-plugin</module>
 		<module>maven-car-deploy-plugin</module>
