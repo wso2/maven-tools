@@ -101,6 +101,7 @@
 		<commons.httpclient.version>3.1</commons.httpclient.version>
         	<mojo-executor.version>2.2.0</mojo-executor.version>
 		<org.apache.maven.core.version>3.0</org.apache.maven.core.version>
+		<org.apache.maven.compat.version>3.0</org.apache.maven.compat.version>
 		<org.apache.maven.project.version>2.2.1</org.apache.maven.project.version>
 		<org.apache.maven.model.version>3.0.2</org.apache.maven.model.version>
 		<org.apache.maven.artifact.version>2.0.7</org.apache.maven.artifact.version>
@@ -131,7 +132,7 @@
 		<org.apache.maven.scm.provider.svnexe.version>1.9.1</org.apache.maven.scm.provider.svnexe.version>
 		<org.apache.maven.scm.provider.gitexe.version>1.9.1</org.apache.maven.scm.provider.gitexe.version>
 		<org.apache.maven.scm.provider.svn.commons.version>1.9.1</org.apache.maven.scm.provider.svn.commons.version>
-		<tycho.version>0.13.0</tycho.version>
+		<tycho.version>0.25.0</tycho.version>
 		<junit.version>3.8.1</junit.version>
 		<plexus.container.default.version>1.5.4</plexus.container.default.version>
 		<plexus.archiver.version>1.0-alpha-7</plexus.archiver.version>
