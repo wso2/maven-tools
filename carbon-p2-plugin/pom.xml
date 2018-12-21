@@ -44,21 +44,26 @@
 			<artifactId>maven-core</artifactId>
 			<version>${org.apache.maven.core.version}</version>
 		</dependency>
-		<dependency>
-			<groupId>org.eclipse.tycho</groupId>
-			<artifactId>tycho-equinox</artifactId>
-			<version>${tycho.version}</version>
-		</dependency>
-		<dependency>
-			<groupId>org.eclipse.tycho</groupId>
-			<artifactId>tycho-equinox-launching</artifactId>
-			<version>${tycho.version}</version>
-		</dependency>
-		<dependency>
-			<groupId>org.eclipse.tycho</groupId>
-			<artifactId>tycho-p2-facade</artifactId>
-			<version>${tycho.version}</version>
-		</dependency>
+        <dependency>
+            <groupId>org.eclipse.tycho</groupId>
+            <artifactId>sisu-equinox-embedder</artifactId>
+            <version>${tycho.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.eclipse.tycho</groupId>
+            <artifactId>sisu-equinox-launching</artifactId>
+            <version>${tycho.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.eclipse.tycho</groupId>
+            <artifactId>tycho-p2-facade</artifactId>
+            <version>${tycho.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.maven</groupId>
+            <artifactId>maven-compat</artifactId>
+            <version>${org.apache.maven.compat.version}</version>
+        </dependency>
         	<dependency>
             		<groupId>org.apache.maven</groupId>
             		<artifactId>maven-project</artifactId>
@@ -91,8 +96,8 @@
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
                 <configuration>
-                    <source>1.6</source>
-                    <target>1.6</target>
+                    <source>1.8</source>
+                    <target>1.8</target>
                 </configuration>
             </plugin>
            <plugin>
