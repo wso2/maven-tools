@@ -34,25 +34,37 @@
 			</releases>
 		</repository>
 	</repositories>
+    <distributionManagement>
+        <repository>
+            <id>nexus-releases</id>
+            <name>WSO2 Release Distribution Repository</name>
+            <url>https://maven.wso2.org/nexus/service/local/staging/deploy/maven2/</url>
+        </repository>
+        <snapshotRepository>
+            <id>wso2.snapshots</id>
+            <name>Apache Snapshot Repository</name>
+            <url>https://maven.wso2.org/nexus/content/repositories/snapshots/</url>
+        </snapshotRepository>
+    </distributionManagement>
 	<scm>
 		<url>https://github.com/wso2/maven-tools.git</url>
 		<developerConnection>scm:git:https://github.com/wso2/maven-tools.git</developerConnection>
 		<connection>scm:git:https://github.com/wso2/maven-tools.git</connection>
 		<tag>HEAD</tag>
 	</scm>
-	<modules>
-               <module>org.wso2.maven.utils</module>
-               <module>org.wso2.maven.core</module>
-		<module>wso2-release-pre-prepare-plugin</module>
-		<module>wso2-release-helper-plugin</module>
-		<module>wso2-maven-package-prepare-plugin</module>
-		<module>org.wso2.maven.capp</module>
-		<module>maven-library-plugin</module>
-		<module>maven-car-deploy-plugin</module>
-		<module>maven-carbon-ui-plugin</module>
-		<module>carbon-p2-plugin</module>
-		<module>maven-car-plugin</module>
-	</modules>
+    <modules>
+        <module>org.wso2.maven.utils</module>
+        <module>org.wso2.maven.core</module>
+        <module>wso2-release-pre-prepare-plugin</module>
+        <module>wso2-release-helper-plugin</module>
+        <module>wso2-maven-package-prepare-plugin</module>
+        <module>org.wso2.maven.capp</module>
+        <module>maven-library-plugin</module>
+        <module>maven-car-deploy-plugin</module>
+        <module>maven-carbon-ui-plugin</module>
+        <module>carbon-p2-plugin</module>
+        <module>maven-car-plugin</module>
+    </modules>
 	<build>
 		<extensions>
 			<extension>
