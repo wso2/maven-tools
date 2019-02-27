@@ -258,14 +258,15 @@ public abstract class AbstractMavenReleaseMojo extends AbstractMojo {
         XMLStreamWriter xmlStreamWriter =
                 XMLOutputFactory.newInstance().createXMLStreamWriter(outputStream);
         builder.getDocument().serialize(xmlStreamWriter);
-        String artifactXmlPath = artifactXml.getPath();
-        artifactXml.delete();
-        artifactXmlTemp.renameTo(new File(artifactXmlPath));
         inputStream.close();
         xmlStreamReader.close();
         outputStream.close();
         xmlStreamWriter.flush();
         xmlStreamWriter.close();
+
+        String artifactXmlPath = artifactXml.getPath();
+        artifactXml.delete();
+        artifactXmlTemp.renameTo(new File(artifactXmlPath));
     }
 
 
