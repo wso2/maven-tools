@@ -55,10 +55,10 @@ public class UtilsTest {
 
         actual.forEach((k, v) -> {
             Assert.assertNotNull(expected.get(k));
-            if (v instanceof List){
-                Assert.assertEqualsNoOrder(((List) v).toArray(),((List)expected.get(k)).toArray());
-            }else if (v instanceof Map){
-                assertMaps((Map) v,(Map) expected.get(k));
+            if (v instanceof List) {
+                Assert.assertEqualsNoOrder(((List) v).toArray(), ((List) expected.get(k)).toArray());
+            } else if (v instanceof Map) {
+                assertMaps((Map) v, (Map) expected.get(k));
             }
         });
     }

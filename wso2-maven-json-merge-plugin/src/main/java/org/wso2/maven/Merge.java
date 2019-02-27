@@ -27,9 +27,15 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * Mojo for Json Merge
+ */
 @Mojo(name = "merge")
 public class Merge extends AbstractMojo {
 
+    /**
+     * List of tasks to merge
+     */
     @Parameter
     private List<Task> tasks;
 

@@ -19,6 +19,9 @@ import org.apache.maven.plugins.annotations.Parameter;
 
 import java.io.Serializable;
 
+/**
+ * Task used for merge json
+ */
 public class Task implements Serializable {
 
     @Parameter(property = "input")
