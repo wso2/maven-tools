@@ -24,6 +24,7 @@ import org.apache.maven.plugins.annotations.Parameter;
 import java.io.BufferedWriter;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -41,15 +42,21 @@ public class Merge extends AbstractMojo {
 
     public void execute() throws MojoExecutionException, MojoFailureException {
         for (Task taskModel : tasks) {
-            String config = taskModel.getConfig();
-            String input = taskModel.getInput();
-            String output = taskModel.getOutput();
+            Map baseJsonMap;
+            if (taskModel.getBase() == null || taskModel.getBase().isEmpty()) {
+                baseJsonMap = Collections.emptyMap();
+            } else {
+                baseJsonMap = Utils.getReadMap(taskModel.getBase());
+            }
+            Map inputMap;
+            String targetPath = taskModel.getTarget();
+            for (String aFile : taskModel.getInclude()) {
+                inputMap = Utils.getReadMap(aFile);
+                baseJsonMap = Utils.mergeMaps(baseJsonMap, inputMap, taskModel.isMergeChildren());
+            }
 
-            Map inputMap = Utils.getReadMap(input);
-            Map outputMap = Utils.getReadMap(config);
-            Utils.mergeMaps(inputMap, outputMap);
-            try (BufferedWriter bufferedWriter = new BufferedWriter(new FileWriter(output))) {
-                bufferedWriter.write(Utils.convertIntoJson(outputMap));
+            try (BufferedWriter bufferedWriter = new BufferedWriter(new FileWriter(targetPath))) {
+                bufferedWriter.write(Utils.convertIntoJson(baseJsonMap));
                 bufferedWriter.flush();
             } catch (IOException e) {
                 throw new MojoFailureException(e, "Error while Writing Merged Json", "Error while writing Json");

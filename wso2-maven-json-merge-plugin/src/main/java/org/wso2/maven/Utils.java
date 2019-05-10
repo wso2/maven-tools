@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 package org.wso2.maven;
+
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import org.apache.maven.plugin.MojoExecutionException;
@@ -50,19 +51,19 @@ public class Utils {
         return gson.toJson(input);
     }
 
-    public static void mergeMaps(Map<String, Object> input, Map<String, Object> output) {
-
+    public static Map<String, Object> mergeMaps(Map<String, Object> baseMap, Map<String, Object> input, boolean isChildMergeEnabled) {
         for (Map.Entry<String, Object> entry : input.entrySet()) {
             String key = entry.getKey();
             Object value = entry.getValue();
-            Object returnedValue = output.get(key);
+            Object returnedValue = baseMap.get(key);
             if (returnedValue == null) {
-                output.put(key, value);
-            } else if (returnedValue instanceof Map) {
-                mergeMaps((Map<String, Object>) value, (Map<String, Object>) returnedValue);
+                baseMap.put(key, value);
+            } else if (returnedValue instanceof Map && isChildMergeEnabled) {
+                value = mergeMaps((Map<String, Object>) returnedValue, (Map<String, Object>) value, false);
+                baseMap.put(key, value);
             }
         }
-
+        return baseMap;
     }
 
 }
