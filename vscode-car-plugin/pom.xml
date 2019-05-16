@@ -70,9 +70,9 @@
             <version>${commons-io.version}</version>
         </dependency>
         <dependency>
-            <groupId>org.apache.ws.commons.axiom.wso2</groupId>
-            <artifactId>axiom</artifactId>
-            <version>${org.apache.ws.commons.axiom.wso2.axiom.version}</version>
+            <groupId>org.apache.ws.commons.axiom</groupId>
+            <artifactId>axiom-impl</artifactId>
+            <version>${org.apache.ws.commons.axiom.version}</version>
         </dependency>
         <dependency>
             <groupId>org.wso2.maven</groupId>
@@ -85,4 +85,7 @@
             <version>${org.wso2.maven.core.version}</version>
         </dependency>
     </dependencies>
+    <properties>
+        <org.apache.ws.commons.axiom.version>1.2.20</org.apache.ws.commons.axiom.version>
+    </properties>
 </project>
