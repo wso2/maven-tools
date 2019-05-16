@@ -24,40 +24,46 @@ import java.io.Serializable;
  */
 public class Task implements Serializable {
 
-    @Parameter(property = "input")
-    private String input;
-    @Parameter(property = "output")
-    private String output;
-    @Parameter(property = "config")
-    private String config;
+    @Parameter(property = "target")
+    private String target;
+    @Parameter(property = "base")
+    private String base;
+    @Parameter(property = "include")
+    private String[] include;
+    @Parameter(property = "mergeChildren")
+    private boolean mergeChildren = false;
 
-    public String getInput() {
+    public String getTarget() {
 
-        return input;
+        return target;
     }
 
-    public void setInput(String input) {
+    public void setTarget(String target) {
 
-        this.input = input;
+        this.target = target;
     }
 
-    public String getOutput() {
-
-        return output;
+    public String getBase() {
+        return base;
     }
 
-    public void setOutput(String output) {
-
-        this.output = output;
+    public void setBase(String base) {
+        this.base = base;
     }
 
-    public String getConfig() {
-
-        return config;
+    public String[] getInclude() {
+        return include;
     }
 
-    public void setConfig(String config) {
+    public void setInclude(String[] include) {
+        this.include = include;
+    }
 
-        this.config = config;
+    public boolean isMergeChildren() {
+        return mergeChildren;
+    }
+
+    public void setMergeChildren(boolean mergeChildren) {
+        this.mergeChildren = mergeChildren;
     }
 }

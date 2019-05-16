@@ -31,7 +31,7 @@ public class UtilsTest {
         Map inputMap = new Gson().fromJson(input, Map.class);
         Map outputMap = new Gson().fromJson(output, Map.class);
         Map expectedMap = new Gson().fromJson(expected, Map.class);
-        Utils.mergeMaps(inputMap, outputMap);
+        Utils.mergeMaps(inputMap, outputMap, false);
         assertMaps(outputMap, expectedMap);
     }
 
