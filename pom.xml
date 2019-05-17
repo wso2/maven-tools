@@ -61,6 +61,7 @@
         <module>maven-car-plugin</module>
         <module>org.wso2.maven.utils</module>
         <module>org.wso2.maven.core</module>
+        <module>vscode-car-plugin</module>
         <module>wso2-release-pre-prepare-plugin</module>
         <module>wso2-release-helper-plugin</module>
         <module>wso2-maven-package-prepare-plugin</module>

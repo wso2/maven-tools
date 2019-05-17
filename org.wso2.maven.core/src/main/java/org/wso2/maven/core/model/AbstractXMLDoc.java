@@ -80,6 +80,10 @@ public abstract class AbstractXMLDoc extends AbstractManifest{
 		element.addAttribute(attributeName, attributeValue, null);
 		return element;
 	}
+
+	protected OMElement getFirstChildWithName(OMElement element, String localName) {
+		return element.getFirstChildWithName(new QName(localName));
+	}
 	
 	private static final String prettyPrintStylesheet =
         "<xsl:stylesheet xmlns:xsl='http://www.w3.org/1999/XSL/Transform' version='1.0' "
