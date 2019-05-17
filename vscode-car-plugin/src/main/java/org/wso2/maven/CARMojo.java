@@ -21,15 +21,18 @@ package org.wso2.maven;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
+import javax.xml.stream.XMLStreamException;
 
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.project.MavenProject;
+import org.wso2.maven.Model.ArchiveException;
 import org.wso2.maven.Model.ArtifactDependency;
 
 
@@ -103,7 +106,7 @@ public class CARMojo extends AbstractMojo {
             } else {
                 getLog().error("Could not create corresponding archive directory.");
             }
-        } catch (Exception e) {
+        } catch (XMLStreamException | IOException | ArchiveException e) {
             getLog().error(e);
         }
     }
@@ -142,14 +145,14 @@ public class CARMojo extends AbstractMojo {
      * @param srcFolder:   file path of the archive directory
      * @param destZipFile: file path of the .car file
      */
-    private void zipFolder(String srcFolder, String destZipFile) {
+    private void zipFolder(String srcFolder, String destZipFile) throws ArchiveException {
         try (FileOutputStream fileWriter = new FileOutputStream(destZipFile);
              ZipOutputStream zip = new ZipOutputStream(fileWriter)) {
 
             addFolderContentsToZip(srcFolder, zip);
             zip.flush();
-        } catch (Exception ex) {
-            getLog().error("Error occurred while creating CAR file. " + ex);
+        } catch (IOException ex) {
+            throw new ArchiveException(Constants.ARCHIVE_EXCEPTION_MSG, ex);
         }
     }
 
@@ -159,24 +162,25 @@ public class CARMojo extends AbstractMojo {
      * @param srcFolder: file path of the archive directory
      * @param zip:       ZipOutputStream
      */
-    private void addFolderContentsToZip(String srcFolder, ZipOutputStream zip) {
+    private void addFolderContentsToZip(String srcFolder, ZipOutputStream zip) throws ArchiveException {
         File folder = new File(srcFolder);
         String[] fileList = folder.list();
+        if (fileList == null) {
+            return;
+        }
         try {
-            if (fileList != null) {
-                int i = 0;
-                while (true) {
-                    if (fileList.length == i) break;
-                    if (new File(folder, fileList[i]).isDirectory()) {
-                        zip.putNextEntry(new ZipEntry(fileList[i] + File.separator));
-                        zip.closeEntry();
-                    }
-                    addToZip("", srcFolder + File.separator + fileList[i], zip);
-                    i++;
+            int i = 0;
+            while (true) {
+                if (fileList.length == i) break;
+                if (new File(folder, fileList[i]).isDirectory()) {
+                    zip.putNextEntry(new ZipEntry(fileList[i] + File.separator));
+                    zip.closeEntry();
                 }
+                addToZip("", srcFolder + File.separator + fileList[i], zip);
+                i++;
             }
-        } catch (Exception ex) {
-            getLog().error("Error occurred while creating CAR file. " + ex);
+        } catch (IOException ex) {
+            throw new ArchiveException(Constants.ARCHIVE_EXCEPTION_MSG, ex);
         }
     }
 
@@ -187,7 +191,7 @@ public class CARMojo extends AbstractMojo {
      * @param srcFile: file to be included in the .car file
      * @param zip:     ZipOutputStream
      */
-    private void addToZip(String path, String srcFile, ZipOutputStream zip) {
+    private void addToZip(String path, String srcFile, ZipOutputStream zip) throws ArchiveException {
         File folder = new File(srcFile);
         if (folder.isDirectory()) {
             addFolderToZip(path, srcFile, zip);
@@ -204,8 +208,8 @@ public class CARMojo extends AbstractMojo {
                 while ((len = in.read(buf)) > 0) {
                     zip.write(buf, 0, len);
                 }
-            } catch (Exception ex) {
-                getLog().error("Error occurred while creating CAR file. " + ex);
+            } catch (IOException ex) {
+                throw new ArchiveException(Constants.ARCHIVE_EXCEPTION_MSG, ex);
             }
         }
     }
@@ -217,9 +221,12 @@ public class CARMojo extends AbstractMojo {
      * @param srcFolder: folder to be included in the .car file
      * @param zip:       ZipOutputStream
      */
-    private void addFolderToZip(String path, String srcFolder, ZipOutputStream zip) {
+    private void addFolderToZip(String path, String srcFolder, ZipOutputStream zip) throws ArchiveException {
         File folder = new File(srcFolder);
         String[] fileList = folder.list();
+        if (fileList == null) {
+            return;
+        }
         try {
             int i = 0;
             while (true) {
@@ -234,8 +241,8 @@ public class CARMojo extends AbstractMojo {
                 addToZip(newPath, srcFolder + File.separator + fileList[i], zip);
                 i++;
             }
-        } catch (Exception ex) {
-            getLog().error("Error occurred while creating CAR file. " + ex);
+        } catch (IOException ex) {
+            throw new ArchiveException(Constants.ARCHIVE_EXCEPTION_MSG, ex);
         }
     }
 
@@ -249,10 +256,13 @@ public class CARMojo extends AbstractMojo {
         if (!file.exists()) {
             return;
         }
-
         //if directory, go inside and call recursively
         if (file.isDirectory()) {
-            for (File f : file.listFiles()) {
+            File[] files = file.listFiles();
+            if (files == null) {
+                return;
+            }
+            for (File f : files) {
                 //call recursively
                 recursiveDelete(f);
             }

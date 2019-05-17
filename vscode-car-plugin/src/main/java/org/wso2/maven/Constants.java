@@ -30,6 +30,7 @@ public class Constants {
     static final String DEPENDENCY = "dependency";
     static final String INCLUDE = "include";
     static final String RESOURCES = "resources";
+    static final String ARCHIVE_EXCEPTION_MSG = "Error occurred while creating CAR file.";
 
     private Constants() {
     }
