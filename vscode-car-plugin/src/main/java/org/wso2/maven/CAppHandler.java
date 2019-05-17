@@ -158,6 +158,7 @@ class CAppHandler extends AbstractXMLDoc {
      *
      * @param artifact             OMElement
      * @param artifactFileLocation in the project
+     * @return Artifact object
      */
     private Artifact createArtifactObject(OMElement artifact, String artifactFileLocation) {
         Artifact artifactObject = new Artifact();
@@ -174,6 +175,7 @@ class CAppHandler extends AbstractXMLDoc {
      * Create artifact data from a given Artifact object.
      *
      * @param artifact: Artifact object
+     * @return serialized <artifact>content</artifact> element
      */
     private String createArtifactData(Artifact artifact) throws MojoExecutionException {
         OMElement artifactElement = getElement(Constants.ARTIFACT, "");
@@ -240,7 +242,7 @@ class CAppHandler extends AbstractXMLDoc {
     }
 
     /**
-     * Get local server details.
+     * Get CApp file name.
      *
      * @param project: wso2 esb project
      * @return .car file name
