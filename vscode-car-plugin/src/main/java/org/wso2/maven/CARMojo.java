@@ -86,7 +86,7 @@ public class CARMojo extends AbstractMojo {
         // Create CApp
         try {
             // Create directory to be compressed.
-            String archiveDirectory = getArchiveFile("").getAbsolutePath();
+            String archiveDirectory = getArchiveFile(Constants.EMPTY_STRING).getAbsolutePath();
             boolean createdArchiveDirectory = org.wso2.developerstudio.eclipse.utils.file.FileUtils.createDirectory(
                     archiveDirectory);
 
@@ -128,12 +128,12 @@ public class CARMojo extends AbstractMojo {
      */
     private File getArchiveFile(String fileExtension) {
         File archiveFile;
-        if (finalName != null && !finalName.trim().equals("")) {
+        if (finalName != null && !finalName.trim().equals(Constants.EMPTY_STRING)) {
             archiveFile = new File(archiveLocation, finalName + fileExtension);
             return archiveFile;
         }
         String archiveFilename = project.getArtifactId() + "_" + project.getVersion() +
-                (classifier != null ? "-" + classifier : "") + fileExtension;
+                (classifier != null ? "-" + classifier : Constants.EMPTY_STRING) + fileExtension;
         archiveFile = new File(archiveLocation, archiveFilename);
 
         return archiveFile;
@@ -176,7 +176,7 @@ public class CARMojo extends AbstractMojo {
                     zip.putNextEntry(new ZipEntry(fileList[i] + File.separator));
                     zip.closeEntry();
                 }
-                addToZip("", srcFolder + File.separator + fileList[i], zip);
+                addToZip(Constants.EMPTY_STRING, srcFolder + File.separator + fileList[i], zip);
                 i++;
             }
         } catch (IOException ex) {
@@ -200,7 +200,7 @@ public class CARMojo extends AbstractMojo {
             byte[] buf = new byte[1024];
             int len;
             try (FileInputStream in = new FileInputStream(srcFile)) {
-                if (path.trim().equals("")) {
+                if (path.trim().equals(Constants.EMPTY_STRING)) {
                     zip.putNextEntry(new ZipEntry(folder.getName()));
                 } else {
                     zip.putNextEntry(new ZipEntry(path + File.separator + folder.getName()));
@@ -232,7 +232,7 @@ public class CARMojo extends AbstractMojo {
             while (true) {
                 if (fileList.length == i) break;
                 String newPath = folder.getName();
-                if (!path.equalsIgnoreCase("")) {
+                if (!path.equalsIgnoreCase(Constants.EMPTY_STRING)) {
                     newPath = path + File.separator + newPath;
                 }
                 if (new File(folder, fileList[i]).isDirectory()) {

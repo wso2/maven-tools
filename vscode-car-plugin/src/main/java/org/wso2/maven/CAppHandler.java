@@ -36,6 +36,9 @@ import org.wso2.maven.core.model.AbstractXMLDoc;
 
 class CAppHandler extends AbstractXMLDoc {
 
+    private static final String SYNAPSE_CONFIG_FOLDER = Paths.get("src", "main", "synapse-config").toString();
+    private static final String REGISTRY_RESOURCES_FOLDER = Paths.get("src", "main", "registry-resources").toString();
+
     /**
      * Read /synapse-config/artifact.xml file and create corresponding files in archive directory.
      *
@@ -48,7 +51,7 @@ class CAppHandler extends AbstractXMLDoc {
             throws IOException, XMLStreamException, MojoExecutionException {
 
         String configArtifactXmlFileAsString = FileUtils.readFileToString(new File(
-                Paths.get(projectBaseDir.getAbsolutePath(), "src", "main", "synapse-config", "artifact.xml")
+                Paths.get(projectBaseDir.getAbsolutePath(), SYNAPSE_CONFIG_FOLDER, Constants.ARTIFACT_XML)
                         .toString()));
 
         OMElement artifactsElement = getElement(configArtifactXmlFileAsString);
@@ -74,12 +77,12 @@ class CAppHandler extends AbstractXMLDoc {
              * */
             String artifactDataAsString = createArtifactData(artifactObject);
             org.wso2.developerstudio.eclipse.utils.file.FileUtils.createFile(
-                    new File(Paths.get(archiveDirectory, artifactFolderName).toString(), "artifact.xml"),
+                    new File(Paths.get(archiveDirectory, artifactFolderName).toString(), Constants.ARTIFACT_XML),
                     artifactDataAsString);
 
 
             // Directly copy artifact from ESB project to archive file.
-            String copyArtifactFileFrom = Paths.get(projectBaseDir.getAbsolutePath(), "src", "main", "synapse-config",
+            String copyArtifactFileFrom = Paths.get(projectBaseDir.getAbsolutePath(), SYNAPSE_CONFIG_FOLDER,
                                                     getFirstChildWithName(artifact, Constants.FILE).getText())
                     .toString();
             org.wso2.developerstudio.eclipse.utils.file.FileUtils.copy(new File(copyArtifactFileFrom),
@@ -103,7 +106,7 @@ class CAppHandler extends AbstractXMLDoc {
             throws IOException, XMLStreamException, MojoExecutionException {
 
         String registryArtifactXmlFileAsString = FileUtils.readFileToString(new File(
-                Paths.get(projectBaseDir.getAbsolutePath(), "src", "main", "registry-resources", "artifact.xml")
+                Paths.get(projectBaseDir.getAbsolutePath(), REGISTRY_RESOURCES_FOLDER, Constants.ARTIFACT_XML)
                         .toString()));
 
         OMElement artifactsElement = getElement(registryArtifactXmlFileAsString);
@@ -132,12 +135,12 @@ class CAppHandler extends AbstractXMLDoc {
             String artifactDataAsString = createArtifactData(registryObject);
             org.wso2.developerstudio.eclipse.utils.file.FileUtils.createFile(
                     new File(Paths.get(archiveDirectory, artifactFolderName).toString(),
-                             "artifact.xml"), artifactDataAsString);
+                             Constants.ARTIFACT_XML), artifactDataAsString);
 
 
             // Directly copy registry resource from ESB project to corresponding resources folder in archive file.
-            String copyArtifactFileFrom = Paths.get(projectBaseDir.getAbsolutePath(), "src", "main",
-                                                    "registry-resources", registryResourceFileName).toString();
+            String copyArtifactFileFrom = Paths.get(projectBaseDir.getAbsolutePath(), REGISTRY_RESOURCES_FOLDER,
+                                                    registryResourceFileName).toString();
             org.wso2.developerstudio.eclipse.utils.file.FileUtils.copy(new File(copyArtifactFileFrom),
                                                                        new File(Paths.get(archiveDirectory,
                                                                                           artifactFolderName,
@@ -178,7 +181,7 @@ class CAppHandler extends AbstractXMLDoc {
      * @return serialized <artifact>content</artifact> element
      */
     private String createArtifactData(Artifact artifact) throws MojoExecutionException {
-        OMElement artifactElement = getElement(Constants.ARTIFACT, "");
+        OMElement artifactElement = getElement(Constants.ARTIFACT, Constants.EMPTY_STRING);
         artifactElement = addAttribute(artifactElement, Constants.NAME, artifact.getName());
         artifactElement = addAttribute(artifactElement, Constants.VERSION, artifact.getVersion());
         artifactElement = addAttribute(artifactElement, Constants.TYPE, artifact.getType());
@@ -196,7 +199,7 @@ class CAppHandler extends AbstractXMLDoc {
      * @return serialized <resources>data</resources> element
      */
     private String createRegistryResourceData(OMElement item) throws MojoExecutionException {
-        OMElement resourcesElement = getElement(Constants.RESOURCES, "");
+        OMElement resourcesElement = getElement(Constants.RESOURCES, Constants.EMPTY_STRING);
         resourcesElement.addChild(item);
         return serialize(resourcesElement);
     }
@@ -216,15 +219,15 @@ class CAppHandler extends AbstractXMLDoc {
          * Create artifact element.
          * Create corresponding dependency elements.
          * */
-        OMElement artifactsElement = getElement(Constants.ARTIFACTS, "");
-        OMElement artifactElement = getElement(Constants.ARTIFACT, "");
+        OMElement artifactsElement = getElement(Constants.ARTIFACTS, Constants.EMPTY_STRING);
+        OMElement artifactElement = getElement(Constants.ARTIFACT, Constants.EMPTY_STRING);
 
         artifactElement = addAttribute(artifactElement, Constants.NAME, getCAppName(project));
         artifactElement = addAttribute(artifactElement, Constants.VERSION, project.getVersion());
         artifactElement = addAttribute(artifactElement, Constants.TYPE, "carbon/application");
 
         for (ArtifactDependency dependency : dependencies) {
-            OMElement dependencyElement = getElement(Constants.DEPENDENCY, "");
+            OMElement dependencyElement = getElement(Constants.DEPENDENCY, Constants.EMPTY_STRING);
             dependencyElement = addAttribute(dependencyElement, Constants.ARTIFACT, dependency.getArtifact());
             dependencyElement = addAttribute(dependencyElement, Constants.VERSION, dependency.getVersion());
             dependencyElement = addAttribute(dependencyElement, Constants.INCLUDE, dependency.getInclude().toString());
