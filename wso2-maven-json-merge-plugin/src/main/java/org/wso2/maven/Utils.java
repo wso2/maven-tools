@@ -59,7 +59,7 @@ public class Utils {
             if (returnedValue == null) {
                 baseMap.put(key, value);
             } else if (returnedValue instanceof Map && isChildMergeEnabled) {
-                value = mergeMaps((Map<String, Object>) returnedValue, (Map<String, Object>) value, false);
+                value = mergeMaps((Map<String, Object>) returnedValue, (Map<String, Object>) value, true);
                 baseMap.put(key, value);
             }
         }
