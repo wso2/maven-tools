@@ -173,10 +173,10 @@ public class CARMojo extends AbstractMojo {
             while (true) {
                 if (fileList.length == i) break;
                 if (new File(folder, fileList[i]).isDirectory()) {
-                    zip.putNextEntry(new ZipEntry(fileList[i] + File.separator));
+                    zip.putNextEntry(new ZipEntry(fileList[i] + "/"));
                     zip.closeEntry();
                 }
-                addToZip(Constants.EMPTY_STRING, srcFolder + File.separator + fileList[i], zip);
+                addToZip(Constants.EMPTY_STRING, srcFolder + "/" + fileList[i], zip);
                 i++;
             }
         } catch (IOException ex) {
@@ -203,7 +203,7 @@ public class CARMojo extends AbstractMojo {
                 if (path.trim().equals(Constants.EMPTY_STRING)) {
                     zip.putNextEntry(new ZipEntry(folder.getName()));
                 } else {
-                    zip.putNextEntry(new ZipEntry(path + File.separator + folder.getName()));
+                    zip.putNextEntry(new ZipEntry(path + "/" + folder.getName()));
                 }
                 while ((len = in.read(buf)) > 0) {
                     zip.write(buf, 0, len);
@@ -233,12 +233,12 @@ public class CARMojo extends AbstractMojo {
                 if (fileList.length == i) break;
                 String newPath = folder.getName();
                 if (!path.equalsIgnoreCase(Constants.EMPTY_STRING)) {
-                    newPath = path + File.separator + newPath;
+                    newPath = path + "/" + newPath;
                 }
                 if (new File(folder, fileList[i]).isDirectory()) {
-                    zip.putNextEntry(new ZipEntry(newPath + File.separator + fileList[i] + File.separator));
+                    zip.putNextEntry(new ZipEntry(newPath + "/" + fileList[i] + "/"));
                 }
-                addToZip(newPath, srcFolder + File.separator + fileList[i], zip);
+                addToZip(newPath, srcFolder + "/" + fileList[i], zip);
                 i++;
             }
         } catch (IOException ex) {
