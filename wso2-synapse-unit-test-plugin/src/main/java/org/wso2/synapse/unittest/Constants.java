@@ -31,7 +31,41 @@ class Constants {
 
     static final String ARTIFACTS = "artifacts";
     static final String ARTIFACT = "artifact";
+    static final String TEST_CASES_TAG = "test-cases";
     static final String TEST_ARTIFACT = "test-artifact";
     static final String SUPPORTIVE_ARTIFACTS = "supportive-artifacts";
+    static final String REGISTRY_RESOURCES = "registry-resources";
+    static final String CONNECTOR_RESOURCES = "connector-resources";
+    static final String MOCK_SERVICES = "mock-services";
+    static final String RELATIVE_PREVIOUS = "..";
 
+    static final String DEPLOYMENT_STATUS = "deploymentStatus";
+    static final String DEPLOYMENT_EXCEPTION = "deploymentException";
+    static final String DEPLOYMENT_DESCRIPTION = "deploymentDescription";
+    static final String MEDIATION_STATUS = "mediationStatus";
+    static final String MEDIATION_EXECEPTION = "mediationException";
+    static final String CURRENT_TESTCASE = "currentTestCase";
+    static final String TEST_CASES = "testCases";
+    static final String ASSERTION_STATUS = "assertionStatus";
+    static final String TEST_CASE_VALUE = "Test Case - ";
+    static final String SUITE = "Suite";
+    static final String EXCEPTION = "exception";
+
+    static final String PASSED_KEY = "PASSED";
+    static final String FAILED_KEY = "FAILED";
+    static final String SKIPPED_KEY = "SKIPPED";
+    static final String DEPLOYMENT_PHASE = "DEPLOYMENT";
+    static final String MEDIATION_PHASE = "MEDIATION";
+    static final String ASSERTION_PHASE = "ASSERTION";
+    static final String TEST_CASE_NAME = "testCaseName";
+
+    static final String TWO_SPACES = "   ";
+    static final String XML_EXTENSION = ".xml";
+    static final String FILE_SEPARATOR = "file.separator";
+    static final String LINE_SEPARATOR = "line.separator";
+    static final String LINE_SEPARATOR_WIN = "\\r?\\n";
+    static final String TEST_FOLDER_EXTENSION = "${testFile}";
+    static final String NO_TEST_CASES = "no-test-cases";
+    static final String OS_TYPE = "os.name";
+    static final String OS_WINDOWS = "win";
 }

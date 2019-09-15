@@ -18,10 +18,14 @@
 
 package org.wso2.synapse.unittest;
 
+import com.google.gson.JsonArray;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
+import org.wso2.synapse.unittest.summarytable.ConsoleDataTable;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -29,7 +33,16 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.InetSocketAddress;
 import java.net.Socket;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.AbstractMap;
 import java.util.ArrayList;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.TimeUnit;
+import java.util.regex.Pattern;
 
 /**
  * Goal which touches a timestamp file.
@@ -44,16 +57,26 @@ public class UnitTestCasesMojo extends AbstractMojo {
     private String testCasesFilePath;
 
     @Parameter(property = "synapseServer")
-    private SynapseServer synapseServer;
+    private SynapseServer server;
+
+    private static final String LOCAL_SERVER = "local";
+    private static final String REMOTE_SERVER = "remote";
+
+    private Date timeStarted;
+    private String serverHost;
+    private String serverPort;
+
+    private DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 
     /**
      * Execution method of Mojo class.
+     *
+     * @throws MojoExecutionException if error occurred while running the plugin
      */
     public void execute() throws MojoExecutionException {
-
         try {
+            timeStarted = new Date();
             appendTestLogs();
-            startTestingServer();
             testCaseRunner();
         } catch (Exception e) {
             throw new MojoExecutionException("Exception occurred while running test cases " + e.getMessage());
@@ -64,25 +87,40 @@ public class UnitTestCasesMojo extends AbstractMojo {
 
     /**
      * Execution method of Mojo class.
+     *
+     * @throws IOException if error occurred while reading test files
      */
     private void testCaseRunner() throws IOException {
-
-        ArrayList<String> synapseTestCasePaths = getTestCasesFileNamesWithPaths(testCasesFilePath);
+        List<String> synapseTestCasePaths = getTestCasesFileNamesWithPaths(testCasesFilePath);
 
         getLog().info("Detect " + synapseTestCasePaths.size() + " Synapse test case files to execute\n");
+        getLog().info("");
 
+        //start the synapse engine with enable the unit test agent
+        if (!synapseTestCasePaths.isEmpty()) {
+            startTestingServer();
+        }
+
+        Map<String, String> testSummaryData = new HashMap<>();
         for (String synapseTestCaseFile : synapseTestCasePaths) {
 
             String responseFromUnitTestFramework = UnitTestClient.executeTests
-                    (synapseTestCaseFile, synapseServer.getHost(), synapseServer.getUnitTestPort());
+                    (synapseTestCaseFile, serverHost, serverPort);
 
-            if (responseFromUnitTestFramework != null) {
-                isAssertResults(responseFromUnitTestFramework, synapseTestCaseFile);
+            if (responseFromUnitTestFramework != null
+                    && !responseFromUnitTestFramework.equals(Constants.NO_TEST_CASES)) {
+                testSummaryData.put(synapseTestCaseFile, responseFromUnitTestFramework);
             } else {
-                throw new IOException("Test case parsing failed ");
+                getLog().info("No test cases found in " + synapseTestCaseFile + " unit test suite");
+                getLog().info("");
+                continue;
             }
+
+            getLog().info("SynapseTestCaseFile " + synapseTestCaseFile + " tested successfully");
         }
 
+        getLog().info("");
+        generateUnitTestReport(testSummaryData);
     }
 
     /**
@@ -92,17 +130,20 @@ public class UnitTestCasesMojo extends AbstractMojo {
      * @return list of files with their file paths
      */
     private ArrayList<String> getTestCasesFileNamesWithPaths(String testFileFolder) {
-
         ArrayList<String> fileNamesWithPaths = new ArrayList<>();
-        File folder = new File(testFileFolder);
-        File[] listOfFiles = folder.listFiles();
 
-        if (listOfFiles != null) {
+        if (testFileFolder.endsWith(Constants.XML_EXTENSION)) {
+            fileNamesWithPaths.add(testFileFolder);
+
+        } else if (testFileFolder.endsWith(Constants.TEST_FOLDER_EXTENSION)) {
+            String testFolderPath = testFileFolder.split("\\$")[0];
+            File folder = new File(testFolderPath);
+            File[] listOfFiles = folder.listFiles();
+
             for (File file : listOfFiles) {
                 String filename = file.getName();
-                if (filename.endsWith(".xml") || filename.endsWith(".XML")) {
-
-                    fileNamesWithPaths.add(testFileFolder + File.separator + filename);
+                if (filename.endsWith(Constants.XML_EXTENSION)) {
+                    fileNamesWithPaths.add(testFolderPath + filename);
                 }
             }
         }
@@ -111,24 +152,7 @@ public class UnitTestCasesMojo extends AbstractMojo {
     }
 
     /**
-     * Assert the expected value with receiving response from unit test client.
-     *
-     * @param response            response from client
-     * @param synapseTestCaseFile test-case file
-     */
-    private void isAssertResults(String response, String synapseTestCaseFile) throws IOException {
-        String expectedResponse = "{\"test-cases\":\"SUCCESS\"}";
-
-        if (!response.equals(expectedResponse)) {
-            throw new IOException("Test Cases are failed - " + response);
-        }
-
-        getLog().info("SynapseTestCaseFile " + synapseTestCaseFile + " passed successfully");
-        getLog().info(" ");
-    }
-
-    /**
-     * Append log of UNIT-TEST when testing started.
+     * Append log of UNIT-TESTS when testing started.
      */
     private void appendTestLogs() {
         getLog().info("------------------------------------------------------------------------");
@@ -138,28 +162,101 @@ public class UnitTestCasesMojo extends AbstractMojo {
     }
 
     /**
+     * Generate unit test report.
+     *
+     * @param summaryData summary data of the unit test received from synapse server
+     */
+    private void generateUnitTestReport(Map<String, String> summaryData) throws IOException {
+        if (summaryData.isEmpty()) {
+            return;
+        }
+
+        getLog().info("------------------------------------------------------------------------");
+        getLog().info("U N I T - T E S T  R E P O R T");
+        getLog().info("------------------------------------------------------------------------");
+
+        getLog().info("Start Time: " + dateFormat.format(timeStarted));
+
+
+        Date timeStop = new Date();
+        long duration = timeStop.getTime() - timeStarted.getTime();
+        getLog().info("Test Run Duration: " + TimeUnit.MILLISECONDS.toSeconds(duration) + " seconds");
+        getLog().info("Test Summary: ");
+        getLog().info("");
+
+        List<Boolean> testFailedSuccessList = new ArrayList<>();
+        for (Map.Entry<String, String> summary : summaryData.entrySet()) {
+            String fileSeperatePattern = Pattern.quote(System.getProperty(Constants.FILE_SEPARATOR));
+            String[] filePathParams = summary.getKey().split(fileSeperatePattern);
+            String testName = filePathParams[filePathParams.length - 1];
+            getLog().info("Test Suite Name: " + testName);
+            getLog().info("==============================================");
+
+            //convert response from synapse engine as a json object
+            JsonObject summaryJson = new JsonParser().parse(summary.getValue()).getAsJsonObject();
+
+            //calculate pass and failure test counts
+            Map.Entry<String, String> testFailPassCounts = getPassFailureTestCaseCounts(summaryJson);
+            String passTestCaseCount = testFailPassCounts.getKey();
+            String failureTestCaseCount = testFailPassCounts.getValue();
+
+            getLog().info("Pass Test Cases: " + passTestCaseCount);
+            getLog().info("Failure Test Cases: " + failureTestCaseCount);
+            getLog().info("");
+
+            String[] summaryHeadersList = {"  TEST CASE  ", "  DEPLOYMENT  ", "  MEDIATION  ", "  ASSERTION  "};
+            String[][] testSummaryDataList = getTestCaseWiseSummary(summaryJson);
+            String summaryTableString = ConsoleDataTable.of(summaryHeadersList, testSummaryDataList);
+
+            String[] tableOutputLines;
+            if (System.getProperty(Constants.OS_TYPE).toLowerCase().contains(Constants.OS_WINDOWS)) {
+                tableOutputLines = summaryTableString.split(System.getProperty(Constants.LINE_SEPARATOR_WIN));
+            } else {
+                tableOutputLines = summaryTableString.split(System.getProperty(Constants.LINE_SEPARATOR));
+            }
+
+            for (String line : tableOutputLines) {
+                getLog().info(line);
+            }
+            getLog().info("");
+
+            //generate test failure table if exists
+            boolean isOverallTestFailed = generateTestFailureTable(summaryJson);
+            testFailedSuccessList.add(isOverallTestFailed);
+        }
+
+        //check overall result of the unit test
+        if (testFailedSuccessList.contains(true)) {
+            throw new IOException("Overall unit test failed");
+        }
+    }
+
+    /**
      * Start the Unit testing agent server if user defined it in configuration.
+     *
+     * @throws IOException if error occurred while starting the synapse server
      */
     private void startTestingServer() throws IOException {
 
-        String unitTestPort = synapseServer.getUnitTestPort();
+        serverPort = server.getServerPort();
         //set default port in client side whether receiving port is empty
-        if(unitTestPort == null || unitTestPort.isEmpty()) {
-            synapseServer.setUnitTestPort("9008");
-            unitTestPort = synapseServer.getUnitTestPort();
+        if(serverPort == null || serverPort.isEmpty()) {
+            server.setServerPort("9008");
+            serverPort = server.getServerPort();
         }
 
         //check already has unit testing server
-        if (!synapseServer.getLocalServer().isEmpty()) {
-            String synapseServerPath = synapseServer.getLocalServer().get(0);
+        if (server.getServerType().equals(LOCAL_SERVER)) {
+            serverHost = "127.0.0.1";
+            String synapseServerPath = server.getServerPath();
 
             //execute local unit test server by given path and port
-            String[] cmd = { synapseServerPath, "-DsynapseTest", "-DsynapseTestPort="+unitTestPort};
+            String[] cmd = { synapseServerPath, "-DsynapseTest", "-DsynapseTestPort=" + serverPort};
             Process processor = Runtime.getRuntime().exec(cmd);
 
             getLog().info("Starting unit testing agent of path - " + synapseServerPath);
             getLog().info("Waiting for testing agent initialization");
-            getLog().info("Start logging the server initialization \n");
+            getLog().info("");
 
             //log the server output
             BufferedReader inputBuffer = new BufferedReader(new InputStreamReader(processor.getInputStream()));
@@ -171,42 +268,44 @@ public class UnitTestCasesMojo extends AbstractMojo {
             long timeoutExpiredMs = System.currentTimeMillis() + 120000;
             while (isServerNotStarted) {
                 long waitMillis = timeoutExpiredMs - System.currentTimeMillis();
-                isServerNotStarted = checkPortAvailability(Integer.parseInt(unitTestPort));
-                getLog().info(inputBuffer.readLine());
+                isServerNotStarted = checkPortAvailability(Integer.parseInt(serverPort));
+
+                if (getLog().isDebugEnabled()) {
+                    getLog().info(inputBuffer.readLine());
+                }
 
                 if (waitMillis <= 0) {
                     // timeout expired
-                    throw new IOException("Connection refused for service in port - " + unitTestPort);
+                    throw new IOException("Connection refused for service in port - " + serverPort);
                 }
             }
 
             inputBuffer.close();
-            getLog().info("Unit testing agent started\n");
 
+        } else if (server.getServerType().equals(REMOTE_SERVER)) {
+            serverHost = server.getServerHost();
         } else {
-            getLog().info("Testing will execute with already started unit testing agent");
+            getLog().info("Given server type " + server.getServerType() + "is not an expected type");
         }
-
     }
 
     /**
      * Stop the Unit testing agent server.
      */
     private void stopTestingServer() {
-
-        String unitTestPort = synapseServer.getUnitTestPort();
-
-        if (!synapseServer.getLocalServer().isEmpty()) {
+        if (server.getServerType().equals(LOCAL_SERVER)) {
             try {
-                getLog().info("Stopping unit testing agent runs on port " + unitTestPort);
+                if (getLog().isDebugEnabled()) {
+                    getLog().debug("Stopping unit testing agent runs on port " + serverPort);
+                }
                 BufferedReader bufferReader;
 
                 //check running operating system
-                if (System.getProperty("os.name").toLowerCase().contains("win")) {
+                if (System.getProperty(Constants.OS_TYPE).toLowerCase().contains(Constants.OS_WINDOWS)) {
 
                     Runtime runTime = Runtime.getRuntime();
                     Process proc =
-                            runTime.exec("cmd /c netstat -ano | findstr " + unitTestPort);
+                            runTime.exec("cmd /c netstat -ano | findstr " + serverPort);
 
                     bufferReader = new BufferedReader(new
                             InputStreamReader(proc.getInputStream()));
@@ -216,27 +315,33 @@ public class UnitTestCasesMojo extends AbstractMojo {
                         int index = stream.lastIndexOf(' ');
                         String pid = stream.substring(index);
 
-                        getLog().info("Unit testing agent runs with PID of " + pid);
+                        if (getLog().isDebugEnabled()) {
+                            getLog().debug("Unit testing agent runs with PID of " + pid);
+                        }
+
                         runTime.exec("cmd /c Taskkill /PID" + pid + " /T /F");
                     }
 
                 } else {
-                    Process pr = Runtime.getRuntime().exec("lsof -t -i:" + unitTestPort);
+                    Process pr = Runtime.getRuntime().exec("lsof -t -i:" + serverPort);
                     bufferReader = new BufferedReader(new InputStreamReader(pr.getInputStream()));
                     String pid = bufferReader.readLine();
 
-                    getLog().info("Unit testing agent runs with PID of " + pid);
+                    if (getLog().isDebugEnabled()) {
+                        getLog().debug("Unit testing agent runs with PID of " + pid);
+                    }
                     Runtime.getRuntime().exec("kill -9 " + pid);
                 }
 
                 bufferReader.close();
-                getLog().info("Unit testing agent stopped");
+                if (getLog().isDebugEnabled()) {
+                    getLog().debug("Unit testing agent stopped");
+                }
 
             } catch (Exception e) {
                 getLog().error("Error in closing the server", e);
             }
         }
-
     }
 
     /**
@@ -248,12 +353,201 @@ public class UnitTestCasesMojo extends AbstractMojo {
     private boolean checkPortAvailability(int port) {
         boolean isPortAvailable;
         try (Socket socket = new Socket()) {
-            socket.connect(new InetSocketAddress(synapseServer.getHost(), port));
+            socket.connect(new InetSocketAddress(serverHost, port));
             isPortAvailable = false;
         } catch (IOException e) {
             isPortAvailable = true;
         }
 
         return isPortAvailable;
+    }
+
+    /**
+     * Get pass and failure tests among all the test cases.
+     *
+     * @param jsonSummary test summary as a json
+     * @return map of test cases
+     */
+    private Map.Entry<String, String> getPassFailureTestCaseCounts(JsonObject jsonSummary) {
+        String passTestCount;
+        String failureTestCount;
+
+        if (jsonSummary.get(Constants.MEDIATION_STATUS) != null &&
+                jsonSummary.get(Constants.MEDIATION_STATUS).getAsString().equals(Constants.PASSED_KEY) &&
+                jsonSummary.get(Constants.TEST_CASES) != null &&
+                jsonSummary.get(Constants.TEST_CASES).getAsJsonArray().size() > 0) {
+            JsonArray testCases = jsonSummary.get(Constants.TEST_CASES).getAsJsonArray();
+
+            int passCount = 0;
+            int failureCount = 0;
+            for (int x = 0; x < testCases.size(); x++) {
+                JsonObject testJsonObject = testCases.get(x).getAsJsonObject();
+
+                if (testJsonObject.get(Constants.ASSERTION_STATUS).getAsString().equals(Constants.PASSED_KEY)) {
+                    passCount++;
+                } else {
+                    failureCount++;
+                }
+            }
+            passTestCount = String.valueOf(passCount);
+            failureTestCount = String.valueOf(failureCount);
+
+        } else {
+            passTestCount = "N/A";
+            failureTestCount = "N/A";
+        }
+
+        return new AbstractMap.SimpleEntry<>(passTestCount, failureTestCount);
+    }
+
+    /**
+     * Get test cases wise summary from the whole test summary.
+     *
+     * @param jsonSummary test summary as a json
+     * @return string array of processes data
+     */
+    private String[][] getTestCaseWiseSummary(JsonObject jsonSummary) {
+        List<List<String>> allTestSummary = new ArrayList<>();
+
+        if (jsonSummary.get(Constants.TEST_CASES) != null &&
+                jsonSummary.get(Constants.TEST_CASES).getAsJsonArray().size() > 0) {
+            JsonArray testCases = jsonSummary.get(Constants.TEST_CASES).getAsJsonArray();
+
+            int x;
+            for (x = 0; x < testCases.size(); x++) {
+                List<String> testSummary = new ArrayList<>();
+                JsonObject testJsonObject = testCases.get(x).getAsJsonObject();
+
+                testSummary.add(Constants.TEST_CASE_VALUE + testJsonObject.get(Constants.TEST_CASE_NAME).getAsString());
+                testSummary.add(Constants.TWO_SPACES + jsonSummary.get(Constants.DEPLOYMENT_STATUS).getAsString());
+                testSummary.add(Constants.TWO_SPACES + testJsonObject.get(Constants.MEDIATION_STATUS).getAsString());
+                testSummary.add(Constants.TWO_SPACES + testJsonObject.get(Constants.ASSERTION_STATUS).getAsString());
+
+                allTestSummary.add(testSummary);
+            }
+
+            if (!jsonSummary.get(Constants.MEDIATION_STATUS).getAsString().equals(Constants.PASSED_KEY)) {
+                List<String> testSummary = new ArrayList<>();
+                testSummary.add(Constants.TEST_CASE_VALUE + jsonSummary.get(Constants.CURRENT_TESTCASE).getAsString());
+                testSummary.add(Constants.TWO_SPACES + jsonSummary.get(Constants.DEPLOYMENT_STATUS).getAsString());
+                testSummary.add(Constants.TWO_SPACES + jsonSummary.get(Constants.MEDIATION_STATUS).getAsString());
+                testSummary.add(Constants.TWO_SPACES + Constants.SKIPPED_KEY);
+                allTestSummary.add(testSummary);
+            }
+
+        } else {
+            List<String> testSummary = new ArrayList<>();
+            testSummary.add(Constants.TEST_CASE_VALUE + Constants.SUITE);
+            testSummary.add(Constants.TWO_SPACES + jsonSummary.get(Constants.DEPLOYMENT_STATUS).getAsString());
+            testSummary.add(Constants.TWO_SPACES + jsonSummary.get(Constants.MEDIATION_STATUS).getAsString());
+            testSummary.add(Constants.TWO_SPACES + Constants.SKIPPED_KEY);
+
+            allTestSummary.add(testSummary);
+        }
+
+        String[][] allSummaryArray = new String[allTestSummary.size()][4];
+        for (int x = 0 ; x < allTestSummary.size(); x++) {
+            List<String> innerList = allTestSummary.get(x);
+            String[] innerArray = new String[4];
+            innerArray = innerList.toArray(innerArray);
+            allSummaryArray[x] = innerArray;
+        }
+        return allSummaryArray;
+    }
+
+    /**
+     * Generate failure detailed table data.
+     *
+     * @param jsonSummary test summary as a json
+     * @return if failed occurred or not
+     */
+    private boolean generateTestFailureTable(JsonObject jsonSummary) {
+        boolean isFailureOccurred = false;
+        String[] errorHeadersList = {"  TEST CASE  ", "  FAILURE STATE  ", "      EXCEPTION / ERROR MESSAGE     "};
+
+        List<List<String>> errorRowsList = new ArrayList<>();
+        if (jsonSummary.get(Constants.TEST_CASES) != null &&
+                jsonSummary.get(Constants.TEST_CASES).getAsJsonArray().size() > 0) {
+            JsonArray testCases = jsonSummary.get(Constants.TEST_CASES).getAsJsonArray();
+
+            for (int x = 0; x < testCases.size(); x++) {
+                List<String> failureSummary = new ArrayList<>();
+                JsonObject testJsonObject = testCases.get(x).getAsJsonObject();
+
+                if (!testJsonObject.get(Constants.MEDIATION_STATUS).getAsString().equals(Constants.PASSED_KEY)) {
+                    isFailureOccurred = true;
+                    failureSummary.add(Constants.TEST_CASE_VALUE +
+                            testJsonObject.get(Constants.TEST_CASE_NAME).getAsString());
+                    failureSummary.add(Constants.TWO_SPACES + Constants.MEDIATION_PHASE);
+                    failureSummary.add(testJsonObject.get(Constants.EXCEPTION).getAsString());
+                    errorRowsList.add(failureSummary);
+                } else if (!testJsonObject.get(Constants.ASSERTION_STATUS).getAsString().equals(Constants.PASSED_KEY)) {
+                    isFailureOccurred = true;
+                    failureSummary.add(Constants.TEST_CASE_VALUE +
+                            testJsonObject.get(Constants.TEST_CASE_NAME).getAsString());
+                    failureSummary.add(Constants.TWO_SPACES + Constants.ASSERTION_PHASE);
+                    failureSummary.add(testJsonObject.get(Constants.EXCEPTION).getAsString());
+                    errorRowsList.add(failureSummary);
+                }
+            }
+
+            if (!jsonSummary.get(Constants.MEDIATION_STATUS).getAsString().equals(Constants.PASSED_KEY)) {
+                isFailureOccurred = true;
+                List<String> failureSummary = new ArrayList<>();
+                failureSummary.add(Constants.TEST_CASE_VALUE +
+                        jsonSummary.get(Constants.CURRENT_TESTCASE).getAsString());
+                failureSummary.add(Constants.TWO_SPACES + Constants.MEDIATION_PHASE);
+                failureSummary.add(jsonSummary.get(Constants.MEDIATION_EXECEPTION).getAsString());
+                errorRowsList.add(failureSummary);
+            }
+
+        } else {
+            List<String> testSummary = new ArrayList<>();
+
+            if (!jsonSummary.get(Constants.DEPLOYMENT_STATUS).getAsString().equals(Constants.PASSED_KEY)) {
+                isFailureOccurred = true;
+                testSummary.add(Constants.TEST_CASE_VALUE + Constants.SUITE);
+                testSummary.add(Constants.TWO_SPACES + Constants.DEPLOYMENT_PHASE);
+                if (jsonSummary.get(Constants.DEPLOYMENT_EXCEPTION) != null) {
+                    testSummary.add(jsonSummary.get(Constants.DEPLOYMENT_EXCEPTION).getAsString());
+                } else {
+                    testSummary.add(jsonSummary.get(Constants.DEPLOYMENT_DESCRIPTION).getAsString());
+                }
+                errorRowsList.add(testSummary);
+            } else if (!jsonSummary.get(Constants.MEDIATION_STATUS).getAsString().equals(Constants.PASSED_KEY)) {
+                isFailureOccurred = true;
+                testSummary.add(Constants.TEST_CASE_VALUE + jsonSummary.get(Constants.CURRENT_TESTCASE).getAsString());
+                testSummary.add(Constants.TWO_SPACES + Constants.MEDIATION_PHASE);
+                testSummary.add(jsonSummary.get(Constants.MEDIATION_EXECEPTION).getAsString());
+                errorRowsList.add(testSummary);
+            }
+        }
+
+        if (isFailureOccurred) {
+            getLog().info("Failed Test Case(s): ");
+
+            String[][] errorRowsArray = new String[errorRowsList.size()][3];
+            for (int x = 0 ; x < errorRowsList.size(); x++) {
+                List<String> innerList = errorRowsList.get(x);
+                String[] innerArray = new String[3];
+                innerArray = innerList.toArray(innerArray);
+                errorRowsArray[x] = innerArray;
+            }
+
+            String errorTableString = ConsoleDataTable.of(errorHeadersList, errorRowsArray);
+
+            String[] errorTableLines;
+            if (System.getProperty(Constants.OS_TYPE).toLowerCase().contains(Constants.OS_WINDOWS)) {
+                errorTableLines = errorTableString.split(System.getProperty(Constants.LINE_SEPARATOR_WIN));
+            } else {
+                errorTableLines = errorTableString.split(System.getProperty(Constants.LINE_SEPARATOR));
+            }
+            for (String line : errorTableLines) {
+                getLog().info(line);
+            }
+            getLog().info("");
+        }
+
+        return isFailureOccurred;
     }
 }
