@@ -44,7 +44,12 @@ import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
 
-@Mojo(name = "synapse-unit-test")
+/**
+ * Goal which touches a timestamp file.
+ *
+ * @goal synapse-unit-test
+ * @phase test
+ */
 public class UnitTestCasesMojo extends AbstractMojo {
 
     @Parameter(property = "testCasesFilePath")
