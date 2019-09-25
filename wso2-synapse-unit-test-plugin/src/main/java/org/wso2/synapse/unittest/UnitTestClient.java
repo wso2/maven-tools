@@ -43,14 +43,16 @@ class UnitTestClient {
      * @return response from the unit testing agent received via TCP transport
      */
     static String executeTests(String synapseTestCaseFilePath, String synapseHost, String synapsePort) {
-
-        getLog().info("Unit testing client started");
         String responseFromServer = null;
+
         try {
+            //check whether unit test suite has test cases or not
+            String deployableMessage = SynapseTestCaseFileReader.processArtifactData(synapseTestCaseFilePath);
+            if (deployableMessage != null && deployableMessage.equals(Constants.NO_TEST_CASES)) {
+                return deployableMessage;
+            }
 
             //process SynapseTestCase data for send to the server
-            String deployableMessage = SynapseTestCaseFileReader.processArtifactData(synapseTestCaseFilePath);
-
             if (deployableMessage != null) {
                 //create tcp connection, send SynapseTestCase file to server and get the response from the server
                 TCPClient tcpClient = new TCPClient(synapseHost, synapsePort);

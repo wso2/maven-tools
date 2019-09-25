@@ -45,7 +45,6 @@
         <dependency>
             <groupId>commons-io</groupId>
             <artifactId>commons-io</artifactId>
-	    <version>${org.apache.commons.io.version}</version>		
         </dependency>
         <dependency>
             <groupId>commons-logging</groupId>

@@ -23,13 +23,20 @@ import org.apache.axiom.om.util.AXIOMUtil;
 import org.apache.commons.io.FileUtils;
 import org.apache.maven.plugin.logging.Log;
 import org.apache.maven.plugin.logging.SystemStreamLog;
+import org.codehaus.plexus.util.Base64;
 
 import javax.xml.namespace.QName;
 import javax.xml.stream.XMLStreamException;
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Iterator;
+import java.util.List;
+
+import static org.wso2.synapse.unittest.Constants.RELATIVE_PREVIOUS;
 
 /**
  * SynapseTestCase file read class in unit test framework.
@@ -57,14 +64,37 @@ class SynapseTestCaseFileReader {
             String synapseTestCaseFileAsString = FileUtils.readFileToString(new File(synapseTestCaseFilePath));
             OMElement importedXMLFile = AXIOMUtil.stringToOM(synapseTestCaseFileAsString);
 
-            getLog().info("Checking SynapseTestCase file contains artifact data");
+            if (getLog().isDebugEnabled()) {
+                getLog().debug("Checking SynapseTestCase file contains artifact data");
+            }
+
+            QName qualifiedTestCases = new QName("", Constants.TEST_CASES_TAG, "");
+            OMElement testCasesNode = importedXMLFile.getFirstChildWithName(qualifiedTestCases);
+            Iterator<?> testCaseIterator = testCasesNode.getChildElements();
+            if (!testCaseIterator.hasNext()) {
+                return Constants.NO_TEST_CASES;
+            }
+
             QName qualifiedArtifacts = new QName("", Constants.ARTIFACTS, "");
             OMElement artifactsNode = importedXMLFile.getFirstChildWithName(qualifiedArtifacts);
 
+            //Read main-test-artifact data
             processTestArtifactData(artifactsNode);
 
             //Read supportive-artifacts data
             processSupportiveArtifactData(artifactsNode);
+
+            //Read registry resources data
+            processRegistryResourcesData(artifactsNode);
+
+            //Read connector resources data
+            processConnectorResourcesData(artifactsNode);
+
+            QName qualifiedMockServices = new QName("", Constants.MOCK_SERVICES, "");
+            OMElement mockServicesNode = importedXMLFile.getFirstChildWithName(qualifiedMockServices);
+
+            //Read mock-services data
+            processMockServicesData(mockServicesNode);
 
             return importedXMLFile.toString();
 
@@ -93,7 +123,8 @@ class SynapseTestCaseFileReader {
         String testArtifactFileAsString;
         if (!testArtifactFileNode.getText().isEmpty()) {
             String testArtifactFilePath = testArtifactFileNode.getText();
-            testArtifactFileAsString = FileUtils.readFileToString(new File(testArtifactFilePath));
+            testArtifactFileAsString = FileUtils.readFileToString(
+                    new File(RELATIVE_PREVIOUS + File.separator +  testArtifactFilePath));
         } else {
             throw new IOException("Test artifact does not contain configuration file path");
         }
@@ -129,19 +160,147 @@ class SynapseTestCaseFileReader {
             String supportiveArtifactFileAsString;
             if (!artifact.getText().isEmpty()) {
                 String artifactFilePath = artifact.getText();
-                supportiveArtifactFileAsString = FileUtils.readFileToString(new File(artifactFilePath));
+                supportiveArtifactFileAsString = FileUtils.readFileToString(
+                        new File(RELATIVE_PREVIOUS + File.separator + artifactFilePath));
             } else {
                 throw new IOException("Supportive artifact does not contain configuration file path");
             }
 
             if (supportiveArtifactFileAsString != null) {
-                //add test-artifact data as a child
+                //add supportive-artifact data as a child
                 OMElement supportiveArtifactDataNode = AXIOMUtil.stringToOM(supportiveArtifactFileAsString);
                 artifact.removeChildren();
                 artifact.addChild(supportiveArtifactDataNode);
             } else {
                 throw new IOException("Supportive artifact does not contain any configuration data");
             }
+        }
+    }
+
+    /**
+     * Method of processing registry-resources data.
+     * Reads registry resources from user defined file and append it to the artifact node
+     *
+     * @param artifactsNode artifact data contain node
+     */
+    private static void processRegistryResourcesData(OMElement artifactsNode) throws IOException, XMLStreamException {
+        QName qualifiedRegistryResources = new QName("", Constants.REGISTRY_RESOURCES, "");
+        OMElement registryResourcesNode = artifactsNode.getFirstChildWithName(qualifiedRegistryResources);
+
+        Iterator resourceIterator = Collections.emptyIterator();
+        if (registryResourcesNode != null) {
+            resourceIterator = registryResourcesNode.getChildElements();
+        }
+
+        while (resourceIterator.hasNext()) {
+            OMElement resource = (OMElement) resourceIterator.next();
+
+            QName qualifiedRegistryResourcesFile = new QName("", Constants.ARTIFACT, "");
+            OMElement registryResourcesFileNode = resource.getFirstChildWithName(qualifiedRegistryResourcesFile);
+
+            String registryResourceFileAsString;
+            if (!registryResourcesFileNode.getText().isEmpty()) {
+                String registryFilePath = registryResourcesFileNode.getText();
+                registryResourceFileAsString = FileUtils.readFileToString(
+                        new File(RELATIVE_PREVIOUS + File.separator + registryFilePath));
+            } else {
+                throw new IOException("Registry resource does not contain configuration file path");
+            }
+
+            if (registryResourceFileAsString != null) {
+                //add registry resource data as a child data in artifact node
+                if (registryResourceFileAsString.startsWith("<")) {
+                    OMElement registryArtifactDataNode = AXIOMUtil.stringToOM(registryResourceFileAsString);
+                    registryResourcesFileNode.removeChildren();
+
+                    registryResourcesFileNode.addChild(registryArtifactDataNode);
+                } else {
+                    registryResourcesFileNode.setText(registryResourceFileAsString);
+                }
+            } else {
+                throw new IOException("Registry resource does not contain any configuration data");
+            }
+        }
+    }
+
+    /**
+     * Method of processing connector-resources data.
+     * Reads connector resources from user defined file and append it to the artifact node
+     *
+     * @param artifactsNode artifact data contain node
+     */
+    private static void processConnectorResourcesData(OMElement artifactsNode) throws IOException, XMLStreamException {
+        QName qualifiedConnectorResources = new QName("", Constants.CONNECTOR_RESOURCES, "");
+        OMElement connectorResourcesNode = artifactsNode.getFirstChildWithName(qualifiedConnectorResources);
+        Iterator<?> connectorIterator = Collections.emptyIterator();
+
+        if (connectorResourcesNode != null) {
+            connectorIterator = connectorResourcesNode.getChildElements();
+        }
+
+        while (connectorIterator.hasNext()) {
+            OMElement resource = (OMElement) connectorIterator.next();
+
+            String encodedConnectorFile;
+            if (!resource.getText().isEmpty()) {
+                String registryFilePath = RELATIVE_PREVIOUS + File.separator + resource.getText();
+                byte[] connectorInBytes = Files.readAllBytes(Paths.get(registryFilePath));
+                byte[] encoded = Base64.encodeBase64(connectorInBytes);
+                encodedConnectorFile = new String(encoded);
+            } else {
+                throw new IOException("Connector resource does not contain configuration file path");
+            }
+
+            if (encodedConnectorFile != null) {
+                //add connector resource base64 data as a child
+                resource.setText(encodedConnectorFile);
+            } else {
+                throw new IOException("Connector resource does not contain any configuration data");
+            }
+        }
+    }
+
+    /**
+     * Method of processing mock service data.
+     * Reads mock service configurations from user defined file and append it to the mock services node
+     *
+     * @param mockServicesNode artifact data contain node
+     */
+    private static void processMockServicesData(OMElement mockServicesNode) throws IOException, XMLStreamException {
+        Iterator mockServiceIterator = Collections.emptyIterator();
+        if (mockServicesNode != null) {
+            mockServiceIterator = mockServicesNode.getChildElements();
+        }
+
+        List<OMElement> mockServiceDataNodeList = new ArrayList<>();
+        while (mockServiceIterator.hasNext()) {
+            OMElement mockServiceNode = (OMElement) mockServiceIterator.next();
+
+            String mockServiceFileDataAsString;
+            if (!mockServiceNode.getText().isEmpty()) {
+                String mockServiceFilePath = mockServiceNode.getText();
+                mockServiceFileDataAsString = FileUtils.readFileToString(
+                        new File(RELATIVE_PREVIOUS + File.separator + mockServiceFilePath));
+            } else {
+                throw new IOException("Mock service file does not contain configuration file path");
+            }
+
+            if (mockServiceFileDataAsString != null) {
+                //add mock service data as a child
+                OMElement mockServiceDataNode = AXIOMUtil.stringToOM(mockServiceFileDataAsString);
+                mockServiceDataNodeList.add(mockServiceDataNode);
+
+            } else {
+                throw new IOException("Mock service does not contain any configuration data");
+            }
+        }
+
+        //remove all child elements in mock-services tag
+        mockServicesNode.removeChildren();
+
+        //add mock services childs to the mock-services tag
+        for (OMElement child : mockServiceDataNodeList) {
+            mockServicesNode.addChild(child);
         }
     }
 
