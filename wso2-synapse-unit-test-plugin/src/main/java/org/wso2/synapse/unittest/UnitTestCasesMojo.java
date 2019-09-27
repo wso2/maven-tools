@@ -87,7 +87,7 @@ public class UnitTestCasesMojo extends AbstractMojo {
     private void testCaseRunner() throws IOException {
         List<String> synapseTestCasePaths = getTestCasesFileNamesWithPaths(testCasesFilePath);
 
-        getLog().info("Detect " + synapseTestCasePaths.size() + " Synapse test case files to execute\n");
+        getLog().info("Detect " + synapseTestCasePaths.size() + " Synapse test case files to execute");
         getLog().info("");
 
         //start the synapse engine with enable the unit test agent
@@ -204,7 +204,9 @@ public class UnitTestCasesMojo extends AbstractMojo {
 
             String[] tableOutputLines;
             if (System.getProperty(Constants.OS_TYPE).toLowerCase().contains(Constants.OS_WINDOWS)) {
-                tableOutputLines = summaryTableString.split(System.getProperty(Constants.LINE_SEPARATOR_WIN));
+                String windowsDefaultLineSeparator = System.getProperty(Constants.LINE_SEPARATOR_WIN);
+                if (windowsDefaultLineSeparator == null) windowsDefaultLineSeparator = "\n";
+                tableOutputLines = summaryTableString.split(windowsDefaultLineSeparator);
             } else {
                 tableOutputLines = summaryTableString.split(System.getProperty(Constants.LINE_SEPARATOR));
             }
@@ -254,6 +256,15 @@ public class UnitTestCasesMojo extends AbstractMojo {
 
             //log the server output
             BufferedReader inputBuffer = new BufferedReader(new InputStreamReader(processor.getInputStream()));
+            String line = null;
+            while ((line = inputBuffer.readLine()) != null) {
+                if (getLog().isDebugEnabled()) {
+                    getLog().debug(line);
+                }
+                if (line.contains("Synapse unit testing agent has been established")) {
+                    break;
+                }
+            }
 
             //check port availability - unit test server started or not
             boolean isServerNotStarted = true;
@@ -264,12 +275,9 @@ public class UnitTestCasesMojo extends AbstractMojo {
                 long waitMillis = timeoutExpiredMs - System.currentTimeMillis();
                 isServerNotStarted = checkPortAvailability(Integer.parseInt(serverPort));
 
-                if (getLog().isDebugEnabled()) {
-                    getLog().info(inputBuffer.readLine());
-                }
-
                 if (waitMillis <= 0) {
                     // timeout expired
+                    processor.destroyForcibly();
                     throw new IOException("Connection refused for service in port - " + serverPort);
                 }
             }
@@ -532,7 +540,9 @@ public class UnitTestCasesMojo extends AbstractMojo {
 
             String[] errorTableLines;
             if (System.getProperty(Constants.OS_TYPE).toLowerCase().contains(Constants.OS_WINDOWS)) {
-                errorTableLines = errorTableString.split(System.getProperty(Constants.LINE_SEPARATOR_WIN));
+                String windowsDefaultLineSeparator = System.getProperty(Constants.LINE_SEPARATOR_WIN);
+                if (windowsDefaultLineSeparator == null) windowsDefaultLineSeparator = "\n";
+                errorTableLines = errorTableString.split(windowsDefaultLineSeparator);
             } else {
                 errorTableLines = errorTableString.split(System.getProperty(Constants.LINE_SEPARATOR));
             }
