@@ -53,6 +53,9 @@ public class UnitTestCasesMojo extends AbstractMojo {
     @Parameter(property = "server")
     private SynapseServer server;
 
+    @Parameter(property = "mavenTestSkip")
+    private String mavenTestSkip;
+
     private static final String LOCAL_SERVER = "local";
     private static final String REMOTE_SERVER = "remote";
 
@@ -68,14 +71,51 @@ public class UnitTestCasesMojo extends AbstractMojo {
      * @throws MojoExecutionException if error occurred while running the plugin
      */
     public void execute() throws MojoExecutionException {
-        try {
-            timeStarted = new Date();
-            appendTestLogs();
-            testCaseRunner();
-        } catch (Exception e) {
-            throw new MojoExecutionException("Exception occurred while running test cases " + e.getMessage());
-        } finally {
-            stopTestingServer();
+        if (!Boolean.parseBoolean(mavenTestSkip)) {
+            try {
+                timeStarted = new Date();
+                appendTestLogs();
+                testCaseRunner();
+            } catch (Exception e) {
+                throw new MojoExecutionException("Exception occurred while running test cases " + e.getMessage());
+            } finally {
+                stopTestingServer();
+            }
+        }
+    }
+
+    /**
+     * Check test parameters before start.
+     *
+     * @throws IOException if error occurred while reading test files
+     */
+    private void checkTestParameters() throws IOException {
+        boolean isParameterNotFound = false;
+
+        if (server.getServerType() == null) {
+            isParameterNotFound = true;
+            getLog().error("Please enter -DtestServerType=<local/remote> parameter value to execute tests");
+        }
+
+        if (server.getServerType() != null && server.getServerType().equals(LOCAL_SERVER)
+                && server.getServerPath() == null) {
+            isParameterNotFound = true;
+            getLog().error("Please enter -DtestServerPath=<path> parameter value to execute tests");
+        }
+
+        if (server.getServerType() != null && server.getServerType().equals(REMOTE_SERVER)
+                && server.getServerHost() == null) {
+            isParameterNotFound = true;
+            getLog().error("Please enter -DtestServerHost=<host-ip> parameter value to execute tests");
+        }
+
+        if (server.getServerPort() == null) {
+            isParameterNotFound = true;
+            getLog().error("Please enter -DtestServerPort=<host-ip> parameter value to execute tests");
+        }
+
+        if (isParameterNotFound) {
+            throw new IOException("Test parameters not found");
         }
     }
 
@@ -91,7 +131,8 @@ public class UnitTestCasesMojo extends AbstractMojo {
         getLog().info("");
 
         //start the synapse engine with enable the unit test agent
-        if (!synapseTestCasePaths.isEmpty()) {
+        if (synapseTestCasePaths.size() > 0) {
+            checkTestParameters();
             startTestingServer();
         }
 
@@ -295,7 +336,7 @@ public class UnitTestCasesMojo extends AbstractMojo {
      * Stop the Unit testing agent server.
      */
     private void stopTestingServer() {
-        if (server.getServerType().equals(LOCAL_SERVER)) {
+        if (server.getServerType() != null && server.getServerType().equals(LOCAL_SERVER)) {
             try {
                 if (getLog().isDebugEnabled()) {
                     getLog().debug("Stopping unit testing agent runs on port " + serverPort);
