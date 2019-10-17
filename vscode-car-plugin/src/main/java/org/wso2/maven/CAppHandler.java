@@ -39,6 +39,12 @@ class CAppHandler extends AbstractXMLDoc {
     private static final String SYNAPSE_CONFIG_FOLDER = Paths.get("src", "main", "synapse-config").toString();
     private static final String REGISTRY_RESOURCES_FOLDER = Paths.get("src", "main", "registry-resources").toString();
 
+    private String cAppName;
+
+    public CAppHandler(String cAppName) {
+        this.cAppName = cAppName;
+    }
+
     /**
      * Read /synapse-config/artifact.xml file and create corresponding files in archive directory.
      *
@@ -251,7 +257,10 @@ class CAppHandler extends AbstractXMLDoc {
      * @return .car file name
      */
     private String getCAppName(MavenProject project) {
-        return project.getArtifactId() + "CompositeApplication_" + project.getVersion();
+        if (cAppName != null && !cAppName.isEmpty())
+            return cAppName;
+        else
+            return project.getArtifactId() + "CompositeApplication_" + project.getVersion();
     }
 
     @Override

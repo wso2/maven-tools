@@ -62,9 +62,15 @@ public class CARMojo extends AbstractMojo {
     /**
      * finalName to use for the generated capp project if the user wants to override the default name
      *
-     * @parameter
+     * @parameter expression="${project.build.finalName}"
      */
     private String finalName;
+
+    /**
+     * CarbonApp name to use for the capp project if the users wants to override the default name
+     * @parameter
+     */
+    private String cAppName;
 
     /**
      * @parameter default-value="${project}"
@@ -91,7 +97,7 @@ public class CARMojo extends AbstractMojo {
                     archiveDirectory);
 
             if (createdArchiveDirectory) {
-                CAppHandler cAppHandler = new CAppHandler();
+                CAppHandler cAppHandler = new CAppHandler(cAppName);
                 List<ArtifactDependency> dependencies = new ArrayList<>();
 
                 cAppHandler.processConfigArtifactXmlFile(projectBaseDir, archiveDirectory, dependencies);
