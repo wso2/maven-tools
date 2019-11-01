@@ -67,6 +67,8 @@
         <module>wso2-maven-package-prepare-plugin</module>
         <module>wso2-maven-json-merge-plugin</module>
         <module>wso2-synapse-unit-test-plugin</module>
+        <module>maven-datasource-plugin</module>
+        <module>humantask-maven-plugin</module>
     </modules>
     <build>
         <extensions>
