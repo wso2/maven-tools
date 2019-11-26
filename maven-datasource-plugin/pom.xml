@@ -153,7 +153,6 @@
 		<dependency>
 			<groupId>org.wso2.maven</groupId>
 			<artifactId>org.wso2.maven.capp</artifactId>
-			<version>${org.wso2.maven.capp.version}</version>
 		</dependency>
 	</dependencies>
 	<profiles>
@@ -245,9 +244,6 @@
 		<commons.codec.wso2.commons.codec.version>1.4.0.wso2v1</commons.codec.wso2.commons.codec.version>
 		<org.wso2.carbon.authenticator.stub.version>3.2.0</org.wso2.carbon.authenticator.stub.version>
 		<org.wso2.carbon.roles.mgt.stub.version>3.2.0</org.wso2.carbon.roles.mgt.stub.version>
-		<org.wso2.maven.synapse.plugin.version>2.1.0</org.wso2.maven.synapse.plugin.version>
-		<org.wso2.maven.stratos.plugin.version>2.1.0</org.wso2.maven.stratos.plugin.version>
-		<org.wso2.maven.capp.version>2.1.0</org.wso2.maven.capp.version>
 		<org.wso2.maven.core.version>2.1.0</org.wso2.maven.core.version>
 		<org.wso2.maven.esb.version>2.1.0</org.wso2.maven.esb.version>
 		<org.wso2.maven.analytics.version>1.0.0</org.wso2.maven.analytics.version>
