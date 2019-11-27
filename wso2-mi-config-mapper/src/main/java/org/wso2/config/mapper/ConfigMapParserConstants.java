@@ -26,7 +26,7 @@ class ConfigMapParserConstants {
     static final String PARSER_OUTPUT_PATH = "CarbonHome";
     static final String DOCKER_FILE = "Dockerfile";
     static final String METADATA_DIR = ".metadata";
-    static final String CONF_DIR = ".metadata";
+    static final String CONF_DIR = "conf";
     static final String RESOURCES_PATH = "resources";
     static final String TEMPLATES_ZIP_FILE = "templates.zip";
     static final String METADATA_CONFIG_PROPERTIES_FILE = "metadata_config.properties";
