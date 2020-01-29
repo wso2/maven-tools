@@ -292,7 +292,8 @@ public class ConfigMapParserMojo extends AbstractMojo {
                 if (currentLine.contains(ConfigMapParserConstants.DOCKER_FROM_TAG) ||
                         currentLine.contains(ConfigMapParserConstants.DOCKER_COMPOSITE_COPY_TAG) ||
                         currentLine.contains(ConfigMapParserConstants.DOCKER_LIBS_COPY_TAG) ||
-                        currentLine.contains(ConfigMapParserConstants.DOCKER_ENV_TAG)) {
+                        currentLine.contains(ConfigMapParserConstants.DOCKER_ENV_TAG) ||
+                        currentLine.contains(ConfigMapParserConstants.DOCKER_RESOURCES_COPY_TAG)) {
                     builder.append(currentLine).append(System.lineSeparator());
                 }
             }
