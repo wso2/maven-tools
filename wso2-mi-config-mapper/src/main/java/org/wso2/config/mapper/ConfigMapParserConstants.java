@@ -36,6 +36,7 @@ class ConfigMapParserConstants {
     static final String DOCKER_FROM_TAG = "FROM wso2/micro-integrator";
     static final String DOCKER_COMPOSITE_COPY_TAG = "COPY CompositeApps";
     static final String DOCKER_LIBS_COPY_TAG = "COPY Libs";
+    static final String DOCKER_RESOURCES_COPY_TAG = "COPY Resources";
     static final String DOCKER_ENV_TAG = "ENV ";
     static final String METADATA_DIR_PATH = DOCKER_MI_DIR_PATH + "repository/resources/conf/.metadata";
     static final String DOCKER_COPY_FILE = "COPY  --chown=wso2carbon:wso2 ";
