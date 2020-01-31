@@ -29,15 +29,13 @@ class ConfigMapParserConstants {
     static final String CONF_DIR = "conf";
     static final String RESOURCES_PATH = "ConfigMapResources";
     static final String TEMPLATES_ZIP_FILE = "templates.zip";
+    static final String PATH_SEPARATOR = "/";
     static final String METADATA_CONFIG_PROPERTIES_FILE = "metadata_config.properties";
     static final String TEMPLATES_URL = "http://product-dist.wso2.com/p2/templates/";
 
     static final String DOCKER_MI_DIR_PATH = " /home/wso2carbon/wso2mi/";
-    static final String DOCKER_FROM_TAG = "FROM wso2/micro-integrator";
-    static final String DOCKER_COMPOSITE_COPY_TAG = "COPY CompositeApps";
-    static final String DOCKER_LIBS_COPY_TAG = "COPY Libs";
-    static final String DOCKER_RESOURCES_COPY_TAG = "COPY Resources";
-    static final String DOCKER_ENV_TAG = "ENV ";
+    static final String DOCKER_FILE_AUTO_GENERATION_BEGIN = "#[DO NOT REMOVE] Auto generated Docker commands for config-map parser";
+    static final String DOCKER_FILE_AUTO_GENERATION_END = "#[DO NOT REMOVE] End of auto generated Docker commands for config-map parser";
     static final String METADATA_DIR_PATH = DOCKER_MI_DIR_PATH + "repository/resources/conf/.metadata";
     static final String DOCKER_COPY_FILE = "COPY  --chown=wso2carbon:wso2 ";
     static final String DOCKER_MAKE_DIR = "RUN mkdir";
