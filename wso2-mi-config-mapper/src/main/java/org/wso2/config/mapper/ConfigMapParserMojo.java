@@ -46,6 +46,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
+import java.util.regex.Pattern;
 
 @Mojo(name = "config-mapper-parser")
 public class ConfigMapParserMojo extends AbstractMojo {
@@ -230,15 +231,19 @@ public class ConfigMapParserMojo extends AbstractMojo {
         String dockerFileBaseEntries = getBaseImageInDockerfile();
         StringBuilder builder = new StringBuilder(dockerFileBaseEntries);
 
+        builder.append(System.lineSeparator()).append(ConfigMapParserConstants.DOCKER_FILE_AUTO_GENERATION_BEGIN)
+                .append(System.lineSeparator());
+        String splitPattern = Pattern.quote(System.getProperty("file.separator"));
         for (String filePath : parsedOutputFileList) {
-            String[] filePathSeparateList = filePath.split(File.separator);
+            String[] filePathSeparateList = filePath.split(splitPattern);
             StringBuilder innerBuilder = new StringBuilder();
             for (int x = 1; x < filePathSeparateList.length - 1 ; x++) {
-                innerBuilder.append(filePathSeparateList[x]).append("/");
+                innerBuilder.append(filePathSeparateList[x]).append(ConfigMapParserConstants.PATH_SEPARATOR);
             }
             innerBuilder.append(filePathSeparateList[filePathSeparateList.length - 1]);
-            builder.append(ConfigMapParserConstants.DOCKER_COPY_FILE).append(filePath)
-                    .append(ConfigMapParserConstants.DOCKER_MI_DIR_PATH).append(innerBuilder.toString());
+            builder.append(ConfigMapParserConstants.DOCKER_COPY_FILE).append(filePath.replaceAll(splitPattern,
+                    ConfigMapParserConstants.PATH_SEPARATOR)).append(ConfigMapParserConstants.DOCKER_MI_DIR_PATH)
+                    .append(innerBuilder.toString());
             builder.append(System.lineSeparator());
         }
 
@@ -246,9 +251,11 @@ public class ConfigMapParserMojo extends AbstractMojo {
         builder.append(ConfigMapParserConstants.DOCKER_MAKE_DIR + ConfigMapParserConstants.METADATA_DIR_PATH);
         builder.append(System.lineSeparator());
         builder.append(ConfigMapParserConstants.DOCKER_COPY_FILE).append(ConfigMapParserConstants.PARSER_OUTPUT_PATH)
-                .append(File.separator).append(ConfigMapParserConstants.METADATA_DIR).append(File.separator)
+                .append(ConfigMapParserConstants.PATH_SEPARATOR).append(ConfigMapParserConstants.METADATA_DIR)
+                .append(ConfigMapParserConstants.PATH_SEPARATOR)
                 .append(ConfigMapParserConstants.METADATA_CONFIG_PROPERTIES_FILE)
-                .append(ConfigMapParserConstants.METADATA_DIR_PATH);
+                .append(ConfigMapParserConstants.METADATA_DIR_PATH).append(System.lineSeparator());
+        builder.append(ConfigMapParserConstants.DOCKER_FILE_AUTO_GENERATION_END).append(System.lineSeparator());
 
         try (InputStream inputStream = new ByteArrayInputStream(builder.toString()
                 .getBytes(StandardCharsets.UTF_8));
@@ -289,11 +296,14 @@ public class ConfigMapParserMojo extends AbstractMojo {
         try (BufferedReader bufferReader = new BufferedReader(new FileReader(ConfigMapParserConstants.DOCKER_FILE))) {
             String currentLine;
             while ((currentLine = bufferReader.readLine()) != null) {
-                if (currentLine.contains(ConfigMapParserConstants.DOCKER_FROM_TAG) ||
-                        currentLine.contains(ConfigMapParserConstants.DOCKER_COMPOSITE_COPY_TAG) ||
-                        currentLine.contains(ConfigMapParserConstants.DOCKER_LIBS_COPY_TAG) ||
-                        currentLine.contains(ConfigMapParserConstants.DOCKER_ENV_TAG) ||
-                        currentLine.contains(ConfigMapParserConstants.DOCKER_RESOURCES_COPY_TAG)) {
+                if (currentLine.contains(ConfigMapParserConstants.DOCKER_FILE_AUTO_GENERATION_BEGIN)) {
+                    String autoGenerateCommandLine;
+                    while ((autoGenerateCommandLine = bufferReader.readLine()) != null) {
+                        if (autoGenerateCommandLine.contains(ConfigMapParserConstants.DOCKER_FILE_AUTO_GENERATION_END)) {
+                            break;
+                        }
+                    }
+                } else {
                     builder.append(currentLine).append(System.lineSeparator());
                 }
             }
