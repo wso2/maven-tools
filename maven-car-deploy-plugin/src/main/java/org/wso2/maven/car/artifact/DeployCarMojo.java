@@ -187,7 +187,6 @@ public class DeployCarMojo extends AbstractMojo {
 				if(server.getTrustStorePath()!=null){
 					trustStorePath=server.getTrustStorePath();
 				}
-				getLog().info("TSPWD="+server.getTrustStorePassword());
 				if(server.getTrustStorePassword()!=null){
 					trustStorePassword=server.getTrustStorePassword();
 				}
@@ -199,11 +198,9 @@ public class DeployCarMojo extends AbstractMojo {
 				if(server.getServerUrl()!=null){
 					serverUrl=server.getServerUrl();
 				}
-				getLog().info("UserName="+server.getUserName());
 				if(server.getUserName()!=null){
 					userName=server.getUserName();
 				}
-				getLog().info("Password="+server.getPassword());
 				if(server.getPassword()!=null){
 					password=server.getPassword();
 				}
@@ -279,12 +276,10 @@ public class DeployCarMojo extends AbstractMojo {
 				getLog().info("TSPWD="+server.getTrustStorePassword());
 				getLog().info("TSType="+server.getTrustStoreType());
 				getLog().info("Server URL="+server.getServerUrl());
-				getLog().info("UserName="+server.getUserName());
-				getLog().info("Password="+server.getPassword());
 				getLog().info("Operation="+server.getOperation());
 				
 				if(server.getUserName()==null){
-					getLog().info("HIT THE GROUNDS!");
+					getLog().info("Please enter a valid user name.");
 				}
 			}
 		}
