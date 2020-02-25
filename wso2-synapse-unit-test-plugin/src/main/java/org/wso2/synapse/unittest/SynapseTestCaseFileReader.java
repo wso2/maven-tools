@@ -123,8 +123,13 @@ class SynapseTestCaseFileReader {
         String testArtifactFileAsString;
         if (!testArtifactFileNode.getText().isEmpty()) {
             String testArtifactFilePath = testArtifactFileNode.getText();
-            testArtifactFileAsString = FileUtils.readFileToString(
-                    new File(RELATIVE_PREVIOUS + File.separator +  testArtifactFilePath));
+            File testArtifactFile = new File(RELATIVE_PREVIOUS + File.separator +  testArtifactFilePath);
+            if (!testArtifactFile.exists()) {
+                testArtifactFileAsString = FileUtils.readFileToString(new File(testArtifactFilePath.substring(1)));
+            } else {
+                testArtifactFileAsString = FileUtils.readFileToString(testArtifactFile);
+            }
+
         } else {
             throw new IOException("Test artifact does not contain configuration file path");
         }
@@ -160,8 +165,12 @@ class SynapseTestCaseFileReader {
             String supportiveArtifactFileAsString;
             if (!artifact.getText().isEmpty()) {
                 String artifactFilePath = artifact.getText();
-                supportiveArtifactFileAsString = FileUtils.readFileToString(
-                        new File(RELATIVE_PREVIOUS + File.separator + artifactFilePath));
+                File supportiveArtifactFile = new File(RELATIVE_PREVIOUS + File.separator +  artifactFilePath);
+                if (!supportiveArtifactFile.exists()) {
+                    supportiveArtifactFileAsString = FileUtils.readFileToString(new File(artifactFilePath.substring(1)));
+                } else {
+                    supportiveArtifactFileAsString = FileUtils.readFileToString(supportiveArtifactFile);
+                }
             } else {
                 throw new IOException("Supportive artifact does not contain configuration file path");
             }
@@ -201,8 +210,12 @@ class SynapseTestCaseFileReader {
             String registryResourceFileAsString;
             if (!registryResourcesFileNode.getText().isEmpty()) {
                 String registryFilePath = registryResourcesFileNode.getText();
-                registryResourceFileAsString = FileUtils.readFileToString(
-                        new File(RELATIVE_PREVIOUS + File.separator + registryFilePath));
+                File registryResourceFile = new File(RELATIVE_PREVIOUS + File.separator +  registryFilePath);
+                if (!registryResourceFile.exists()) {
+                    registryResourceFileAsString = FileUtils.readFileToString(new File(registryFilePath.substring(1)));
+                } else {
+                    registryResourceFileAsString = FileUtils.readFileToString(registryResourceFile);
+                }
             } else {
                 throw new IOException("Registry resource does not contain configuration file path");
             }
@@ -243,7 +256,13 @@ class SynapseTestCaseFileReader {
 
             String encodedConnectorFile;
             if (!resource.getText().isEmpty()) {
-                String registryFilePath = RELATIVE_PREVIOUS + File.separator + resource.getText();
+                String registryFilePath;
+                File connectorResourceFile = new File(RELATIVE_PREVIOUS + File.separator + resource.getText());
+                if (!connectorResourceFile.exists()) {
+                    registryFilePath = resource.getText().substring(1);
+                } else {
+                    registryFilePath = RELATIVE_PREVIOUS + File.separator + resource.getText();
+                }
                 byte[] connectorInBytes = Files.readAllBytes(Paths.get(registryFilePath));
                 byte[] encoded = Base64.encodeBase64(connectorInBytes);
                 encodedConnectorFile = new String(encoded);
@@ -279,8 +298,12 @@ class SynapseTestCaseFileReader {
             String mockServiceFileDataAsString;
             if (!mockServiceNode.getText().isEmpty()) {
                 String mockServiceFilePath = mockServiceNode.getText();
-                mockServiceFileDataAsString = FileUtils.readFileToString(
-                        new File(RELATIVE_PREVIOUS + File.separator + mockServiceFilePath));
+                File mockServiceFile = new File(RELATIVE_PREVIOUS + File.separator +  mockServiceFilePath);
+                if (!mockServiceFile.exists()) {
+                    mockServiceFileDataAsString = FileUtils.readFileToString(new File(mockServiceFilePath.substring(1)));
+                } else {
+                    mockServiceFileDataAsString = FileUtils.readFileToString(mockServiceFile);
+                }
             } else {
                 throw new IOException("Mock service file does not contain configuration file path");
             }
