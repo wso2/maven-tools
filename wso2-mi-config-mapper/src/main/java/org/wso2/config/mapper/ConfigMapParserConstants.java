@@ -33,7 +33,7 @@ class ConfigMapParserConstants {
     static final String METADATA_CONFIG_PROPERTIES_FILE = "metadata_config.properties";
     static final String TEMPLATES_URL = "http://product-dist.wso2.com/p2/templates/";
 
-    static final String DOCKER_MI_DIR_PATH = " /home/wso2carbon/wso2mi/";
+    static final String DOCKER_MI_DIR_PATH = " ${WSO2_SERVER_HOME}/";
     static final String DOCKER_FILE_AUTO_GENERATION_BEGIN = "#[DO NOT REMOVE] Auto generated Docker commands for config-map parser";
     static final String DOCKER_FILE_AUTO_GENERATION_END = "#[DO NOT REMOVE] End of auto generated Docker commands for config-map parser";
     static final String METADATA_DIR_PATH = DOCKER_MI_DIR_PATH + "repository/resources/conf/.metadata";
