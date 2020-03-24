@@ -266,7 +266,7 @@
         <common.logging.version>1.2</common.logging.version>
         <orbit.version.commons.lang>2.6.0.wso2v1</orbit.version.commons.lang>
         <version.commons.codec>1.12</version.commons.codec>
-        <mi.config.mapper.version>1.0.4</mi.config.mapper.version>
+        <mi.config.mapper.version>1.0.7</mi.config.mapper.version>
         <net.lingala.zip4j.version>1.3.2</net.lingala.zip4j.version>
     </properties>
 

@@ -66,7 +66,7 @@ public class ConfigMapParserMojo extends AbstractMojo {
             if (!isDownloaded) {
                 return;
             }
-
+            System.setProperty("avoidResolvingEnvAndSysVariables", "true");
             String templatePath = ConfigMapParserConstants.RESOURCES_PATH + File.separator + "templates";
             File deplymentTomlFile = new File(ConfigMapParserConstants.DEPLOYMENT_TOML_PATH);
             boolean isDeploymentTomlFileExist = deplymentTomlFile.exists();
