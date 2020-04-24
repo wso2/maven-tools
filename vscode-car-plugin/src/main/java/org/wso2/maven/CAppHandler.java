@@ -260,7 +260,7 @@ class CAppHandler extends AbstractXMLDoc {
         if (cAppName != null && !cAppName.isEmpty())
             return cAppName;
         else
-            return project.getArtifactId() + "CompositeApplication_" + project.getVersion();
+            return project.getArtifactId() + "CompositeApplication";
     }
 
     @Override

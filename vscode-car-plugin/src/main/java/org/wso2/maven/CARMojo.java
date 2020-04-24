@@ -46,28 +46,29 @@ import org.wso2.maven.Model.ArtifactDependency;
 public class CARMojo extends AbstractMojo {
 
     /**
-     * Location archiveLocation folder
+     * Location archiveLocation folder.
      *
      * @parameter expression="${project.basedir}"
      */
     private File projectBaseDir;
 
     /**
-     * Location archiveLocation folder
+     * Location archiveLocation folder.
      *
      * @parameter expression="${project.build.directory}"
      */
     private File archiveLocation;
 
     /**
-     * finalName to use for the generated capp project if the user wants to override the default name
+     * archiveName is used if the user wants to override the default name of the generated archive with .car extension.
      *
-     * @parameter expression="${project.build.finalName}"
+     * @parameter expression="${project.build.archiveName}"
      */
-    private String finalName;
+    private String archiveName;
 
     /**
-     * CarbonApp name to use for the capp project if the users wants to override the default name
+     * CarbonApp is used if the user wants to override the default name of the carbon application.
+     *
      * @parameter
      */
     private String cAppName;
@@ -78,7 +79,7 @@ public class CARMojo extends AbstractMojo {
     private MavenProject project;
 
     /**
-     * A classifier for the build final name
+     * A classifier for the build final name.
      *
      * @parameter
      */
@@ -138,8 +139,8 @@ public class CARMojo extends AbstractMojo {
      */
     private File getArchiveFile(String fileExtension) {
         File archiveFile;
-        if (finalName != null && !finalName.trim().equals(Constants.EMPTY_STRING)) {
-            archiveFile = new File(archiveLocation, finalName + fileExtension);
+        if (archiveName != null && !archiveName.trim().equals(Constants.EMPTY_STRING)) {
+            archiveFile = new File(archiveLocation, archiveName + fileExtension);
             return archiveFile;
         }
         String archiveFilename = project.getArtifactId() + "_" + project.getVersion() +
