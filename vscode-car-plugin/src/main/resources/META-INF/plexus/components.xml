@@ -1,0 +1,44 @@
+<component-set>
+  <components>
+    <component>
+      <role>org.apache.maven.lifecycle.mapping.LifecycleMapping</role>
+      <role-hint>car</role-hint>
+      <implementation>org.apache.maven.lifecycle.mapping.DefaultLifecycleMapping</implementation>
+      <configuration>
+    <phases>
+      <process-resources>
+        org.apache.maven.plugins:maven-resources-plugin:resources
+      </process-resources>
+<!-- 
+	When the package-element is enabled then we'll run in the package phase automatically. 
+	If the project's pom has an execution-config to execute in the package phase then we'll 
+	be run twice in the same build.... So for now, given the current VSCode plugin generates 
+	this execution-config, this is disabled. Consider to enable to make the plugin-config 
+	inside the project even more lean.
+      <package>
+        org.wso2.maven:vscode-car-plugin:car
+      </package>
+-->
+      <package />
+      <install>
+        org.apache.maven.plugins:maven-install-plugin:install
+      </install>
+      <deploy>
+        org.apache.maven.plugins:maven-deploy-plugin:deploy
+      </deploy>
+    </phases>
+      </configuration>
+    </component>
+    <component>
+      <role>org.apache.maven.artifact.handler.ArtifactHandler</role>
+      <role-hint>car</role-hint>
+      <implementation>
+        org.apache.maven.artifact.handler.DefaultArtifactHandler
+      </implementation>
+      <configuration>
+        <type>car</type>
+        <extension>car</extension>
+      </configuration>
+    </component>
+  </components>
+</component-set>

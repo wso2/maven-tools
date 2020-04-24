@@ -100,6 +100,11 @@ public class CARMojo extends AbstractMojo {
 
                 File fileToZip = new File(archiveDirectory);
                 zipFolder(fileToZip.getPath(), getArchiveFile(".car").getPath());
+                File carFile = getArchiveFile(".car");
+                zipFolder(fileToZip.getPath(), carFile.getPath());
+
+                // Attach carFile to Maven context.
+                this.project.getArtifact().setFile(carFile);
 
                 recursiveDelete(fileToZip);
 
