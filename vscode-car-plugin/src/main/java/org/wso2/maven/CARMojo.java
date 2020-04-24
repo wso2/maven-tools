@@ -87,7 +87,7 @@ public class CARMojo extends AbstractMojo {
         try {
             // Create directory to be compressed.
             String archiveDirectory = getArchiveFile(Constants.EMPTY_STRING).getAbsolutePath();
-            boolean createdArchiveDirectory = org.wso2.developerstudio.eclipse.utils.file.FileUtils.createDirectory(
+            boolean createdArchiveDirectory = org.wso2.developerstudio.eclipse.utils.file.FileUtils.createDirectories(
                     archiveDirectory);
 
             if (createdArchiveDirectory) {
@@ -99,7 +99,6 @@ public class CARMojo extends AbstractMojo {
                 cAppHandler.createDependencyArtifactsXmlFile(archiveDirectory, dependencies, project);
 
                 File fileToZip = new File(archiveDirectory);
-                zipFolder(fileToZip.getPath(), getArchiveFile(".car").getPath());
                 File carFile = getArchiveFile(".car");
                 zipFolder(fileToZip.getPath(), carFile.getPath());
 

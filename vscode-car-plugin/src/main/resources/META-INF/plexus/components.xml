@@ -1,44 +1,54 @@
+<!--
+  ~ Copyright (c) 2020, WSO2 Inc. (http://www.wso2.org) All Rights Reserved.
+  ~
+  ~ WSO2 Inc. licenses this file to you under the Apache License,
+  ~ Version 2.0 (the "License"); you may not use this file except
+  ~ in compliance with the License.
+  ~ You may obtain a copy of the License at
+  ~
+  ~ http://www.apache.org/licenses/LICENSE-2.0
+  ~
+  ~ Unless required by applicable law or agreed to in writing,
+  ~ software distributed under the License is distributed on an
+  ~ "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+  ~ KIND, either express or implied. See the License for the
+  ~ specific language governing permissions and limitations
+  ~ under the License.
+  -->
+
 <component-set>
-  <components>
-    <component>
-      <role>org.apache.maven.lifecycle.mapping.LifecycleMapping</role>
-      <role-hint>car</role-hint>
-      <implementation>org.apache.maven.lifecycle.mapping.DefaultLifecycleMapping</implementation>
-      <configuration>
-    <phases>
-      <process-resources>
-        org.apache.maven.plugins:maven-resources-plugin:resources
-      </process-resources>
-<!-- 
-	When the package-element is enabled then we'll run in the package phase automatically. 
-	If the project's pom has an execution-config to execute in the package phase then we'll 
-	be run twice in the same build.... So for now, given the current VSCode plugin generates 
-	this execution-config, this is disabled. Consider to enable to make the plugin-config 
-	inside the project even more lean.
-      <package>
-        org.wso2.maven:vscode-car-plugin:car
-      </package>
--->
-      <package />
-      <install>
-        org.apache.maven.plugins:maven-install-plugin:install
-      </install>
-      <deploy>
-        org.apache.maven.plugins:maven-deploy-plugin:deploy
-      </deploy>
-    </phases>
-      </configuration>
-    </component>
-    <component>
-      <role>org.apache.maven.artifact.handler.ArtifactHandler</role>
-      <role-hint>car</role-hint>
-      <implementation>
-        org.apache.maven.artifact.handler.DefaultArtifactHandler
-      </implementation>
-      <configuration>
-        <type>car</type>
-        <extension>car</extension>
-      </configuration>
-    </component>
-  </components>
+    <components>
+        <component>
+            <role>org.apache.maven.lifecycle.mapping.LifecycleMapping</role>
+            <role-hint>car</role-hint>
+            <implementation>org.apache.maven.lifecycle.mapping.DefaultLifecycleMapping</implementation>
+            <configuration>
+                <phases>
+                    <process-resources>
+                        org.apache.maven.plugins:maven-resources-plugin:resources
+                    </process-resources>
+                    <package>
+                        org.wso2.maven:vscode-car-plugin:car
+                    </package>
+                    <install>
+                        org.apache.maven.plugins:maven-install-plugin:install
+                    </install>
+                    <deploy>
+                        org.apache.maven.plugins:maven-deploy-plugin:deploy
+                    </deploy>
+                </phases>
+            </configuration>
+        </component>
+        <component>
+            <role>org.apache.maven.artifact.handler.ArtifactHandler</role>
+            <role-hint>car</role-hint>
+            <implementation>
+                org.apache.maven.artifact.handler.DefaultArtifactHandler
+            </implementation>
+            <configuration>
+                <type>car</type>
+                <extension>car</extension>
+            </configuration>
+        </component>
+    </components>
 </component-set>

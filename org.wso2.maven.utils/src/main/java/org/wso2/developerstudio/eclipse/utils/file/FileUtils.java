@@ -157,7 +157,7 @@ public class FileUtils{
 		return success;  
 	}
 
-	public static boolean createDirectorys(String directory){
+	public static boolean createDirectories(String directory){
 		// Create a directory; all ancestor directories must exist
 		boolean success = (new File(directory)).mkdirs();
 		if (!success) {
