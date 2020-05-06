@@ -62,6 +62,7 @@ public class UnitTestCasesMojo extends AbstractMojo {
     private Date timeStarted;
     private String serverHost;
     private String serverPort;
+    private boolean isUnitTestAgentStartTheServer = false;
 
     private DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 
@@ -77,9 +78,11 @@ public class UnitTestCasesMojo extends AbstractMojo {
                 appendTestLogs();
                 testCaseRunner();
             } catch (Exception e) {
-                throw new MojoExecutionException("Exception occurred while running test cases " + e.getMessage());
+                throw new MojoExecutionException("Exception occurred while running test cases: " + e.getMessage());
             } finally {
-                stopTestingServer();
+                if (isUnitTestAgentStartTheServer) {
+                    stopTestingServer();
+                }
             }
         }
     }
@@ -239,23 +242,10 @@ public class UnitTestCasesMojo extends AbstractMojo {
             getLog().info("Failure Test Cases: " + failureTestCaseCount);
             getLog().info("");
 
+            //generate test summary detail table (PASS / FAILURE)
             String[] summaryHeadersList = {"  TEST CASE  ", "  DEPLOYMENT  ", "  MEDIATION  ", "  ASSERTION  "};
-            String[][] testSummaryDataList = getTestCaseWiseSummary(summaryJson);
-            String summaryTableString = ConsoleDataTable.of(summaryHeadersList, testSummaryDataList);
-
-            String[] tableOutputLines;
-            if (System.getProperty(Constants.OS_TYPE).toLowerCase().contains(Constants.OS_WINDOWS)) {
-                String windowsDefaultLineSeparator = System.getProperty(Constants.LINE_SEPARATOR_WIN);
-                if (windowsDefaultLineSeparator == null) windowsDefaultLineSeparator = "\n";
-                tableOutputLines = summaryTableString.split(windowsDefaultLineSeparator);
-            } else {
-                tableOutputLines = summaryTableString.split(System.getProperty(Constants.LINE_SEPARATOR));
-            }
-
-            for (String line : tableOutputLines) {
-                getLog().info(line);
-            }
-            getLog().info("");
+            List<List<String>> testSummaryDataList = getTestCaseWiseSummary(summaryJson);
+            printDetailedTable(testSummaryDataList, 4, summaryHeadersList);
 
             //generate test failure table if exists
             boolean isOverallTestFailed = generateTestFailureTable(summaryJson);
@@ -277,7 +267,7 @@ public class UnitTestCasesMojo extends AbstractMojo {
 
         serverPort = server.getServerPort();
         //set default port in client side whether receiving port is empty
-        if(serverPort == null || serverPort.isEmpty()) {
+        if (serverPort == null || serverPort.isEmpty()) {
             server.setServerPort("9008");
             serverPort = server.getServerPort();
         }
@@ -295,6 +285,12 @@ public class UnitTestCasesMojo extends AbstractMojo {
             getLog().info("Waiting for testing agent initialization");
             getLog().info("");
 
+            //check unit testing port availability
+            if (!checkPortAvailability(Integer.parseInt(serverPort))) {
+                getLog().error("Another process has already occupied the port - " + serverPort);
+                throw new IOException("Another process has already occupied the port - " + serverPort);
+            }
+
             //log the server output
             BufferedReader inputBuffer = new BufferedReader(new InputStreamReader(processor.getInputStream()));
             String line = null;
@@ -303,6 +299,7 @@ public class UnitTestCasesMojo extends AbstractMojo {
                     getLog().debug(line);
                 }
                 if (line.contains("Synapse unit testing agent has been established")) {
+                    isUnitTestAgentStartTheServer = true;
                     break;
                 }
             }
@@ -447,9 +444,9 @@ public class UnitTestCasesMojo extends AbstractMojo {
      * Get test cases wise summary from the whole test summary.
      *
      * @param jsonSummary test summary as a json
-     * @return string array of processes data
+     * @return list array of processes data
      */
-    private String[][] getTestCaseWiseSummary(JsonObject jsonSummary) {
+    private List<List<String>> getTestCaseWiseSummary(JsonObject jsonSummary) {
         List<List<String>> allTestSummary = new ArrayList<>();
 
         if (jsonSummary.get(Constants.TEST_CASES) != null &&
@@ -488,14 +485,7 @@ public class UnitTestCasesMojo extends AbstractMojo {
             allTestSummary.add(testSummary);
         }
 
-        String[][] allSummaryArray = new String[allTestSummary.size()][4];
-        for (int x = 0 ; x < allTestSummary.size(); x++) {
-            List<String> innerList = allTestSummary.get(x);
-            String[] innerArray = new String[4];
-            innerArray = innerList.toArray(innerArray);
-            allSummaryArray[x] = innerArray;
-        }
-        return allSummaryArray;
+        return allTestSummary;
     }
 
     /**
@@ -506,9 +496,9 @@ public class UnitTestCasesMojo extends AbstractMojo {
      */
     private boolean generateTestFailureTable(JsonObject jsonSummary) {
         boolean isFailureOccurred = false;
-        String[] errorHeadersList = {"  TEST CASE  ", "  FAILURE STATE  ", "      EXCEPTION / ERROR MESSAGE     "};
 
         List<List<String>> errorRowsList = new ArrayList<>();
+        List<List<String>> assertErrors = new ArrayList<>();
         if (jsonSummary.get(Constants.TEST_CASES) != null &&
                 jsonSummary.get(Constants.TEST_CASES).getAsJsonArray().size() > 0) {
             JsonArray testCases = jsonSummary.get(Constants.TEST_CASES).getAsJsonArray();
@@ -526,11 +516,43 @@ public class UnitTestCasesMojo extends AbstractMojo {
                     errorRowsList.add(failureSummary);
                 } else if (!testJsonObject.get(Constants.ASSERTION_STATUS).getAsString().equals(Constants.PASSED_KEY)) {
                     isFailureOccurred = true;
-                    failureSummary.add(Constants.TEST_CASE_VALUE +
-                            testJsonObject.get(Constants.TEST_CASE_NAME).getAsString());
-                    failureSummary.add(Constants.TWO_SPACES + Constants.ASSERTION_PHASE);
-                    failureSummary.add(testJsonObject.get(Constants.EXCEPTION).getAsString());
-                    errorRowsList.add(failureSummary);
+                    JsonArray failureAssertions = testJsonObject.getAsJsonArray(Constants.FAILURE_ASSERTIONS);
+                    for (int item = 0; item < failureAssertions.size(); item++) {
+                        JsonObject assertFailures = failureAssertions.get(item).getAsJsonObject();
+
+                        //Add test assertion failure abstract details
+                        List<String> assertionSummary = new ArrayList<>();
+                        String testCaseName = Constants.TEST_CASE_VALUE +
+                                testJsonObject.get(Constants.TEST_CASE_NAME).getAsString();
+                        assertionSummary.add(testCaseName);
+                        assertionSummary.add(Constants.TWO_SPACES + Constants.ASSERTION_PHASE);
+                        assertionSummary.add(assertFailures.get(Constants.ASSERTION_MESSAGE).getAsString());
+                        errorRowsList.add(assertionSummary);
+
+                        //Add test assertion failure full details
+                        List<String> failureAssertionInDetail = new ArrayList<>();
+                        failureAssertionInDetail.add(testCaseName);
+                        failureAssertionInDetail.add(assertFailures.get(Constants.ASSERTION_TYPE).getAsString() + " - "
+                                + assertFailures.get(Constants.ASSERTION_EXPRESSION).getAsString());
+
+                        String assertionErrorMessage = "Actual Response: " + Constants.NEW_LINE_SEPARATOR
+                                + splitLongStrings(assertFailures.get(Constants.ASSERTION_ACTUAL).getAsString())
+                                + Constants.NEW_LINE_SEPARATOR;
+
+                        if (!assertFailures.get(Constants.ASSERTION_EXPECTED).isJsonNull()) {
+                            assertionErrorMessage += "Expected Response: " + Constants.NEW_LINE_SEPARATOR
+                                    + splitLongStrings(assertFailures.get(Constants.ASSERTION_EXPECTED).getAsString());
+                        }
+
+                        if (!assertFailures.get(Constants.ASSERTION_DESCRIPTION).isJsonNull()) {
+                            assertionErrorMessage += Constants.NEW_LINE_SEPARATOR + "Description: "
+                                    + Constants.NEW_LINE_SEPARATOR
+                                    + splitLongStrings(assertFailures.get(Constants.ASSERTION_DESCRIPTION).getAsString());
+                        }
+
+                        failureAssertionInDetail.add(assertionErrorMessage);
+                        assertErrors.add(failureAssertionInDetail);
+                    }
                 }
             }
 
@@ -568,31 +590,76 @@ public class UnitTestCasesMojo extends AbstractMojo {
 
         if (isFailureOccurred) {
             getLog().info("Failed Test Case(s): ");
+            String[] errorHeadersList = {"  TEST CASE  ", "  FAILURE STATE  ", "      EXCEPTION / ERROR MESSAGE     "};
 
-            String[][] errorRowsArray = new String[errorRowsList.size()][3];
-            for (int x = 0 ; x < errorRowsList.size(); x++) {
-                List<String> innerList = errorRowsList.get(x);
-                String[] innerArray = new String[3];
-                innerArray = innerList.toArray(innerArray);
-                errorRowsArray[x] = innerArray;
-            }
+            printDetailedTable(errorRowsList, 3, errorHeadersList);
 
-            String errorTableString = ConsoleDataTable.of(errorHeadersList, errorRowsArray);
+            //generate test assertion failure detail table
+            if (!assertErrors.isEmpty()) {
+                getLog().info("Failed Assertion(s): ");
+                String[] assertErrorHeadersList = {"  TEST CASE  ", "  ASSERT EXPRESSION  ", "      FAILURE     "};
 
-            String[] errorTableLines;
-            if (System.getProperty(Constants.OS_TYPE).toLowerCase().contains(Constants.OS_WINDOWS)) {
-                String windowsDefaultLineSeparator = System.getProperty(Constants.LINE_SEPARATOR_WIN);
-                if (windowsDefaultLineSeparator == null) windowsDefaultLineSeparator = "\n";
-                errorTableLines = errorTableString.split(windowsDefaultLineSeparator);
-            } else {
-                errorTableLines = errorTableString.split(System.getProperty(Constants.LINE_SEPARATOR));
+                printDetailedTable(assertErrors, 3, assertErrorHeadersList);
             }
-            for (String line : errorTableLines) {
-                getLog().info(line);
-            }
-            getLog().info("");
         }
 
         return isFailureOccurred;
+    }
+
+    /**
+     * Split lengthy strings.
+     *
+     * @param text string which need to make it as multiline
+     * @return multiline string
+     */
+    private String splitLongStrings(String text) {
+        if (text.length() < 100) {
+            return text + Constants.NEW_LINE_SEPARATOR;
+        }
+
+        int maxStringLength = 100;
+        StringBuilder multilineConvertedString = new StringBuilder();
+        for (int start = 0; start < text.length(); start += maxStringLength) {
+            String currentLine = text.substring(start, Math.min(text.length(), start + maxStringLength));
+            if (currentLine.contains(Constants.NEW_LINE_SEPARATOR)) {
+                multilineConvertedString.append(currentLine);
+            } else {
+                multilineConvertedString.append(currentLine).append(Constants.NEW_LINE_SEPARATOR);
+            }
+        }
+
+        return multilineConvertedString.toString();
+    }
+
+    /**
+     * Generate detail tables in unit testing report.
+     *
+     * @param detailList list of unit test details
+     * @param columnSize number of columns in the table
+     * @param errorHeadersList header titles of the table
+     */
+    private void printDetailedTable(List<List<String>> detailList, int columnSize, String[] errorHeadersList) {
+        String[][] errorRowsArray = new String[detailList.size()][columnSize];
+        for (int x = 0 ; x < detailList.size(); x++) {
+            List<String> innerList = detailList.get(x);
+            String[] innerArray = new String[columnSize];
+            innerArray = innerList.toArray(innerArray);
+            errorRowsArray[x] = innerArray;
+        }
+
+        String errorTableString = ConsoleDataTable.of(errorHeadersList, errorRowsArray);
+
+        String[] errorTableLines;
+        if (System.getProperty(Constants.OS_TYPE).toLowerCase().contains(Constants.OS_WINDOWS)) {
+            String windowsDefaultLineSeparator = System.getProperty(Constants.LINE_SEPARATOR_WIN);
+            if (windowsDefaultLineSeparator == null) windowsDefaultLineSeparator = Constants.NEW_LINE_SEPARATOR;
+            errorTableLines = errorTableString.split(windowsDefaultLineSeparator);
+        } else {
+            errorTableLines = errorTableString.split(System.getProperty(Constants.LINE_SEPARATOR));
+        }
+        for (String line : errorTableLines) {
+            getLog().info(line);
+        }
+        getLog().info("");
     }
 }

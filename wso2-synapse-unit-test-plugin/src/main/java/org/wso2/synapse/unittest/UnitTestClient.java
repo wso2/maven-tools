@@ -21,6 +21,8 @@ package org.wso2.synapse.unittest;
 import org.apache.maven.plugin.logging.Log;
 import org.apache.maven.plugin.logging.SystemStreamLog;
 
+import java.io.IOException;
+
 /**
  * SynapseTestCase file read class in unit test framework.
  */
@@ -41,36 +43,38 @@ class UnitTestClient {
      * @param synapseHost synapse unit test server host
      * @param synapsePort synapse unit test server port
      * @return response from the unit testing agent received via TCP transport
+     * @throws IOException when tcp socket not initialized
      */
-    static String executeTests(String synapseTestCaseFilePath, String synapseHost, String synapsePort) {
+    static String executeTests(String synapseTestCaseFilePath, String synapseHost, String synapsePort)
+            throws IOException {
         String responseFromServer = null;
-
+        String deployableMessage = null;
         try {
             //check whether unit test suite has test cases or not
-            String deployableMessage = SynapseTestCaseFileReader.processArtifactData(synapseTestCaseFilePath);
+            deployableMessage = SynapseTestCaseFileReader.processArtifactData(synapseTestCaseFilePath);
             if (deployableMessage != null && deployableMessage.equals(Constants.NO_TEST_CASES)) {
                 return deployableMessage;
             }
-
-            //process SynapseTestCase data for send to the server
-            if (deployableMessage != null) {
-                //create tcp connection, send SynapseTestCase file to server and get the response from the server
-                TCPClient tcpClient = new TCPClient(synapseHost, synapsePort);
-                tcpClient.writeData(deployableMessage);
-                responseFromServer = tcpClient.readData();
-                tcpClient.closeSocket();
-
-            } else {
-                getLog().error("Error in creating deployable message");
-            }
-
-            return responseFromServer;
-
         } catch (Exception e) {
             getLog().error("Error while executing client", e);
         }
 
-        getLog().info("Unit testing client stopped");
+        //process SynapseTestCase data for send to the server
+        if (deployableMessage != null) {
+            //create tcp connection, send SynapseTestCase file to server and get the response from the server
+            TCPClient tcpClient = new TCPClient(synapseHost, synapsePort);
+            if (!tcpClient.isSocketInitialized()) {
+                throw new IOException("Error while sending test data to the unit testing server. " +
+                        "Hence aborting the testing operation");
+            }
+            tcpClient.writeData(deployableMessage);
+            responseFromServer = tcpClient.readData();
+            tcpClient.closeSocket();
+
+        } else {
+            getLog().error("Error while creating a deployable message with test suites");
+        }
+
         return responseFromServer;
     }
 
