@@ -22,18 +22,32 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 import javax.xml.stream.XMLStreamException;
 
+import com.google.inject.internal.util.Lists;
+import org.apache.maven.execution.MavenSession;
+import org.apache.maven.model.Resource;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
+import org.apache.maven.plugins.annotations.Component;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.project.MavenProject;
+import org.apache.maven.shared.filtering.MavenFilteringException;
+import org.apache.maven.shared.filtering.MavenResourcesExecution;
+import org.apache.maven.shared.filtering.MavenResourcesFiltering;
+import org.codehaus.plexus.component.annotations.Requirement;
 import org.wso2.maven.Model.ArchiveException;
 import org.wso2.maven.Model.ArtifactDependency;
+
+import static org.wso2.maven.CAppHandler.REGISTRY_RESOURCES_FOLDER;
+import static org.wso2.maven.CAppHandler.SYNAPSE_CONFIG_FOLDER;
 
 
 /**
@@ -44,6 +58,7 @@ import org.wso2.maven.Model.ArtifactDependency;
  */
 @Mojo(name = "WSO2ESBDeployableArchive")
 public class CARMojo extends AbstractMojo {
+    private static final List<String> EMPTY_LIST = Collections.unmodifiableList(Lists.<String>newArrayList());
 
     /**
      * Location archiveLocation folder.
@@ -86,6 +101,26 @@ public class CARMojo extends AbstractMojo {
     private String classifier;
 
     /**
+     * Source encoding for this project.
+     *
+     * @parameter expression="${project.build.sourceEncoding}"
+     */
+    private String sourceEncoding;
+
+    /**
+     * the current maven session instance.
+     *
+     * @parameter expression="${session}"
+     */
+    protected MavenSession session;
+
+    /**
+     * a filtering capability is needed to filter project-resources
+     */
+    @Component
+    private MavenResourcesFiltering mavenResourcesFiltering;
+
+    /**
      * Read artifact.xml files and create .car file.
      */
     public void execute() throws MojoExecutionException {
@@ -93,32 +128,64 @@ public class CARMojo extends AbstractMojo {
         // Create CApp
         try {
             // Create directory to be compressed.
-            String archiveDirectory = getArchiveFile(Constants.EMPTY_STRING).getAbsolutePath();
-            boolean createdArchiveDirectory = org.wso2.developerstudio.eclipse.utils.file.FileUtils.createDirectories(
-                    archiveDirectory);
+            String archiveWorkDirectory = getArchiveFile(Constants.EMPTY_STRING).getAbsolutePath();
+            boolean createdArchiveDirectory = org.wso2.developerstudio.eclipse.utils.file.FileUtils.createDirectories(archiveWorkDirectory);
 
             if (createdArchiveDirectory) {
                 CAppHandler cAppHandler = new CAppHandler(cAppName);
                 List<ArtifactDependency> dependencies = new ArrayList<>();
 
-                cAppHandler.processConfigArtifactXmlFile(projectBaseDir, archiveDirectory, dependencies);
-                cAppHandler.processRegistryResourceArtifactXmlFile(projectBaseDir, archiveDirectory, dependencies);
-                cAppHandler.createDependencyArtifactsXmlFile(archiveDirectory, dependencies, project);
+                // filter synapse-config files into the archiveWorkDirectory
+                filterResources(Paths.get(projectBaseDir.getAbsolutePath(), SYNAPSE_CONFIG_FOLDER), Paths.get(archiveWorkDirectory, SYNAPSE_CONFIG_FOLDER).toFile());
+                // filter registry-resources files into the archiveWorkDirectory
+                filterResources(Paths.get(projectBaseDir.getAbsolutePath(), REGISTRY_RESOURCES_FOLDER), Paths.get(archiveWorkDirectory, REGISTRY_RESOURCES_FOLDER).toFile());
 
-                File fileToZip = new File(archiveDirectory);
+                // Make sure we continue our work using the archiveWorkDirectory
+                File filteredProjectBaseDir = Paths.get(archiveWorkDirectory).toFile();
+
+                String cappArchiveDirectory = Paths.get(this.project.getBuild().getOutputDirectory(), "capp").toString();
+                cAppHandler.processConfigArtifactXmlFile(filteredProjectBaseDir, cappArchiveDirectory, dependencies);
+                cAppHandler.processRegistryResourceArtifactXmlFile(filteredProjectBaseDir, cappArchiveDirectory, dependencies);
+                cAppHandler.createDependencyArtifactsXmlFile(cappArchiveDirectory, dependencies, project);
+
+                File fileToZip = new File(cappArchiveDirectory);
                 File carFile = getArchiveFile(".car");
                 zipFolder(fileToZip.getPath(), carFile.getPath());
 
                 // Attach carFile to Maven context.
                 this.project.getArtifact().setFile(carFile);
 
+                // Delete the filtered files folder
                 recursiveDelete(fileToZip);
+                // Delete temp archive folder
+                recursiveDelete(filteredProjectBaseDir);
 
             } else {
                 getLog().error("Could not create corresponding archive directory.");
             }
         } catch (XMLStreamException | IOException | ArchiveException e) {
             getLog().error(e);
+        }
+    }
+
+    /**
+     * Filter the resources in given sourcePath, output the results to the outputFolder
+     * @param sourcePath folder containing resources
+     * @param outputFolder location where filtered resources will be stored
+     * @throws MojoExecutionException if filtering throws an exception its wrapped in this MojoExecutionException for clean handling by Maven.
+     */
+    private void filterResources(Path sourcePath, File outputFolder) throws MojoExecutionException {
+        Resource srcResource = new Resource();
+        srcResource.setDirectory(sourcePath.toString());
+        srcResource.setFiltering(true);
+
+        MavenResourcesExecution execution = new MavenResourcesExecution(Collections.singletonList(srcResource), outputFolder, this.project, sourceEncoding, EMPTY_LIST, EMPTY_LIST, session);
+        execution.setUseDefaultFilterWrappers(true);
+
+        try {
+            mavenResourcesFiltering.filterResources(execution);
+        } catch (MavenFilteringException e) {
+            throw new MojoExecutionException("Error while filtering project resources", e);
         }
     }
 

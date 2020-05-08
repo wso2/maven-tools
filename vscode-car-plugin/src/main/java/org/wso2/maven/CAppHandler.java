@@ -36,8 +36,8 @@ import org.wso2.maven.core.model.AbstractXMLDoc;
 
 class CAppHandler extends AbstractXMLDoc {
 
-    private static final String SYNAPSE_CONFIG_FOLDER = Paths.get("src", "main", "synapse-config").toString();
-    private static final String REGISTRY_RESOURCES_FOLDER = Paths.get("src", "main", "registry-resources").toString();
+    protected static final String SYNAPSE_CONFIG_FOLDER = Paths.get("src", "main", "synapse-config").toString();
+    protected static final String REGISTRY_RESOURCES_FOLDER = Paths.get("src", "main", "registry-resources").toString();
 
     private String cAppName;
 

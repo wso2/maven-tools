@@ -53,6 +53,11 @@
             <version>${org.apache.maven.plugin.api.version}</version>
         </dependency>
         <dependency>
+            <groupId>org.apache.maven.shared</groupId>
+            <artifactId>maven-filtering</artifactId>
+            <version>${maven-filtering.version}</version>
+        </dependency>
+        <dependency>
             <groupId>org.apache.maven.plugin-tools</groupId>
             <artifactId>maven-plugin-annotations</artifactId>
             <scope>provided</scope>
@@ -82,5 +87,6 @@
     </dependencies>
     <properties>
         <org.apache.ws.commons.axiom.version>1.2.20</org.apache.ws.commons.axiom.version>
+        <maven-filtering.version>3.1.1</maven-filtering.version>
     </properties>
 </project>
