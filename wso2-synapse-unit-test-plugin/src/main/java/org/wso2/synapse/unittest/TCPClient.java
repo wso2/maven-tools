@@ -17,6 +17,7 @@
  */
 package org.wso2.synapse.unittest;
 
+import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.logging.Log;
 import org.apache.maven.plugin.logging.SystemStreamLog;
 
@@ -51,7 +52,11 @@ class TCPClient {
             }
 
         } catch (IOException e) {
-            getLog().error("Error in initializing the socket", e);
+            if (getLog().isDebugEnabled()) {
+                getLog().error("Error in initializing the socket", e);
+            }
+            getLog().error("Error in initializing the socket - Connection refused");
+            getLog().error("Please check unit testing server has been started or not");
         }
     }
 
@@ -65,14 +70,17 @@ class TCPClient {
             getLog().debug("Waiting for synapse unit test agent response");
         }
 
-        try (InputStream inputStream = clientSocket.getInputStream();
-             ObjectInputStream objectInputStream = new ObjectInputStream(inputStream)) {
+        if (clientSocket != null) {
+            try (InputStream inputStream = clientSocket.getInputStream();
+                 ObjectInputStream objectInputStream = new ObjectInputStream(inputStream)) {
 
-            return (String) objectInputStream.readObject();
-        } catch (Exception e) {
-            getLog().error("Error in getting response from the synapse unit test agent", e);
-            return null;
+                return (String) objectInputStream.readObject();
+            } catch (Exception e) {
+                getLog().error("Error in getting response from the synapse unit test agent", e);
+            }
         }
+
+        return null;
     }
 
     /**
@@ -83,10 +91,12 @@ class TCPClient {
     void writeData(String messageToBeSent) {
 
         try {
-            outputStream = clientSocket.getOutputStream();
-            ObjectOutputStream objectOutputStream = new ObjectOutputStream(outputStream);
-            objectOutputStream.writeObject(messageToBeSent);
-            outputStream.flush();
+            if (clientSocket != null) {
+                outputStream = clientSocket.getOutputStream();
+                ObjectOutputStream objectOutputStream = new ObjectOutputStream(outputStream);
+                objectOutputStream.writeObject(messageToBeSent);
+                outputStream.flush();
+            }
 
             if (getLog().isDebugEnabled()) {
                 getLog().debug("Artifact configurations and test cases data sent to the synapse agent successfully");
@@ -97,12 +107,23 @@ class TCPClient {
     }
 
     /**
+     * Method of checking status of clientSocket.
+     *
+     * @return status of the clientSocket
+     */
+    boolean isSocketInitialized() {
+        return clientSocket != null;
+    }
+
+    /**
      * Method of closing connection of TCP.
      */
     void closeSocket() {
         try {
-            outputStream.close();
-            clientSocket.close();
+            if (outputStream != null && clientSocket != null) {
+                outputStream.close();
+                clientSocket.close();
+            }
         } catch (IOException e) {
             getLog().error("Error while closing TCP client socket connection", e);
         }

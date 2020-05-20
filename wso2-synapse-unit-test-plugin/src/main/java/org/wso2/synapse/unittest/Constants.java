@@ -50,6 +50,13 @@ class Constants {
     static final String TEST_CASE_VALUE = "Test Case - ";
     static final String SUITE = "Suite";
     static final String EXCEPTION = "exception";
+    static final String FAILURE_ASSERTIONS = "failureAssertions";
+    static final String ASSERTION_EXPRESSION = "assertionExpression";
+    static final String ASSERTION_ACTUAL = "actual";
+    static final String ASSERTION_EXPECTED = "expected";
+    static final String ASSERTION_MESSAGE = "message";
+    static final String ASSERTION_TYPE = "assertionType";
+    static final String ASSERTION_DESCRIPTION = "assertionDescription";
 
     static final String PASSED_KEY = "PASSED";
     static final String FAILED_KEY = "FAILED";
@@ -68,4 +75,5 @@ class Constants {
     static final String NO_TEST_CASES = "no-test-cases";
     static final String OS_TYPE = "os.name";
     static final String OS_WINDOWS = "win";
+    static final String NEW_LINE_SEPARATOR = "\n";
 }
