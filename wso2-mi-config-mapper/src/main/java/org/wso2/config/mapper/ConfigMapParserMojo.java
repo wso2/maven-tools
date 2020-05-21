@@ -18,6 +18,9 @@
 
 package org.wso2.config.mapper;
 
+import net.consensys.cava.toml.Toml;
+import net.consensys.cava.toml.TomlParseResult;
+import net.consensys.cava.toml.TomlTable;
 import net.lingala.zip4j.core.ZipFile;
 import net.lingala.zip4j.exception.ZipException;
 import org.apache.commons.codec.digest.DigestUtils;
@@ -26,14 +29,18 @@ import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
+import org.wso2.ciphertool.CipherTool;
+import org.wso2.ciphertool.utils.Constants;
 import org.wso2.config.mapper.model.Context;
 import org.wso2.config.mapper.util.FileUtils;
 
 import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -43,6 +50,7 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
@@ -54,12 +62,28 @@ public class ConfigMapParserMojo extends AbstractMojo {
     @Parameter(property = "miVersion")
     private String miVersion;
 
+    @Parameter(property = "keystoreName")
+    private String keystoreName;
+
+    @Parameter(property = "keystoreAlias")
+    private String keystoreAlias;
+
+    @Parameter(property = "keystorePassword")
+    private String keystorePassword;
+
+    @Parameter(property = "keystoreType")
+    private String keystoreType;
+
+    @Parameter(property = "cipher")
+    private String cipherTransformation;
+
     /**
      * Execution method of Mojo class.
      *
      * @throws MojoExecutionException if error occurred while running the plugin
      */
     public void execute() throws MojoExecutionException {
+
         try {
             //download templates folder to the resource folder
             boolean isDownloaded = downloadTemplates();
@@ -68,16 +92,31 @@ public class ConfigMapParserMojo extends AbstractMojo {
             }
             System.setProperty("avoidResolvingEnvAndSysVariables", "true");
             String templatePath = ConfigMapParserConstants.RESOURCES_PATH + File.separator + "templates";
-            File deplymentTomlFile = new File(ConfigMapParserConstants.DEPLOYMENT_TOML_PATH);
-            boolean isDeploymentTomlFileExist = deplymentTomlFile.exists();
+            File deploymentTomlFile = new File(ConfigMapParserConstants.DEPLOYMENT_TOML_PATH);
+            boolean isDeploymentTomlFileExist = deploymentTomlFile.exists();
 
             File templateDirectory = new File(templatePath);
             boolean isTemplateDirectoryExist = templateDirectory.exists();
 
+            Map secrets = getSecretsFromConfiguration(ConfigMapParserConstants.DEPLOYMENT_TOML_PATH);
+            boolean hasSecrets = !secrets.isEmpty();
+            // deployment.toml has secrets defined in it
+            if (hasSecrets) {
+                initializeSystemProperties();
+                if (cipherTransformation == null) {
+                    // default encryption algorithm
+                    cipherTransformation = "RSA/ECB/OAEPwithSHA1andMGF1Padding";
+                }
+                String[] args = new String[]{"-Dconfigure", "-Dorg.wso2.CipherTransformation=" + cipherTransformation};
+                CipherTool.main(args);
+                updateSecretConf();
+                createPasswordTmpFile();
+            }
+
             boolean isParsedSuccessfully = false;
             if (isDeploymentTomlFileExist && isTemplateDirectoryExist) {
                 getLog().info("ConfigParser for deployment.toml file has been started");
-                runConfigMapParser(deplymentTomlFile, templatePath);
+                runConfigMapParser(deploymentTomlFile, templatePath);
                 isParsedSuccessfully = true;
                 getLog().info("ConfigParser successfully parsed the deployment.toml file");
             } else {
@@ -89,7 +128,7 @@ public class ConfigMapParserMojo extends AbstractMojo {
             if (isParsedSuccessfully) {
                 List<String> parsedOutputFileList = new ArrayList<>();
                 listFilesForFolder(new File(ConfigMapParserConstants.PARSER_OUTPUT_PATH), parsedOutputFileList);
-                updateDockerFile(parsedOutputFileList);
+                updateDockerFile(parsedOutputFileList, hasSecrets);
                 getLog().info("Dockerfile successfully updated with the config files");
             }
         } catch (Exception e) {
@@ -225,9 +264,10 @@ public class ConfigMapParserMojo extends AbstractMojo {
      * Append the list of parsed files to the Dockerfile.
      *
      * @param parsedOutputFileList list of parsed files
+     * @param deploymentHasSecrets boolean flag for secrets existence
      * @throws IOException while writing to the Dockerfile
      */
-    private void updateDockerFile(List<String> parsedOutputFileList) throws IOException {
+    private void updateDockerFile(List<String> parsedOutputFileList, boolean deploymentHasSecrets) throws IOException {
         String dockerFileBaseEntries = getBaseImageInDockerfile();
         StringBuilder builder = new StringBuilder(dockerFileBaseEntries);
 
@@ -247,6 +287,24 @@ public class ConfigMapParserMojo extends AbstractMojo {
             builder.append(System.lineSeparator());
         }
 
+        //copy password-tmp and secret-conf.properties files to the runtime if secrets are defined
+        if (deploymentHasSecrets) {
+            String secretConfLocalLocation = Paths.get(ConfigMapParserConstants.RESOURCE_DIR_PATH,
+                    ConfigMapParserConstants.SECRET_CONF_FILE_NAME).toString();
+            String secretConfRuntimeLocation = Paths.get(ConfigMapParserConstants.DOCKER_MI_DIR_PATH,
+                    ConfigMapParserConstants.CONF_DIR, Constants.SECURITY_DIR,
+                    ConfigMapParserConstants.SECRET_CONF_FILE_NAME).toString();
+            builder.append(ConfigMapParserConstants.DOCKER_COPY_FILE).
+                    append(secretConfLocalLocation).append(secretConfRuntimeLocation).append(System.lineSeparator());
+
+            String passwordTmpLocalLocation = Paths.get(ConfigMapParserConstants.RESOURCE_DIR_PATH,
+                    ConfigMapParserConstants.PASSWORD_TMP_FILE_NAME).toString();
+            String passwordTmpRuntimeLocation = Paths.get(ConfigMapParserConstants.DOCKER_MI_DIR_PATH,
+                    ConfigMapParserConstants.PASSWORD_TMP_FILE_NAME).toString();
+            builder.append(ConfigMapParserConstants.DOCKER_COPY_FILE).
+                    append(passwordTmpLocalLocation).append(passwordTmpRuntimeLocation).append(System.lineSeparator());
+        }
+
         //copy .metadata folder to the repository/resources/conf directory
         builder.append(ConfigMapParserConstants.DOCKER_MAKE_DIR + ConfigMapParserConstants.METADATA_DIR_PATH);
         builder.append(System.lineSeparator());
@@ -256,7 +314,6 @@ public class ConfigMapParserMojo extends AbstractMojo {
                 .append(ConfigMapParserConstants.METADATA_CONFIG_PROPERTIES_FILE)
                 .append(ConfigMapParserConstants.METADATA_DIR_PATH).append(System.lineSeparator());
         builder.append(ConfigMapParserConstants.DOCKER_FILE_AUTO_GENERATION_END).append(System.lineSeparator());
-
         try (InputStream inputStream = new ByteArrayInputStream(builder.toString()
                 .getBytes(StandardCharsets.UTF_8));
              OutputStream outputStream = new FileOutputStream(new File(ConfigMapParserConstants.DOCKER_FILE))) {
@@ -312,5 +369,118 @@ public class ConfigMapParserMojo extends AbstractMojo {
         }
 
         return builder.toString();
+    }
+
+
+    /**
+     * Read deployment.toml file and return list of secrets
+     *
+     * @param configFilePath file path to deployment toml
+     * @return Map of secrets
+     */
+    public Map<String, String> getSecretsFromConfiguration(String configFilePath) throws IOException {
+
+        Map<String, String> context = new LinkedHashMap<>();
+
+        TomlParseResult result = Toml.parse(Paths.get(configFilePath));
+        TomlTable table = result.getTable(ConfigMapParserConstants.SECRET_PROPERTY_MAP_NAME);
+        if (table != null) {
+            table.dottedKeySet().forEach(key -> context.put(key, table.getString(key)));
+        }
+        return context;
+    }
+
+    /**
+     * Sets system properties required by the cipherTool.
+     *
+     * @throws MojoExecutionException
+     */
+    private void initializeSystemProperties() throws MojoExecutionException {
+
+           if (isKeystoreParametersAvailable()) {
+
+               // Setting the property to be referred by the cipherTool to override inherent system properties
+               System.setProperty(Constants.SET_EXTERNAL_SYSTEM_PROPERTY, Boolean.TRUE.toString());
+
+               String keystoreLocation = Paths.get(ConfigMapParserConstants.RESOURCE_DIR_PATH, keystoreName).toString();
+               String secretConfFile = Paths.get(ConfigMapParserConstants.RESOURCE_DIR_PATH,
+                       Constants.SECRET_PROPERTY_FILE).toString();
+               File keystore = new File(keystoreLocation);
+               if (keystore.exists()) {
+                   keystoreLocation = keystore.getAbsolutePath();
+               } else {
+                   throw new MojoExecutionException("Keystore file is not available in " + keystoreLocation);
+               }
+               String cipherTextPropFile =  Constants.CONF_DIR + File.separator +
+                       Constants.SECURITY_DIR + File.separator + Constants.CIPHER_TEXT_PROPERTY_FILE;
+
+               System.setProperty(ConfigMapParserConstants.KEY_LOCATION_PROPERTY, keystoreLocation);
+               System.setProperty(ConfigMapParserConstants.KEY_ALIAS_PROPERTY, keystoreAlias);
+               System.setProperty(ConfigMapParserConstants.KEY_TYPE_PROPERTY, keystoreType);
+               System.setProperty(ConfigMapParserConstants.KEYSTORE_PASSWORD, keystorePassword);
+
+               System.setProperty(ConfigMapParserConstants.DEPLOYMENT_CONFIG_FILE_PATH,
+                       ConfigMapParserConstants.DEPLOYMENT_TOML_PATH);
+               System.setProperty(ConfigMapParserConstants.SECRET_PROPERTY_FILE_PROPERTY, secretConfFile);
+               System.setProperty(ConfigMapParserConstants.SECRET_FILE_LOCATION, cipherTextPropFile);
+           } else {
+               throw new MojoExecutionException("Keystore parameters have not been defined in pom.xml");
+           }
+    }
+
+    /**
+     * Checks if keystore parameters have been defined in pom.xml.
+     *
+     * @return boolean
+     */
+    private boolean isKeystoreParametersAvailable() {
+
+        if (keystoreName != null && keystoreAlias != null && keystorePassword != null && keystoreType != null) {
+            return true;
+        }
+        return false;
+    }
+
+    /**
+     * Update the secret-conf.properties with keystore location.
+     *
+     * @throws MojoExecutionException
+     */
+    private void updateSecretConf() throws MojoExecutionException {
+
+        String secretConfLocation = Paths.get(ConfigMapParserConstants.RESOURCE_DIR_PATH,
+                ConfigMapParserConstants.SECRET_CONF_FILE_NAME).toString();
+        Properties secretConfProperties = new Properties();
+        try (InputStream inputStream = new FileInputStream(secretConfLocation)) {
+            secretConfProperties.load(inputStream);
+
+            // default location is ./repository/resources/security directory
+            String defaultKeystoreLocation = Paths
+                    .get(".", "repository", "resources", Constants.SECURITY_DIR, keystoreName).toString();
+            secretConfProperties
+                    .setProperty(ConfigMapParserConstants.SECRET_CONF_KEYSTORE_LOCATION_PROPERTY, defaultKeystoreLocation);
+
+            // write back the properties file
+            OutputStream outputStream = new FileOutputStream(secretConfLocation);
+            secretConfProperties.store(outputStream, null);
+        } catch (IOException e) {
+            throw new MojoExecutionException("Error while modifying secret-conf.properties file in " + secretConfLocation);
+        }
+    }
+
+    /**
+     * Creates password-tmp file for startup.
+     *
+     * @throws MojoExecutionException
+     */
+    private void createPasswordTmpFile() throws MojoExecutionException {
+
+        String passwordTempFileLocation = Paths.get(ConfigMapParserConstants.RESOURCE_DIR_PATH,
+                ConfigMapParserConstants.PASSWORD_TMP_FILE_NAME).toString();
+        try (FileWriter fileWriter = new FileWriter(passwordTempFileLocation)) {
+            fileWriter.write(keystorePassword);
+        } catch (IOException e) {
+            throw new MojoExecutionException("Error while creating " + passwordTempFileLocation);
+        }
     }
 }

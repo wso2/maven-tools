@@ -75,5 +75,10 @@
             <groupId>net.lingala.zip4j</groupId>
             <artifactId>zip4j</artifactId>
         </dependency>
+        <!-- https://mvnrepository.com/artifact/org.wso2.ciphertool/org.wso2.ciphertool -->
+        <dependency>
+            <groupId>org.wso2.ciphertool</groupId>
+            <artifactId>org.wso2.ciphertool</artifactId>
+        </dependency>
     </dependencies>
 </project>
