@@ -39,4 +39,21 @@ class ConfigMapParserConstants {
     static final String METADATA_DIR_PATH = DOCKER_MI_DIR_PATH + "repository/resources/conf/.metadata";
     static final String DOCKER_COPY_FILE = "COPY  --chown=wso2carbon:wso2 ";
     static final String DOCKER_MAKE_DIR = "RUN mkdir";
+
+    public static final String SECRET_PROPERTY_MAP_NAME = "secrets";
+    public static final String RESOURCE_DIR_PATH = "Resources";
+    public static final String SECURITY_DIR_PATH = "security";
+    public static final String SECRET_CONF_FILE_NAME = "secret-conf.properties";
+    // system properties related to cipher tool
+    public static final String KEY_LOCATION_PROPERTY = "primary.key.location";
+    public static final String KEY_TYPE_PROPERTY = "primary.key.type";
+    public static final String KEY_ALIAS_PROPERTY = "primary.key.alias";
+    public static final String KEYSTORE_PASSWORD = "keystore.password";
+    public static final String SECRET_PROPERTY_FILE_PROPERTY = "secret.conf.properties.file";
+    public static final String SECRET_FILE_LOCATION = "secretRepositories.file.location";
+    public static final String DEPLOYMENT_CONFIG_FILE_PATH = "deployment.config.file.path";
+    public static final String SECRET_CONF_KEYSTORE_LOCATION_PROPERTY = "keystore.identity.location";
+    // password-tmp file name
+    public static final String PASSWORD_TMP_FILE_NAME = "password-tmp";
+
 }
