@@ -31,6 +31,7 @@ class ConfigMapParserConstants {
     static final String TEMPLATES_ZIP_FILE = "templates.zip";
     static final String PATH_SEPARATOR = "/";
     static final String METADATA_CONFIG_PROPERTIES_FILE = "metadata_config.properties";
+    static final String REFERENCES_PROPERTIES_FILE = "references.properties";
     static final String TEMPLATES_URL = "http://product-dist.wso2.com/p2/templates/";
 
     static final String DOCKER_MI_DIR_PATH = " ${WSO2_SERVER_HOME}/";
