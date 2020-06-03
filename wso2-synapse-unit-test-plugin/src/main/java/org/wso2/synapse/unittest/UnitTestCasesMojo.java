@@ -517,41 +517,51 @@ public class UnitTestCasesMojo extends AbstractMojo {
                 } else if (!testJsonObject.get(Constants.ASSERTION_STATUS).getAsString().equals(Constants.PASSED_KEY)) {
                     isFailureOccurred = true;
                     JsonArray failureAssertions = testJsonObject.getAsJsonArray(Constants.FAILURE_ASSERTIONS);
-                    for (int item = 0; item < failureAssertions.size(); item++) {
-                        JsonObject assertFailures = failureAssertions.get(item).getAsJsonObject();
 
-                        //Add test assertion failure abstract details
-                        List<String> assertionSummary = new ArrayList<>();
-                        String testCaseName = Constants.TEST_CASE_VALUE +
-                                testJsonObject.get(Constants.TEST_CASE_NAME).getAsString();
-                        assertionSummary.add(testCaseName);
-                        assertionSummary.add(Constants.TWO_SPACES + Constants.ASSERTION_PHASE);
-                        assertionSummary.add(assertFailures.get(Constants.ASSERTION_MESSAGE).getAsString());
-                        errorRowsList.add(assertionSummary);
+                    // failureAssertions will null for MI 1.1.0 or below versions
+                    if (failureAssertions == null) {
+                        failureSummary.add(Constants.TEST_CASE_VALUE +
+                                testJsonObject.get(Constants.TEST_CASE_NAME).getAsString());
+                        failureSummary.add(Constants.TWO_SPACES + Constants.ASSERTION_PHASE);
+                        failureSummary.add(testJsonObject.get(Constants.EXCEPTION).getAsString());
+                        errorRowsList.add(failureSummary);
+                    } else {
+                        for (int item = 0; item < failureAssertions.size(); item++) {
+                            JsonObject assertFailures = failureAssertions.get(item).getAsJsonObject();
 
-                        //Add test assertion failure full details
-                        List<String> failureAssertionInDetail = new ArrayList<>();
-                        failureAssertionInDetail.add(testCaseName);
-                        failureAssertionInDetail.add(assertFailures.get(Constants.ASSERTION_TYPE).getAsString() + " - "
-                                + assertFailures.get(Constants.ASSERTION_EXPRESSION).getAsString());
+                            //Add test assertion failure abstract details
+                            List<String> assertionSummary = new ArrayList<>();
+                            String testCaseName = Constants.TEST_CASE_VALUE +
+                                    testJsonObject.get(Constants.TEST_CASE_NAME).getAsString();
+                            assertionSummary.add(testCaseName);
+                            assertionSummary.add(Constants.TWO_SPACES + Constants.ASSERTION_PHASE);
+                            assertionSummary.add(assertFailures.get(Constants.ASSERTION_MESSAGE).getAsString());
+                            errorRowsList.add(assertionSummary);
 
-                        String assertionErrorMessage = "Actual Response: " + Constants.NEW_LINE_SEPARATOR
-                                + splitLongStrings(assertFailures.get(Constants.ASSERTION_ACTUAL).getAsString())
-                                + Constants.NEW_LINE_SEPARATOR;
+                            //Add test assertion failure full details
+                            List<String> failureAssertionInDetail = new ArrayList<>();
+                            failureAssertionInDetail.add(testCaseName);
+                            failureAssertionInDetail.add(assertFailures.get(Constants.ASSERTION_TYPE).getAsString() + " - "
+                                    + assertFailures.get(Constants.ASSERTION_EXPRESSION).getAsString());
 
-                        if (!assertFailures.get(Constants.ASSERTION_EXPECTED).isJsonNull()) {
-                            assertionErrorMessage += "Expected Response: " + Constants.NEW_LINE_SEPARATOR
-                                    + splitLongStrings(assertFailures.get(Constants.ASSERTION_EXPECTED).getAsString());
+                            String assertionErrorMessage = "Actual Response: " + Constants.NEW_LINE_SEPARATOR
+                                    + splitLongStrings(assertFailures.get(Constants.ASSERTION_ACTUAL).getAsString())
+                                    + Constants.NEW_LINE_SEPARATOR;
+
+                            if (!assertFailures.get(Constants.ASSERTION_EXPECTED).isJsonNull()) {
+                                assertionErrorMessage += "Expected Response: " + Constants.NEW_LINE_SEPARATOR
+                                        + splitLongStrings(assertFailures.get(Constants.ASSERTION_EXPECTED).getAsString());
+                            }
+
+                            if (!assertFailures.get(Constants.ASSERTION_DESCRIPTION).isJsonNull()) {
+                                assertionErrorMessage += Constants.NEW_LINE_SEPARATOR + "Description: "
+                                        + Constants.NEW_LINE_SEPARATOR
+                                        + splitLongStrings(assertFailures.get(Constants.ASSERTION_DESCRIPTION).getAsString());
+                            }
+
+                            failureAssertionInDetail.add(assertionErrorMessage);
+                            assertErrors.add(failureAssertionInDetail);
                         }
-
-                        if (!assertFailures.get(Constants.ASSERTION_DESCRIPTION).isJsonNull()) {
-                            assertionErrorMessage += Constants.NEW_LINE_SEPARATOR + "Description: "
-                                    + Constants.NEW_LINE_SEPARATOR
-                                    + splitLongStrings(assertFailures.get(Constants.ASSERTION_DESCRIPTION).getAsString());
-                        }
-
-                        failureAssertionInDetail.add(assertionErrorMessage);
-                        assertErrors.add(failureAssertionInDetail);
                     }
                 }
             }
