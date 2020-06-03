@@ -25,6 +25,7 @@ import net.lingala.zip4j.core.ZipFile;
 import net.lingala.zip4j.exception.ZipException;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugins.annotations.Mojo;
@@ -44,6 +45,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.io.PrintStream;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -77,6 +79,9 @@ public class ConfigMapParserMojo extends AbstractMojo {
     @Parameter(property = "cipher")
     private String cipherTransformation;
 
+    @Parameter(property = "projectLocation")
+    private String projectLocation;
+
     /**
      * Execution method of Mojo class.
      *
@@ -85,20 +90,23 @@ public class ConfigMapParserMojo extends AbstractMojo {
     public void execute() throws MojoExecutionException {
 
         try {
+            projectLocation += File.separator;
             //download templates folder to the resource folder
             boolean isDownloaded = downloadTemplates();
             if (!isDownloaded) {
+                getLog().error("Error while downloading ConfigMapper templates for version " + miVersion);
                 return;
             }
             System.setProperty("avoidResolvingEnvAndSysVariables", "true");
-            String templatePath = ConfigMapParserConstants.RESOURCES_PATH + File.separator + "templates";
-            File deploymentTomlFile = new File(ConfigMapParserConstants.DEPLOYMENT_TOML_PATH);
+            String templatePath = projectLocation + ConfigMapParserConstants.RESOURCES_PATH
+                    + File.separator + "templates";
+            File deploymentTomlFile = new File(projectLocation + ConfigMapParserConstants.DEPLOYMENT_TOML_PATH);
             boolean isDeploymentTomlFileExist = deploymentTomlFile.exists();
 
             File templateDirectory = new File(templatePath);
             boolean isTemplateDirectoryExist = templateDirectory.exists();
 
-            Map secrets = getSecretsFromConfiguration(ConfigMapParserConstants.DEPLOYMENT_TOML_PATH);
+            Map secrets = getSecretsFromConfiguration(projectLocation + ConfigMapParserConstants.DEPLOYMENT_TOML_PATH);
             boolean hasSecrets = !secrets.isEmpty();
             // deployment.toml has secrets defined in it
             if (hasSecrets) {
@@ -108,7 +116,19 @@ public class ConfigMapParserMojo extends AbstractMojo {
                     cipherTransformation = "RSA/ECB/OAEPwithSHA1andMGF1Padding";
                 }
                 String[] args = new String[]{"-Dconfigure", "-Dorg.wso2.CipherTransformation=" + cipherTransformation};
+
+                //hide println message logs from ciphertool
+                PrintStream originalStream = System.out;
+                PrintStream dummyStream = new PrintStream(new OutputStream(){
+                    public void write(int b) {
+                    }
+                });
+                System.setOut(dummyStream);
                 CipherTool.main(args);
+                //enable past print stream
+                System.setOut(originalStream);
+                getLog().info("ConfigParser successfully encrypted all the given secrets");
+                getLog().info("Secret Configurations are written to the property file successfully");
                 updateSecretConf();
                 createPasswordTmpFile();
             }
@@ -127,7 +147,7 @@ public class ConfigMapParserMojo extends AbstractMojo {
             //append output files to the Dockerfile
             if (isParsedSuccessfully) {
                 List<String> parsedOutputFileList = new ArrayList<>();
-                listFilesForFolder(new File(ConfigMapParserConstants.PARSER_OUTPUT_PATH), parsedOutputFileList);
+                listFilesForFolder(new File(projectLocation + ConfigMapParserConstants.PARSER_OUTPUT_PATH), parsedOutputFileList);
                 updateDockerFile(parsedOutputFileList, hasSecrets);
                 getLog().info("Dockerfile successfully updated with the config files");
             }
@@ -149,8 +169,8 @@ public class ConfigMapParserMojo extends AbstractMojo {
                 ConfigMapParserConstants.TEMPLATES_ZIP_FILE;
 
         //clear the resources directory
-        FileUtils.deleteDirectory(new File(ConfigMapParserConstants.RESOURCES_PATH));
-        File tempFile = new File(ConfigMapParserConstants.RESOURCES_PATH);
+        FileUtils.deleteDirectory(new File(projectLocation + ConfigMapParserConstants.RESOURCES_PATH));
+        File tempFile = new File(projectLocation + ConfigMapParserConstants.RESOURCES_PATH);
         if (!tempFile.mkdirs()) {
             return false;
         }
@@ -159,11 +179,11 @@ public class ConfigMapParserMojo extends AbstractMojo {
             if (inputStream.available() == 0) {
                 isDownloaded = false;
             } else {
-                String templateZipLocation = ConfigMapParserConstants.RESOURCES_PATH + File.separator
+                String templateZipLocation = projectLocation + ConfigMapParserConstants.RESOURCES_PATH + File.separator
                         + ConfigMapParserConstants.TEMPLATES_ZIP_FILE;
                 Files.copy(inputStream, Paths.get(templateZipLocation));
                 ZipFile zipFile = new ZipFile(templateZipLocation);
-                zipFile.extractAll(ConfigMapParserConstants.RESOURCES_PATH);
+                zipFile.extractAll(projectLocation + ConfigMapParserConstants.RESOURCES_PATH);
 
                 File templateZipFile = new File(templateZipLocation);
                 if (!templateZipFile.delete()) {
@@ -188,18 +208,19 @@ public class ConfigMapParserMojo extends AbstractMojo {
      */
     private void runConfigMapParser(File deploymentToml, String templatePath) throws ConfigParserException, IOException {
         Context context = new Context();
-        ConfigParser.ConfigPaths.setPaths(ConfigMapParserConstants.DEPLOYMENT_TOML_PATH, templatePath,
-                ConfigMapParserConstants.PARSER_OUTPUT_PATH);
+        ConfigParser.ConfigPaths.setPaths(projectLocation + ConfigMapParserConstants.DEPLOYMENT_TOML_PATH,
+                templatePath, projectLocation + ConfigMapParserConstants.PARSER_OUTPUT_PATH);
         Map<String,String> configMap = ConfigParser.parse(context);
         Map<String,String> metaDataMap = new HashMap<>();
 
         //clear the CarbonHome directory
-        FileUtils.deleteDirectory(new File(ConfigMapParserConstants.PARSER_OUTPUT_PATH));
+        FileUtils.deleteDirectory(new File(projectLocation + ConfigMapParserConstants.PARSER_OUTPUT_PATH));
 
         for (Map.Entry<String,String> entry : configMap.entrySet()) {
             String fileSource = entry.getValue();
             String filePath = entry.getKey();
-            String fileFromOutput = ConfigMapParserConstants.PARSER_OUTPUT_PATH + File.separator + filePath;
+            String fileFromOutput = projectLocation + ConfigMapParserConstants.PARSER_OUTPUT_PATH + File.separator
+                    + filePath;
 
             File tempFile = new File(fileFromOutput);
             tempFile.getParentFile().mkdirs();
@@ -209,14 +230,15 @@ public class ConfigMapParserMojo extends AbstractMojo {
         }
 
         //add deployment.toml file md5Hex to the metaDataMap
-        String tomlFileSource = new String(Files.readAllBytes(Paths.get(ConfigMapParserConstants.DEPLOYMENT_TOML_PATH)),
+        String tomlFileSource = new String(Files.readAllBytes(
+                Paths.get(projectLocation + ConfigMapParserConstants.DEPLOYMENT_TOML_PATH)),
                 StandardCharsets.UTF_8);
         String tomlOutputPath = ConfigMapParserConstants.CONF_DIR + File.separator
                 + ConfigMapParserConstants.DEPLOYMENT_TOML_PATH;
         metaDataMap.put(tomlOutputPath, DigestUtils.md5Hex(tomlFileSource));
 
         //copy deployment.toml file to the CarbonHome/conf directory
-        String confDirPath = ConfigMapParserConstants.PARSER_OUTPUT_PATH + File.separator
+        String confDirPath = projectLocation + ConfigMapParserConstants.PARSER_OUTPUT_PATH + File.separator
                 + ConfigMapParserConstants.CONF_DIR + File.separator + ConfigMapParserConstants.DEPLOYMENT_TOML_PATH;
         File destinationFile = new File(confDirPath);
         Files.copy(deploymentToml.toPath(), destinationFile.toPath());
@@ -232,15 +254,15 @@ public class ConfigMapParserMojo extends AbstractMojo {
      * @throws IOException while writing to the metadata_template.properties
      */
     private void generateMetadataFolder(Map<String,String> metaDataMap) throws IOException {
-        String templateFilePath = ConfigMapParserConstants.PARSER_OUTPUT_PATH + File.separator
+        String templateFilePath = projectLocation + ConfigMapParserConstants.PARSER_OUTPUT_PATH + File.separator
                 + ConfigMapParserConstants.METADATA_DIR + File.separator
                 + ConfigMapParserConstants.METADATA_CONFIG_PROPERTIES_FILE;
 
         //create the metadata_config.properties
         File tempFile = new File(templateFilePath);
         if (!tempFile.getParentFile().mkdirs() || !tempFile.createNewFile()) {
-            throw new IOException("Creating .metadata directory in " + ConfigMapParserConstants.PARSER_OUTPUT_PATH
-                    + " path failed");
+            throw new IOException("Creating .metadata directory in " + projectLocation +
+                    ConfigMapParserConstants.PARSER_OUTPUT_PATH + " path failed");
         }
 
         try (OutputStream output = new FileOutputStream(templateFilePath)) {
@@ -258,6 +280,16 @@ public class ConfigMapParserMojo extends AbstractMojo {
             throw new IOException("Exception while writing to the "
                     + ConfigMapParserConstants.METADATA_CONFIG_PROPERTIES_FILE + "\n" + e);
         }
+
+        //create the references.properties
+        String referenceFilePath = projectLocation + ConfigMapParserConstants.PARSER_OUTPUT_PATH + File.separator
+                + ConfigMapParserConstants.METADATA_DIR + File.separator
+                + ConfigMapParserConstants.REFERENCES_PROPERTIES_FILE;
+        File referenceFile = new File(referenceFilePath);
+        if (!referenceFile.exists() && !referenceFile.createNewFile()) {
+            throw new IOException("Creating " + ConfigMapParserConstants.REFERENCES_PROPERTIES_FILE
+                    + " in .metadata directory path failed");
+        }
     }
 
     /**
@@ -274,6 +306,7 @@ public class ConfigMapParserMojo extends AbstractMojo {
         builder.append(System.lineSeparator()).append(ConfigMapParserConstants.DOCKER_FILE_AUTO_GENERATION_BEGIN)
                 .append(System.lineSeparator());
         String splitPattern = Pattern.quote(System.getProperty("file.separator"));
+
         for (String filePath : parsedOutputFileList) {
             String[] filePathSeparateList = filePath.split(splitPattern);
             StringBuilder innerBuilder = new StringBuilder();
@@ -308,15 +341,26 @@ public class ConfigMapParserMojo extends AbstractMojo {
         //copy .metadata folder to the repository/resources/conf directory
         builder.append(ConfigMapParserConstants.DOCKER_MAKE_DIR + ConfigMapParserConstants.METADATA_DIR_PATH);
         builder.append(System.lineSeparator());
+
+        //copy metadata_config.properties file to the .metadata folder
         builder.append(ConfigMapParserConstants.DOCKER_COPY_FILE).append(ConfigMapParserConstants.PARSER_OUTPUT_PATH)
                 .append(ConfigMapParserConstants.PATH_SEPARATOR).append(ConfigMapParserConstants.METADATA_DIR)
                 .append(ConfigMapParserConstants.PATH_SEPARATOR)
                 .append(ConfigMapParserConstants.METADATA_CONFIG_PROPERTIES_FILE)
                 .append(ConfigMapParserConstants.METADATA_DIR_PATH).append(System.lineSeparator());
+
+        //copy references.properties file to the .metadata folder
+        builder.append(ConfigMapParserConstants.DOCKER_COPY_FILE).append(ConfigMapParserConstants.PARSER_OUTPUT_PATH)
+                .append(ConfigMapParserConstants.PATH_SEPARATOR).append(ConfigMapParserConstants.METADATA_DIR)
+                .append(ConfigMapParserConstants.PATH_SEPARATOR)
+                .append(ConfigMapParserConstants.REFERENCES_PROPERTIES_FILE)
+                .append(ConfigMapParserConstants.METADATA_DIR_PATH).append(System.lineSeparator());
+
         builder.append(ConfigMapParserConstants.DOCKER_FILE_AUTO_GENERATION_END).append(System.lineSeparator());
         try (InputStream inputStream = new ByteArrayInputStream(builder.toString()
                 .getBytes(StandardCharsets.UTF_8));
-             OutputStream outputStream = new FileOutputStream(new File(ConfigMapParserConstants.DOCKER_FILE))) {
+             OutputStream outputStream = new FileOutputStream(
+                     new File(projectLocation + ConfigMapParserConstants.DOCKER_FILE))) {
              IOUtils.copy(inputStream, outputStream);
         } catch (IOException e) {
             throw new IOException("Exception while writing to the Dockerfile \n" + e);
@@ -333,10 +377,10 @@ public class ConfigMapParserMojo extends AbstractMojo {
         File[] listOfFiles = folder.listFiles();
         if (listOfFiles != null) {
             for (final File fileEntry : listOfFiles) {
-                if (fileEntry.isDirectory()) {
+                if (fileEntry.isDirectory() && !fileEntry.getName().equals(ConfigMapParserConstants.METADATA_DIR)) {
                     listFilesForFolder(fileEntry, outputList);
                 } else if (fileEntry.isFile() && !fileEntry.isHidden()) {
-                    outputList.add(fileEntry.getPath());
+                    outputList.add(StringUtils.substringAfter(fileEntry.getPath(), projectLocation));
                 }
             }
         }
@@ -350,7 +394,8 @@ public class ConfigMapParserMojo extends AbstractMojo {
      */
     private String getBaseImageInDockerfile() throws IOException {
         StringBuilder builder = new StringBuilder();
-        try (BufferedReader bufferReader = new BufferedReader(new FileReader(ConfigMapParserConstants.DOCKER_FILE))) {
+        try (BufferedReader bufferReader = new BufferedReader(
+                new FileReader(projectLocation + ConfigMapParserConstants.DOCKER_FILE))) {
             String currentLine;
             while ((currentLine = bufferReader.readLine()) != null) {
                 if (currentLine.contains(ConfigMapParserConstants.DOCKER_FILE_AUTO_GENERATION_BEGIN)) {
@@ -402,8 +447,9 @@ public class ConfigMapParserMojo extends AbstractMojo {
                // Setting the property to be referred by the cipherTool to override inherent system properties
                System.setProperty(Constants.SET_EXTERNAL_SYSTEM_PROPERTY, Boolean.TRUE.toString());
 
-               String keystoreLocation = Paths.get(ConfigMapParserConstants.RESOURCE_DIR_PATH, keystoreName).toString();
-               String secretConfFile = Paths.get(ConfigMapParserConstants.RESOURCE_DIR_PATH,
+               String keystoreLocation = Paths.get(projectLocation + ConfigMapParserConstants.RESOURCE_DIR_PATH,
+                       keystoreName).toString();
+               String secretConfFile = Paths.get(projectLocation + ConfigMapParserConstants.RESOURCE_DIR_PATH,
                        Constants.SECRET_PROPERTY_FILE).toString();
                File keystore = new File(keystoreLocation);
                if (keystore.exists()) {
@@ -420,7 +466,7 @@ public class ConfigMapParserMojo extends AbstractMojo {
                System.setProperty(ConfigMapParserConstants.KEYSTORE_PASSWORD, keystorePassword);
 
                System.setProperty(ConfigMapParserConstants.DEPLOYMENT_CONFIG_FILE_PATH,
-                       ConfigMapParserConstants.DEPLOYMENT_TOML_PATH);
+                       projectLocation + ConfigMapParserConstants.DEPLOYMENT_TOML_PATH);
                System.setProperty(ConfigMapParserConstants.SECRET_PROPERTY_FILE_PROPERTY, secretConfFile);
                System.setProperty(ConfigMapParserConstants.SECRET_FILE_LOCATION, cipherTextPropFile);
            } else {
@@ -434,11 +480,7 @@ public class ConfigMapParserMojo extends AbstractMojo {
      * @return boolean
      */
     private boolean isKeystoreParametersAvailable() {
-
-        if (keystoreName != null && keystoreAlias != null && keystorePassword != null && keystoreType != null) {
-            return true;
-        }
-        return false;
+        return (keystoreName != null && keystoreAlias != null && keystorePassword != null && keystoreType != null);
     }
 
     /**
@@ -448,7 +490,7 @@ public class ConfigMapParserMojo extends AbstractMojo {
      */
     private void updateSecretConf() throws MojoExecutionException {
 
-        String secretConfLocation = Paths.get(ConfigMapParserConstants.RESOURCE_DIR_PATH,
+        String secretConfLocation = Paths.get(projectLocation + ConfigMapParserConstants.RESOURCE_DIR_PATH,
                 ConfigMapParserConstants.SECRET_CONF_FILE_NAME).toString();
         Properties secretConfProperties = new Properties();
         try (InputStream inputStream = new FileInputStream(secretConfLocation)) {
@@ -475,7 +517,7 @@ public class ConfigMapParserMojo extends AbstractMojo {
      */
     private void createPasswordTmpFile() throws MojoExecutionException {
 
-        String passwordTempFileLocation = Paths.get(ConfigMapParserConstants.RESOURCE_DIR_PATH,
+        String passwordTempFileLocation = Paths.get(projectLocation + ConfigMapParserConstants.RESOURCE_DIR_PATH,
                 ConfigMapParserConstants.PASSWORD_TMP_FILE_NAME).toString();
         try (FileWriter fileWriter = new FileWriter(passwordTempFileLocation)) {
             fileWriter.write(keystorePassword);
