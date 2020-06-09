@@ -112,13 +112,8 @@ public class UnitTestCasesMojo extends AbstractMojo {
             getLog().error("Please enter -DtestServerHost=<host-ip> parameter value to execute tests");
         }
 
-        if (server.getServerPort() == null) {
-            isParameterNotFound = true;
-            getLog().error("Please enter -DtestServerPort=<host-ip> parameter value to execute tests");
-        }
-
         if (isParameterNotFound) {
-            throw new IOException("Test parameters not found");
+            throw new IOException("Test parameters are not found");
         }
     }
 
