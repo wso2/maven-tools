@@ -82,6 +82,9 @@ public class ConfigMapParserMojo extends AbstractMojo {
     @Parameter(property = "projectLocation")
     private String projectLocation;
 
+    @Parameter(property = "executeCipherTool")
+    private Boolean executeCipherTool;
+
     /**
      * Execution method of Mojo class.
      *
@@ -106,10 +109,8 @@ public class ConfigMapParserMojo extends AbstractMojo {
             File templateDirectory = new File(templatePath);
             boolean isTemplateDirectoryExist = templateDirectory.exists();
 
-            Map secrets = getSecretsFromConfiguration(projectLocation + ConfigMapParserConstants.DEPLOYMENT_TOML_PATH);
-            boolean hasSecrets = !secrets.isEmpty();
-            // deployment.toml has secrets defined in it
-            if (hasSecrets) {
+            // cipherTool will only run if user sets the property
+            if (executeCipherTool) {
                 initializeSystemProperties();
                 if (cipherTransformation == null) {
                     // default encryption algorithm
@@ -148,7 +149,7 @@ public class ConfigMapParserMojo extends AbstractMojo {
             if (isParsedSuccessfully) {
                 List<String> parsedOutputFileList = new ArrayList<>();
                 listFilesForFolder(new File(projectLocation + ConfigMapParserConstants.PARSER_OUTPUT_PATH), parsedOutputFileList);
-                updateDockerFile(parsedOutputFileList, hasSecrets);
+                updateDockerFile(parsedOutputFileList, executeCipherTool);
                 getLog().info("Dockerfile successfully updated with the config files");
             }
         } catch (Exception e) {
