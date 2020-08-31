@@ -36,8 +36,8 @@ import org.wso2.maven.core.model.AbstractXMLDoc;
 
 class CAppHandler extends AbstractXMLDoc {
 
-    private static final String SYNAPSE_CONFIG_FOLDER = Paths.get("src", "main", "synapse-config").toString();
-    private static final String REGISTRY_RESOURCES_FOLDER = Paths.get("src", "main", "registry-resources").toString();
+    private static final String SYNAPSE_CONFIG_FOLDER = Paths.get("classes", "main", "synapse-config").toString();
+    private static final String REGISTRY_RESOURCES_FOLDER = Paths.get("classes", "main", "registry-resources").toString();
 
     private String cAppName;
 
@@ -48,16 +48,16 @@ class CAppHandler extends AbstractXMLDoc {
     /**
      * Read /synapse-config/artifact.xml file and create corresponding files in archive directory.
      *
-     * @param projectBaseDir:   path to project base directory
+     * @param projectBuildDir:   path to project base directory
      * @param archiveDirectory: path to archive directory
      * @param dependencies      to be added to artifacts.xml file
      */
-    void processConfigArtifactXmlFile(File projectBaseDir, String archiveDirectory,
+    void processConfigArtifactXmlFile(File projectBuildDir, String archiveDirectory,
                                       List<ArtifactDependency> dependencies)
             throws IOException, XMLStreamException, MojoExecutionException {
 
         String configArtifactXmlFileAsString = FileUtils.readFileToString(new File(
-                Paths.get(projectBaseDir.getAbsolutePath(), SYNAPSE_CONFIG_FOLDER, Constants.ARTIFACT_XML)
+                Paths.get(projectBuildDir.getAbsolutePath(), SYNAPSE_CONFIG_FOLDER, Constants.ARTIFACT_XML)
                         .toString()));
 
         OMElement artifactsElement = getElement(configArtifactXmlFileAsString);
@@ -88,7 +88,7 @@ class CAppHandler extends AbstractXMLDoc {
 
 
             // Directly copy artifact from ESB project to archive file.
-            String copyArtifactFileFrom = Paths.get(projectBaseDir.getAbsolutePath(), SYNAPSE_CONFIG_FOLDER,
+            String copyArtifactFileFrom = Paths.get(projectBuildDir.getAbsolutePath(), SYNAPSE_CONFIG_FOLDER,
                                                     getFirstChildWithName(artifact, Constants.FILE).getText())
                     .toString();
             org.wso2.developerstudio.eclipse.utils.file.FileUtils.copy(new File(copyArtifactFileFrom),
@@ -103,16 +103,16 @@ class CAppHandler extends AbstractXMLDoc {
     /**
      * Read /registry-resources/artifact.xml file and create corresponding files in archive directory.
      *
-     * @param projectBaseDir:   path to project base directory
+     * @param projectBuildDir:   path to project base directory
      * @param archiveDirectory: path to archive directory
      * @param dependencies      to be added to artifacts.xml file
      */
-    void processRegistryResourceArtifactXmlFile(File projectBaseDir, String archiveDirectory,
+    void processRegistryResourceArtifactXmlFile(File projectBuildDir, String archiveDirectory,
                                                 List<ArtifactDependency> dependencies)
             throws IOException, XMLStreamException, MojoExecutionException {
 
         String registryArtifactXmlFileAsString = FileUtils.readFileToString(new File(
-                Paths.get(projectBaseDir.getAbsolutePath(), REGISTRY_RESOURCES_FOLDER, Constants.ARTIFACT_XML)
+                Paths.get(projectBuildDir.getAbsolutePath(), REGISTRY_RESOURCES_FOLDER, Constants.ARTIFACT_XML)
                         .toString()));
 
         OMElement artifactsElement = getElement(registryArtifactXmlFileAsString);
@@ -145,7 +145,7 @@ class CAppHandler extends AbstractXMLDoc {
 
 
             // Directly copy registry resource from ESB project to corresponding resources folder in archive file.
-            String copyArtifactFileFrom = Paths.get(projectBaseDir.getAbsolutePath(), REGISTRY_RESOURCES_FOLDER,
+            String copyArtifactFileFrom = Paths.get(projectBuildDir.getAbsolutePath(), REGISTRY_RESOURCES_FOLDER,
                                                     registryResourceFileName).toString();
             org.wso2.developerstudio.eclipse.utils.file.FileUtils.copy(new File(copyArtifactFileFrom),
                                                                        new File(Paths.get(archiveDirectory,
