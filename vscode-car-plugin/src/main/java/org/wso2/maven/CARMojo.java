@@ -46,14 +46,14 @@ import org.wso2.maven.Model.ArtifactDependency;
 public class CARMojo extends AbstractMojo {
 
     /**
-     * Location archiveLocation folder.
+     * Location of the default build folder.
      *
-     * @parameter expression="${project.basedir}"
+     * @parameter expression="${project.build.directory}"
      */
-    private File projectBaseDir;
+    private File projectBuildDir;
 
     /**
-     * Location archiveLocation folder.
+     * Location of the archive folder.
      *
      * @parameter expression="${project.build.directory}"
      */
@@ -101,8 +101,8 @@ public class CARMojo extends AbstractMojo {
                 CAppHandler cAppHandler = new CAppHandler(cAppName);
                 List<ArtifactDependency> dependencies = new ArrayList<>();
 
-                cAppHandler.processConfigArtifactXmlFile(projectBaseDir, archiveDirectory, dependencies);
-                cAppHandler.processRegistryResourceArtifactXmlFile(projectBaseDir, archiveDirectory, dependencies);
+                cAppHandler.processConfigArtifactXmlFile(projectBuildDir, archiveDirectory, dependencies);
+                cAppHandler.processRegistryResourceArtifactXmlFile(projectBuildDir, archiveDirectory, dependencies);
                 cAppHandler.createDependencyArtifactsXmlFile(archiveDirectory, dependencies, project);
 
                 File fileToZip = new File(archiveDirectory);
