@@ -16,17 +16,33 @@
 
 package org.wso2.maven.registry.beans;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+
 public abstract class RegistryElement {
 
-	protected String path;
+    private String path;
 
-	public void setPath(String path) {
-	    this.path = path;
+    private List<RegistryProperty> properties = new ArrayList<RegistryProperty>();
+
+    public void setPath(String path) {
+        this.path = path;
     }
 
-	public String getPath() {
-	    return path;
+    public String getPath() {
+        return path;
     }
-	
-	
+
+    public List<RegistryProperty> getProperties() {
+        return Collections.unmodifiableList(properties);
+    }
+
+    public void addProperty(RegistryProperty property) {
+        this.properties.add(property);
+    }
+
+    public void removeProperty(RegistryProperty property) {
+        this.properties.remove(property);
+    }
 }
