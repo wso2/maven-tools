@@ -72,7 +72,11 @@ public abstract class RegistryInfoProvider extends AbstractXMLDoc implements Obs
     }
 
     private void setPropertiesToRegistryElement(OMElement omElement, RegistryElement element) {
-        OMElement properties = getChildElements(omElement, PROPERTIES).get(0);
+        List<OMElement> propertiesElement = getChildElements(omElement, PROPERTIES);
+        if (propertiesElement.isEmpty()) {
+            return;
+        }
+        OMElement properties = propertiesElement.get(0);
         List<OMElement> propertyList = getChildElements(properties, PROPERTY);
         for (OMElement property : propertyList) {
             element.addProperty(new RegistryProperty(getAttribute(property, KEY), getAttribute(property, VALUE)));
