@@ -32,6 +32,9 @@ import java.util.Map;
  */
 public class CARMojo extends AbstractMojo {
 
+	private static final String METADATA_ARTIFACT_TYPE = "synapse/metadata";
+	private static final String METADATA_FOLDER_NAME = "metadata";
+
     /**
      * Location target folder
      *
@@ -129,7 +132,12 @@ public class CARMojo extends AbstractMojo {
 
 	private void createArtifactData(File baseCARLocation, CAppArtifactDependency cAppArtifactDependency) throws IOException, MojoExecutionException{
 		getLog().info("Generating artifact descriptor for artifact: "+cAppArtifactDependency.getName());
-		
+
+		if (cAppArtifactDependency.getcAppArtifact().getType() != null &&
+				cAppArtifactDependency.getcAppArtifact().getType().equals(METADATA_ARTIFACT_TYPE)) {
+			baseCARLocation = new File(baseCARLocation, METADATA_FOLDER_NAME);
+		}
+
 		File artifactLocation = new File(baseCARLocation,cAppArtifactDependency.getName()+"_"+cAppArtifactDependency.getVersion());
 		
 		CAppArtifact cAppArtifact = cAppArtifactDependency.getcAppArtifact();

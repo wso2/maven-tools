@@ -72,6 +72,7 @@
         <module>humantask-maven-plugin</module>
         <module>wso2-mi-config-mapper</module>
         <module>wso2-general-project-plugin</module>
+        <module>wso2-esb-metadata-plugin</module>
     </modules>
     <build>
         <extensions>
