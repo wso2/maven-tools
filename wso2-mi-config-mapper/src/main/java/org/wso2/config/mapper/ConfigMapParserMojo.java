@@ -306,17 +306,17 @@ public class ConfigMapParserMojo extends AbstractMojo {
 
         builder.append(System.lineSeparator()).append(ConfigMapParserConstants.DOCKER_FILE_AUTO_GENERATION_BEGIN)
                 .append(System.lineSeparator());
-        String splitPattern = Pattern.quote(System.getProperty("file.separator"));
 
         for (String filePath : parsedOutputFileList) {
-            String[] filePathSeparateList = filePath.split(splitPattern);
+            String[] filePathSeparateList = filePath.split(ConfigMapParserConstants.SPLIT_PATTERN);
             StringBuilder innerBuilder = new StringBuilder();
             for (int x = 1; x < filePathSeparateList.length - 1 ; x++) {
                 innerBuilder.append(filePathSeparateList[x]).append(ConfigMapParserConstants.PATH_SEPARATOR);
             }
             innerBuilder.append(filePathSeparateList[filePathSeparateList.length - 1]);
-            builder.append(ConfigMapParserConstants.DOCKER_COPY_FILE).append(filePath.replaceAll(splitPattern,
-                    ConfigMapParserConstants.PATH_SEPARATOR)).append(ConfigMapParserConstants.DOCKER_MI_DIR_PATH)
+            builder.append(ConfigMapParserConstants.DOCKER_COPY_FILE).append(filePath.replaceAll(
+                    ConfigMapParserConstants.SPLIT_PATTERN, ConfigMapParserConstants.PATH_SEPARATOR))
+                    .append(ConfigMapParserConstants.DOCKER_MI_DIR_PATH)
                     .append(innerBuilder.toString());
             builder.append(System.lineSeparator());
         }
@@ -324,17 +324,21 @@ public class ConfigMapParserMojo extends AbstractMojo {
         //copy password-tmp and secret-conf.properties files to the runtime if secrets are defined
         if (deploymentHasSecrets) {
             String secretConfLocalLocation = Paths.get(ConfigMapParserConstants.RESOURCE_DIR_PATH,
-                    ConfigMapParserConstants.SECRET_CONF_FILE_NAME).toString();
+                    ConfigMapParserConstants.SECRET_CONF_FILE_NAME).toString()
+                    .replaceAll(ConfigMapParserConstants.SPLIT_PATTERN, ConfigMapParserConstants.PATH_SEPARATOR);
             String secretConfRuntimeLocation = Paths.get(ConfigMapParserConstants.DOCKER_MI_DIR_PATH,
                     ConfigMapParserConstants.CONF_DIR, Constants.SECURITY_DIR,
-                    ConfigMapParserConstants.SECRET_CONF_FILE_NAME).toString();
+                    ConfigMapParserConstants.SECRET_CONF_FILE_NAME).toString()
+                    .replaceAll(ConfigMapParserConstants.SPLIT_PATTERN, ConfigMapParserConstants.PATH_SEPARATOR);
             builder.append(ConfigMapParserConstants.DOCKER_COPY_FILE).
                     append(secretConfLocalLocation).append(secretConfRuntimeLocation).append(System.lineSeparator());
 
             String passwordTmpLocalLocation = Paths.get(ConfigMapParserConstants.RESOURCE_DIR_PATH,
-                    ConfigMapParserConstants.PASSWORD_TMP_FILE_NAME).toString();
+                    ConfigMapParserConstants.PASSWORD_TMP_FILE_NAME).toString()
+                    .replaceAll(ConfigMapParserConstants.SPLIT_PATTERN, ConfigMapParserConstants.PATH_SEPARATOR);
             String passwordTmpRuntimeLocation = Paths.get(ConfigMapParserConstants.DOCKER_MI_DIR_PATH,
-                    ConfigMapParserConstants.PASSWORD_TMP_FILE_NAME).toString();
+                    ConfigMapParserConstants.PASSWORD_TMP_FILE_NAME).toString()
+                    .replaceAll(ConfigMapParserConstants.SPLIT_PATTERN, ConfigMapParserConstants.PATH_SEPARATOR);
             builder.append(ConfigMapParserConstants.DOCKER_COPY_FILE).
                     append(passwordTmpLocalLocation).append(passwordTmpRuntimeLocation).append(System.lineSeparator());
         }
@@ -458,17 +462,20 @@ public class ConfigMapParserMojo extends AbstractMojo {
                } else {
                    throw new MojoExecutionException("Keystore file is not available in " + keystoreLocation);
                }
-               String cipherTextPropFile =  Constants.CONF_DIR + File.separator +
-                       Constants.SECURITY_DIR + File.separator + Constants.CIPHER_TEXT_PROPERTY_FILE;
+               String cipherTextPropFile =  Constants.CONF_DIR + ConfigMapParserConstants.PATH_SEPARATOR
+                       + Constants.SECURITY_DIR + ConfigMapParserConstants.PATH_SEPARATOR
+                       + Constants.CIPHER_TEXT_PROPERTY_FILE;
 
-               System.setProperty(ConfigMapParserConstants.KEY_LOCATION_PROPERTY, keystoreLocation);
+               System.setProperty(ConfigMapParserConstants.KEY_LOCATION_PROPERTY, keystoreLocation
+                       .replaceAll(ConfigMapParserConstants.SPLIT_PATTERN, ConfigMapParserConstants.PATH_SEPARATOR));
                System.setProperty(ConfigMapParserConstants.KEY_ALIAS_PROPERTY, keystoreAlias);
                System.setProperty(ConfigMapParserConstants.KEY_TYPE_PROPERTY, keystoreType);
                System.setProperty(ConfigMapParserConstants.KEYSTORE_PASSWORD, keystorePassword);
 
                System.setProperty(ConfigMapParserConstants.DEPLOYMENT_CONFIG_FILE_PATH,
                        projectLocation + ConfigMapParserConstants.DEPLOYMENT_TOML_PATH);
-               System.setProperty(ConfigMapParserConstants.SECRET_PROPERTY_FILE_PROPERTY, secretConfFile);
+               System.setProperty(ConfigMapParserConstants.SECRET_PROPERTY_FILE_PROPERTY, secretConfFile
+                       .replaceAll(ConfigMapParserConstants.SPLIT_PATTERN, ConfigMapParserConstants.PATH_SEPARATOR));
                System.setProperty(ConfigMapParserConstants.SECRET_FILE_LOCATION, cipherTextPropFile);
            } else {
                throw new MojoExecutionException("Keystore parameters have not been defined in pom.xml");
@@ -499,7 +506,8 @@ public class ConfigMapParserMojo extends AbstractMojo {
 
             // default location is ./repository/resources/security directory
             String defaultKeystoreLocation = Paths
-                    .get(".", "repository", "resources", Constants.SECURITY_DIR, keystoreName).toString();
+                    .get(".", "repository", "resources", Constants.SECURITY_DIR, keystoreName).toString()
+                    .replaceAll(ConfigMapParserConstants.SPLIT_PATTERN, ConfigMapParserConstants.PATH_SEPARATOR);
             secretConfProperties
                     .setProperty(ConfigMapParserConstants.SECRET_CONF_KEYSTORE_LOCATION_PROPERTY, defaultKeystoreLocation);
 
