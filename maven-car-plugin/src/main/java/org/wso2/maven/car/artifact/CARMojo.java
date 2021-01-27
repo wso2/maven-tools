@@ -34,6 +34,8 @@ public class CARMojo extends AbstractMojo {
 
 	private static final String METADATA_ARTIFACT_TYPE = "synapse/metadata";
 	private static final String METADATA_FOLDER_NAME = "metadata";
+	private static final String METADATA_FILE_NAME = "metadata.xml";
+	private static final String ARTIFACTS_FILE_NAME = "artifacts.xml";
 
     /**
      * Location target folder
@@ -117,7 +119,11 @@ public class CARMojo extends AbstractMojo {
 		collectArtifacts(cAppArtifact, cAppArtifactDependencies);
 		try {
 			cAppArtifact.setRoot(true);
-			cAppArtifact.toFile(new File(getArchiveDir(),"artifacts.xml"));
+			// Creating the metadata.xml file with all the dependencies
+			cAppArtifact.toFile(new File(getArchiveDir(), METADATA_FILE_NAME));
+			// Creating the artifact.xml file excluding metadata dependencies
+			cAppArtifact.getDependencies().removeIf(c -> METADATA_ARTIFACT_TYPE.equals(c.getcAppArtifact().getType()));
+			cAppArtifact.toFile(new File(getArchiveDir(), ARTIFACTS_FILE_NAME));
 			for (CAppArtifactDependency cAppDependency : cAppArtifactDependencies.values()) {
 				cAppArtifact.setRoot(false);
 				createArtifactData(getArchiveDir(), cAppDependency);
@@ -173,7 +179,6 @@ public class CARMojo extends AbstractMojo {
 	
 	private void collectArtifacts(CAppArtifact cAppArtifact, Map<String,CAppArtifactDependency> cAppArtifacts) throws MojoExecutionException{
 		List<CAppArtifactDependency> dependencies = cAppArtifact.getDependencies();
-		cAppArtifact.getDependencies().clear();
 		for (CAppArtifactDependency artifactDependency : dependencies) {
 			if (!cAppArtifacts.containsKey(artifactDependency.getDependencyId())){
 				List<CAppArtifactDependency> artifactsToAdd = processArtifactsToAdd(artifactDependency);

@@ -39,7 +39,8 @@ public class CAppArtifact extends AbstractXMLDoc{
 
 	private MavenProject project;
 	private String serverRole;
-	
+	private List<CAppArtifactDependency> dependencyList;
+
 	/**
 	 * Artifact content file.
 	 */
@@ -83,33 +84,40 @@ public class CAppArtifact extends AbstractXMLDoc{
 		return getProject().getVersion();
 	}
 
-	public List<CAppArtifactDependency> getDependencies() throws MojoExecutionException {
-		List<CAppArtifactDependency> dependencies = new ArrayList<CAppArtifactDependency>();
-		Properties properties = getProject().getProperties();
-		for (Object object: getProject().getDependencies()) {
-			Dependency dependency=(Dependency)object;
-			String property = properties.getProperty(dependency.getGroupId()+"_._"+dependency.getArtifactId());
-			if (property !=null && property.toLowerCase().startsWith(CAppMavenUtils.CAPP_SCOPE_PREFIX)){
-				String[] scopeElements = property.split("/");
-				String dependencyServerRole;
-				if (scopeElements.length>1){
-					dependencyServerRole=scopeElements[1];
-				}else{
-					dependencyServerRole=getServerRole();
-				}
-				CAppArtifactDependency artifactDependency = new CAppArtifactDependency(dependency,dependencyServerRole);
-				if (!ignoreDependencies.contains(artifactDependency.getName()+":"+artifactDependency.getVersion())){
-					dependencies.add(artifactDependency);
-				}
-			}
-		}
-		for (CAppArtifactDependency cAppArtifactDependency : getDummyDependencies()) {
-			if (!ignoreDependencies.contains(cAppArtifactDependency.getName()+":"+cAppArtifactDependency.getVersion())){
-				dependencies.add(cAppArtifactDependency);
-			}
-		}
-		return dependencies;
-	}
+    public List<CAppArtifactDependency> getDependencies() throws MojoExecutionException {
+        if (dependencyList != null) {
+            return dependencyList;
+        }
+        List<CAppArtifactDependency> dependencies = new ArrayList<CAppArtifactDependency>();
+        Properties properties = getProject().getProperties();
+        for (Object object : getProject().getDependencies()) {
+            Dependency dependency = (Dependency) object;
+            String property = properties.getProperty(dependency.getGroupId() + "_._" + dependency.getArtifactId());
+            if (property != null && property.toLowerCase().startsWith(CAppMavenUtils.CAPP_SCOPE_PREFIX)) {
+                String[] scopeElements = property.split("/");
+                String dependencyServerRole;
+                if (scopeElements.length > 1) {
+                    dependencyServerRole = scopeElements[1];
+                } else {
+                    dependencyServerRole = getServerRole();
+                }
+                CAppArtifactDependency artifactDependency =
+                        new CAppArtifactDependency(dependency, dependencyServerRole);
+                if (!ignoreDependencies
+                        .contains(artifactDependency.getName() + ":" + artifactDependency.getVersion())) {
+                    dependencies.add(artifactDependency);
+                }
+            }
+        }
+        for (CAppArtifactDependency cAppArtifactDependency : getDummyDependencies()) {
+            if (!ignoreDependencies
+                    .contains(cAppArtifactDependency.getName() + ":" + cAppArtifactDependency.getVersion())) {
+                dependencies.add(cAppArtifactDependency);
+            }
+        }
+        dependencyList = new ArrayList<>(dependencies);
+        return dependencies;
+    }
 	
 	public void addIgnoreDependency(CAppArtifactDependency cAppArtifactDependency){
 		ignoreDependencies.add(cAppArtifactDependency.getName()+":"+cAppArtifactDependency.getVersion());
