@@ -35,7 +35,7 @@ public class Artifact extends AbstractXMLDoc implements Observer{
 	String name;
 	String version;
 	String serverRole;
-	String type;	
+	String type;
 	/**
 	 * Artifact content file.
 	 */
@@ -101,6 +101,10 @@ public class Artifact extends AbstractXMLDoc implements Observer{
 
 	public void setFile(String file) {
 		this.file = file;
+	}
+
+	public String getFilePath() {
+		return file;
 	}
 
 	public synchronized void addObserver(Observer o) {

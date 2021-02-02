@@ -126,11 +126,8 @@ public class MetadataPOMGenMojo extends AbstractPOMGenMojo {
 
     protected void copyResources(MavenProject project, File projectLocation, Artifact artifact)throws IOException {
         ITemporaryFileTag newTag = org.wso2.developerstudio.eclipse.utils.file.FileUtils.createNewTempTag();
-        File sequenceArtifact = processTokenReplacement(artifact);
-        if (sequenceArtifact == null) {
-            sequenceArtifact = artifact.getFile();
-        }
-        FileUtils.copyFile(sequenceArtifact, new File(projectLocation, artifact.getFile().getName()));
+        File sequenceArtifact = getFile(artifact);
+        FileUtils.copyFile(sequenceArtifact, new File(projectLocation, sequenceArtifact.getName()));
         newTag.clearAndEnd();
     }
 
@@ -140,10 +137,16 @@ public class MetadataPOMGenMojo extends AbstractPOMGenMojo {
         Xpp3Dom configuration = (Xpp3Dom)plugin.getConfiguration();
         //add configuration
         Xpp3Dom aritfact = CAppMavenUtils.createConfigurationNode(configuration,"artifact");
-        aritfact.setValue(artifact.getFile().getName());
+        aritfact.setValue(getFile(artifact).getName());
     }
 
     protected String getArtifactType() {
         return ARTIFACT_TYPE;
+    }
+
+    private File getFile(Artifact artifact) {
+        String filePath = artifact.getFilePath();
+        filePath = filePath.replace("/synapse-config/", "/resources/");
+        return new File(artifact.getSource().getParentFile(), filePath);
     }
 }
