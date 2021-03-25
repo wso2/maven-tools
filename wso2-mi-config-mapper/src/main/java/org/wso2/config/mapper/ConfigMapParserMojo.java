@@ -98,6 +98,7 @@ public class ConfigMapParserMojo extends AbstractMojo {
             boolean isDownloaded = downloadTemplates();
             if (!isDownloaded) {
                 getLog().error("Error while downloading ConfigMapper templates for version " + miVersion);
+                updateDockerfileAsDefault();
                 return;
             }
             System.setProperty("avoidResolvingEnvAndSysVariables", "true");
@@ -176,20 +177,16 @@ public class ConfigMapParserMojo extends AbstractMojo {
             return false;
         }
 
-        try (InputStream inputStream = new URL(sourceURL).openStream()) {
-            if (inputStream.available() == 0) {
-                isDownloaded = false;
-            } else {
-                String templateZipLocation = projectLocation + ConfigMapParserConstants.RESOURCES_PATH + File.separator
-                        + ConfigMapParserConstants.TEMPLATES_ZIP_FILE;
-                Files.copy(inputStream, Paths.get(templateZipLocation));
-                ZipFile zipFile = new ZipFile(templateZipLocation);
-                zipFile.extractAll(projectLocation + ConfigMapParserConstants.RESOURCES_PATH);
+        try (InputStream inputStream = (new URL(sourceURL).openConnection()).getInputStream()) {
+            String templateZipLocation = projectLocation + ConfigMapParserConstants.RESOURCES_PATH + File.separator
+                    + ConfigMapParserConstants.TEMPLATES_ZIP_FILE;
+            Files.copy(inputStream, Paths.get(templateZipLocation));
+            ZipFile zipFile = new ZipFile(templateZipLocation);
+            zipFile.extractAll(projectLocation + ConfigMapParserConstants.RESOURCES_PATH);
 
-                File templateZipFile = new File(templateZipLocation);
-                if (!templateZipFile.delete()) {
-                    getLog().warn("Templates zip file can not delete from the resource path");
-                }
+            File templateZipFile = new File(templateZipLocation);
+            if (!templateZipFile.delete()) {
+                getLog().warn("Templates zip file can not delete from the resource path");
             }
         } catch (IOException e) {
             isDownloaded = false;
@@ -419,6 +416,23 @@ public class ConfigMapParserMojo extends AbstractMojo {
         }
 
         return builder.toString();
+    }
+
+    /**
+     * Get default/initial lines from Dockerfile.
+     *
+     * @throws IOException exception while reading dockerfile
+     */
+    private void updateDockerfileAsDefault() throws IOException {
+        try (InputStream inputStream = new ByteArrayInputStream(getBaseImageInDockerfile()
+                .getBytes(StandardCharsets.UTF_8));
+             OutputStream outputStream = new FileOutputStream(
+                     new File(projectLocation + ConfigMapParserConstants.DOCKER_FILE))) {
+            IOUtils.copy(inputStream, outputStream);
+            getLog().warn("Updated Dockerfile to default");
+        } catch (IOException e) {
+            throw new IOException("Exception while making the Dockerfile to default \n" + e);
+        }
     }
 
 
