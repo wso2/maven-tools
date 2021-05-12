@@ -238,6 +238,31 @@
 			<version>${wsdl4j.version}</version>
 		</dependency>
 		<dependency>
+			<groupId>io.github.openfeign</groupId>
+			<artifactId>feign-core</artifactId>
+			<version>${feign.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>io.github.openfeign</groupId>
+			<artifactId>feign-gson</artifactId>
+			<version>${feign.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>io.github.openfeign.form</groupId>
+			<artifactId>feign-form</artifactId>
+			<version>${feign-form.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>org.json.wso2</groupId>
+			<artifactId>json</artifactId>
+			<version>${org.wso2.json.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>commons-io.wso2</groupId>
+			<artifactId>commons-io</artifactId>
+			<version>${commons.io.version}</version>
+		</dependency>
+		<dependency>
 			<groupId>org.apache.neethi.wso2</groupId>
 			<artifactId>neethi</artifactId>
 			<version>${org.apache.neethi.wso2.neethi.version}</version>

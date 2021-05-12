@@ -253,6 +253,10 @@
         <mockito.core.version>1.9.5</mockito.core.version>
         <log4j.version>1.2.14</log4j.version>
         <wsdl4j.version>1.6.2.wso2v2</wsdl4j.version>
+        <feign.version>11.0</feign.version>
+        <feign-form.version>3.8.0</feign-form.version>
+        <org.wso2.json.version>3.0.0.wso2v1</org.wso2.json.version>
+        <commons.io.version>2.4.0.wso2v1</commons.io.version>
         <org.wso2.securevault.version>1.0.0</org.wso2.securevault.version>
         <org.wso2.carbon.authenticator.stub.version>3.2.0</org.wso2.carbon.authenticator.stub.version>
         <org.wso2.carbon.roles.mgt.stub.version>3.2.0</org.wso2.carbon.roles.mgt.stub.version>
