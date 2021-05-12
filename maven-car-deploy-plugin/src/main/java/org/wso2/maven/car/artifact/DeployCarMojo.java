@@ -175,11 +175,15 @@ public class DeployCarMojo extends AbstractMojo {
 			return;
 		}
 		
-		if(carbonServers == null){
+		if(carbonServers == null) {
+            getLog().info("Could not find <carbonServers> element in the pom.xml. " +
+                    "Hence proceeding with default values");
 			process();
-		}else if(carbonServers!= null && carbonServers.isEmpty()){
+		} else if(carbonServers != null && carbonServers.isEmpty()){
+            getLog().info("Could not find properties under <carbonServer> element in the pom.xml. " +
+                    "Hence proceeding with default values");
 			process();
-		}else{
+		} else{
 			for (CarbonServer server : carbonServers) {
 				getLog().info("Deploying to Server...");
 				getLog().info("TSPath=" + server.getTrustStorePath());

@@ -41,7 +41,4 @@ public interface CAppMgtServiceStub {
     @RequestLine("POST /management/capp-undeployer")
     @Headers("Content-Type: application/json; charset=utf-8")
     Response unDeployCApp(@Param("cAppNamePattern") String cAppNamePattern) throws CAppMgtServiceStubException;
-
-
-
 }
