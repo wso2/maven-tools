@@ -299,7 +299,6 @@ public class DeployCarMojo extends AbstractMojo {
         if (resObj != null) {
             getLog().info("Authentication to " + serverUrl + " successful.");
             String accessToken = resObj.getString("AccessToken");
-            getLog().info("AccessToken is : " + accessToken);
             if (accessToken != null && !accessToken.equals("")) {
                 if (capppMgtApiHelperServiceImpl.deployCApp(carFile, accessToken, serverUrl)) {
                     getLog().info("Uploaded " + carFile.getName()+ " to " + serverUrl+ " ...");
