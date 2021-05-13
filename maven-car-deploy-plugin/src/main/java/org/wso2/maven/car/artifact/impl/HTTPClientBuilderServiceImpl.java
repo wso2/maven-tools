@@ -27,8 +27,6 @@ import feign.auth.BasicAuthRequestInterceptor;
 import feign.codec.Decoder;
 import feign.codec.Encoder;
 import feign.form.FormEncoder;
-import feign.gson.GsonDecoder;
-import feign.gson.GsonEncoder;
 import org.wso2.maven.car.artifact.HTTPClientBuilderService;
 
 public class HTTPClientBuilderServiceImpl implements HTTPClientBuilderService {
@@ -62,7 +60,7 @@ public class HTTPClientBuilderServiceImpl implements HTTPClientBuilderService {
     public <T> T buildWithJWT(String accessToken, int connectTimeoutMillis, int readTimeoutMillis, Class<T> target,
                               String url) {
         return Feign.builder().requestInterceptor(new JWTAuthRequestInterceptor(accessToken))
-                .encoder(new GsonEncoder()).decoder(new GsonDecoder())
+                .encoder(new Encoder.Default()).decoder(new Decoder.Default())
                 .options(new Request.Options(connectTimeoutMillis, readTimeoutMillis))
                 .client(newDefaultClientInstance())
                 .target(target, url);

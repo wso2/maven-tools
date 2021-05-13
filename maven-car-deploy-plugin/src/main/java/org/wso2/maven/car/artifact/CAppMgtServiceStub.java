@@ -34,11 +34,11 @@ public interface CAppMgtServiceStub {
     @Headers("accept: application/json; charset=utf-8")
     Response doAuthenticate() throws CAppMgtServiceStubException;
 
-    @RequestLine("POST /management/capp-deployer")
+    @RequestLine("POST /management/applications")
     @Headers("Content-Type: multipart/form-data; charset=utf-8")
     Response deployCApp(@Param("file") File capp) throws CAppMgtServiceStubException;
 
-    @RequestLine("POST /management/capp-undeployer")
+    @RequestLine("DELETE /management/applications/{name}")
     @Headers("Content-Type: application/json; charset=utf-8")
-    Response unDeployCApp(@Param("cAppNamePattern") String cAppNamePattern) throws CAppMgtServiceStubException;
+    Response unDeployCApp(@Param("name") String cAppNamePattern) throws CAppMgtServiceStubException;
 }
