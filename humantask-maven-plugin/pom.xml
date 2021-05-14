@@ -133,6 +133,6 @@
 	<maven.core.version>3.3.9</maven.core.version>
 	<wso2.developerstudio.version>3.6.0</wso2.developerstudio.version>
 	<maven.plugin.annotations.version>3.4</maven.plugin.annotations.version>
-	<apache.commons.io.version>2.4</apache.commons.io.version>
+	<apache.commons.io.version>2.7</apache.commons.io.version>
 	</properties>
 </project>
