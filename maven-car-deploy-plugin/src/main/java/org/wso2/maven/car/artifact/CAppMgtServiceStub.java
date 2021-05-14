@@ -40,5 +40,5 @@ public interface CAppMgtServiceStub {
 
     @RequestLine("DELETE /management/applications/{name}")
     @Headers("Content-Type: application/json; charset=utf-8")
-    Response unDeployCApp(@Param("name") String cAppNamePattern) throws CAppMgtServiceStubException;
+    Response unDeployCApp(@Param("name") String cAppName) throws CAppMgtServiceStubException;
 }

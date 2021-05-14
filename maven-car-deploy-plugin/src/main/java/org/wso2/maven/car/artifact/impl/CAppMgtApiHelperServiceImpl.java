@@ -70,10 +70,10 @@ public class CAppMgtApiHelperServiceImpl implements CAppMgtApiHelperService {
     }
 
     @Override
-    public boolean unDeployCApp(String accessToken, String serverUrl, String cAppNamePattern)
+    public boolean unDeployCApp(String accessToken, String serverUrl, String cAppName)
             throws CAppMgtServiceStubException {
         try {
-            Response response = HTTPSClientUtil.unDeployCApp(accessToken, serverUrl, cAppNamePattern);
+            Response response = HTTPSClientUtil.unDeployCApp(accessToken, serverUrl, cAppName);
             if (response.status() == 200) {
                 return true;
             }

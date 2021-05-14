@@ -44,10 +44,10 @@ public class HTTPSClientUtil {
         return CAppMgtHandlerFactory.getCAppMgtHttpsClient2(serverUrl, accessToken).deployCApp(capp);
     }
 
-    public static Response unDeployCApp(String accessToken, String serverUrl, String cAppNamePattern) throws
+    public static Response unDeployCApp(String accessToken, String serverUrl, String cAppName) throws
             CAppMgtServiceStubException{
         return CAppMgtHandlerFactory.getCAppMgtHttpsClient3(serverUrl, accessToken).
-                unDeployCApp(cAppNamePattern);
+                unDeployCApp(cAppName);
     }
 
 

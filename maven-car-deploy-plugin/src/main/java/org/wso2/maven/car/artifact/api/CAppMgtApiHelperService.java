@@ -35,6 +35,6 @@ public interface CAppMgtApiHelperService {
 
     boolean deployCApp(File capp, String accessToken, String serverUrl) throws CAppMgtServiceStubException;
 
-    boolean unDeployCApp(String accessToken, String serverUrl, String cAppNamePattern)
+    boolean unDeployCApp(String accessToken, String serverUrl, String cAppName)
             throws CAppMgtServiceStubException;
 }
