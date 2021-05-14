@@ -233,7 +233,7 @@
         <org.apache.httpcomponents.httpcore.version>4.1</org.apache.httpcomponents.httpcore.version>
         <org.apache.felix.maven.bundle.plugin.version>2.3.7</org.apache.felix.maven.bundle.plugin.version>
         <org.apache.maven.plugin.api.version>3.0</org.apache.maven.plugin.api.version>
-        <org.apache.commons.io.version>2.4</org.apache.commons.io.version>
+        <org.apache.commons.io.version>2.7</org.apache.commons.io.version>
         <org.apache.commons.logging.version>1.2</org.apache.commons.logging.version>
         <org.apache.maven.war.plugins.version>2.1-beta-1</org.apache.maven.war.plugins.version>
         <org.apache.maven.scm.api.version>1.9.1</org.apache.maven.scm.api.version>
