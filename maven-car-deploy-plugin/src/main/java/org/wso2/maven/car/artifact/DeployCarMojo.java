@@ -26,14 +26,14 @@ import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.project.MavenProject;
 import org.apache.maven.project.MavenProjectHelper;
 import org.codehaus.plexus.util.xml.Xpp3Dom;
-import org.json.JSONObject;
-import org.wso2.maven.car.artifact.impl.CAppMgtApiHelperServiceImpl;
 
 import java.io.File;
 import java.util.List;
 
 import static org.wso2.maven.car.artifact.util.Constants.CONFIG_OPERATION_DEPLOY;
 import static org.wso2.maven.car.artifact.util.Constants.CONFIG_OPERATION_UNDEPLOY;
+import static org.wso2.maven.car.artifact.util.Constants.EI_SERVER;
+import static org.wso2.maven.car.artifact.util.Constants.MI_SERVER;
 
 /**
  * Deploy the generated CAR file to a Remote Server
@@ -153,6 +153,11 @@ public class DeployCarMojo extends AbstractMojo {
     private String operation;
 
     /**
+     * @parameter expression="${serverType}" default-value="mi"
+     */
+    private String serverType;
+
+    /**
      * Maven ProjectHelper.
      *
      * @parameter
@@ -166,12 +171,7 @@ public class DeployCarMojo extends AbstractMojo {
      */
     private boolean skip;
 
-    private final CAppMgtApiHelperServiceImpl capppMgtApiHelperServiceImpl;
-
-    public DeployCarMojo() {
-
-        capppMgtApiHelperServiceImpl = new CAppMgtApiHelperServiceImpl();
-    }
+    private CAppHandler cAppHandler;
 
     public void execute() throws MojoExecutionException, MojoFailureException {
 
@@ -217,6 +217,10 @@ public class DeployCarMojo extends AbstractMojo {
                 if (server.getOperation() != null) {
                     operation = server.getOperation();
                 }
+                if (server.getServerType() != null) {
+                    serverType = server.getServerType();
+                }
+                getLog().info("ServerType=" + serverType);
                 process();
             }
         }
@@ -257,16 +261,22 @@ public class DeployCarMojo extends AbstractMojo {
             }
         }
 
+        if (isValidServerType()) {
+            cAppHandler = getCAppHandler();
+        } else {
+            throw new MojoExecutionException("Unsupported serverType. Only allows \"mi\" or \"ei\" ");
+        }
+
         if (operation.equalsIgnoreCase(CONFIG_OPERATION_DEPLOY)) {
             try {
-                deployCApp(userName, password, serverUrl, carFile);
+                cAppHandler.deployCApp(userName, password, serverUrl, carFile);
             } catch (Exception e) {
                 getLog().error("Uploading " + carFile.getName() + " to " + serverUrl + " Failed.", e);
                 throw new MojoExecutionException("Deploying " + carFile.getName() + " to " + serverUrl + " Failed.", e);
             }
         } else if (operation.equalsIgnoreCase(CONFIG_OPERATION_UNDEPLOY)) {
             try {
-                unDeployCAR(userName, password, serverUrl);
+                cAppHandler.unDeployCApp(userName, password, serverUrl, project);
             } catch (Exception e) {
                 getLog().error("Deleting " + carFile.getName() + " to " + serverUrl + " Failed.", e);
                 throw new MojoExecutionException("Deleting " + carFile.getName() + " to " + serverUrl + " Failed.", e);
@@ -302,33 +312,16 @@ public class DeployCarMojo extends AbstractMojo {
         System.setProperty("javax.net.ssl.trustStoreType", trustStoreType);
     }
 
-    public void deployCApp(String username, String password, String serverUrl, File carFile) throws Exception {
+    private boolean isValidServerType() {
 
-        JSONObject resObj = capppMgtApiHelperServiceImpl.doAuthenticate(serverUrl, username, password);
-        if (resObj != null) {
-            getLog().info("Authentication to " + serverUrl + " successful.");
-            String accessToken = resObj.getString("AccessToken");
-            if (accessToken != null && !accessToken.equals("")) {
-                if (capppMgtApiHelperServiceImpl.deployCApp(carFile, accessToken, serverUrl)) {
-                    getLog().info("Uploaded " + carFile.getName() + " to " + serverUrl + " ...");
-                }
-            }
-        }
+        return serverType.equalsIgnoreCase(MI_SERVER) || serverType.equalsIgnoreCase(EI_SERVER);
     }
 
-    public void unDeployCAR(String username, String password, String serverUrl) throws Exception {
+    private CAppHandler getCAppHandler() {
 
-        JSONObject resObj = capppMgtApiHelperServiceImpl.doAuthenticate(serverUrl, username, password);
-        if (resObj != null) {
-            getLog().info("Authentication to " + serverUrl + " successful.");
-            String accessToken = resObj.getString("AccessToken");
-            if (accessToken != null && !accessToken.equals("")) {
-                if (capppMgtApiHelperServiceImpl.unDeployCApp(accessToken, serverUrl,
-                        project.getArtifactId() + "_" + project.getVersion())) {
-                    getLog().info("Located the C-App " + project.getArtifactId() +
-                            "_" + project.getVersion() + " and undeployed ...");
-                }
-            }
+        if (serverType.equalsIgnoreCase(EI_SERVER)) {
+            return new EICAppHandler(getLog());
         }
+        return new MICAppHandler(getLog());
     }
 }

@@ -17,6 +17,8 @@ public class CarbonServer {
 	
 	private String operation;
 
+	private String serverType;
+
 
 	public String getTrustStorePath() {
 		return trustStorePath;
@@ -85,6 +87,14 @@ public class CarbonServer {
 
 	public String getOperation() {
 		return operation;
+	}
+
+	public void setServerType(String serverType) {
+		this.serverType = serverType;
+	}
+
+	public String getServerType() {
+		return serverType;
 	}
 
 }
