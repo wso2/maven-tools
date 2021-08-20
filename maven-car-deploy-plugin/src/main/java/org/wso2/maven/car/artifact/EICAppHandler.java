@@ -103,8 +103,7 @@ public class EICAppHandler implements CAppHandler {
 
     private Header createBasicAuthHeader(String userName, String password) {
 
-        String concatUserNamePassword = userName + ":" + password;
-        String encodedString = Base64Utils.encode(concatUserNamePassword.getBytes());
-        return new Header(Constants.AUTHORIZATION_HEADER, Constants.BASIC + encodedString);
+        return new Header(Constants.AUTHORIZATION_HEADER,
+                Constants.BASIC + Base64Utils.encode((userName + ":" + password).getBytes()));
     }
 }

@@ -24,6 +24,7 @@ import org.apache.maven.plugin.logging.Log;
 import org.apache.maven.project.MavenProject;
 import org.json.JSONObject;
 import org.wso2.maven.car.artifact.impl.CAppMgtApiHelperServiceImpl;
+import org.wso2.maven.car.artifact.util.Constants;
 
 import java.io.File;
 
@@ -47,8 +48,8 @@ public class MICAppHandler implements CAppHandler {
         JSONObject resObj = capppMgtApiHelperServiceImpl.doAuthenticate(serverUrl, username, password);
         if (resObj != null) {
             logger.info("Authentication to " + serverUrl + " successful.");
-            String accessToken = resObj.getString("AccessToken");
-            if (accessToken != null && !accessToken.equals("")) {
+            String accessToken = resObj.getString(Constants.ACCESS_TOKEN);
+            if (isNotBlank(accessToken)) {
                 if (capppMgtApiHelperServiceImpl.deployCApp(carFile, accessToken, serverUrl)) {
                     logger.info("Uploaded " + carFile.getName() + " to " + serverUrl + " ...");
                 }
@@ -63,8 +64,8 @@ public class MICAppHandler implements CAppHandler {
         JSONObject resObj = capppMgtApiHelperServiceImpl.doAuthenticate(serverUrl, username, password);
         if (resObj != null) {
             logger.info("Authentication to " + serverUrl + " successful.");
-            String accessToken = resObj.getString("AccessToken");
-            if (accessToken != null && !accessToken.equals("")) {
+            String accessToken = resObj.getString(Constants.ACCESS_TOKEN);
+            if (isNotBlank(accessToken)) {
                 if (capppMgtApiHelperServiceImpl.unDeployCApp(accessToken, serverUrl,
                         project.getArtifactId() + "_" + project.getVersion())) {
                     logger.info("Located the C-App " + project.getArtifactId() +
@@ -72,5 +73,10 @@ public class MICAppHandler implements CAppHandler {
                 }
             }
         }
+    }
+
+    private static boolean isNotBlank(String accessToken) {
+
+        return accessToken != null && !accessToken.trim().isEmpty();
     }
 }
