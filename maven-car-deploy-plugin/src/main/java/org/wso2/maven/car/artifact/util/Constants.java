@@ -26,4 +26,10 @@ public class Constants {
     public static final int CLIENT_READ_TIMEOUT = 5000;
     public static final String CONFIG_OPERATION_DEPLOY = "deploy";
     public static final String CONFIG_OPERATION_UNDEPLOY = "undeploy";
+    public static final String MI_SERVER = "mi";
+    public static final String EI_SERVER = "ei";
+
+    public static final String AUTHORIZATION_HEADER = "Authorization";
+    public static final String BASIC = "Basic ";
+    public static final String ACCESS_TOKEN = "AccessToken";
 }
