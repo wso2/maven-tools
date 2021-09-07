@@ -125,7 +125,13 @@ class SynapseTestCaseFileReader {
             String testArtifactFilePath = testArtifactFileNode.getText();
             File testArtifactFile = new File(RELATIVE_PREVIOUS + File.separator +  testArtifactFilePath);
             if (!testArtifactFile.exists()) {
-                testArtifactFileAsString = FileUtils.readFileToString(new File(testArtifactFilePath.substring(1)));
+                testArtifactFile = new File(RELATIVE_PREVIOUS + File.separator +
+                        RELATIVE_PREVIOUS + File.separator +  testArtifactFilePath);
+                if (!testArtifactFile.exists()) {
+                    testArtifactFileAsString = FileUtils.readFileToString(new File(testArtifactFilePath.substring(1)));
+                } else {
+                    testArtifactFileAsString = FileUtils.readFileToString(testArtifactFile);
+                }
             } else {
                 testArtifactFileAsString = FileUtils.readFileToString(testArtifactFile);
             }
@@ -167,7 +173,13 @@ class SynapseTestCaseFileReader {
                 String artifactFilePath = artifact.getText();
                 File supportiveArtifactFile = new File(RELATIVE_PREVIOUS + File.separator +  artifactFilePath);
                 if (!supportiveArtifactFile.exists()) {
-                    supportiveArtifactFileAsString = FileUtils.readFileToString(new File(artifactFilePath.substring(1)));
+                    supportiveArtifactFile = new File(RELATIVE_PREVIOUS + File.separator + 
+                                    RELATIVE_PREVIOUS + File.separator +  artifactFilePath);
+                    if (!supportiveArtifactFile.exists()) {
+                        supportiveArtifactFileAsString = FileUtils.readFileToString(new File(artifactFilePath.substring(1)));
+                    } else {
+                        supportiveArtifactFileAsString = FileUtils.readFileToString(supportiveArtifactFile);
+                    }
                 } else {
                     supportiveArtifactFileAsString = FileUtils.readFileToString(supportiveArtifactFile);
                 }
@@ -212,7 +224,13 @@ class SynapseTestCaseFileReader {
                 String registryFilePath = registryResourcesFileNode.getText();
                 File registryResourceFile = new File(RELATIVE_PREVIOUS + File.separator +  registryFilePath);
                 if (!registryResourceFile.exists()) {
-                    registryResourceFileAsString = FileUtils.readFileToString(new File(registryFilePath.substring(1)));
+                    registryResourceFile = new File(RELATIVE_PREVIOUS + File.separator +
+                            RELATIVE_PREVIOUS + File.separator +  registryFilePath);
+                    if (!registryResourceFile.exists()) {
+                        registryResourceFileAsString = FileUtils.readFileToString(new File(registryFilePath.substring(1)));
+                    } else {
+                        registryResourceFileAsString = FileUtils.readFileToString(registryResourceFile);
+                    }
                 } else {
                     registryResourceFileAsString = FileUtils.readFileToString(registryResourceFile);
                 }
@@ -259,7 +277,13 @@ class SynapseTestCaseFileReader {
                 String registryFilePath;
                 File connectorResourceFile = new File(RELATIVE_PREVIOUS + File.separator + resource.getText());
                 if (!connectorResourceFile.exists()) {
-                    registryFilePath = resource.getText().substring(1);
+                    connectorResourceFile = new File(RELATIVE_PREVIOUS + File.separator +
+                            RELATIVE_PREVIOUS + File.separator +  resource.getText());
+                    if (!connectorResourceFile.exists()) {
+                        registryFilePath = resource.getText().substring(1);
+                    } else {
+                        registryFilePath = RELATIVE_PREVIOUS + File.separator + resource.getText();
+                    }
                 } else {
                     registryFilePath = RELATIVE_PREVIOUS + File.separator + resource.getText();
                 }
@@ -300,7 +324,14 @@ class SynapseTestCaseFileReader {
                 String mockServiceFilePath = mockServiceNode.getText();
                 File mockServiceFile = new File(RELATIVE_PREVIOUS + File.separator +  mockServiceFilePath);
                 if (!mockServiceFile.exists()) {
-                    mockServiceFileDataAsString = FileUtils.readFileToString(new File(mockServiceFilePath.substring(1)));
+                    mockServiceFile = new File(RELATIVE_PREVIOUS + File.separator +
+                            RELATIVE_PREVIOUS + File.separator +  mockServiceFilePath);
+                    if (!mockServiceFile.exists()) {
+                        mockServiceFileDataAsString = FileUtils.readFileToString(new File(mockServiceFilePath.substring(1)));
+                    } else {
+                        mockServiceFileDataAsString = FileUtils.readFileToString(mockServiceFile);
+                    }
+                    
                 } else {
                     mockServiceFileDataAsString = FileUtils.readFileToString(mockServiceFile);
                 }
