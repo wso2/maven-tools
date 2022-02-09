@@ -277,7 +277,7 @@
         <maven.spotbugsplugin.version>3.1.10</maven.spotbugsplugin.version>
         <maven.checkstyle.plugin.version>3.0.0</maven.checkstyle.plugin.version>
         <version.checkstyle>7.8.2</version.checkstyle>
-        <version.jinjava>2.4.14</version.jinjava>
+        <version.jinjava>2.5.4</version.jinjava>
         <version.cava-toml>0.5.0</version.cava-toml>
         <orbit.version.commons.io>2.4.0.wso2v1</orbit.version.commons.io>
         <common.logging.version>1.2</common.logging.version>
