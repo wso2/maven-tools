@@ -228,7 +228,7 @@
 		<junit.version>3.8.1</junit.version>
 		<plexus.container.default.version>1.5.4</plexus.container.default.version>
 		<plexus.archiver.version>1.0-alpha-7</plexus.archiver.version>
-		<plexus.utils.version>2.0.1</plexus.utils.version>
+		<plexus.utils.version>3.0.16</plexus.utils.version>
 		<bndlib.version>0.0.357</bndlib.version>
 		<kxml2.version>2.2.2</kxml2.version>
 		<plexus.interactivity.api.version>1.0-alpha-6</plexus.interactivity.api.version>
