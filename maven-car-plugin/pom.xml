@@ -10,19 +10,19 @@
 	language governing permissions and limitations under the License. -->
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 
-	<parent>
+       <parent>
 		<groupId>org.wso2.maven</groupId>
 		<artifactId>maven-common-tools</artifactId>
 		<version>5.2.39-SNAPSHOT</version>
 		<relativePath>../pom.xml</relativePath>
-	</parent>
+       </parent>
 
 	<modelVersion>4.0.0</modelVersion>
-	<groupId>org.wso2.maven</groupId>
+        <groupId>org.wso2.maven</groupId>
 	<artifactId>maven-car-plugin</artifactId>
 	<version>5.2.39-SNAPSHOT</version>
 	<packaging>maven-plugin</packaging>
-	<url>http://wso2.org</url>
+        <url>http://wso2.org</url>
 
 	<name>Maven CAR Plugin</name>
 	<description>Maven plugin which creates CAR artifact</description>
