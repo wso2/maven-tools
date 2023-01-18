@@ -239,15 +239,7 @@ class SynapseTestCaseFileReader {
             }
 
             if (registryResourceFileAsString != null) {
-                //add registry resource data as a child data in artifact node
-                if (registryResourceFileAsString.startsWith("<")) {
-                    OMElement registryArtifactDataNode = AXIOMUtil.stringToOM(registryResourceFileAsString);
-                    registryResourcesFileNode.removeChildren();
-
-                    registryResourcesFileNode.addChild(registryArtifactDataNode);
-                } else {
-                    registryResourcesFileNode.setText(registryResourceFileAsString);
-                }
+                registryResourcesFileNode.setText(registryResourceFileAsString);
             } else {
                 throw new IOException("Registry resource does not contain any configuration data");
             }
