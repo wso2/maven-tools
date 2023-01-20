@@ -1,0 +1,6 @@
+<archetype>
+    <id>maven-inboundendpoint-plugin</id>
+    <resources>
+        <resource>src/main/resources/sample/sample-inboundendpoint.xml</resource>
+    </resources>
+</archetype>
