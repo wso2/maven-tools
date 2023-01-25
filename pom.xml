@@ -73,6 +73,20 @@
         <module>wso2-mi-config-mapper</module>
         <module>wso2-general-project-plugin</module>
         <module>wso2-esb-metadata-plugin</module>
+        <module>maven-synapse-plugin</module>
+        <module>wso2-esb-api-plugin</module>
+        <module>wso2-esb-connector-plugin</module>
+        <module>wso2-esb-endpoint-plugin</module>
+        <module>wso2-esb-inboundendpoint-plugin</module>
+        <module>wso2-esb-localentry-plugin</module>
+        <module>wso2-esb-messageprocessor-plugin</module>
+        <module>wso2-esb-messagestore-plugin</module>
+        <module>wso2-esb-proxy-plugin</module>
+        <module>wso2-esb-sequence-plugin</module>
+        <module>wso2-esb-synapse-plugin</module>
+        <module>wso2-esb-task-plugin</module>
+        <module>wso2-esb-template-plugin</module>
+        <module>maven-dataservice-plugin</module>
     </modules>
     <build>
         <extensions>
@@ -260,7 +274,7 @@
         <org.wso2.securevault.version>1.0.0</org.wso2.securevault.version>
         <org.wso2.carbon.authenticator.stub.version>3.2.0</org.wso2.carbon.authenticator.stub.version>
         <org.wso2.carbon.roles.mgt.stub.version>3.2.0</org.wso2.carbon.roles.mgt.stub.version>
-        <org.wso2.maven.synapse.plugin.version>2.1.0</org.wso2.maven.synapse.plugin.version>
+        <org.wso2.maven.synapse.plugin.version>5.2.42-SNAPSHOT</org.wso2.maven.synapse.plugin.version>
         <org.wso2.maven.stratos.plugin.version>2.1.0</org.wso2.maven.stratos.plugin.version>
         <org.wso2.maven.capp.version>5.2.42-SNAPSHOT</org.wso2.maven.capp.version>
         <org.wso2.maven.core.version>5.2.42-SNAPSHOT</org.wso2.maven.core.version>

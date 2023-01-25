@@ -26,6 +26,7 @@ import org.wso2.developerstudio.eclipse.utils.file.FileUtils;
 import org.wso2.maven.capp.model.Artifact;
 import org.wso2.maven.capp.mojo.AbstractPOMGenMojo;
 import org.wso2.maven.capp.utils.WSO2MavenPluginConstantants;
+import org.wso2.maven.core.utils.MavenConstants;
 import org.wso2.maven.core.utils.MavenUtils;
 import org.wso2.maven.registry.beans.RegistryCollection;
 import org.wso2.maven.registry.beans.RegistryElement;
@@ -270,7 +271,7 @@ public class RegistryResourcePOMGenMojo extends AbstractPOMGenMojo {
     }
 
     protected void addPlugins(MavenProject artifactMavenProject, Artifact artifact) {
-        Plugin plugin = MavenUtils.createPluginEntry(artifactMavenProject, "org.wso2.maven", "maven-registry-plugin",
+        Plugin plugin = MavenUtils.createPluginEntry(artifactMavenProject, MavenConstants.WSO2_MAVEN_GROUPID, "wso2-general-project-plugin",
                                                      WSO2MavenPluginConstantants.MAVEN_REGISTRY_PLUGIN_VERSION, true);
         Xpp3Dom configuration = (Xpp3Dom) plugin.getConfiguration();
         //add configuration
