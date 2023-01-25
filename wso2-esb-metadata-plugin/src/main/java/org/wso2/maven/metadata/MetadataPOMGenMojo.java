@@ -17,11 +17,6 @@
  */
 package org.wso2.maven.metadata;
 
-import java.io.File;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
-
 import org.apache.maven.model.Plugin;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
@@ -33,8 +28,15 @@ import org.wso2.developerstudio.eclipse.utils.data.ITemporaryFileTag;
 import org.wso2.maven.capp.model.Artifact;
 import org.wso2.maven.capp.mojo.AbstractPOMGenMojo;
 import org.wso2.maven.capp.utils.CAppMavenUtils;
+import org.wso2.maven.capp.utils.WSO2MavenPluginConstantants;
+import org.wso2.maven.core.utils.MavenConstants;
 import org.wso2.maven.esb.ESBArtifact;
 import org.wso2.maven.esb.utils.ESBMavenUtils;
+
+import java.io.File;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * This is the Maven Mojo used for generating a pom for a sequence artifact
@@ -133,7 +135,8 @@ public class MetadataPOMGenMojo extends AbstractPOMGenMojo {
 
     protected void addPlugins(MavenProject artifactMavenProject, Artifact artifact) {
         Plugin plugin = CAppMavenUtils.createPluginEntry(artifactMavenProject,
-                "org.wso2.maven", "wso2-esb-metadata-plugin", "5.2.31", true);
+                MavenConstants.WSO2_MAVEN_GROUPID, "wso2-esb-metadata-plugin",
+                WSO2MavenPluginConstantants.WSO2_ESB_METADATA_PLUGIN_VERSION, true);
         Xpp3Dom configuration = (Xpp3Dom)plugin.getConfiguration();
         //add configuration
         Xpp3Dom aritfact = CAppMavenUtils.createConfigurationNode(configuration,"artifact");
