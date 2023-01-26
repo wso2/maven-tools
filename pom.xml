@@ -142,6 +142,11 @@
                 <version>${org.wso2.maven.registry.version}</version>
             </dependency>
             <dependency>
+                <groupId>org.wso2.maven</groupId>
+                <artifactId>maven-synapse-plugin</artifactId>
+                <version>${org.wso2.maven.synapse.plugin.version}</version>
+            </dependency>
+            <dependency>
                 <groupId>com.google.code.gson</groupId>
                 <artifactId>gson</artifactId>
                 <version>${gson.version}</version>

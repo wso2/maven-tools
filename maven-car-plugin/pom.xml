@@ -181,7 +181,6 @@
 		<dependency>
 			<groupId>org.wso2.maven</groupId>
 			<artifactId>maven-synapse-plugin</artifactId>
-			<version>${org.wso2.maven.synapse.plugin.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>org.wso2.maven</groupId>
