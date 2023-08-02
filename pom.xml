@@ -87,6 +87,7 @@
         <module>wso2-esb-task-plugin</module>
         <module>wso2-esb-template-plugin</module>
         <module>maven-dataservice-plugin</module>
+        <module>wso2-mi-synapse-plugin</module>
     </modules>
     <build>
         <extensions>
