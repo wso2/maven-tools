@@ -58,7 +58,8 @@ public class CAppArtifact extends AbstractXMLDoc{
 	private String file;
 	private boolean root;
 	private String type;
-	
+	private static final String MAIN_SEQUENCE = "mainSequence";
+
 	public boolean isRoot() {
 		return root;
 	}
@@ -255,6 +256,9 @@ public class CAppArtifact extends AbstractXMLDoc{
 		addAttribute(artifactElement, "type", getType());
 		if (serverRole != null)
 			addAttribute(artifactElement, "serverRole", getServerRole());
+		if (getProject().getProperties().containsKey(MAIN_SEQUENCE)) {
+			addAttribute(artifactElement, MAIN_SEQUENCE, getProject().getProperties().getProperty(MAIN_SEQUENCE));
+		}
 		if (getFile() != null)
 			artifactElement.addChild(getElement("file", getFile()));
 		List<CAppArtifactDependency> artifactDependencies = getDependencies();

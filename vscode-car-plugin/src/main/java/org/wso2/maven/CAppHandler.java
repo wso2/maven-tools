@@ -231,6 +231,10 @@ class CAppHandler extends AbstractXMLDoc {
         artifactElement = addAttribute(artifactElement, Constants.NAME, getCAppName(project));
         artifactElement = addAttribute(artifactElement, Constants.VERSION, project.getVersion());
         artifactElement = addAttribute(artifactElement, Constants.TYPE, "carbon/application");
+        if (project.getProperties().containsKey(Constants.MAIN_SEQUENCE)) {
+            artifactElement = addAttribute(artifactElement, Constants.MAIN_SEQUENCE,
+                    project.getProperties().getProperty(Constants.MAIN_SEQUENCE));
+        }
 
         for (ArtifactDependency dependency : dependencies) {
             OMElement dependencyElement = getElement(Constants.DEPENDENCY, Constants.EMPTY_STRING);
