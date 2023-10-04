@@ -33,6 +33,7 @@ class Constants {
     static final String ARCHIVE_EXCEPTION_MSG = "Error occurred while creating CAR file.";
     static final String ARTIFACT_XML = "artifact.xml";
     static final String EMPTY_STRING = "";
+    static final String MAIN_SEQUENCE = "mainSequence";
 
     private Constants() {
     }
