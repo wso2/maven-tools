@@ -682,12 +682,16 @@ public class FileUtils{
 
                 if (!f.isDirectory()) {
                     OutputStream out = new FileOutputStream(f);
-                    byte[] buf = new byte[40960];
+                    try {
+                        byte[] buf = new byte[40960];
 
-                    // Transfer bytes from the ZIP file to the output file
-                    int len;
-                    while ((len = zin.read(buf)) > 0) {
-                        out.write(buf, 0, len);
+                        // Transfer bytes from the ZIP file to the output file
+                        int len;
+                        while ((len = zin.read(buf)) > 0) {
+                            out.write(buf, 0, len);
+                        }
+                    } finally {
+                        out.close();
                     }
                 }
             }
