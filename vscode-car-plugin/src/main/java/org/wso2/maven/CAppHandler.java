@@ -22,7 +22,12 @@ import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Paths;
+import java.util.Arrays;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import javax.xml.namespace.QName;
 import javax.xml.stream.XMLStreamException;
 
 import org.apache.axiom.om.OMDocument;
@@ -32,152 +37,277 @@ import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.project.MavenProject;
 import org.wso2.maven.Model.Artifact;
 import org.wso2.maven.Model.ArtifactDependency;
+import org.wso2.maven.Model.ArtifactDetails;
 import org.wso2.maven.core.model.AbstractXMLDoc;
 
 class CAppHandler extends AbstractXMLDoc {
+    private final String cAppName;
+    private final CARMojo mojoInstance;
+    private final List<ArtifactDetails> artifactTypeList;
+    private final Map<String, String> apiList = new HashMap<>();
+    private final Map<String, String> proxyList = new HashMap<>();
 
-    private static final String SYNAPSE_CONFIG_FOLDER = Paths.get("classes", "main", "synapse-config").toString();
-    private static final String REGISTRY_RESOURCES_FOLDER = Paths.get("classes", "main", "registry-resources").toString();
-
-    private String cAppName;
-
-    public CAppHandler(String cAppName) {
+    public CAppHandler(String cAppName, CARMojo mojoInstance) {
         this.cAppName = cAppName;
+        this.mojoInstance = mojoInstance;
+        //initialize artifactTypeList with values
+        artifactTypeList = new ArrayList<>(Arrays.asList(
+                new ArtifactDetails(Constants.API_DIR_NAME, Constants.API_TYPE, Constants.SERVER_ROLE_EI),
+                new ArtifactDetails(Constants.ENDPOINTS_DIR_NAME, Constants.ENDPOINT_TYPE, Constants.SERVER_ROLE_EI),
+                new ArtifactDetails(Constants.INBOUND_DIR_NAME, Constants.INBOUND_TYPE, Constants.SERVER_ROLE_EI),
+                new ArtifactDetails(Constants.LOCAL_ENTRIES_DIR_NAME, Constants.LOCAL_ENTRY_TYPE, Constants.SERVER_ROLE_EI),
+                new ArtifactDetails(Constants.MSG_PROCESSORS_DIR_NAME, Constants.MESSAGE_PROCESSOR_TYPE, Constants.SERVER_ROLE_EI),
+                new ArtifactDetails(Constants.MSG_STORES_DIR_NAME, Constants.MESSAGE_STORE_TYPE, Constants.SERVER_ROLE_EI),
+                new ArtifactDetails(Constants.PROXY_SERVICES_DIR_NAME, Constants.PROXY_SERVICE_TYPE, Constants.SERVER_ROLE_EI),
+                new ArtifactDetails(Constants.SEQUENCES_DIR_NAME, Constants.SEQUENCE_TYPE, Constants.SERVER_ROLE_EI),
+                new ArtifactDetails(Constants.TASKS_DIR_NAME, Constants.TASK_TYPE, Constants.SERVER_ROLE_EI),
+                new ArtifactDetails(Constants.TEMPLATES_DIR_NAME, Constants.TEMPLATE_TYPE, Constants.SERVER_ROLE_EI),
+                new ArtifactDetails(Constants.DATASOURCE_DIR_NAME, Constants.DATASOURCE_TYPE, Constants.SERVER_ROLE_DSS),
+                new ArtifactDetails(Constants.DATASERVICES_DIR_NAME, Constants.DATASERVICE_TYPE, Constants.SERVER_ROLE_DSS)
+        ));
     }
 
     /**
-     * Read /synapse-config/artifact.xml file and create corresponding files in archive directory.
+     * Method to process artifacts in the artifacts folder and create corresponding files in the archive directory.
      *
-     * @param projectBuildDir:   path to project base directory
-     * @param archiveDirectory: path to archive directory
-     * @param dependencies      to be added to artifacts.xml file
+     * @param artifactsFolder  path to artifacts folder
+     * @param archiveDirectory path to archive directory
+     * @param dependencies     list of dependencies to be added to artifacts.xml file
+     * @param version          version of the project
      */
-    void processConfigArtifactXmlFile(File projectBuildDir, String archiveDirectory,
-                                      List<ArtifactDependency> dependencies)
-            throws IOException, XMLStreamException, MojoExecutionException {
+    void processArtifacts(File artifactsFolder, String archiveDirectory, List<ArtifactDependency> dependencies,
+                          String version) {
+        mojoInstance.logInfo("Processing artifacts in " + artifactsFolder.getAbsolutePath());
+        for (ArtifactDetails artifactDetails : artifactTypeList) {
+            File artifactFolder = new File(artifactsFolder, artifactDetails.getDirectory());
+            processArtifactsInFolder(artifactFolder, dependencies, version, archiveDirectory,
+                    artifactDetails.getServerRole(), artifactDetails.getType());
+        }
+    }
 
-        String configArtifactXmlFileAsString = FileUtils.readFileToString(new File(
-                Paths.get(projectBuildDir.getAbsolutePath(), SYNAPSE_CONFIG_FOLDER, Constants.ARTIFACT_XML)
-                        .toString()));
+    /**
+     * Method to process given artifact type ex: api/proxy and create corresponding files in the archive directory.
+     *
+     * @param artifactsDir     path to artifacts folder
+     * @param dependencies     list of dependencies to be added to artifacts.xml file
+     * @param version          version of the project
+     * @param archiveDirectory path to archive directory
+     * @param serverRole       server role of the artifact
+     * @param type             type of the artifact
+     */
+    void processArtifactsInFolder(File artifactsDir, List<ArtifactDependency> dependencies, String version,
+                                  String archiveDirectory, String serverRole, String type) {
+        File[] configFiles = artifactsDir.listFiles();
+        if (configFiles != null) {
+            for (File configFile : configFiles) {
+                if (configFile.isFile()) {
+                    try {
+                        String fileContent = FileUtils.readFileToString(configFile);
+                        OMElement configElement = getElement(fileContent);
+                        String name = configElement.getAttributeValue(new QName(Constants.NAME));
+                        if (Constants.LOCAL_ENTRY_TYPE.equals(type)) {
+                            name = configElement.getAttributeValue(new QName(Constants.KEY));
+                        }
+                        if (Constants.DATASOURCE_TYPE.equals(type)) {
+                            // Remove .xml extension from the file name and use it as the artifact name
+                            // since the name attribute is not available in the datasource configuration
+                            name = configFile.getName().substring(0, configFile.getName().length() - 4);
+                        }
+                        String configVersion = configElement.getAttributeValue(new QName(Constants.VERSION))
+                                == null ? version : configElement.getAttributeValue(new QName(Constants.VERSION));
+                        if (Constants.API_TYPE.equals(type)) {
+                            apiList.put(name, configVersion);
+                        }
+                        if (Constants.PROXY_SERVICE_TYPE.equals(type)) {
+                            proxyList.put(name, configVersion);
+                        }
+                        String fileName = name + "-" + configVersion;
+                        fileName = fileName.concat(Constants.DATASERVICE_TYPE.equals(type) ? ".dbs" : ".xml");
+                        String folderName = name + "_" + configVersion;
+                        dependencies.add(new ArtifactDependency(name, configVersion, serverRole, true));
+                        writeArtifactAndFile(configFile, archiveDirectory, name, type, serverRole, configVersion, fileName,
+                                folderName);
+                    } catch (IOException | XMLStreamException e) {
+                        mojoInstance.logError("Error occurred while processing " + configFile.getName());
+                        mojoInstance.logError(e.getMessage());
+                    }
+                }
+            }
+        }
+    }
 
-        OMElement artifactsElement = getElement(configArtifactXmlFileAsString);
-        List<OMElement> artifactChildElements = getChildElements(artifactsElement, Constants.ARTIFACT);
+    /**
+     * Method to process resources folder and create corresponding files in the archive directory.
+     * @param resourcesFolder path to resources folder
+     * @param archiveDirectory path to archive directory
+     * @param dependencies list of dependencies to be added to artifacts.xml file
+     */
+    void processResourcesFolder(File resourcesFolder, String archiveDirectory, List<ArtifactDependency> dependencies) {
+        processConnectors(resourcesFolder, archiveDirectory, dependencies);
+        processRegistryResources(resourcesFolder, archiveDirectory, dependencies);
+        processMetadata(resourcesFolder, archiveDirectory);
+    }
 
-        for (OMElement artifact : artifactChildElements) {
-            // Create an Artifact object to represent the artifact mentioned in artifact.xml file.
-            Artifact artifactObject = createArtifactObject(artifact, getAttribute(artifact,
-                                                                                  Constants.NAME) + "-" +
-                    getAttribute(artifact, Constants.VERSION) + ".xml");
+    /**
+     * Method to process connectors in the resources folder and create corresponding files in the archive directory.
+     * @param resourcesFolder path to resources folder
+     * @param archiveDirectory path to archive directory
+     * @param dependencies list of dependencies to be added to artifacts.xml file
+     */
+    void processConnectors( File resourcesFolder, String archiveDirectory, List<ArtifactDependency> dependencies){
+        mojoInstance.logInfo("Processing connectors in " + resourcesFolder.getAbsolutePath());
+        File connectorFolder = new File(resourcesFolder, Constants.CONNECTORS_DIR_NAME);
+        File[] connectorFiles = connectorFolder.listFiles();
+        if (connectorFiles == null) {
+            return;
+        }
+        for (File connector : connectorFiles) {
+            if (connector.isFile()) {
+                String fileName = connector.getName();
+                int lastIndex = fileName.lastIndexOf('-');
+                String name = fileName.substring(0, lastIndex);
+                // remove .zip at the end
+                String version = fileName.substring(lastIndex + 1, fileName.length() - 4);
+                dependencies.add(new ArtifactDependency(name, version, Constants.SERVER_ROLE_EI, true));
+                writeArtifactAndFile(connector, archiveDirectory, name, Constants.CONNECTOR_TYPE,
+                        Constants.SERVER_ROLE_EI, version, fileName, name + "_" + version);
+            }
+        }
+    }
 
-            // Create dependency info from artifacts in artifact.xml file.
-            dependencies.add(new ArtifactDependency(artifactObject.getName(), artifactObject.getVersion(),
-                                                    artifactObject.getServerRole(), true));
+    /**
+     * Method to process registry resources in the resources folder and create corresponding files in the archive directory.
+     * @param resourcesFolder   path to resources folder
+     * @param archiveDirectory path to archive directory
+     * @param dependencies list of dependencies to be added to artifacts.xml file
+     */
+    void processRegistryResources(File resourcesFolder, String archiveDirectory, List<ArtifactDependency> dependencies) {
+        mojoInstance.logInfo("Processing registry resources in " + resourcesFolder.getAbsolutePath());
+        File registryFolder = new File(resourcesFolder, Constants.REGISTRY_DIR_NAME);
+        File artifactFile = new File(registryFolder, Constants.ARTIFACT_XML);
+        if (!artifactFile.exists()) {
+            return;
+        }
+        try {
+            String artifactXmlFileAsString = FileUtils.readFileToString(artifactFile);
+            OMElement artifactsElement = getElement(artifactXmlFileAsString);
+            List<OMElement> artifactChildElements = getChildElements(artifactsElement, Constants.ARTIFACT);
+            for (OMElement artifact : artifactChildElements) {
+                String name = artifact.getAttributeValue(new QName(Constants.NAME));
+                String version = artifact.getAttributeValue(new QName(Constants.VERSION));
+                OMElement item = getFirstChildWithName(artifact, Constants.ITEM);
+                String fileName = item.getFirstChildWithName(new QName(Constants.FILE)).getText();
+                String path = item.getFirstChildWithName(new QName(Constants.PATH)).getText();
+                File registryResource;
+                if (path.startsWith(Constants.GOV_REG_PREFIX)) {
+                    path = path.substring(Constants.GOV_REG_PREFIX.length());
+                    registryResource = new File(registryFolder, Constants.GOV_FOLDER + path + "/" + fileName);
+                } else {
+                    path = path.substring(Constants.CONF_REG_PREFIX.length());
+                    registryResource = new File(registryFolder, Constants.CONF_FOLDER + path + "/" + fileName);
+                }
+                if (!registryResource.exists()) {
+                    mojoInstance.logError("Registry resource " + path + "/" + fileName + " does not exist");
+                    continue;
+                }
+                dependencies.add(new ArtifactDependency(name, version, Constants.SERVER_ROLE_EI, true));
+                Artifact artifactObject = new Artifact();
+                artifactObject.setName(name);
+                artifactObject.setType(Constants.REG_RESOURCE_TYPE);
+                artifactObject.setVersion(version);
+                artifactObject.setServerRole(Constants.SERVER_ROLE_EI);
+                artifactObject.setFile(Constants.REG_INFO_FILE);
 
-            // generate new folder name and new file name to be put in the archive file.
-            String artifactFolderName = artifactObject.getName() + "_" + artifactObject.getVersion();
-            String artifactFileName = artifactObject.getName() + "-" + artifactObject.getVersion() + ".xml";
+                String artifactDataAsString = createArtifactData(artifactObject);
+                String commonPath = Paths.get(archiveDirectory, name + "_" + version).toString();
+                org.wso2.developerstudio.eclipse.utils.file.FileUtils.createFile(
+                        new File(commonPath, Constants.ARTIFACT_XML), artifactDataAsString);
+                org.wso2.developerstudio.eclipse.utils.file.FileUtils.copy(registryResource,
+                        new File(Paths.get(archiveDirectory, name + "_" + version, Constants.RESOURCES,
+                                fileName).toString()));
+                OMElement infoElement = getElement(Constants.RESOURCES, Constants.EMPTY_STRING);
+                infoElement.addChild(item);
+                org.wso2.developerstudio.eclipse.utils.file.FileUtils.createFile(
+                        new File(commonPath, Constants.REG_INFO_FILE), serialize(infoElement));
+            }
+        } catch (IOException | XMLStreamException | MojoExecutionException e) {
+            mojoInstance.logError("Error occurred while processing registry resources");
+            mojoInstance.logError(e.getMessage());
+        }
+    }
 
-            /*
-             * Create content to be put into each artifact's artifact.xml file in archive file and
-             * create corresponding artifact.xml in archive file.
-             * */
+    /**
+     * Method to process metadata in the resources folder and create corresponding files in the archive directory.
+     * @param resourcesFolder   path to resources folder
+     * @param archiveDirectory path to archive directory
+     */
+    void processMetadata(File resourcesFolder, String archiveDirectory) {
+        mojoInstance.logInfo("Processing metadata in " + resourcesFolder.getAbsolutePath());
+        File metadataFolder = new File(resourcesFolder, Constants.METADATA_DIR_NAME);
+        if (apiList.size() > 0) {
+            for (Map.Entry<String, String> entry : apiList.entrySet()) {
+                String apiName = entry.getKey();
+                String apiVersion = entry.getValue();
+                File swaggerFile = new File(metadataFolder, apiName + "_swagger.yaml");
+                File metaFile = new File(metadataFolder, apiName + "_metadata.yaml");
+                if (swaggerFile.exists() && metaFile.exists()) {
+                    writeArtifactAndFile(swaggerFile, archiveDirectory, apiName + "_metadata",
+                            Constants.METADATA_TYPE, Constants.SERVER_ROLE_EI, apiVersion, apiName +
+                                    "_metadata-" + apiVersion + ".yaml", Constants.METADATA_DIR_NAME + "/" +
+                                    apiName + "_metadata_" + apiVersion);
+                    writeArtifactAndFile(metaFile, archiveDirectory, apiName + "_swagger",
+                            Constants.METADATA_TYPE, Constants.SERVER_ROLE_EI, apiVersion, apiName +
+                                    "_swagger-" + apiVersion + ".yaml", Constants.METADATA_DIR_NAME + "/" +
+                                    apiName + "_swagger_" + apiVersion);
+                }
+            }
+        }
+        if (proxyList.size() > 0) {
+            for (Map.Entry<String, String> entry : proxyList.entrySet()) {
+                String proxyName = entry.getKey();
+                String proxyVersion = entry.getValue();
+                File metaFile = new File(metadataFolder, proxyName + "_proxy_metadata.yaml");
+                if (metaFile.exists()) {
+                    writeArtifactAndFile(metaFile, archiveDirectory, proxyName + "_proxy_metadata",
+                            Constants.METADATA_TYPE, Constants.SERVER_ROLE_EI, proxyVersion, proxyName +
+                                    "_proxy_metadata-" + proxyVersion + ".yaml", Constants.METADATA_DIR_NAME + "/" +
+                                    proxyName + "_proxy_metadata_" + proxyVersion);
+                }
+            }
+        }
+    }
+
+    /**
+     * Method to write artifact.xml and file to the archive directory.
+     *
+     * @param configFile       configuration file to write to the archive
+     * @param archiveDirectory path to archive directory
+     * @param name             name of the artifact
+     * @param type             type of the artifact
+     * @param serverRole       server role of the artifact
+     * @param configVersion    version of the artifact
+     * @param fileName         name of the file
+     * @param folderName       name of the folder
+     */
+    private void writeArtifactAndFile(File configFile, String archiveDirectory, String name, String type,
+                                      String serverRole, String configVersion, String fileName, String folderName) {
+        Artifact artifactObject = new Artifact();
+        artifactObject.setName(name);
+        artifactObject.setType(type);
+        artifactObject.setVersion(configVersion);
+        artifactObject.setServerRole(serverRole);
+        artifactObject.setFile(fileName);
+        try {
             String artifactDataAsString = createArtifactData(artifactObject);
             org.wso2.developerstudio.eclipse.utils.file.FileUtils.createFile(
-                    new File(Paths.get(archiveDirectory, artifactFolderName).toString(), Constants.ARTIFACT_XML),
+                    new File(Paths.get(archiveDirectory, folderName).toString(), Constants.ARTIFACT_XML),
                     artifactDataAsString);
-
-
-            // Directly copy artifact from ESB project to archive file.
-            String copyArtifactFileFrom = Paths.get(projectBuildDir.getAbsolutePath(), SYNAPSE_CONFIG_FOLDER,
-                                                    getFirstChildWithName(artifact, Constants.FILE).getText())
-                    .toString();
-            org.wso2.developerstudio.eclipse.utils.file.FileUtils.copy(new File(copyArtifactFileFrom),
-                                                                       new File(Paths.get(archiveDirectory,
-                                                                                          artifactFolderName,
-                                                                                          artifactFileName)
-                                                                                        .toString()));
-
+            org.wso2.developerstudio.eclipse.utils.file.FileUtils.copy(configFile,
+                    new File(Paths.get(archiveDirectory, folderName, fileName).toString()));
+        } catch (IOException | MojoExecutionException e) {
+            mojoInstance.logError("Error occurred while creating " + fileName);
+            mojoInstance.logError(e.getMessage());
         }
-    }
-
-    /**
-     * Read /registry-resources/artifact.xml file and create corresponding files in archive directory.
-     *
-     * @param projectBuildDir:   path to project base directory
-     * @param archiveDirectory: path to archive directory
-     * @param dependencies      to be added to artifacts.xml file
-     */
-    void processRegistryResourceArtifactXmlFile(File projectBuildDir, String archiveDirectory,
-                                                List<ArtifactDependency> dependencies)
-            throws IOException, XMLStreamException, MojoExecutionException {
-
-        String registryArtifactXmlFileAsString = FileUtils.readFileToString(new File(
-                Paths.get(projectBuildDir.getAbsolutePath(), REGISTRY_RESOURCES_FOLDER, Constants.ARTIFACT_XML)
-                        .toString()));
-
-        OMElement artifactsElement = getElement(registryArtifactXmlFileAsString);
-        List<OMElement> artifactChildElements = getChildElements(artifactsElement, Constants.ARTIFACT);
-
-        for (OMElement artifact : artifactChildElements) {
-            // Create an Registry object to represent the registry resource mentioned in artifact.xml file.
-            Artifact registryObject = createArtifactObject(
-                    artifact, getAttribute(artifact, Constants.NAME) + "-info.xml");
-
-            // Abstract registry resource file name from item element in artifact.xml file
-            OMElement itemElement = getFirstChildWithName(artifact, Constants.ITEM);
-            String registryResourceFileName = getFirstChildWithName(itemElement, Constants.FILE).getText();
-
-            // Create dependency info from registry resources in artifact.xml file.
-            dependencies.add(new ArtifactDependency(registryObject.getName(), registryObject.getVersion(),
-                                                    registryObject.getServerRole(), true));
-
-            // generate new folder name to put registry resource info in archive file
-            String artifactFolderName = registryObject.getName() + "_" + registryObject.getVersion();
-
-            /*
-             * Create data for each artifact's artifact.xml file in archive file.
-             * Create corresponding artifact.xml for resource in archive file.
-             * */
-            String artifactDataAsString = createArtifactData(registryObject);
-            org.wso2.developerstudio.eclipse.utils.file.FileUtils.createFile(
-                    new File(Paths.get(archiveDirectory, artifactFolderName).toString(),
-                             Constants.ARTIFACT_XML), artifactDataAsString);
-
-
-            // Directly copy registry resource from ESB project to corresponding resources folder in archive file.
-            String copyArtifactFileFrom = Paths.get(projectBuildDir.getAbsolutePath(), REGISTRY_RESOURCES_FOLDER,
-                                                    registryResourceFileName).toString();
-            org.wso2.developerstudio.eclipse.utils.file.FileUtils.copy(new File(copyArtifactFileFrom),
-                                                                       new File(Paths.get(archiveDirectory,
-                                                                                          artifactFolderName,
-                                                                                          "resources",
-                                                                                          registryResourceFileName)
-                                                                                        .toString()));
-
-            // Create resource-info.xml file in archive file.
-            String registryResourceData = createRegistryResourceData(getFirstChildWithName(artifact, Constants.ITEM));
-            org.wso2.developerstudio.eclipse.utils.file.FileUtils.createFile(
-                    new File(Paths.get(archiveDirectory, artifactFolderName).toString(),
-                             registryObject.getName() + "-info.xml"), registryResourceData);
-        }
-    }
-
-    /**
-     * Create artifact object.
-     *
-     * @param artifact             OMElement
-     * @param artifactFileLocation in the project
-     * @return Artifact object
-     */
-    private Artifact createArtifactObject(OMElement artifact, String artifactFileLocation) {
-        Artifact artifactObject = new Artifact();
-        artifactObject.setName(getAttribute(artifact, Constants.NAME));
-        artifactObject.setType(getAttribute(artifact, Constants.TYPE));
-        artifactObject.setVersion(getAttribute(artifact, Constants.VERSION));
-        artifactObject.setServerRole(getAttribute(artifact, Constants.SERVER_ROLE));
-        artifactObject.setFile(artifactFileLocation);
-
-        return artifactObject;
     }
 
     /**
@@ -199,18 +329,6 @@ class CAppHandler extends AbstractXMLDoc {
     }
 
     /**
-     * Create artifact data from a given Artifact object.
-     *
-     * @param item OMElement in registry-resources/artifact.xml
-     * @return serialized <resources>data</resources> element
-     */
-    private String createRegistryResourceData(OMElement item) throws MojoExecutionException {
-        OMElement resourcesElement = getElement(Constants.RESOURCES, Constants.EMPTY_STRING);
-        resourcesElement.addChild(item);
-        return serialize(resourcesElement);
-    }
-
-    /**
      * Create artifacts.xml file including meta data of each artifact in WSO2-ESB project.
      *
      * @param archiveDirectory: path to archive directory
@@ -218,8 +336,7 @@ class CAppHandler extends AbstractXMLDoc {
      * @param project:          wso2 esb project
      */
     void createDependencyArtifactsXmlFile(String archiveDirectory, List<ArtifactDependency> dependencies,
-                                          MavenProject project)
-            throws MojoExecutionException, IOException {
+                                          MavenProject project) {
         /*
          * Create artifacts.xml file content.
          * Create artifact element.
@@ -228,9 +345,9 @@ class CAppHandler extends AbstractXMLDoc {
         OMElement artifactsElement = getElement(Constants.ARTIFACTS, Constants.EMPTY_STRING);
         OMElement artifactElement = getElement(Constants.ARTIFACT, Constants.EMPTY_STRING);
 
-        artifactElement = addAttribute(artifactElement, Constants.NAME, getCAppName(project));
+        artifactElement = addAttribute(artifactElement, Constants.NAME, cAppName);
         artifactElement = addAttribute(artifactElement, Constants.VERSION, project.getVersion());
-        artifactElement = addAttribute(artifactElement, Constants.TYPE, "carbon/application");
+        artifactElement = addAttribute(artifactElement, Constants.TYPE, Constants.CAPP_TYPE);
         if (project.getProperties().containsKey(Constants.MAIN_SEQUENCE)) {
             artifactElement = addAttribute(artifactElement, Constants.MAIN_SEQUENCE,
                     project.getProperties().getProperty(Constants.MAIN_SEQUENCE));
@@ -248,23 +365,15 @@ class CAppHandler extends AbstractXMLDoc {
         }
         artifactsElement.addChild(artifactElement);
 
-        // Create artifacts.xml file in archive file.
-        String artifactsXmlFileDataAsString = serialize(artifactsElement);
-        org.wso2.developerstudio.eclipse.utils.file.FileUtils.createFile(new File(archiveDirectory, "artifacts.xml"),
-                                                                         artifactsXmlFileDataAsString);
-    }
-
-    /**
-     * Get CApp file name.
-     *
-     * @param project: wso2 esb project
-     * @return .car file name
-     */
-    private String getCAppName(MavenProject project) {
-        if (cAppName != null && !cAppName.isEmpty())
-            return cAppName;
-        else
-            return project.getArtifactId() + "CompositeApplication";
+        try {
+            // Create artifacts.xml file in archive file.
+            String artifactsXmlFileDataAsString = serialize(artifactsElement);
+            org.wso2.developerstudio.eclipse.utils.file.FileUtils.createFile(new File(archiveDirectory, "artifacts.xml"),
+                    artifactsXmlFileDataAsString);
+        } catch (MojoExecutionException | IOException e) {
+            mojoInstance.logError("Error occurred while creating artifacts.xml file");
+            mojoInstance.logError(e.getMessage());
+        }
     }
 
     @Override
