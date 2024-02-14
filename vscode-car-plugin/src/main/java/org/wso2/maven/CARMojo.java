@@ -31,7 +31,7 @@ import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.project.MavenProject;
-import org.codehaus.plexus.util.StringUtils;
+import org.apache.commons.lang.StringUtils;
 import org.wso2.maven.Model.ArchiveException;
 import org.wso2.maven.Model.ArtifactDependency;
 
@@ -102,11 +102,12 @@ public class CARMojo extends AbstractMojo {
             File carFile = getArchiveFile(fileExtension);
             try {
                 zipFolder(fileToZip.getPath(), carFile.getPath(), fileExtension);
+                // Attach carFile to Maven context.
+                this.project.getArtifact().setFile(carFile);
             } catch (ArchiveException e) {
                 logError("Error occurred while creating the .car file");
+                logError(e.getMessage());
             }
-            // Attach carFile to Maven context.
-            this.project.getArtifact().setFile(carFile);
             recursiveDelete(fileToZip, fileExtension);
         } else {
             getLog().error("Could not create the archive directory.");
