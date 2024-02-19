@@ -53,7 +53,11 @@ public class CARMojo extends AbstractMojo {
      */
     MavenProject project;
 
-    @Parameter(defaultValue = "${project.baseDir}", property = "archiveLocation")
+    /**
+     * The location of the archive file
+     *
+     * @parameter expression="${archiveLocation}"
+     */
     String archiveLocation;
 
     /**
@@ -89,14 +93,21 @@ public class CARMojo extends AbstractMojo {
             getLog().error("Invalid project structure");
             return;
         }
-        boolean createdArchiveDirectory = org.wso2.developerstudio.eclipse.utils.file.FileUtils.createDirectories(
-                archiveLocation);
+        boolean createdArchiveDirectory = false;
+        File targetFolder = new File(archiveLocation);
+        if (!targetFolder.exists()) {
+            createdArchiveDirectory = org.wso2.developerstudio.eclipse.utils.file.FileUtils.createDirectories(
+                    archiveLocation);
+        }
         CAppHandler cAppHandler = new CAppHandler(getArchiveName(), this);
         List<ArtifactDependency> dependencies = new ArrayList<>();
-        if (createdArchiveDirectory) {
-            cAppHandler.processArtifacts(artifactFolder, archiveLocation, dependencies, project.getVersion());
-            cAppHandler.processResourcesFolder(resourcesFolder, archiveLocation, dependencies);
-            cAppHandler.createDependencyArtifactsXmlFile(archiveLocation, dependencies, project);
+        List<ArtifactDependency> metaDependencies = new ArrayList<>();
+        if (createdArchiveDirectory || targetFolder.exists()) {
+            String projectVersion = project.getVersion().replace("-SNAPSHOT", "");
+            cAppHandler.processArtifacts(artifactFolder, archiveLocation, dependencies, projectVersion);
+            cAppHandler.processResourcesFolder(resourcesFolder, archiveLocation, dependencies,
+                    metaDependencies, projectVersion);
+            cAppHandler.createDependencyArtifactsXmlFile(archiveLocation, dependencies, metaDependencies, project);
             File fileToZip = new File(archiveLocation);
             String fileExtension = ".car";
             File carFile = getArchiveFile(fileExtension);

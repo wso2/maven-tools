@@ -22,11 +22,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Paths;
-import java.util.Arrays;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import javax.xml.namespace.QName;
 import javax.xml.stream.XMLStreamException;
 
@@ -113,20 +109,34 @@ class CAppHandler extends AbstractXMLDoc {
                             // since the name attribute is not available in the datasource configuration
                             name = configFile.getName().substring(0, configFile.getName().length() - 4);
                         }
-                        String configVersion = configElement.getAttributeValue(new QName(Constants.VERSION))
-                                == null ? version : configElement.getAttributeValue(new QName(Constants.VERSION));
+                        String configVersion = configElement.getAttributeValue(new QName(Constants.VERSION));
+                        boolean apiHasVersion = true;
                         if (Constants.API_TYPE.equals(type)) {
+                            // api version can be null
                             apiList.put(name, configVersion);
+                        }
+                        if (configVersion == null) {
+                            apiHasVersion = false;
+                            configVersion = version;
                         }
                         if (Constants.PROXY_SERVICE_TYPE.equals(type)) {
                             proxyList.put(name, configVersion);
                         }
-                        String fileName = name + "-" + configVersion;
+                        String fileName;
+                        String folderName = "";
+                        if (Constants.API_TYPE.equals(type) && apiHasVersion) {
+                            // todo : need to fix this naming convention in runtime
+                            fileName = name + "_" + configVersion + "-" + configVersion;
+                            folderName = name + "_" + configVersion + "_" + configVersion;
+                        } else {
+                            fileName = name + "-" + configVersion;
+                            folderName = name + "_" + configVersion;
+                        }
                         fileName = fileName.concat(Constants.DATASERVICE_TYPE.equals(type) ? ".dbs" : ".xml");
-                        String folderName = name + "_" + configVersion;
+                        name = apiHasVersion ? name + "_" + configVersion : name;
                         dependencies.add(new ArtifactDependency(name, configVersion, serverRole, true));
-                        writeArtifactAndFile(configFile, archiveDirectory, name, type, serverRole, configVersion, fileName,
-                                folderName);
+                        writeArtifactAndFile(configFile, archiveDirectory, name, type, serverRole, configVersion,
+                                fileName, folderName);
                     } catch (IOException | XMLStreamException e) {
                         mojoInstance.logError("Error occurred while processing " + configFile.getName());
                         mojoInstance.logError(e.getMessage());
@@ -138,23 +148,26 @@ class CAppHandler extends AbstractXMLDoc {
 
     /**
      * Method to process resources folder and create corresponding files in the archive directory.
-     * @param resourcesFolder path to resources folder
+     *
+     * @param resourcesFolder  path to resources folder
      * @param archiveDirectory path to archive directory
-     * @param dependencies list of dependencies to be added to artifacts.xml file
+     * @param dependencies     list of dependencies to be added to artifacts.xml file
      */
-    void processResourcesFolder(File resourcesFolder, String archiveDirectory, List<ArtifactDependency> dependencies) {
+    void processResourcesFolder(File resourcesFolder, String archiveDirectory, List<ArtifactDependency> dependencies,
+                                List<ArtifactDependency> metadataDependencies, String version) {
         processConnectors(resourcesFolder, archiveDirectory, dependencies);
         processRegistryResources(resourcesFolder, archiveDirectory, dependencies);
-        processMetadata(resourcesFolder, archiveDirectory);
+        processMetadata(resourcesFolder, archiveDirectory, metadataDependencies, version);
     }
 
     /**
      * Method to process connectors in the resources folder and create corresponding files in the archive directory.
-     * @param resourcesFolder path to resources folder
+     *
+     * @param resourcesFolder  path to resources folder
      * @param archiveDirectory path to archive directory
-     * @param dependencies list of dependencies to be added to artifacts.xml file
+     * @param dependencies     list of dependencies to be added to artifacts.xml file
      */
-    void processConnectors( File resourcesFolder, String archiveDirectory, List<ArtifactDependency> dependencies){
+    void processConnectors(File resourcesFolder, String archiveDirectory, List<ArtifactDependency> dependencies) {
         mojoInstance.logInfo("Processing connectors in " + resourcesFolder.getAbsolutePath());
         File connectorFolder = new File(resourcesFolder, Constants.CONNECTORS_DIR_NAME);
         File[] connectorFiles = connectorFolder.listFiles();
@@ -177,9 +190,10 @@ class CAppHandler extends AbstractXMLDoc {
 
     /**
      * Method to process registry resources in the resources folder and create corresponding files in the archive directory.
-     * @param resourcesFolder   path to resources folder
+     *
+     * @param resourcesFolder  path to resources folder
      * @param archiveDirectory path to archive directory
-     * @param dependencies list of dependencies to be added to artifacts.xml file
+     * @param dependencies     list of dependencies to be added to artifacts.xml file
      */
     void processRegistryResources(File resourcesFolder, String archiveDirectory, List<ArtifactDependency> dependencies) {
         mojoInstance.logInfo("Processing registry resources in " + resourcesFolder.getAbsolutePath());
@@ -238,27 +252,65 @@ class CAppHandler extends AbstractXMLDoc {
 
     /**
      * Method to process metadata in the resources folder and create corresponding files in the archive directory.
-     * @param resourcesFolder   path to resources folder
+     *
+     * @param resourcesFolder  path to resources folder
      * @param archiveDirectory path to archive directory
      */
-    void processMetadata(File resourcesFolder, String archiveDirectory) {
+    void processMetadata(File resourcesFolder, String archiveDirectory, List<ArtifactDependency> metadataDependencies,
+                         String version) {
         mojoInstance.logInfo("Processing metadata in " + resourcesFolder.getAbsolutePath());
         File metadataFolder = new File(resourcesFolder, Constants.METADATA_DIR_NAME);
         if (apiList.size() > 0) {
             for (Map.Entry<String, String> entry : apiList.entrySet()) {
                 String apiName = entry.getKey();
                 String apiVersion = entry.getValue();
-                File swaggerFile = new File(metadataFolder, apiName + "_swagger.yaml");
-                File metaFile = new File(metadataFolder, apiName + "_metadata.yaml");
+                String swaggerFilename = apiName + "_swagger.yaml";
+                String metadataFilename = apiName + "_metadata.yaml";
+                boolean apiVersionExists = true;
+                if (apiVersion != null) {
+                    swaggerFilename = apiName + "_" + apiVersion + "_swagger.yaml";
+                    metadataFilename = apiName + "_" + apiVersion + "_metadata.yaml";
+                } else {
+                    apiVersion = version;
+                    apiVersionExists = false;
+                }
+                File swaggerFile = new File(metadataFolder, swaggerFilename);
+                File metaFile = new File(metadataFolder, metadataFilename);
                 if (swaggerFile.exists() && metaFile.exists()) {
-                    writeArtifactAndFile(swaggerFile, archiveDirectory, apiName + "_metadata",
-                            Constants.METADATA_TYPE, Constants.SERVER_ROLE_EI, apiVersion, apiName +
-                                    "_metadata-" + apiVersion + ".yaml", Constants.METADATA_DIR_NAME + "/" +
-                                    apiName + "_metadata_" + apiVersion);
-                    writeArtifactAndFile(metaFile, archiveDirectory, apiName + "_swagger",
-                            Constants.METADATA_TYPE, Constants.SERVER_ROLE_EI, apiVersion, apiName +
-                                    "_swagger-" + apiVersion + ".yaml", Constants.METADATA_DIR_NAME + "/" +
-                                    apiName + "_swagger_" + apiVersion);
+                    String folderName = Constants.METADATA_DIR_NAME + "/" + apiName + "_metadata_" + apiVersion;
+                    String fileName = apiName + "_metadata-" + apiVersion + ".yaml";
+                    if (apiVersionExists) {
+                        fileName = apiName + "_" + apiVersion + "_metadata-" + apiVersion + ".yaml";
+                        folderName = Constants.METADATA_DIR_NAME + "/" + apiName + "_" + apiVersion + "_metadata_"
+                                + apiVersion;
+                        String name = apiName + "_" + apiVersion + "_metadata";
+                        metadataDependencies.add(new ArtifactDependency(name, apiVersion, Constants.SERVER_ROLE_EI, true));
+                        writeArtifactAndFile(metaFile, archiveDirectory, name, Constants.METADATA_TYPE,
+                                Constants.SERVER_ROLE_EI, apiVersion, fileName, folderName);
+                    } else {
+                        metadataDependencies.add(new ArtifactDependency(apiName + "_metadata", version,
+                                Constants.SERVER_ROLE_EI, true));
+                        writeArtifactAndFile(metaFile, archiveDirectory, apiName + "_metadata",
+                                Constants.METADATA_TYPE, Constants.SERVER_ROLE_EI, apiVersion, fileName, folderName);
+                    }
+
+                    folderName = Constants.METADATA_DIR_NAME + "/" + apiName + "_swagger_" + apiVersion;
+                    fileName = apiName + "_swagger-" + apiVersion + ".yaml";
+                    if (apiVersionExists) {
+                        fileName = apiName + "_" + apiVersion + "_swagger-" + apiVersion + ".yaml";
+                        folderName = Constants.METADATA_DIR_NAME + "/" + apiName + "_" + apiVersion + "_swagger_"
+                                + apiVersion;
+                        String name = apiName + "_" + apiVersion + "_swagger";
+                        metadataDependencies.add(new ArtifactDependency(name, apiVersion, Constants.SERVER_ROLE_EI, true));
+                        writeArtifactAndFile(swaggerFile, archiveDirectory, name, Constants.METADATA_TYPE,
+                                Constants.SERVER_ROLE_EI, apiVersion, fileName, folderName);
+                    } else {
+                        metadataDependencies.add(new ArtifactDependency(apiName + "_swagger", apiVersion,
+                                Constants.SERVER_ROLE_EI, true));
+                        writeArtifactAndFile(swaggerFile, archiveDirectory, apiName + "_swagger",
+                                Constants.METADATA_TYPE, Constants.SERVER_ROLE_EI, apiVersion, fileName, folderName);
+                    }
+
                 }
             }
         }
@@ -272,6 +324,8 @@ class CAppHandler extends AbstractXMLDoc {
                             Constants.METADATA_TYPE, Constants.SERVER_ROLE_EI, proxyVersion, proxyName +
                                     "_proxy_metadata-" + proxyVersion + ".yaml", Constants.METADATA_DIR_NAME + "/" +
                                     proxyName + "_proxy_metadata_" + proxyVersion);
+                    metadataDependencies.add(new ArtifactDependency(proxyName + "_proxy_metadata", proxyVersion,
+                            Constants.SERVER_ROLE_EI, true));
                 }
             }
         }
@@ -336,7 +390,7 @@ class CAppHandler extends AbstractXMLDoc {
      * @param project:          wso2 esb project
      */
     void createDependencyArtifactsXmlFile(String archiveDirectory, List<ArtifactDependency> dependencies,
-                                          MavenProject project) {
+                                          List<ArtifactDependency> metaDependencies, MavenProject project) {
         /*
          * Create artifacts.xml file content.
          * Create artifact element.
@@ -345,7 +399,7 @@ class CAppHandler extends AbstractXMLDoc {
         OMElement artifactsElement = getElement(Constants.ARTIFACTS, Constants.EMPTY_STRING);
         OMElement artifactElement = getElement(Constants.ARTIFACT, Constants.EMPTY_STRING);
 
-        artifactElement = addAttribute(artifactElement, Constants.NAME, cAppName);
+        artifactElement = addAttribute(artifactElement, Constants.NAME, project.getArtifactId() + "CompositeExporter");
         artifactElement = addAttribute(artifactElement, Constants.VERSION, project.getVersion());
         artifactElement = addAttribute(artifactElement, Constants.TYPE, Constants.CAPP_TYPE);
         if (project.getProperties().containsKey(Constants.MAIN_SEQUENCE)) {
@@ -372,6 +426,28 @@ class CAppHandler extends AbstractXMLDoc {
                     artifactsXmlFileDataAsString);
         } catch (MojoExecutionException | IOException e) {
             mojoInstance.logError("Error occurred while creating artifacts.xml file");
+            mojoInstance.logError(e.getMessage());
+        }
+
+        for (ArtifactDependency dependency : metaDependencies) {
+            OMElement dependencyElement = getElement(Constants.DEPENDENCY, Constants.EMPTY_STRING);
+            dependencyElement = addAttribute(dependencyElement, Constants.ARTIFACT, dependency.getArtifact());
+            dependencyElement = addAttribute(dependencyElement, Constants.VERSION, dependency.getVersion());
+            dependencyElement = addAttribute(dependencyElement, Constants.INCLUDE, dependency.getInclude().toString());
+            if (dependency.getServerRole() != null) {
+                dependencyElement = addAttribute(dependencyElement, Constants.SERVER_ROLE, dependency.getServerRole());
+            }
+            artifactElement.addChild(dependencyElement);
+        }
+        artifactsElement.addChild(artifactElement);
+
+        try {
+            // Create metadata.xml file in archive file.
+            String artifactsXmlFileDataAsString = serialize(artifactsElement);
+            org.wso2.developerstudio.eclipse.utils.file.FileUtils.createFile(new File(archiveDirectory, "metadata.xml"),
+                    artifactsXmlFileDataAsString);
+        } catch (MojoExecutionException | IOException e) {
+            mojoInstance.logError("Error occurred while creating metadata.xml file");
             mojoInstance.logError(e.getMessage());
         }
     }
