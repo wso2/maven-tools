@@ -26,12 +26,12 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
-import javax.xml.stream.XMLStreamException;
 
 import org.apache.maven.plugin.AbstractMojo;
-import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugins.annotations.Mojo;
+import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.project.MavenProject;
+import org.apache.commons.lang.StringUtils;
 import org.wso2.maven.Model.ArchiveException;
 import org.wso2.maven.Model.ArtifactDependency;
 
@@ -46,79 +46,82 @@ import org.wso2.maven.Model.ArtifactDependency;
 public class CARMojo extends AbstractMojo {
 
     /**
-     * Location of the default build folder.
+     * The Maven Project Object
      *
-     * @parameter expression="${project.build.directory}"
+     * @parameter expression="${project}"
+     * @required
      */
-    private File projectBuildDir;
+    MavenProject project;
 
     /**
-     * Location of the archive folder.
+     * The location of the archive file
      *
-     * @parameter expression="${project.build.directory}"
+     * @parameter expression="${archiveLocation}"
      */
-    private File archiveLocation;
+    String archiveLocation;
 
     /**
-     * archiveName is used if the user wants to override the default name of the generated archive with .car extension.
+     * The name of the archive file
      *
-     * @parameter expression="${project.build.archiveName}"
+     * @parameter expression="${archiveName}"
      */
-    private String archiveName;
+    String archiveName;
 
-    /**
-     * CarbonApp is used if the user wants to override the default name of the carbon application.
-     *
-     * @parameter
-     */
-    private String cAppName;
+    public void logError(String message) {
+        getLog().error(message);
+    }
 
-    /**
-     * @parameter default-value="${project}"
-     */
-    private MavenProject project;
+    public void logInfo(String message) {
+        getLog().info(message);
+    }
 
-    /**
-     * A classifier for the build final name.
-     *
-     * @parameter
-     */
-    private String classifier;
+    public String getArchiveName() {
+        return archiveName == null ? project.getArtifactId() + "CompositeExporter_" + project.getVersion() : archiveName;
+    }
 
-    /**
-     * Read artifact.xml files and create .car file.
-     */
-    public void execute() throws MojoExecutionException {
+    public void execute() {
         appendLogs();
-        // Create CApp
-        try {
-            // Create directory to be compressed.
-            String archiveDirectory = getArchiveFile(Constants.EMPTY_STRING).getAbsolutePath();
-            boolean createdArchiveDirectory = org.wso2.developerstudio.eclipse.utils.file.FileUtils.createDirectories(
-                    archiveDirectory);
+        String basedir = project.getBasedir().toString();
+        archiveLocation = StringUtils.isEmpty(archiveLocation) ? basedir + File.separator +
+                Constants.DEFAULT_TARGET_FOLDER : archiveLocation;
+        String artifactFolderPath = basedir + File.separator + Constants.ARTIFACTS_FOLDER_PATH;
+        String resourcesFolderPath = basedir + File.separator + Constants.RESOURCES_FOLDER_PATH;
 
-            if (createdArchiveDirectory) {
-                CAppHandler cAppHandler = new CAppHandler(cAppName);
-                List<ArtifactDependency> dependencies = new ArrayList<>();
-
-                cAppHandler.processConfigArtifactXmlFile(projectBuildDir, archiveDirectory, dependencies);
-                cAppHandler.processRegistryResourceArtifactXmlFile(projectBuildDir, archiveDirectory, dependencies);
-                cAppHandler.createDependencyArtifactsXmlFile(archiveDirectory, dependencies, project);
-
-                File fileToZip = new File(archiveDirectory);
-                File carFile = getArchiveFile(".car");
-                zipFolder(fileToZip.getPath(), carFile.getPath());
-
+        File artifactFolder = new File(artifactFolderPath);
+        File resourcesFolder = new File(resourcesFolderPath);
+        if (!artifactFolder.exists() || !resourcesFolder.exists()) {
+            getLog().error("Invalid project structure");
+            return;
+        }
+        boolean createdArchiveDirectory = false;
+        File targetFolder = new File(archiveLocation);
+        if (!targetFolder.exists()) {
+            createdArchiveDirectory = org.wso2.developerstudio.eclipse.utils.file.FileUtils.createDirectories(
+                    archiveLocation);
+        }
+        CAppHandler cAppHandler = new CAppHandler(getArchiveName(), this);
+        List<ArtifactDependency> dependencies = new ArrayList<>();
+        List<ArtifactDependency> metaDependencies = new ArrayList<>();
+        if (createdArchiveDirectory || targetFolder.exists()) {
+            String projectVersion = project.getVersion().replace("-SNAPSHOT", "");
+            cAppHandler.processArtifacts(artifactFolder, archiveLocation, dependencies, projectVersion);
+            cAppHandler.processResourcesFolder(resourcesFolder, archiveLocation, dependencies,
+                    metaDependencies, projectVersion);
+            cAppHandler.createDependencyArtifactsXmlFile(archiveLocation, dependencies, metaDependencies, project);
+            File fileToZip = new File(archiveLocation);
+            String fileExtension = ".car";
+            File carFile = getArchiveFile(fileExtension);
+            try {
+                zipFolder(fileToZip.getPath(), carFile.getPath(), fileExtension);
                 // Attach carFile to Maven context.
                 this.project.getArtifact().setFile(carFile);
-
-                recursiveDelete(fileToZip);
-
-            } else {
-                getLog().error("Could not create corresponding archive directory.");
+            } catch (ArchiveException e) {
+                logError("Error occurred while creating the .car file");
+                logError(e.getMessage());
             }
-        } catch (XMLStreamException | IOException | ArchiveException e) {
-            getLog().error(e);
+            recursiveDelete(fileToZip, fileExtension);
+        } else {
+            getLog().error("Could not create the archive directory.");
         }
     }
 
@@ -127,7 +130,7 @@ public class CARMojo extends AbstractMojo {
      */
     private void appendLogs() {
         getLog().info("------------------------------------------------------------------------");
-        getLog().info("Building Synapse Config Project");
+        getLog().info("Building Composite Project");
         getLog().info("------------------------------------------------------------------------");
     }
 
@@ -139,14 +142,7 @@ public class CARMojo extends AbstractMojo {
      */
     private File getArchiveFile(String fileExtension) {
         File archiveFile;
-        if (archiveName != null && !archiveName.trim().equals(Constants.EMPTY_STRING)) {
-            archiveFile = new File(archiveLocation, archiveName + fileExtension);
-            return archiveFile;
-        }
-        String archiveFilename = project.getArtifactId() + "_" + project.getVersion() +
-                (classifier != null ? "-" + classifier : Constants.EMPTY_STRING) + fileExtension;
-        archiveFile = new File(archiveLocation, archiveFilename);
-
+        archiveFile = new File(archiveLocation, getArchiveName() + fileExtension);
         return archiveFile;
     }
 
@@ -156,11 +152,10 @@ public class CARMojo extends AbstractMojo {
      * @param srcFolder:   file path of the archive directory
      * @param destZipFile: file path of the .car file
      */
-    private void zipFolder(String srcFolder, String destZipFile) throws ArchiveException {
+    private void zipFolder(String srcFolder, String destZipFile, String fileExtension) throws ArchiveException {
         try (FileOutputStream fileWriter = new FileOutputStream(destZipFile);
              ZipOutputStream zip = new ZipOutputStream(fileWriter)) {
-
-            addFolderContentsToZip(srcFolder, zip);
+            addFolderContentsToZip(srcFolder, zip, fileExtension);
             zip.flush();
         } catch (IOException ex) {
             throw new ArchiveException(Constants.ARCHIVE_EXCEPTION_MSG, ex);
@@ -173,7 +168,8 @@ public class CARMojo extends AbstractMojo {
      * @param srcFolder: file path of the archive directory
      * @param zip:       ZipOutputStream
      */
-    private void addFolderContentsToZip(String srcFolder, ZipOutputStream zip) throws ArchiveException {
+    private void addFolderContentsToZip(String srcFolder, ZipOutputStream zip, String fileExtension)
+            throws ArchiveException {
         File folder = new File(srcFolder);
         String[] fileList = folder.list();
         if (fileList == null) {
@@ -181,11 +177,15 @@ public class CARMojo extends AbstractMojo {
         }
         try {
             int i = 0;
-            while (true) {
-                if (fileList.length == i) break;
+            while (fileList.length != i) {
                 if (new File(folder, fileList[i]).isDirectory()) {
                     zip.putNextEntry(new ZipEntry(fileList[i] + "/"));
                     zip.closeEntry();
+                }
+                // stop the recursive loop
+                if (getArchiveName().concat(fileExtension).equals(fileList[i])) {
+                    i++;
+                    continue;
                 }
                 addToZip(Constants.EMPTY_STRING, srcFolder + "/" + fileList[i], zip);
                 i++;
@@ -240,8 +240,7 @@ public class CARMojo extends AbstractMojo {
         }
         try {
             int i = 0;
-            while (true) {
-                if (fileList.length == i) break;
+            while (fileList.length != i) {
                 String newPath = folder.getName();
                 if (!path.equalsIgnoreCase(Constants.EMPTY_STRING)) {
                     newPath = path + "/" + newPath;
@@ -260,9 +259,10 @@ public class CARMojo extends AbstractMojo {
     /**
      * Delete the file/folder in the given file path.
      *
-     * @param file directory to be deleted
+     * @param file          directory to be deleted
+     * @param fileExtension to exclude CAPP from deletion
      */
-    private void recursiveDelete(File file) {
+    private void recursiveDelete(File file, String fileExtension) {
         //to end the recursive loop
         if (!file.exists()) {
             return;
@@ -275,8 +275,10 @@ public class CARMojo extends AbstractMojo {
             }
             for (File f : files) {
                 //call recursively
-                recursiveDelete(f);
+                recursiveDelete(f, fileExtension);
             }
+        } else if (file.getName().equals(getArchiveName().concat(fileExtension))) {
+            return;
         }
         //call delete to delete files and empty directory
         file.delete();
