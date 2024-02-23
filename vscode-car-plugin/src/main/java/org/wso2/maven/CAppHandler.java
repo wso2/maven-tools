@@ -26,6 +26,7 @@ import java.util.*;
 import javax.xml.namespace.QName;
 import javax.xml.stream.XMLStreamException;
 
+import org.apache.axiom.om.DeferredParsingException;
 import org.apache.axiom.om.OMDocument;
 import org.apache.axiom.om.OMElement;
 import org.apache.commons.io.FileUtils;
@@ -73,6 +74,10 @@ class CAppHandler extends AbstractXMLDoc {
      */
     void processArtifacts(File artifactsFolder, String archiveDirectory, List<ArtifactDependency> dependencies,
                           String version) {
+        if (!artifactsFolder.exists()) {
+            mojoInstance.logInfo("Could not find artifacts folder in " + artifactsFolder.getAbsolutePath());
+            return;
+        }
         mojoInstance.logInfo("Processing artifacts in " + artifactsFolder.getAbsolutePath());
         for (ArtifactDetails artifactDetails : artifactTypeList) {
             File artifactFolder = new File(artifactsFolder, artifactDetails.getDirectory());
@@ -137,7 +142,7 @@ class CAppHandler extends AbstractXMLDoc {
                         dependencies.add(new ArtifactDependency(name, configVersion, serverRole, true));
                         writeArtifactAndFile(configFile, archiveDirectory, name, type, serverRole, configVersion,
                                 fileName, folderName);
-                    } catch (IOException | XMLStreamException e) {
+                    } catch (IOException | XMLStreamException | DeferredParsingException e) {
                         mojoInstance.logError("Error occurred while processing " + configFile.getName());
                         mojoInstance.logError(e.getMessage());
                     }
@@ -155,6 +160,10 @@ class CAppHandler extends AbstractXMLDoc {
      */
     void processResourcesFolder(File resourcesFolder, String archiveDirectory, List<ArtifactDependency> dependencies,
                                 List<ArtifactDependency> metadataDependencies, String version) {
+        if (!resourcesFolder.exists()) {
+            mojoInstance.logInfo("Could not find resources folder in " + resourcesFolder.getAbsolutePath());
+            return;
+        }
         processConnectors(resourcesFolder, archiveDirectory, dependencies);
         processRegistryResources(resourcesFolder, archiveDirectory, dependencies);
         processMetadata(resourcesFolder, archiveDirectory, metadataDependencies, version);
@@ -449,6 +458,25 @@ class CAppHandler extends AbstractXMLDoc {
         } catch (MojoExecutionException | IOException e) {
             mojoInstance.logError("Error occurred while creating metadata.xml file");
             mojoInstance.logError(e.getMessage());
+        }
+    }
+
+    /**
+     * Method to process class mediators in the project and create corresponding files in the archive directory.
+     *
+     * @param dependencies     list of dependencies to be added to artifacts.xml file
+     * @param project          VSCode maven project
+     */
+    void processClassMediators(List<ArtifactDependency> dependencies, MavenProject project) {
+        String jarName = project.getArtifactId() + "-" + project.getVersion() + ".jar";
+        File jarFile = new File(Paths.get(project.getBasedir().toString(), "target", jarName).toString());
+        if (jarFile.exists()) {
+            dependencies.add(new ArtifactDependency(project.getArtifactId(), project.getVersion(),
+                    Constants.SERVER_ROLE_EI, true));
+            writeArtifactAndFile(jarFile, project.getBasedir().toString() + File.separator +
+                            Constants.TEMP_TARGET_DIR_NAME, project.getArtifactId(), Constants.CLASS_MEDIATOR_TYPE,
+                    Constants.SERVER_ROLE_EI, project.getVersion(), jarName, project.getArtifactId() + "_" +
+                            project.getVersion());
         }
     }
 

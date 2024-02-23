@@ -28,13 +28,10 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
 import org.apache.maven.plugin.AbstractMojo;
-import org.apache.maven.plugins.annotations.Mojo;
-import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.project.MavenProject;
 import org.apache.commons.lang.StringUtils;
 import org.wso2.maven.Model.ArchiveException;
 import org.wso2.maven.Model.ArtifactDependency;
-
 
 /**
  * Goal which touches a timestamp file.
@@ -42,7 +39,6 @@ import org.wso2.maven.Model.ArtifactDependency;
  * @goal car
  * @phase package
  */
-@Mojo(name = "WSO2ESBDeployableArchive")
 public class CARMojo extends AbstractMojo {
 
     /**
@@ -76,7 +72,7 @@ public class CARMojo extends AbstractMojo {
     }
 
     public String getArchiveName() {
-        return archiveName == null ? project.getArtifactId() + "CompositeExporter_" + project.getVersion() : archiveName;
+        return archiveName == null ? project.getArtifactId() + "_" + project.getVersion() : archiveName;
     }
 
     public void execute() {
@@ -89,26 +85,23 @@ public class CARMojo extends AbstractMojo {
 
         File artifactFolder = new File(artifactFolderPath);
         File resourcesFolder = new File(resourcesFolderPath);
-        if (!artifactFolder.exists() || !resourcesFolder.exists()) {
-            getLog().error("Invalid project structure");
-            return;
-        }
         boolean createdArchiveDirectory = false;
-        File targetFolder = new File(archiveLocation);
+        String tempTargetDir = basedir + File.separator + Constants.TEMP_TARGET_DIR_NAME;
+        File targetFolder = new File(tempTargetDir);
         if (!targetFolder.exists()) {
-            createdArchiveDirectory = org.wso2.developerstudio.eclipse.utils.file.FileUtils.createDirectories(
-                    archiveLocation);
+            createdArchiveDirectory = targetFolder.mkdir();
         }
         CAppHandler cAppHandler = new CAppHandler(getArchiveName(), this);
         List<ArtifactDependency> dependencies = new ArrayList<>();
         List<ArtifactDependency> metaDependencies = new ArrayList<>();
         if (createdArchiveDirectory || targetFolder.exists()) {
             String projectVersion = project.getVersion().replace("-SNAPSHOT", "");
-            cAppHandler.processArtifacts(artifactFolder, archiveLocation, dependencies, projectVersion);
-            cAppHandler.processResourcesFolder(resourcesFolder, archiveLocation, dependencies,
+            cAppHandler.processArtifacts(artifactFolder, tempTargetDir, dependencies, projectVersion);
+            cAppHandler.processResourcesFolder(resourcesFolder, tempTargetDir, dependencies,
                     metaDependencies, projectVersion);
-            cAppHandler.createDependencyArtifactsXmlFile(archiveLocation, dependencies, metaDependencies, project);
-            File fileToZip = new File(archiveLocation);
+            cAppHandler.processClassMediators(dependencies, project);
+            cAppHandler.createDependencyArtifactsXmlFile(tempTargetDir, dependencies, metaDependencies, project);
+            File fileToZip = new File(tempTargetDir);
             String fileExtension = ".car";
             File carFile = getArchiveFile(fileExtension);
             try {

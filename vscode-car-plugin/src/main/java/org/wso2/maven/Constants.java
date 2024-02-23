@@ -44,7 +44,7 @@ class Constants {
     static final String INBOUND_TYPE = "synapse/inbound-endpoint";
     static final String LOCAL_ENTRY_TYPE = "synapse/local-entry";
     static final String MESSAGE_PROCESSOR_TYPE = "synapse/message-processors";
-    static final String MESSAGE_STORE_TYPE = "synapse/message-stores";
+    static final String MESSAGE_STORE_TYPE = "synapse/message-store";
     static final String PROXY_SERVICE_TYPE = "synapse/proxy-service";
     static final String SEQUENCE_TYPE = "synapse/sequence";
     static final String TASK_TYPE = "synapse/task";
@@ -55,6 +55,7 @@ class Constants {
     static final String CONNECTOR_TYPE = "synapse/lib";
     static final String METADATA_TYPE = "synapse/metadata";
     static final String CAPP_TYPE = "carbon/application";
+    static final String CLASS_MEDIATOR_TYPE = "lib/synapse/mediator";
     static final String ARTIFACTS_FOLDER_PATH = "src" + File.separator + "main" + File.separator
             + "wso2mi" + File.separator + "artifacts";
     static final String RESOURCES_FOLDER_PATH = "src" + File.separator + "main" + File.separator
@@ -81,6 +82,7 @@ class Constants {
     static final String ARTIFACT_XML = "artifact.xml";
     static final String EMPTY_STRING = "";
     static final String MAIN_SEQUENCE = "mainSequence";
+    static final String TEMP_TARGET_DIR_NAME = "tmp";
 
     private Constants() {
     }
