@@ -103,8 +103,8 @@ public class CARMojo extends AbstractMojo {
             cAppHandler.createDependencyArtifactsXmlFile(tempTargetDir, dependencies, metaDependencies, project);
             File fileToZip = new File(tempTargetDir);
             String fileExtension = ".car";
-            File carFile = getArchiveFile(fileExtension);
             try {
+                File carFile = getArchiveFile(fileExtension);
                 zipFolder(fileToZip.getPath(), carFile.getPath(), fileExtension);
                 // Attach carFile to Maven context.
                 this.project.getArtifact().setFile(carFile);
@@ -134,9 +134,11 @@ public class CARMojo extends AbstractMojo {
      * @return empty archive file
      */
     private File getArchiveFile(String fileExtension) {
-        File archiveFile;
-        archiveFile = new File(archiveLocation, getArchiveName() + fileExtension);
-        return archiveFile;
+        File archiveLocation = new File(this.archiveLocation);
+        if (!archiveLocation.exists()) {
+            archiveLocation.mkdir();
+        }
+        return new File(archiveLocation, getArchiveName() + fileExtension);
     }
 
     /**
