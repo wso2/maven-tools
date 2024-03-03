@@ -15,6 +15,7 @@
  */
 package org.wso2.maven;
 
+import org.apache.commons.io.filefilter.WildcardFileFilter;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
@@ -22,11 +23,14 @@ import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
 
 import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileFilter;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 /**
  * Mojo for Json Merge
@@ -51,8 +55,10 @@ public class Merge extends AbstractMojo {
             Map inputMap;
             String targetPath = taskModel.getTarget();
             for (String aFile : taskModel.getInclude()) {
-                inputMap = Utils.getReadMap(aFile);
-                baseJsonMap = Utils.mergeMaps(baseJsonMap, inputMap, taskModel.isMergeChildren());
+                for (String bFile : this.getMatchingFiles(aFile)) {
+                    inputMap = Utils.getReadMap(bFile);
+                    baseJsonMap = Utils.mergeMaps(baseJsonMap, inputMap, taskModel.isMergeChildren());
+                }
             }
 
             try (BufferedWriter bufferedWriter = new BufferedWriter(new FileWriter(targetPath))) {
@@ -63,5 +69,20 @@ public class Merge extends AbstractMojo {
             }
         }
 
+    }
+
+    private String[] getMatchingFiles(String aFile) {
+        File file = new File(aFile).getParentFile();
+        if (file != null && file.exists()) {
+            FileFilter fileFilter = new WildcardFileFilter(new File(aFile).getName());
+            File[] files = Objects.requireNonNull(file.listFiles(fileFilter));
+            String[] result = new String[files.length];
+            for (int i = 0; i < files.length; i++) {
+                result[i] = files[i].getPath();
+            }
+            return result;
+        } else {
+            return new String[]{ aFile };
+        }
     }
 }
