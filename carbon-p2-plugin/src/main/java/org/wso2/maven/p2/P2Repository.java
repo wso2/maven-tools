@@ -17,35 +17,33 @@
 */
 package org.wso2.maven.p2;
 
+import org.apache.maven.plugins.annotations.Parameter;
+
 import java.net.URL;
 
 public class P2Repository {
     /**
      * URL of the Metadata Repository
-     *
-     * @parameter
      */
+	@Parameter(name = "metadataRepository")
     private URL metadataRepository;
 
     /**
      * URL of the Artifact Repository
-     *
-     * @parameter
      */
+	@Parameter(name = "artifactRepository")
     private URL artifactRepository;
     
     /**
      * URL of the P2 Repository
-     *
-     * @parameter
      */
+	@Parameter(name = "repository")
     private URL repository;
     
     /**
-     * Genrate P2 Repository on the fly
-     *
-     * @parameter
+     * Generate P2 Repository on the fly
      */
+	@Parameter(name = "generateRepo")
     private RepositoryGenMojo generateRepo;
 
 	public void setGenerateRepo(RepositoryGenMojo generateRepo) {
