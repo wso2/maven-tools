@@ -25,30 +25,26 @@ import java.util.regex.Pattern;
 import org.apache.maven.artifact.Artifact;
 import org.apache.maven.model.Dependency;
 import org.apache.maven.plugin.MojoExecutionException;
+import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.project.MavenProject;
 
 public class FeatureArtifact {
     /**
      * Group Id of the Bundle
-     *
-     * @parameter
-     * @required
      */
+	@Parameter(name = "groupId", required = true)
 	private String groupId;
 	
 	/**
      * Artifact Id of the Bundle
-     *
-     * @parameter
-     * @required
      */
+	@Parameter(name = "artifactId", required = true)
 	private String artifactId;
 	
     /**
      * Version of the Bundle
-     *
-     * @parameter default-value=""
      */
+	@Parameter(name = "version")
 	private String version;
 
 	private Artifact artifact;

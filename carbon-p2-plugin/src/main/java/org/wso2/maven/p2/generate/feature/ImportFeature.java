@@ -33,6 +33,7 @@ import javax.xml.parsers.DocumentBuilderFactory;
 import org.apache.maven.artifact.Artifact;
 import org.apache.maven.model.Dependency;
 import org.apache.maven.plugin.MojoExecutionException;
+import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.project.MavenProject;
 import org.w3c.dom.Document;
 import org.wso2.maven.p2.generate.utils.P2Utils;
@@ -41,24 +42,20 @@ public class ImportFeature{
 
 	/**
      * Feature Id of the feature
-     *
-     * @parameter
      */
-
+	@Parameter(name = "featureId")
 	private String featureId;
 
 	/**
      * Version of the feature
-     *
-     * @parameter default-value=""
      */
+	@Parameter(name = "featureVersion", defaultValue = "")
 	private String featureVersion;
 	
     /**
      * Version Compatibility of the Feature
-     *
-     * @parameter
      */
+	@Parameter(name = "compatibility")
 	private String compatibility;
 
 	private Artifact artifact;

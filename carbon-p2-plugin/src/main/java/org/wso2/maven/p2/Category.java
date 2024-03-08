@@ -25,38 +25,33 @@ import org.apache.maven.artifact.factory.ArtifactFactory;
 import org.apache.maven.artifact.repository.ArtifactRepository;
 import org.apache.maven.artifact.resolver.ArtifactResolver;
 import org.apache.maven.plugin.MojoExecutionException;
+import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.project.MavenProject;
 
 public class Category {
 	
     /**
      * Category Id
-     *
-     * @parameter
-     * @required
      */
+	@Parameter(name = "id", required = true)
 	private String id;
 	
     /**
      * Category Label
-     *
-     * @parameter
      */
+	@Parameter(name = "label")
 	private String label;
 
 	/**
      * Category description
-     *
-     * @parameter
      */
+	@Parameter(name = "description")
 	private String description;
 	
     /**
      * List of features contained in the category
-     *
-     * @parameter
-     * @required
      */
+	@Parameter(name = "features", required = true)
 	private ArrayList<CatFeature> features;
 
 	private ArrayList<CatFeature> processedFeatures;

@@ -31,6 +31,7 @@ import org.apache.maven.artifact.Artifact;
 import org.apache.maven.model.Dependency;
 import org.apache.maven.model.DependencyManagement;
 import org.apache.maven.plugin.MojoExecutionException;
+import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.project.MavenProject;
 import org.wso2.maven.p2.generate.utils.P2Utils;
 
@@ -39,25 +40,20 @@ public class Bundle{
 
     /**
      * Group Id of the Bundle
-     *
-     * @parameter
-     * @required
      */
+    @Parameter(name = "groupId", required = true)
 	private String groupId;
 	
 	/**
      * Artifact Id of the Bundle
-     *
-     * @parameter
-     * @required
      */
+    @Parameter(name = "artifactId", required = true)
 	private String artifactId;
 	
     /**
      * Version of the Bundle
-     *
-     * @parameter default-value=""
      */
+    @Parameter(name = "version", defaultValue = "")
 	private String version;
 
 	private Artifact artifact;
