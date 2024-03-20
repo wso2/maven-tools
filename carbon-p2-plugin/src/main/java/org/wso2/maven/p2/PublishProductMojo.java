@@ -104,8 +104,8 @@ public class PublishProductMojo extends AbstractMojo {
 		arguments.add(metadataRepository.toString());
 		arguments.add("-productFile");
 		arguments.add(productConfigurationFile.getCanonicalPath());
-		arguments.add("-executables");
-		arguments.add(executable.toString());
+//		arguments.add("-executables");
+//		arguments.add(executable.toString());
 		arguments.add("-publishArtifacts");
 		arguments.add("-configs");
 		arguments.add("gtk.linux.x86");
