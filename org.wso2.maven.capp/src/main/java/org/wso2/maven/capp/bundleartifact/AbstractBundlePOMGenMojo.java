@@ -74,19 +74,6 @@ public abstract class AbstractBundlePOMGenMojo extends AbstractPOMGenMojo {
 			activatorClassNode.setValue(bundleActivatorClass);
 		}
 		
-		//Embed dependencies
-//		Xpp3Dom embedDependencyNode = CAppMavenUtils.createConfigurationNode(instructionNode, "Embed-Dependency");
-//		String embedDependencyString=null;
-//		List<LibraryArtifact> libraries = getBundlesDataInfo(null, artifact).getLibraries();
-//		for (LibraryArtifact libraryArtifact : libraries) {
-//			if (embedDependencyString==null){
-//				embedDependencyString="";
-//			}else{
-//				embedDependencyString+=",";
-//			}
-//			embedDependencyString+=libraryArtifact.getArtifactId()+";scope=compile|runtime;inline=false;";
-//		}
-//		embedDependencyNode.setValue(embedDependencyString);
 		Xpp3Dom exportPackageNode = CAppMavenUtils.createConfigurationNode(instructionNode, "Export-Package");
 		exportPackageNode.setValue(getBundlesDataInfo(null, artifact).getAllPackagesString());
 		Xpp3Dom dynamicImportNode = CAppMavenUtils.createConfigurationNode(instructionNode, "DynamicImport-Package");
@@ -110,19 +97,6 @@ public abstract class AbstractBundlePOMGenMojo extends AbstractPOMGenMojo {
 			activatorClassNode.setValue(bundleActivatorClass);
 		}
 		
-		//Embed dependencies
-//		Xpp3Dom embedDependencyNode = CAppMavenUtils.createConfigurationNode(instructionNode, "Embed-Dependency");
-//		String embedDependencyString=null;
-//		List<LibraryArtifact> libraries = getBundlesDataInfo(null, artifact).getLibraries();
-//		for (LibraryArtifact libraryArtifact : libraries) {
-//			if (embedDependencyString==null){
-//				embedDependencyString="";
-//			}else{
-//				embedDependencyString+=",";
-//			}
-//			embedDependencyString+=libraryArtifact.getArtifactId()+";scope=compile|runtime;inline=false;";
-//		}
-//		embedDependencyNode.setValue(embedDependencyString);
 		Xpp3Dom exportPackageNode = CAppMavenUtils.createConfigurationNode(instructionNode, "Export-Package");
 		exportPackageNode.setValue(getBundlesDataInfo(null, artifact).getAllPackagesString());
 		Xpp3Dom dynamicImportNode = CAppMavenUtils.createConfigurationNode(instructionNode, "DynamicImport-Package");

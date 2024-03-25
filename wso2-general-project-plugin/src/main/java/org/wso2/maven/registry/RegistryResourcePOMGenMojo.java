@@ -19,6 +19,9 @@ package org.wso2.maven.registry;
 import org.apache.maven.model.Plugin;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
+import org.apache.maven.plugins.annotations.Component;
+import org.apache.maven.plugins.annotations.Mojo;
+import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.project.MavenProject;
 import org.apache.maven.project.MavenProjectHelper;
 import org.codehaus.plexus.util.xml.Xpp3Dom;
@@ -43,49 +46,41 @@ import java.util.Map;
 
 /**
  * This is the Maven Mojo used for generating a pom for a sequence artifact from the old CApp project structure
- *
- * @goal pom-gen
  */
+@Mojo(name = "pom-gen")
 public class RegistryResourcePOMGenMojo extends AbstractPOMGenMojo {
 
-    /**
-     * @parameter default-value="${project}"
-     */
+	@Parameter(defaultValue = "${project}")
     private MavenProject project;
 
     /**
      * Maven ProjectHelper.
-     *
-     * @component
      */
+	@Component
     private MavenProjectHelper projectHelper;
 
     /**
      * The path of the location to output the pom
-     *
-     * @parameter expression="${project.build.directory}/artifacts"
      */
+	@Parameter(defaultValue = "${project.build.directory}/artifacts")
     private File outputLocation;
 
     /**
      * The resulting extension of the file
-     *
-     * @parameter
      */
+	@Parameter
     private File artifactLocation;
 
     /**
      * POM location for the module project
-     *
-     * @parameter expression="${project.build.directory}/pom.xml"
      */
+	@Parameter(defaultValue = "${project.build.directory}/pom.xml")
     private File moduleProject;
 
     /**
      * Group id to use for the generated pom
-     *
-     * @parameter
      */
+	@Parameter
     private String groupId;
 
     private static final String ARTIFACT_TYPE = "registry/resource";

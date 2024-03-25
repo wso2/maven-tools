@@ -33,6 +33,9 @@ import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.plugin.logging.Log;
+import org.apache.maven.plugins.annotations.Component;
+import org.apache.maven.plugins.annotations.Mojo;
+import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.project.MavenProject;
 import org.codehaus.plexus.components.interactivity.Prompter;
 import org.codehaus.plexus.components.interactivity.PrompterException;
@@ -43,13 +46,10 @@ import org.wso2.maven.pckg.prepare.util.PackagePrepareUtils;
 
 /**
  * This Maven Mojo is used to change all dependencies to system scope.
- * 
- * @goal system-scope
- * @requiresProject
- * @aggregator
  * @since 1.0.0
  * 
  */
+@Mojo(name="system-scope", requiresProject = true, aggregator = true)
 public class PackagePrepareSystemScopeMojo extends AbstractMojo {
 	private static final String USER_CONSENT_PROMPTER = "Continue? [Y/n]";
 	private static final String USER_CONSENT_YES = "y";
@@ -58,26 +58,19 @@ public class PackagePrepareSystemScopeMojo extends AbstractMojo {
 
 	private final Log log = getLog();
 
-	/**
-	 * @parameter default-value="${project}"
-	 */
+	@Parameter(defaultValue = "${project}")
 	private MavenProject project;
 
-	/**
-	 * @parameter expression="${dryRun}" default-value="false"
-	 */
+	@Parameter(property = "dryRun", defaultValue = "false")
 	private boolean dryRun;
 
-	/**
-	 * @parameter expression="${updateDependencies}" default-value="false"
-	 */
+	@Parameter(property = "updateDependencies", defaultValue = "false")
 	private boolean updateDependencies;
 
 	/**
 	 * Prompter component for user input
-	 * 
-	 * @component
 	 */
+	@Component
 	private Prompter prompter;
 
 	private List<MavenProject> cappMavenProjects;

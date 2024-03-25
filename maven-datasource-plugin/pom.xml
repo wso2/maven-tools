@@ -18,14 +18,14 @@
   ~ under the License.
   -->
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
-	
+
        <parent>
 		<groupId>org.wso2.maven</groupId>
 		<artifactId>maven-common-tools</artifactId>
 		<version>5.2.50-SNAPSHOT</version>
 		<relativePath>../pom.xml</relativePath>
        </parent>
-	
+
 	<modelVersion>4.0.0</modelVersion>
 	<artifactId>maven-datasource-plugin</artifactId>
 	<packaging>maven-plugin</packaging>
@@ -43,11 +43,6 @@
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-compiler-plugin</artifactId>
-				<version>2.3.2</version>
-				<configuration>
-					<source>1.5</source>
-					<target>1.5</target>
-				</configuration>
 			</plugin>
 		</plugins>
 	</build>
