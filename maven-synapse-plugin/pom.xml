@@ -19,7 +19,6 @@
 
 	<modelVersion>4.0.0</modelVersion>
 	<artifactId>synapse-maven-plugin</artifactId>
-	<version>5.2.50-SNAPSHOT</version>
 	<packaging>maven-plugin</packaging>
 
 	<name>Maven ESB Synapse Configuration Plugin</name>
@@ -79,7 +78,6 @@
 		<dependency>
 			<groupId>org.apache.maven</groupId>
 			<artifactId>maven-plugin-api</artifactId>
-			<version>${org.apache.maven.plugin.api.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>org.apache.maven</groupId>
@@ -146,7 +144,6 @@
 		<dependency>
 			<groupId>org.wso2.maven</groupId>
 			<artifactId>org.wso2.maven.capp</artifactId>
-			<version>${org.wso2.maven.capp.version}</version>
 		</dependency>
 	</dependencies>
 

@@ -287,6 +287,7 @@ additional
 		<commons.codec.wso2.commons.codec.version>1.4.0.wso2v1</commons.codec.wso2.commons.codec.version>
 		<commons.httpclient.version>3.1</commons.httpclient.version>
 		<mojo-executor.version>2.2.0</mojo-executor.version>
+		<!-- Must be at least 3.8.6, see https://github.com/eclipse-tycho/tycho/blob/tycho-3.0.5/pom.xml#L83 -->
 		<org.apache.maven.core.version>3.9.3</org.apache.maven.core.version>
 		<org.apache.maven.compat.version>3.9.6</org.apache.maven.compat.version>
 		<org.apache.maven.project.version>2.2.1</org.apache.maven.project.version>

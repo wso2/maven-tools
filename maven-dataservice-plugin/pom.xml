@@ -19,7 +19,6 @@
 
     <modelVersion>4.0.0</modelVersion>
     <artifactId>dataservice-maven-plugin</artifactId>
-    <version>5.2.50-SNAPSHOT</version>
     <packaging>maven-plugin</packaging>
 
     <name>Maven Dataservice Plugin</name>

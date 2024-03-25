@@ -25,7 +25,6 @@
     </parent>
     <modelVersion>4.0.0</modelVersion>
     <artifactId>wso2-mi-synapse-plugin</artifactId>
-    <version>5.2.50-SNAPSHOT</version>
     <packaging>maven-plugin</packaging>
     <name>Maven MI Synapse Plugin</name>
 
