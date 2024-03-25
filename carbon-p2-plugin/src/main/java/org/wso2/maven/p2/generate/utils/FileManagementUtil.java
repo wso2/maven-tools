@@ -60,7 +60,7 @@ public class FileManagementUtil {
         }
     }
 
-    public static void copyDirectory(File srcPath, File dstPath, List filesToBeCopied) throws IOException{
+    public static void copyDirectory(File srcPath, File dstPath, List<String> filesToBeCopied) throws IOException{
         if (srcPath.isDirectory()){
             if (!dstPath.exists()){
                 dstPath.mkdir();
@@ -81,8 +81,8 @@ public class FileManagementUtil {
         }
     }
 
-    public static List getAllFilesPresentInFolder(File srcPath){
-        List fileList=new ArrayList();
+    public static List<String> getAllFilesPresentInFolder(File srcPath){
+        List<String> fileList=new ArrayList<>();
         if (srcPath.isDirectory()){
             String files[] = srcPath.list();
             for(int i = 0; i < files.length; i++){

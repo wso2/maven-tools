@@ -6,13 +6,11 @@
 		<version>5.2.50-SNAPSHOT</version>
 		<relativePath>../pom.xml</relativePath>
   	</parent>
-	<groupId>org.wso2.maven</groupId>
 	<modelVersion>4.0.0</modelVersion>
-	<artifactId>maven-library-plugin</artifactId>
-	<version>5.2.50-SNAPSHOT</version>
+	<artifactId>wso2-library-maven-plugin</artifactId>
 	<packaging>maven-plugin</packaging>
 
-	<name>Maven Library Plugin</name>
+	<name>WSO2 Library Maven Plugin</name>
 	<url>http://maven.apache.org</url>
 	<dependencies>
 		<dependency>
@@ -38,11 +36,6 @@
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-compiler-plugin</artifactId>
-				<version>2.3.2</version>
-				<configuration>
-					<source>1.6</source>
-					<target>1.6</target>
-				</configuration>
 			</plugin>
 		</plugins>
 	</build>

@@ -19,44 +19,35 @@ package org.wso2.maven.p2;
 
 import java.util.ArrayList;
 import java.util.Iterator;
-import java.util.List;
 
-import org.apache.maven.artifact.factory.ArtifactFactory;
-import org.apache.maven.artifact.repository.ArtifactRepository;
-import org.apache.maven.artifact.resolver.ArtifactResolver;
 import org.apache.maven.plugin.MojoExecutionException;
+import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.project.MavenProject;
 
 public class Category {
 	
     /**
      * Category Id
-     *
-     * @parameter
-     * @required
      */
+	@Parameter(required = true)
 	private String id;
 	
     /**
      * Category Label
-     *
-     * @parameter
      */
+	@Parameter
 	private String label;
 
 	/**
      * Category description
-     *
-     * @parameter
      */
+	@Parameter
 	private String description;
 	
     /**
      * List of features contained in the category
-     *
-     * @parameter
-     * @required
      */
+	@Parameter(required = true)
 	private ArrayList<CatFeature> features;
 
 	private ArrayList<CatFeature> processedFeatures;
@@ -65,7 +56,7 @@ public class Category {
 		return features;
 	}
 	
-    public ArrayList<CatFeature> getProcessedFeatures(MavenProject project, ArtifactFactory artifactFactory, List remoteRepositories, ArtifactRepository localRepository, ArtifactResolver resolver) throws MojoExecutionException{
+    public ArrayList<CatFeature> getProcessedFeatures(MavenProject project) throws MojoExecutionException{
         if (processedFeatures != null)
             return processedFeatures;
         if (features == null || features.size() == 0) return null;

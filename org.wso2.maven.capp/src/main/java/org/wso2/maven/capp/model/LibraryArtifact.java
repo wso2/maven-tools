@@ -4,7 +4,6 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.apache.maven.artifact.Artifact;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.wso2.maven.capp.utils.CAppMavenUtils;
 
@@ -52,7 +51,7 @@ public class LibraryArtifact {
 	}
 	public File getArtifactFile() throws MojoExecutionException {
 		if (artifactFile==null){
-			Artifact resolvedArtifact = CAppMavenUtils.getResolvedArtifact(getGroupId(), getArtifactId(), getVersion(), "jar", "compile");
+			org.eclipse.aether.artifact.Artifact resolvedArtifact = CAppMavenUtils.getResolvedArtifact(getGroupId(), getArtifactId(), getVersion(), "jar", "compile");
 			artifactFile=resolvedArtifact.getFile();
 		}
 		return artifactFile;

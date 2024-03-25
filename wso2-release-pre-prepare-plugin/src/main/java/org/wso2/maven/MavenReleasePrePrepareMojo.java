@@ -33,6 +33,9 @@ import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.plugin.logging.Log;
+import org.apache.maven.plugins.annotations.Component;
+import org.apache.maven.plugins.annotations.Mojo;
+import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.project.MavenProject;
 import org.apache.maven.scm.ScmException;
 import org.apache.maven.scm.ScmFile;
@@ -57,10 +60,9 @@ import org.wso2.maven.registry.RegistryArtifact;
 /**
  * This is the Maven Mojo used for do pre prepare tasks such as update version
  * of artifacts in Artifact.xml etc.
- * 
- * @goal pre-prepare
  * @deprecated
  */
+@Mojo(name="pre-prepare")
 public class MavenReleasePrePrepareMojo extends AbstractMojo {
 
 	private static final String PROJECT_NATURES = "projectnatures";
@@ -99,19 +101,13 @@ public class MavenReleasePrePrepareMojo extends AbstractMojo {
 
 	private final Log log = getLog();
 
-	/**
-	 * @parameter default-value="${project}"
-	 */
+	@Parameter(defaultValue = "${project}")
 	private MavenProject project;
 	
-	/** 
-	 * @component role-hint="mojo" 
-	 */
+	@Component(hint = "mojo")
     private SecDispatcher secDispatcher;
 
-	/**
-	 * @parameter expression="${dryRun}" default-value="false"
-	 */
+	@Parameter(property = "dryRun", defaultValue = "false")
 	private boolean dryRun;
 
 	/**

@@ -33,8 +33,6 @@ import org.wso2.maven.capp.utils.CAppMavenUtils;
 import org.wso2.maven.capp.utils.CAppUtils;
 import org.wso2.maven.core.model.AbstractXMLDoc;
 
-import sun.security.action.GetLongAction;
-
 public class CAppArtifact extends AbstractXMLDoc{
 
 	private MavenProject project;

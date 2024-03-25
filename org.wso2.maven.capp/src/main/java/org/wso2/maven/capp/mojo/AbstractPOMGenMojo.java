@@ -27,29 +27,25 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.apache.maven.model.Dependency;
-import org.apache.maven.model.Parent;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
+import org.apache.maven.plugins.annotations.Component;
+import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.project.MavenProject;
 import org.apache.maven.project.MavenProjectHelper;
 import org.wso2.maven.capp.model.Artifact;
 import org.wso2.maven.capp.model.ArtifactDependency;
 import org.wso2.maven.capp.utils.CAppMavenUtils;
 import org.wso2.maven.capp.utils.CAppUtils;
-import org.apache.maven.model.Repository;
 
 public abstract class AbstractPOMGenMojo extends AbstractMojo {
 	private static final String SYNAPSE_TYPE="synapse/configuration";
 
-	/**
-	 * @parameter default-value="${project}"
-	 */
+	@Parameter(defaultValue = "${project}")
 	public MavenProject project;
 
-	/**
-	 * @component
-	 */
+	@Component
 	public MavenProjectHelper projectHelper;
 
 	public File outputLocation;
@@ -150,8 +146,7 @@ public abstract class AbstractPOMGenMojo extends AbstractMojo {
 											projectLocation);
 							List existingModules = getMavenModuleProject().getModules();
 							if (!existingModules.contains(artifactAsMavenModule)) {
-								existingModules.add(
-										artifactAsMavenModule);
+								existingModules.add(artifactAsMavenModule);
 							}
 							
 							if(getLog().isDebugEnabled()){

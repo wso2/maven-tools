@@ -17,18 +17,15 @@
 package org.wso2.maven.capp.model;
 
 import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
-import java.util.zip.ZipOutputStream;
 
-import org.apache.maven.artifact.Artifact;
 import org.apache.maven.model.Dependency;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.project.MavenProject;
 import org.wso2.developerstudio.eclipse.utils.archive.ArchiveManipulator;
 import org.wso2.developerstudio.eclipse.utils.file.FileUtils;
-import org.wso2.maven.capp.utils.CAppMavenUtils;
 import org.wso2.maven.capp.utils.CAppArtifactPriorityMapping;
+import org.wso2.maven.capp.utils.CAppMavenUtils;
 
 public class CAppArtifactDependency implements Comparable<CAppArtifactDependency> {
 
@@ -39,9 +36,7 @@ public class CAppArtifactDependency implements Comparable<CAppArtifactDependency
 
 	public CAppArtifactDependency(Dependency mavenDependency, String serverRole) throws MojoExecutionException {
 		setMavenDependency(mavenDependency);
-		Artifact resolvedArtifactPom = CAppMavenUtils.getResolvedArtifactPom(mavenDependency,
-				CAppMavenUtils.getArtifactFactory(), CAppMavenUtils.getRemoteRepositories(),
-				CAppMavenUtils.getLocalRepository(), CAppMavenUtils.getResolver());
+		org.eclipse.aether.artifact.Artifact resolvedArtifactPom = CAppMavenUtils.getResolvedArtifactPom(mavenDependency);
 		MavenProject mavenProject = CAppMavenUtils.getMavenProject(resolvedArtifactPom.getFile());
 		setcAppArtifact(new CAppArtifact(mavenProject, serverRole));
 	}
@@ -79,25 +74,19 @@ public class CAppArtifactDependency implements Comparable<CAppArtifactDependency
 
 	public File[] getCappArtifactFile() throws MojoExecutionException, IOException {
 		if (artifactFiles == null) {
-			Artifact resolvedArtifact;
+			org.eclipse.aether.artifact.Artifact resolvedArtifact;
 			if (null != getMavenDependency().getScope()) {
 				String artifactSystemPath = getArtifactSystemPath();
 				if (null != artifactSystemPath) {
-					resolvedArtifact = CAppMavenUtils.getResolvedArtifact(getMavenDependency(), CAppMavenUtils
-							.getArtifactFactory(), CAppMavenUtils.getRemoteRepositories(), CAppMavenUtils
-							.getLocalRepository(), CAppMavenUtils.getResolver(), getMavenDependency().getScope(),
-							artifactSystemPath);
+					resolvedArtifact = CAppMavenUtils.getResolvedArtifact(
+							getMavenDependency(), getMavenDependency().getScope(),artifactSystemPath);
 				} else {
-					resolvedArtifact = CAppMavenUtils.getResolvedArtifact(getMavenDependency(), CAppMavenUtils
-							.getArtifactFactory(), CAppMavenUtils.getRemoteRepositories(), CAppMavenUtils
-							.getLocalRepository(), CAppMavenUtils.getResolver(), getMavenDependency().getScope(),
-							getMavenDependency().getSystemPath());
+					resolvedArtifact = CAppMavenUtils.getResolvedArtifact(
+							getMavenDependency(), getMavenDependency().getScope(), getMavenDependency().getSystemPath());
 				}
 			} else {
-				resolvedArtifact = CAppMavenUtils.getResolvedArtifact(getMavenDependency(),
-						CAppMavenUtils.getArtifactFactory(), CAppMavenUtils.getRemoteRepositories(),
-						CAppMavenUtils.getLocalRepository(), CAppMavenUtils.getResolver(),
-						CAppMavenUtils.CAPP_SCOPE_PREFIX, null);
+				resolvedArtifact = CAppMavenUtils.getResolvedArtifact(
+						getMavenDependency(), CAppMavenUtils.CAPP_SCOPE_PREFIX, null);
 			}
 
 			File mavenArtifact = resolvedArtifact.getFile();
