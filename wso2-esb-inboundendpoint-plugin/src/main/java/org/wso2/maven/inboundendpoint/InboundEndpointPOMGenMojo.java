@@ -36,7 +36,7 @@ import org.wso2.developerstudio.eclipse.utils.data.ITemporaryFileTag;
 import org.wso2.maven.capp.model.Artifact;
 import org.wso2.maven.capp.mojo.AbstractPOMGenMojo;
 import org.wso2.maven.capp.utils.CAppMavenUtils;
-import org.wso2.maven.capp.utils.WSO2MavenPluginConstantants;
+import org.wso2.maven.capp.utils.WSO2MavenPluginConstants;
 import org.wso2.maven.core.utils.MavenConstants;
 import org.wso2.maven.esb.ESBArtifact;
 import org.wso2.maven.esb.utils.ESBMavenUtils;
@@ -133,7 +133,7 @@ public class InboundEndpointPOMGenMojo extends AbstractPOMGenMojo {
 
         Plugin plugin = CAppMavenUtils.createPluginEntry(artifactMavenProject, MavenConstants.WSO2_MAVEN_GROUPID,
                 "wso2-esb-inboundendpoint-plugin",
-                WSO2MavenPluginConstantants.WSO2_ESB_INBOUND_ENDPOINT_VERSION, true);
+                WSO2MavenPluginConstants.WSO2_ESB_INBOUND_ENDPOINT_VERSION, true);
         Xpp3Dom configuration = (Xpp3Dom) plugin.getConfiguration();
         // add configuration
         Xpp3Dom aritfact = CAppMavenUtils.createConfigurationNode(configuration, MavenConstants.ARTIFACT_TAG);

@@ -32,7 +32,7 @@ import org.wso2.maven.capp.model.Artifact;
 import org.wso2.maven.capp.model.ArtifactDependency;
 import org.wso2.maven.capp.mojo.AbstractPOMGenMojo;
 import org.wso2.maven.capp.utils.CAppMavenUtils;
-import org.wso2.maven.capp.utils.WSO2MavenPluginConstantants;
+import org.wso2.maven.capp.utils.WSO2MavenPluginConstants;
 
 
 /**
@@ -99,7 +99,7 @@ public class CARPOMGenMojo extends AbstractPOMGenMojo {
 	protected void copyResources(MavenProject project, File projectLocation, Artifact artifact)throws IOException {
 	}
 	protected void addPlugins(MavenProject artifactMavenProject, Artifact artifact) {
-		Plugin plugin = CAppMavenUtils.createPluginEntry(artifactMavenProject,"org.wso2.maven","maven-car-plugin",WSO2MavenPluginConstantants.MAVEN_CAR_PLUGIN_VERSION,true);
+		Plugin plugin = CAppMavenUtils.createPluginEntry(artifactMavenProject,"org.wso2.maven","maven-car-plugin",WSO2MavenPluginConstants.MAVEN_CAR_PLUGIN_VERSION,true);
 		Xpp3Dom configuration = (Xpp3Dom)plugin.getConfiguration();
 		//add configuration
 		Xpp3Dom aritfact = CAppMavenUtils.createConfigurationNode(configuration,"archiveLocation");

@@ -37,7 +37,7 @@ import org.wso2.maven.capp.bundleartifact.AbstractBundlePOMGenMojo;
 import org.wso2.maven.capp.model.Artifact;
 import org.wso2.maven.capp.model.BundlesDataInfo;
 import org.wso2.maven.capp.utils.CAppMavenUtils;
-import org.wso2.maven.capp.utils.WSO2MavenPluginConstantants;
+import org.wso2.maven.capp.utils.WSO2MavenPluginConstants;
 
 /**
  * This is the Maven Mojo used for generating a pom for a carbon ui artifact
@@ -143,7 +143,7 @@ public class CarbonUIPOMGenMojo extends AbstractBundlePOMGenMojo {
 		                     CAppMavenUtils.createPluginEntry(artifactMavenProject,
 		                                                      "org.wso2.maven",
 		                                                      "maven-carbon-ui-plugin",
-		                                                      WSO2MavenPluginConstantants.MAVEN_CARBON_UI_PLUGIN_VERSION,
+		                                                      WSO2MavenPluginConstants.MAVEN_CARBON_UI_PLUGIN_VERSION,
 		                                                      true);
 //		PluginExecution executionAxis2 = new PluginExecution();
 //		executionAxis2.setId("package-war");

@@ -1,6 +1,6 @@
 package org.wso2.maven.capp.utils;
 
-public class WSO2MavenPluginConstantants {
+public class WSO2MavenPluginConstants {
 	public static final String MAVEN_CARBON_UI_PLUGIN_VERSION="5.2.50-SNAPSHOT";
 	public static final String MAVEN_CAR_PLUGIN_VERSION="5.2.50-SNAPSHOT";
 	public static final String WSO2_GENERAL_PROJECT_VERSION = "5.2.50-SNAPSHOT";

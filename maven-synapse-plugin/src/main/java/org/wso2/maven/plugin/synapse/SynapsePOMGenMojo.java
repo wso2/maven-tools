@@ -31,7 +31,7 @@ import org.codehaus.plexus.util.xml.Xpp3Dom;
 import org.wso2.maven.capp.model.Artifact;
 import org.wso2.maven.capp.mojo.AbstractPOMGenMojo;
 import org.wso2.maven.capp.utils.CAppMavenUtils;
-import org.wso2.maven.capp.utils.WSO2MavenPluginConstantants;
+import org.wso2.maven.capp.utils.WSO2MavenPluginConstants;
 
 /**
  * This is the Maven Mojo used for generating a pom for a sequence artifact
@@ -90,7 +90,7 @@ public class SynapsePOMGenMojo extends AbstractPOMGenMojo {
     protected void addPlugins(MavenProject artifactMavenProject, Artifact artifact) {
 
         Plugin plugin = CAppMavenUtils.createPluginEntry(artifactMavenProject, "org.wso2.maven", "maven-synapse-plugin",
-                WSO2MavenPluginConstantants.MAVEN_SYNAPSE_PLUGIN_VERSION, true);
+                WSO2MavenPluginConstants.MAVEN_SYNAPSE_PLUGIN_VERSION, true);
         Xpp3Dom configuration = (Xpp3Dom) plugin.getConfiguration();
         //add configuration
         Xpp3Dom aritfact = CAppMavenUtils.createConfigurationNode(configuration, "artifact");
