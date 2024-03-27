@@ -96,6 +96,11 @@ additional
 	</modules>
 	<build>
 		<extensions>
+			<!-- 
+				This is from 2009, bloody hell!
+				See https://maven.apache.org/guides/mini/guide-resolver-transport.html 
+				and update this stuff
+			-->
 			<extension>
 				<groupId>org.apache.maven.wagon</groupId>
 				<artifactId>wagon-ssh</artifactId>
