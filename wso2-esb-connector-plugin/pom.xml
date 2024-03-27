@@ -60,6 +60,11 @@
         </repository>
     </repositories>
     <dependencies>
+        <!-- See https://issues.apache.org/jira/browse/MNG-6965 -->
+		<dependency>
+	        <groupId>commons-logging</groupId>
+	        <artifactId>commons-logging</artifactId>
+        </dependency>
         <dependency>
             <groupId>biz.aQute</groupId>
             <artifactId>bndlib</artifactId>
