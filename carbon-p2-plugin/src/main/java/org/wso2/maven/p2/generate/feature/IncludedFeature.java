@@ -15,38 +15,33 @@
  */
 package org.wso2.maven.p2.generate.feature;
 
-import org.apache.maven.artifact.Artifact;
+import org.apache.maven.plugins.annotations.Parameter;
+import org.eclipse.aether.artifact.Artifact;
 
 public class IncludedFeature {
 
     /**
      * Group Id of the Bundle
-     *
-     * @parameter
-     * @required
      */
+	@Parameter(required = true)
 	private String groupId;
 
 	/**
      * Artifact Id of the Bundle
-     *
-     * @parameter
-     * @required
      */
+	@Parameter(required = true)
 	private String artifactId;
 
     /**
      * Version of the Bundle
-     *
-     * @parameter default-value=""
      */
+	@Parameter(defaultValue = "")
 	private String artifactVersion;
 
-   /**
+    /**
      * Optionality of the included feature
-     *
-     * @parameter default-value=""
      */
+	@Parameter(defaultValue = "")
     private String optionality;
 
     private boolean optional = false;

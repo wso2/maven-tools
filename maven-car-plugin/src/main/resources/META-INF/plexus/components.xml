@@ -32,12 +32,12 @@
               <process-test-resources>org.apache.maven.plugins:maven-resources-plugin:testResources</process-test-resources>
               <test-compile>org.apache.maven.plugins:maven-compiler-plugin:testCompile</test-compile>
               <test>org.apache.maven.plugins:maven-surefire-plugin:test</test>
-              <package>org.wso2.maven:maven-car-plugin:car</package>
+              <package>org.wso2.maven:car-maven-plugin:car</package>
               <install>
                 org.apache.maven.plugins:maven-install-plugin:install
               </install>
               <deploy>
-                org.wso2.maven:maven-car-deploy-plugin:deploy-car,
+                org.wso2.maven:car-deploy-maven-plugin:deploy-car,
                 org.apache.maven.plugins:maven-deploy-plugin:deploy
               </deploy>
             </phases>

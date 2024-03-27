@@ -15,87 +15,81 @@
  */
 package org.wso2.maven.p2;
 
-import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStreamReader;
-import java.net.MalformedURLException;
+import java.net.URI;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
-import org.apache.maven.artifact.factory.ArtifactFactory;
-import org.apache.maven.artifact.repository.ArtifactRepository;
-import org.apache.maven.artifact.resolver.ArtifactResolver;
+import javax.inject.Inject;
+
 import org.apache.maven.model.Resource;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
+import org.apache.maven.plugins.annotations.Component;
+import org.apache.maven.plugins.annotations.LifecyclePhase;
+import org.apache.maven.plugins.annotations.Mojo;
+import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.project.MavenProject;
-import org.codehaus.plexus.util.FileUtils;
-import org.eclipse.sisu.equinox.launching.internal.P2ApplicationLauncher;
+import org.eclipse.aether.RepositorySystem;
+import org.eclipse.aether.RepositorySystemSession;
+import org.eclipse.aether.repository.RemoteRepository;
+import org.eclipse.equinox.app.IApplication;
+import org.eclipse.equinox.p2.publisher.eclipse.FeaturesAndBundlesPublisherApplication;
 import org.wso2.maven.p2.generate.utils.FileManagementUtil;
 import org.wso2.maven.p2.generate.utils.MavenUtils;
 import org.wso2.maven.p2.generate.utils.P2Utils;
 
 /**
  * Write environment information for the current build to file.
- *
- * @goal p2-repo-gen
- * @phase package
  */
+@Mojo(defaultPhase = LifecyclePhase.PACKAGE, name = "p2-repo-gen")
 public class RepositoryGenMojo extends AbstractMojo {
-
-//    /**
-//     * URL of the Metadata Repository
-//     *
-//     * @parameter
-//     */
-//    private URL repository;
 
     /**
      * Name of the repository
-     *
-     * @parameter
      */
+	@Parameter
     private String name;
 
     /**
      * URL of the Metadata Repository
      *
-     * @parameter
      */
+	@Parameter
     private URL metadataRepository;
 
     /**
      * URL of the Artifact Repository
      *
-     * @parameter
      */
+	@Parameter
     private URL artifactRepository;
 
     /**
      * Source folder
-     *
-     * @parameter
-     * @required
      */
+	@Parameter(required = true)
     private ArrayList featureArtifacts;
 
     /**
      * Source folder
      *
-     * @parameter
      */
+	@Parameter
     private ArrayList bundleArtifacts;
-    
+
     /**
      * Source folder
      *
-     * @parameter
      */
+	@Parameter
     private ArrayList categories;
 
     /**
@@ -104,72 +98,70 @@ public class RepositoryGenMojo extends AbstractMojo {
      * When this option is not specified, it is recommended to set the artifactRepository to be in the same location
      * as the source (-source)
      *
-     * @parameter
      */
+	@Parameter
     private boolean publishArtifacts;
 
     /**
      * Type of Artifact (War,Jar,etc)
-     *
-     * @parameter
      */
+	@Parameter
     private boolean publishArtifactRepository;
 
     /**
      * Equinox Launcher
-     *
-     * @parameter
      */
+	@Parameter
     private EquinoxLauncher equinoxLauncher;
-
 
     /**
      * Equinox p2 configuration path
-     *
-     * @parameter
      */
+	@Parameter
     private P2Profile p2Profile;
 
-    /**
-     * @parameter default-value="${project}"
-     */
+	@Parameter(defaultValue = "${project}")
     private MavenProject project;
-    
-    /**
-     * @parameter default-value="false"
-     */
+
+	@Parameter(defaultValue = "false")
     private boolean archive;
 
-    /**
-     * @component
+	//See https://stackoverflow.com/questions/28361289/for-a-maven-3-plugin-what-is-the-latest-way-to-resolve-a-artifact
+	//See https://blog.sonatype.com/2011/01/how-to-use-aether-in-maven-plugins/
+	//See https://wiki.eclipse.org/Aether/Using_Aether_in_Maven_Plugins
+	/**
+     * The entry point to Aether, i.e. the component doing all the work.
      */
-    private org.apache.maven.artifact.factory.ArtifactFactory artifactFactory;
-
+    @Component
+    private RepositorySystem repoSystem;
+    
     /**
-     * @component
+     * The current repository/network configuration of Maven.
      */
-    private org.apache.maven.artifact.resolver.ArtifactResolver resolver;
-
+    @Parameter(defaultValue = "${repositorySystemSession}", readonly = true)
+    private RepositorySystemSession repoSession;
+    
     /**
-     * @parameter default-value="${localRepository}"
+     * The project's remote repositories to use for the resolution of project dependencies.
      */
-    private org.apache.maven.artifact.repository.ArtifactRepository localRepository;
-
+    @Parameter(defaultValue = "${project.remoteProjectRepositories}", readonly = true)
+    private List<RemoteRepository> remoteProjectRepos;
+    
     /**
-     * @parameter default-value="${project.remoteArtifactRepositories}"
+     * The project's remote repositories to use for the resolution of plugins and their dependencies.
      */
-    private List remoteRepositories;
-
-
-    /** @component */
-    private P2ApplicationLauncher launcher;
+    @Parameter(defaultValue = "${project.remotePluginRepositories}", readonly = true)
+    private List<RemoteRepository> remotePluginRepos;
+    
+    @Component(role = FeaturesAndBundlesPublisherApplication.class)
+    @Inject
+    private FeaturesAndBundlesPublisherApplication launcher;
 
     /**
      * Kill the forked test process after a certain number of seconds. If set to 0, wait forever for
      * the process, never timing out.
-     *
-     * @parameter expression="${p2.timeout}"
      */
+    @Parameter(property = "p2.timeout")
     private int forkedProcessTimeoutInSeconds;
 
     private ArrayList processedFeatureArtifacts;
@@ -182,8 +174,8 @@ public class RepositoryGenMojo extends AbstractMojo {
 	private ArrayList processedBundleArtifacts;
 
 	private File REPO_GEN_LOCATION;
-	
-	private File categoryDeinitionFile;
+
+	private File categoryDefinitionFile;
 
 	private File ARCHIVE_FILE;
 
@@ -200,13 +192,13 @@ public class RepositoryGenMojo extends AbstractMojo {
             extractFeatures();
             copyBundleArtifacts();
             copyResources();
-            this.getLog().info("Running Equinox P2 Publisher Application for Repository Generation");
+            getLog().info("Running Equinox P2 Publisher Application for Repository Generation");
             generateRepository();
-            this.getLog().info("Running Equinox P2 Category Publisher Application for the Generated Repository");
+            getLog().info("Running Equinox P2 Category Publisher Application for the Generated Repository");
             updateRepositoryWithCategories();
             archiveRepo();
         } catch (Exception e) {
-            this.getLog().error(e.getMessage(), e);
+            getLog().error(e.getMessage(), e);
             throw new MojoExecutionException(e.getMessage(), e);
         }
     }
@@ -236,36 +228,33 @@ public class RepositoryGenMojo extends AbstractMojo {
 
 
     private String getPublisherApplication() {
-        return "org.eclipse.equinox.p2.publisher.FeaturesAndBundlesPublisher";
+        return "org.eclipse.equinox.p2.publisher.eclipse.FeaturesAndBundlesPublisherApplication";
     }
 
     private void generateRepository() throws Exception {
 
-        P2ApplicationLauncher launcher = this.launcher;
-
-        launcher.setWorkingDirectory(project.getBasedir());
-        launcher.setApplicationName(getPublisherApplication());
-
-        addArguments(launcher);
-
-
-
-        int result = launcher.execute(forkedProcessTimeoutInSeconds);
-        if (result != 0) {
+    	launcher.setContextRepositories(new URI[]{metadataRepository.toURI()}, new URI[]{metadataRepository.toURI()});
+    	launcher.setArtifactLocation(metadataRepository.toURI());
+    	launcher.setMetadataLocation(metadataRepository.toURI());
+    	launcher.setCompress(true);
+    	
+    	Object result = launcher.run(getGenerateRepositoryConfigurations());
+        if (result != IApplication.EXIT_OK) {
             throw new MojoFailureException("P2 publisher return code was " + result);
         }
     }
-
-    private void addArguments(P2ApplicationLauncher launcher) throws IOException, MalformedURLException {
-        launcher.addArguments("-source", sourceDir.getAbsolutePath(), //
-                "-metadataRepository", metadataRepository.toString(), //
-                "-metadataRepositoryName", getRepositoryName(), //
-                "-artifactRepository", metadataRepository.toString(), //
-                "-artifactRepositoryName", getRepositoryName(), //
-                "-publishArtifacts",
-                "-publishArtifactRepository",
-                "-compress",
-                "-append");
+    
+    private String[] getGenerateRepositoryConfigurations() {
+    	String[] result = new String[] {
+    		String.format("-source %s", sourceDir.getAbsolutePath()),
+    		String.format("-metadataRepositoryName %s", getRepositoryName()),
+    		String.format("-artifactRepositoryName %s", getRepositoryName()),
+    		"-publishArtifacts",
+    		"-publishArtifactRepository",
+    		"-compress",
+    		"-append"
+    	};
+    	return result; 
     }
     
     private void extractFeatures() throws MojoExecutionException {
@@ -275,7 +264,7 @@ public class RepositoryGenMojo extends AbstractMojo {
                 .hasNext();) {
             FeatureArtifact featureArtifact = (FeatureArtifact) iterator.next();
             try {
-		getLog().info("Extracting feature "+featureArtifact.getGroupId()+":"+featureArtifact.getArtifactId());
+		        getLog().info("Extracting feature "+featureArtifact.getGroupId()+":"+featureArtifact.getArtifactId());
                 FileManagementUtil.unzip(featureArtifact.getArtifact().getFile(), sourceDir);
             } catch (Exception e) {
                 throw new MojoExecutionException("Error occured when extracting the Feature Artifact: " + featureArtifact.toString(), e);
@@ -303,6 +292,7 @@ public class RepositoryGenMojo extends AbstractMojo {
         if (processedFeatureArtifacts != null)
             return processedFeatureArtifacts;
         if (featureArtifacts == null || featureArtifacts.size() == 0) return null;
+        List<RemoteRepository> repos = 
         processedFeatureArtifacts = new ArrayList();
         Iterator iter = featureArtifacts.iterator();
         while (iter.hasNext()) {
@@ -316,7 +306,8 @@ public class RepositoryGenMojo extends AbstractMojo {
                 } else
                     f = (FeatureArtifact) obj;
                 f.resolveVersion(getProject());
-                f.setArtifact(MavenUtils.getResolvedArtifact(f, getArtifactFactory(), remoteRepositories, getLocalRepository(), getResolver()));
+                getLog().info( "Resolving artifact " + f + " from " + remotePluginRepos );
+                f.setArtifact(MavenUtils.getResolvedArtifact(repoSystem, repoSession, Stream.concat(remotePluginRepos.stream(), remoteProjectRepos.stream()).collect(Collectors.toList()), f));
                 processedFeatureArtifacts.add(f);
         	} catch (Exception e) {
                 throw new MojoExecutionException("Error occured when processing the Feature Artifact: " + obj.toString(), e);
@@ -324,7 +315,7 @@ public class RepositoryGenMojo extends AbstractMojo {
         }
         return processedFeatureArtifacts;
     }
-    
+
     private void archiveRepo() throws MojoExecutionException {
     	if (isArchive()){
     		getLog().info("Generating repository archive...");
@@ -333,7 +324,7 @@ public class RepositoryGenMojo extends AbstractMojo {
     		FileManagementUtil.deleteDirectories(REPO_GEN_LOCATION);
     	}
     }
-    
+
     private ArrayList getProcessedBundleArtifacts() throws MojoExecutionException {
         if (processedBundleArtifacts != null)
             return processedBundleArtifacts;
@@ -350,7 +341,8 @@ public class RepositoryGenMojo extends AbstractMojo {
             } else
                 f = (BundleArtifact) obj;
             f.resolveVersion(getProject());
-            f.setArtifact(MavenUtils.getResolvedArtifact(f, getArtifactFactory(), remoteRepositories, getLocalRepository(), getResolver()));
+            getLog().info( "Resolving artifact " + f + " from " + remotePluginRepos );
+            f.setArtifact(MavenUtils.getResolvedArtifact(repoSystem, repoSession, Stream.concat(remotePluginRepos.stream(), remoteProjectRepos.stream()).collect(Collectors.toList()), f));
             processedBundleArtifacts.add(f);
         }
         return processedBundleArtifacts;
@@ -364,7 +356,7 @@ public class RepositoryGenMojo extends AbstractMojo {
         tempDir = new File(targetDir, "tmp." + timestampVal);
         sourceDir = new File(tempDir, "featureExtract");
         sourceDir.mkdirs();
-        
+
 		metadataRepository=(artifactRepository==null? metadataRepository:artifactRepository);
 		artifactRepository=(metadataRepository==null? artifactRepository:metadataRepository);
 		if (metadataRepository == null) {
@@ -374,39 +366,44 @@ public class RepositoryGenMojo extends AbstractMojo {
 		}
         REPO_GEN_LOCATION=new File(metadataRepository.getFile().replace("/",File.separator));
         ARCHIVE_FILE=new File(targetDir,getProject().getArtifactId()+"_"+getProject().getVersion()+".zip");
-        categoryDeinitionFile=File.createTempFile("equinox-p2", "category");
+        categoryDefinitionFile=File.createTempFile("equinox-p2", "category");
+    }
+    
+    private String[] getUpdateRepositoryConfigurations() {
+    	String[] result = new String[] {
+    		String.format("-categoryDefinition %s", categoryDefinitionFile.toURI()),
+    		String.format("-metadataRepositoryName %s", getRepositoryName()),
+    		String.format("-artifactRepositoryName %s", getRepositoryName()),
+    		"-categoryQualifier",
+            "-append"
+    	};
+    	return result; 
     }
 
 	private void updateRepositoryWithCategories() throws Exception {
 		if (!isCategoriesAvailable()) {
 			return;
 		} else {
-			P2Utils.createCategoryFile(getProject(), categories, categoryDeinitionFile,
-			                           getArtifactFactory(), getRemoteRepositories(),
-			                           getLocalRepository(), getResolver());
-			P2ApplicationLauncher launcher = this.launcher;
-			launcher.setWorkingDirectory(project.getBasedir());
-			launcher.setApplicationName("org.eclipse.equinox.p2.publisher.CategoryPublisher");
-			launcher.addArguments("-metadataRepository", metadataRepository.toString(),
-			                      "-categoryDefinition", categoryDeinitionFile.toURI().toString(),
-			                      "-categoryQualifier", 
-			                      "-compress", 
-			                      "-append");
+			P2Utils.createCategoryFile(getProject(), categories, categoryDefinitionFile,
+										repoSystem, repoSession, remotePluginRepos /*remoteRepositories*/);
+			
+			launcher.setContextRepositories(new URI[]{metadataRepository.toURI()}, new URI[]{metadataRepository.toURI()});
+	    	launcher.setCompress(true);
 
-			int result = launcher.execute(forkedProcessTimeoutInSeconds);
-			if (result != 0) {
+			Object result = launcher.run(getUpdateRepositoryConfigurations());
+			if (result != IApplication.EXIT_OK) {
 				throw new MojoFailureException("P2 publisher return code was " + result);
 			}
 		}
 	}
-    
+
 	private boolean isCategoriesAvailable() {
 		if (categories == null || categories.size() == 0) {
 			return false;
 		}
 		return true;
 	}
-    
+
     private void performMopUp() {
         try {
             // we want this temp file, in order to debug some errors. since this is in target, it will
@@ -433,41 +430,25 @@ public class RepositoryGenMojo extends AbstractMojo {
         this.project = project;
     }
 
-    public void setArtifactFactory(org.apache.maven.artifact.factory.ArtifactFactory artifactFactory) {
-        this.artifactFactory = artifactFactory;
-    }
+//    public void setLocalRepository(LocalRepository localRepository) {
+//        this.localRepository = localRepository;
+//    }
 
-    public void setResolver(org.apache.maven.artifact.resolver.ArtifactResolver resolver) {
-        this.resolver = resolver;
-    }
-
-    public void setLocalRepository(org.apache.maven.artifact.repository.ArtifactRepository localRepository) {
-        this.localRepository = localRepository;
-    }
-
-    public void setRemoteRepositories(List remoteRepositories) {
-        this.remoteRepositories = remoteRepositories;
-    }
+//    public void setRemoteRepositories(List remoteRepositories) {
+//        this.remoteRepositories = remoteRepositories;
+//    }
 
     public MavenProject getProject() {
         return project;
     }
 
-    public ArtifactFactory getArtifactFactory() {
-        return artifactFactory;
-    }
+//    public LocalRepository getLocalRepository() {
+//        return localRepository;
+//    }
 
-    public ArtifactResolver getResolver() {
-        return resolver;
-    }
-
-    public ArtifactRepository getLocalRepository() {
-        return localRepository;
-    }
-
-    public List getRemoteRepositories() {
-        return remoteRepositories;
-    }
+//    public List getRemoteRepositories() {
+//        return remoteRepositories;
+//    }
 
 	public String getRepositoryName() {
 		if (name==null){

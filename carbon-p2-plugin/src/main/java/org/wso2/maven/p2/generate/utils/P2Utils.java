@@ -37,23 +37,19 @@ import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
 
-import org.apache.maven.artifact.factory.ArtifactFactory;
-import org.apache.maven.artifact.repository.ArtifactRepository;
-import org.apache.maven.artifact.resolver.ArtifactResolver;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.project.MavenProject;
-import org.codehaus.plexus.util.FileUtils;
+import org.eclipse.aether.RepositorySystem;
+import org.eclipse.aether.RepositorySystemSession;
+import org.eclipse.aether.repository.RemoteRepository;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
-import org.w3c.dom.Node;
-import org.w3c.dom.NodeList;
 import org.wso2.maven.p2.CatFeature;
 import org.wso2.maven.p2.Category;
 import org.wso2.maven.p2.EquinoxLauncher;
 import org.wso2.maven.p2.FeatureArtifact;
 import org.wso2.maven.p2.P2Profile;
 import org.wso2.maven.p2.generate.feature.Bundle;
-import org.wso2.maven.p2.generate.feature.IncludedFeature;
 
 public class P2Utils {
 	private static String[] matchList=new String[]{"perfect","equivalent","compatible","greaterOrEqual","patch", "optional"};
@@ -87,7 +83,7 @@ public class P2Utils {
         }
     }
 
-    public static ArrayList getProcessedP2LanucherFiles(ArrayList processedP2LauncherFiles, EquinoxLauncher equinoxLauncher, MavenProject project, ArtifactFactory artifactFactory, List remoteRepositories, ArtifactRepository localRepository, ArtifactResolver resolver) throws MojoExecutionException {
+    public static ArrayList getProcessedP2LanucherFiles(ArrayList processedP2LauncherFiles, EquinoxLauncher equinoxLauncher, MavenProject project,RepositorySystem repoSystem, RepositorySystemSession repoSession, List<RemoteRepository> remoteRepositories) throws MojoExecutionException {
         if (processedP2LauncherFiles != null)
             return processedP2LauncherFiles;
         processedP2LauncherFiles = new ArrayList();
@@ -108,7 +104,7 @@ public class P2Utils {
                 if (b.getVersion() == null)
                     throw e;
             }
-            b.setArtifact(MavenUtils.getResolvedArtifact(b, artifactFactory, remoteRepositories, localRepository, resolver));
+            b.setArtifact(MavenUtils.getResolvedArtifact(repoSystem, repoSession, remoteRepositories, b));
             processedP2LauncherFiles.add(b);
         }
         return processedP2LauncherFiles;
@@ -195,7 +191,7 @@ public class P2Utils {
     	return matchStr.equalsIgnoreCase("patch");
     }
     
-    public static void createCategoryFile(MavenProject project, ArrayList categories, File categoryFile, ArtifactFactory artifactFactory, List remoteRepositories, ArtifactRepository localRepository, ArtifactResolver resolver)throws Exception {
+    public static void createCategoryFile(MavenProject project, ArrayList categories, File categoryFile, RepositorySystem repoSystem, RepositorySystemSession repoSession, List<RemoteRepository> remoteRepositories )throws Exception {
     	
     	Map featureCategories=new HashMap();
     	
@@ -217,7 +213,7 @@ public class P2Utils {
 				Element descriptionElement = doc.createElement("description");
 				descriptionElement.setTextContent(cat.getDescription());
 				categoryDef.appendChild(descriptionElement);
-				ArrayList<CatFeature> processedFeatures = cat.getProcessedFeatures(project, artifactFactory, remoteRepositories, localRepository, resolver);
+				ArrayList<CatFeature> processedFeatures = cat.getProcessedFeatures(project);
 				for (CatFeature feature : processedFeatures) {
 					if (!featureCategories.containsKey(feature.getId()+feature.getVersion())){
 						ArrayList list = new ArrayList();

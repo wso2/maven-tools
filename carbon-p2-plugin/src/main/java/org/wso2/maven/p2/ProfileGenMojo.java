@@ -15,145 +15,99 @@
  */
 package org.wso2.maven.p2;
 
-import java.io.*;
-import java.net.MalformedURLException;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileWriter;
+import java.io.FilenameFilter;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.PrintWriter;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
-import java.util.List;
+
+import javax.inject.Inject;
 
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
+import org.apache.maven.plugins.annotations.Component;
+import org.apache.maven.plugins.annotations.LifecyclePhase;
+import org.apache.maven.plugins.annotations.Mojo;
+import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.project.MavenProject;
 import org.apache.maven.project.MavenProjectHelper;
 import org.codehaus.plexus.util.FileUtils;
-import org.eclipse.sisu.equinox.launching.internal.P2ApplicationLauncher;
+import org.eclipse.equinox.app.IApplication;
+import org.eclipse.equinox.p2.publisher.eclipse.FeaturesAndBundlesPublisherApplication;
 import org.wso2.maven.p2.generate.utils.FileManagementUtil;
-import org.wso2.maven.p2.generate.utils.MavenUtils;
 import org.wso2.maven.p2.generate.utils.P2Constants;
-import org.wso2.maven.p2.generate.utils.P2Utils;
 
 /**
  * Write environment information for the current build to file.
- *
- * @goal p2-profile-gen
- * @phase package
  */
+@Mojo(name = "p2-profile-gen", defaultPhase = LifecyclePhase.PACKAGE)
 public class ProfileGenMojo extends AbstractMojo {
 
 
     /**
      * Destination to which the features should be installed
-     *
-     * @parameter
-     * @required
      */
+    @Parameter(required = true)
     private String destination;
 
     /**
      * target profile
-     *
-     * @parameter
-     * @required
      */
+    @Parameter(required = true)
     private String profile;
 
 
 
     /**
      * URL of the Metadata Repository
-     *
-     * @parameter
      */
+    @Parameter
     private URL metadataRepository;
 
     /**
      * URL of the Artifact Repository
-     *
-     * @parameter
      */
+    @Parameter
     private URL artifactRepository;
 
     /**
      * List of features
-     *
-     * @parameter
-     * @required
      */
+    @Parameter(required = true)
     private ArrayList features;
 
     /**
      * Flag to indicate whether to delete old profile files
-     *
-     * @parameter default-value="true"
      */
+    @Parameter(defaultValue = "true")
     private boolean deleteOldProfileFiles = true;
 
-    /**
-     * Location of the p2 repository
-     *
-     * @parameter
-     */
-    private P2Repository p2Repository;
-
-    /**
-     * @parameter default-value="${project}"
-     */
+    @Parameter(defaultValue = "${project}")
     private MavenProject project;
 
-    /**
-     * @component
-     */
-    private org.apache.maven.artifact.factory.ArtifactFactory artifactFactory;
-
-    /**
-     * @component
-     */
-    private org.apache.maven.artifact.resolver.ArtifactResolver resolver;
-
-    /**
-     * @parameter default-value="${localRepository}"
-     */
-    private org.apache.maven.artifact.repository.ArtifactRepository localRepository;
-
-    /**
-     * @parameter default-value="${project.remoteArtifactRepositories}"
-     */
-    private java.util.List remoteRepositories;
-
-    /**
-     * Equinox p2 configuration path
-     *
-     * @parameter
-     */
-    private P2Profile p2Profile;
 
     /**
      * Maven ProjectHelper.
-     *
-     * @component
      */
+    @Component
     private MavenProjectHelper projectHelper;
 
-    /** @component */
-    private P2ApplicationLauncher launcher;
-
-    /**
-     * Kill the forked test process after a certain number of seconds. If set to 0, wait forever for
-     * the process, never timing out.
-     *
-     * @parameter expression="${p2.timeout}"
-     */
-    private int forkedProcessTimeoutInSeconds;
-
+    @Component
+    @Inject
+    private FeaturesAndBundlesPublisherApplication launcher;
 
     private File FOLDER_TARGET;
     private File FOLDER_TEMP;
     private File FOLDER_TEMP_REPO_GEN;
     private File FILE_FEATURE_PROFILE;
-    private File p2AgentDir;
 
     private final String STREAM_TYPE_IN = "inputStream";
     private final String STREAM_TYPE_ERROR = "errorStream";
@@ -202,41 +156,26 @@ public class ProfileGenMojo extends AbstractMojo {
         }
         return installUIs;
     }
-
-    private String getPublisherApplication() {
-        return "org.eclipse.equinox.p2.director";
+    
+    private String[] getInstallFeaturesConfigurations(String installUIs) {
+    	String[] result = new String[] {
+    		String.format("-metadataRepository %s", metadataRepository.toExternalForm()),
+    		String.format("-artifactRepository %s", artifactRepository.toExternalForm()),
+    		"--profileProperties org.eclipse.update.install.features=true",
+    		String.format("-installIU %s", installUIs),
+    		String.format("-bundlepool %s", destination),
+    		String.format("-shared %s", destination + File.separator + "p2"),
+    		String.format("-profile %s", profile),
+            "-roaming"
+    	};
+    	return result; 
     }
 
     private void installFeatures(String installUIs) throws Exception {
-        P2ApplicationLauncher launcher = this.launcher;
-
-        launcher.setWorkingDirectory(project.getBasedir());
-        launcher.setApplicationName(getPublisherApplication());
-
-        addArguments(launcher,installUIs);
-
-
-
-        int result = launcher.execute(forkedProcessTimeoutInSeconds);
-        if (result != 0) {
+       	Object result = launcher.run(getInstallFeaturesConfigurations(installUIs));
+        if (result != IApplication.EXIT_OK) {
             throw new MojoFailureException("P2 publisher return code was " + result);
         }
-    }
-
-    private void addArguments(P2ApplicationLauncher launcher, String installUIs) throws IOException, MalformedURLException {
-        launcher.addArguments(
-                "-metadataRepository", metadataRepository.toExternalForm(), //
-                "-artifactRepository", artifactRepository.toExternalForm(), //
-                "-profileProperties", "org.eclipse.update.install.features=true",
-                "-installIU", installUIs,
-                "-bundlepool", destination,
-                //to support shared installation in carbon
-                "-shared" , destination + File.separator + "p2",
-                //target is set to a separate directory per Profile
-                "-destination", destination + File.separator + profile,
-                "-profile", profile.toString(),
-                "-roaming"
-        );
     }
 
     public class InputStreamHandler implements Runnable {
@@ -344,12 +283,12 @@ public class ProfileGenMojo extends AbstractMojo {
         }
     }
 
-    private void deployArtifact() {
-        if (FILE_FEATURE_PROFILE != null && FILE_FEATURE_PROFILE.exists()) {
-            project.getArtifact().setFile(FILE_FEATURE_PROFILE);
-            projectHelper.attachArtifact(project, "zip", null, FILE_FEATURE_PROFILE);
-        }
-    }
+//    private void deployArtifact() {
+//        if (FILE_FEATURE_PROFILE != null && FILE_FEATURE_PROFILE.exists()) {
+//            project.getArtifact().setFile(FILE_FEATURE_PROFILE);
+//            projectHelper.attachArtifact(project, "zip", null, FILE_FEATURE_PROFILE);
+//        }
+//    }
 
     private void performMopUp() {
         try {

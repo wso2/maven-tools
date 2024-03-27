@@ -18,6 +18,9 @@ package org.wso2.maven.synapse;
 
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
+import org.apache.maven.plugins.annotations.Component;
+import org.apache.maven.plugins.annotations.Mojo;
+import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.project.MavenProject;
 import org.apache.maven.project.MavenProjectHelper;
 import org.codehaus.plexus.util.FileUtils;
@@ -27,50 +30,41 @@ import java.io.IOException;
 
 /**
  * Prepare an artifact to be installed in the local Maven repository.
- *
- * @goal package-synapse-config
  */
+@Mojo(name = "package-synapse-config")
 public class MISynapseMojo extends AbstractMojo {
 
-    /**
-     * @parameter default-value="${project}"
-     */
+	@Parameter(defaultValue = "${project}")
     private MavenProject project;
 
     /**
      * Maven ProjectHelper.
-     *
-     * @component
      */
+	@Component
     private MavenProjectHelper projectHelper;
 
     /**
      * The path of the existing artifact
-     *
-     * @parameter expression="${deploy-file.artifact}"
-     * @required
      */
+	@Parameter(property = "deploy-file.artifact", required = true)
     private File artifact;
 
     /**
      * The resulting extension of the file
-     *
-     * @parameter expression="${deploy-file.extension}
      */
+	@Parameter(property = "deploy-file.extension")
     private String extension;
 
     /**
-     * The resulting extension of the file
-     *
-     * @parameter expression="${deploy-file.fileName}
+     * The resulting name of the file
      */
+	@Parameter(property = "deploy-file.fileName")
     private String fileName;
 
     /**
      * If the file should be archived
-     *
-     * @parameter expression="${deploy-file.enableArchive}" default-value=false
      */
+	@Parameter(property = "deploy-file.enableArchive", defaultValue = "false")
     private boolean enableArchive;
 
     private File destFolder;

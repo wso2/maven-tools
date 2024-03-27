@@ -18,22 +18,19 @@
 package org.wso2.maven.p2.generate.feature;
 
 import org.apache.maven.plugin.MojoExecutionException;
+import org.apache.maven.plugins.annotations.Parameter;
 
 public class Property {
 	/**
      * property key
-     *
-     * @parameter
-     * @required
      */
+	@Parameter(required = true)
 	private String key;
 	
 	/**
      * property value
-     *
-     * @parameter 
-     * @required
      */
+	@Parameter(required = true)
 	private String value;
 	
 	

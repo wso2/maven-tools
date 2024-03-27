@@ -1,29 +1,25 @@
 package org.wso2.maven.car.artifact;
 
+import org.apache.maven.plugins.annotations.Parameter;
+
 public class TopologyMavenArtifact {
 	
     /**
      * group id of the topology artifact
-     *
-     * @required
-     * @parameter
      */
+	@Parameter(required = true)
 	private String groupId;
 	
     /**
      * artifact id of the topology artifact
-     *
-     * @required
-     * @parameter
      */
+	@Parameter(required = true)
 	private String artifactId;
 
     /**
      * version of the topology artifact
-     *
-     * @required
-     * @parameter
      */
+	@Parameter(required = true)
 	private String version;
 	
 	public void setGroupId(String groupId) {

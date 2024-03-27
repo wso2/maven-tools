@@ -6,10 +6,8 @@
         <version>5.2.50-SNAPSHOT</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
-    <groupId>org.wso2.maven</groupId>
     <modelVersion>4.0.0</modelVersion>
     <artifactId>wso2-maven-json-merge-plugin</artifactId>
-    <version>5.2.50-SNAPSHOT</version>
     <packaging>maven-plugin</packaging>
 
     <name>Maven Library Plugin</name>
@@ -19,23 +17,17 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
-                <version>3.7.0</version>
-                <configuration>
-                    <source>8</source>
-                    <target>8</target>
-                </configuration>
             </plugin>
             <plugin>
+				<groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-install-plugin</artifactId>
-                <version>2.5.2</version>
             </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-plugin-plugin</artifactId>
-                <version>3.5.1</version>
                 <configuration>
                     <skipErrorNoDescriptorsFound>true</skipErrorNoDescriptorsFound>
-                    <goalPrefix>json-merge</goalPrefix>
+                    <goalPrefix>wso2json-merge</goalPrefix>
                 </configuration>
                 <executions>
                     <execution>

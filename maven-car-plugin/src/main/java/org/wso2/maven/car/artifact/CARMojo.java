@@ -1,5 +1,12 @@
 package org.wso2.maven.car.artifact;
 
+import java.io.File;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
 import org.apache.maven.artifact.factory.ArtifactFactory;
 import org.apache.maven.artifact.repository.ArtifactRepository;
 import org.apache.maven.artifact.resolver.ArtifactResolver;
@@ -7,6 +14,10 @@ import org.apache.maven.model.Dependency;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
+import org.apache.maven.plugins.annotations.Component;
+import org.apache.maven.plugins.annotations.LifecyclePhase;
+import org.apache.maven.plugins.annotations.Mojo;
+import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.project.MavenProject;
 import org.apache.maven.project.MavenProjectHelper;
 import org.wso2.developerstudio.eclipse.utils.file.FileUtils;
@@ -16,20 +27,12 @@ import org.wso2.maven.capp.utils.CAppMavenUtils;
 import org.wso2.maven.car.artifact.utils.FileManagementUtil;
 import org.wso2.maven.plugin.synapse.utils.SynapseArtifactBundleCreator;
 
-import java.io.File;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
 /**
  * Create a bpel artifact from Maven project
  *
- * @goal car
- * @phase package
  * @description build car artifact
  */
+@Mojo(name = "car", defaultPhase = LifecyclePhase.PACKAGE)
 public class CARMojo extends AbstractMojo {
 
 	private static final String METADATA_ARTIFACT_TYPE = "synapse/metadata";
@@ -39,69 +42,53 @@ public class CARMojo extends AbstractMojo {
 
     /**
      * Location target folder
-     *
-     * @parameter expression="${project.build.directory}"
      */
+	@Parameter(property = "project.build.directory")
     private File target;
-    
+
     /**
      * Location archiveLocation folder
-     *
-     * @parameter expression="${project.build.directory}"
      */
+	@Parameter(property = "project.build.directory")
     private File archiveLocation;
-    
+
 	/**
 	 * finalName to use for the generated capp project if the user wants to override the default name
-	 * 
-	 * @parameter
 	 */
+	@Parameter
 	public String finalName;
 
 	/**
 	 * A classifier for the build final name
-	 *
-	 * @parameter
 	 */
+	@Parameter
 	public String classifier;
 
-	/**
-	 * @parameter default-value="${project}"
-	 */
+	@Parameter(defaultValue = "${project}")
 	private MavenProject project;
 
 	/**
 	 * Maven ProjectHelper.
-	 * 
-	 * @component
 	 */
+	@Component
 	private MavenProjectHelper projectHelper;
 
-    /**
-     * @component
-     */
+	@Component
     private ArtifactFactory artifactFactory;
 
-    /**
-     * @component
-     */
+	@Component
     private ArtifactResolver resolver;
 
-    /**
-     * @parameter default-value="${localRepository}"
-     */
+	@Parameter(defaultValue = "${localRepository}")
     private ArtifactRepository localRepository;
 
-    /**
-     * @parameter default-value="${project.remoteArtifactRepositories}"
-     */
+	@Parameter(defaultValue = "${project.remoteArtifactRepositories}")
     private List<?> remoteRepositories;
-    
+
     /**
 	 * Maven ProjectHelper.
-	 * 
-	 * @parameter
 	 */
+	@Parameter
     private List<artifact> artifacts;
 
     private void setupMavenRepoObjects(){
@@ -110,9 +97,9 @@ public class CARMojo extends AbstractMojo {
     	CAppMavenUtils.setLocalRepository(localRepository);
     	CAppMavenUtils.setRemoteRepositories(remoteRepositories);
     }
-	
+
     private Map<String,CAppArtifactDependency> cAppArtifactDependencies=new HashMap<String, CAppArtifactDependency>();
-    
+
 	public void execute() throws MojoExecutionException, MojoFailureException {
 		setupMavenRepoObjects();
 		CAppArtifact cAppArtifact = new CAppArtifact(project,null);
@@ -145,22 +132,22 @@ public class CARMojo extends AbstractMojo {
 		}
 
 		File artifactLocation = new File(baseCARLocation,cAppArtifactDependency.getName()+"_"+cAppArtifactDependency.getVersion());
-		
+
 		CAppArtifact cAppArtifact = cAppArtifactDependency.getcAppArtifact();
 		Dependency mavenArtifact = cAppArtifactDependency.getMavenDependency();
-		
+
 		String artifactFinalName = null;
-		
+
 		if(artifacts != null){
 			for (artifact cappArtifact : artifacts) {
-				if(mavenArtifact.getGroupId().equals(cappArtifact.getGroupId()) && 
+				if(mavenArtifact.getGroupId().equals(cappArtifact.getGroupId()) &&
 						mavenArtifact.getArtifactId().equals(cappArtifact.getArtifactId())){
 					artifactFinalName = cappArtifact.getFinalName();
 					break;
 				}
 			}
 		}
-		
+
 		getLog().info("Copying artifact content to target location.");
 		File[] cappArtifactFile = cAppArtifactDependency.getCappArtifactFile();
 		for (File file : cappArtifactFile) {
@@ -173,10 +160,10 @@ public class CARMojo extends AbstractMojo {
 				cAppArtifact.setFile(artifactFinalName);
 			}
 		}
-		
+
 		cAppArtifact.toFile(new File(artifactLocation,"artifact.xml"));
 	}
-	
+
 	private void collectArtifacts(CAppArtifact cAppArtifact, Map<String,CAppArtifactDependency> cAppArtifacts) throws MojoExecutionException{
 		List<CAppArtifactDependency> dependencies = cAppArtifact.getDependencies();
 		for (CAppArtifactDependency artifactDependency : dependencies) {
@@ -188,7 +175,7 @@ public class CARMojo extends AbstractMojo {
 					cAppArtifacts.put(cAppArtifactDependency.getDependencyId(),
 							cAppArtifactDependency);
 					collectArtifacts(cAppArtifactDependency.getcAppArtifact(),
-							cAppArtifacts);	
+							cAppArtifacts);
 					originalDependencyPresent=originalDependencyPresent || (artifactDependency.getName().equals(cAppArtifactDependency.getName()) && artifactDependency.getVersion().equals(cAppArtifactDependency.getVersion()));
 				}
 				if (!originalDependencyPresent){
@@ -225,7 +212,7 @@ public class CARMojo extends AbstractMojo {
 	public File getTarget() {
 		return target;
 	}
-	
+
 	private File getArchiveDir(){
 		File archiveDir = new File(getTarget(),"car");
 		if (!archiveDir.exists()){
@@ -244,7 +231,7 @@ public class CARMojo extends AbstractMojo {
 			archiveFile=new File(getArchiveLocation(), finalName+".car");
 		}		return archiveFile;
 	}
-	
+
 	public File getArchiveLocation() {
 		return archiveLocation;
 	}
@@ -252,5 +239,5 @@ public class CARMojo extends AbstractMojo {
 	public void setArchiveLocation(File archiveLocation) {
 		this.archiveLocation = archiveLocation;
 	}
-	
+
 }

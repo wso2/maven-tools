@@ -169,15 +169,17 @@ public class UnitTestCasesMojo extends AbstractMojo {
             fileNamesWithPaths.add(testFileFolder);
 
         } else if (testFileFolder.endsWith(Constants.TEST_FOLDER_EXTENSION)) {
-            String testFolderPath = testFileFolder.split("\\$")[0];
+        	String testFolderPath = testFileFolder.split("\\$")[0];
             File folder = new File(testFolderPath);
             File[] listOfFiles = folder.listFiles();
-
-            for (File file : listOfFiles) {
-                String filename = file.getName();
-                if (filename.endsWith(Constants.XML_EXTENSION)) {
-                    fileNamesWithPaths.add(testFolderPath + filename);
-                }
+            
+            if (listOfFiles!=null) {
+	            for (File file : listOfFiles) {
+	                String filename = file.getName();
+	                if (filename.endsWith(Constants.XML_EXTENSION)) {
+	                    fileNamesWithPaths.add(testFolderPath + filename);
+	                }
+	            }
             }
         }
 

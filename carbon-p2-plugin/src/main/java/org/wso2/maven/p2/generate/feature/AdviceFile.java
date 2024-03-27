@@ -19,12 +19,14 @@ package org.wso2.maven.p2.generate.feature;
 
 import java.util.ArrayList;
 
+import org.apache.maven.plugins.annotations.Parameter;
+
 public class AdviceFile {
 	
 	 /**
      * define properties
-     * @parameter
      */
+	@Parameter
 	private ArrayList properties;
 
 	public void setProperties(ArrayList properties) {
