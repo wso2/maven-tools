@@ -51,6 +51,7 @@ additional
 						</goals>
 						<configuration>
 							<target>
+								<!-- Why these hard-coded paths? -->
 								<path id="wsdl2java.classpath">
 									<pathelement
 										location="${settings.localRepository}/com/sun/activation/javax.activation/${javax.activation.version}/javax.activation-${javax.activation.version}.jar" />
@@ -131,7 +132,12 @@ additional
 		</plugins>
 	</build>
 	<dependencies>
+		<!-- See https://issues.apache.org/jira/browse/MNG-6965 -->
 		<dependency>
+	        <groupId>commons-logging</groupId>
+	        <artifactId>commons-logging</artifactId>
+        </dependency>
+        <dependency>
 			<groupId>biz.aQute</groupId>
 			<artifactId>bndlib</artifactId>
 			<version>${bndlib.version}</version>
@@ -246,10 +252,6 @@ additional
 			<artifactId>geronimo-stax-api_1.0_spec</artifactId>
 			<version>
 				${org.apache.geronimo.specs.wso2.geronimo.stax.api_1.0_spec.version}</version>
-		</dependency>
-		<dependency>
-			<groupId>commons-logging</groupId>
-			<artifactId>commons-logging</artifactId>
 		</dependency>
 		<dependency>
 			<groupId>org.wso2.maven</groupId>
