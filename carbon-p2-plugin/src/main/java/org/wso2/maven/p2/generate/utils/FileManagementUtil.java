@@ -19,11 +19,9 @@ package org.wso2.maven.p2.generate.utils;
 
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
-import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
-import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -369,7 +367,7 @@ public class FileManagementUtil {
      *         <code>extension</code>
      */
     public static File[] getMatchingFiles(String sourceDir, String fileNamePrefix, String extension) {
-        List fileList = new ArrayList();
+        List<File> fileList = new ArrayList<>();
         File libDir = new File(sourceDir);
         String libDirPath = libDir.getAbsolutePath();
         String[] items = libDir.list();
