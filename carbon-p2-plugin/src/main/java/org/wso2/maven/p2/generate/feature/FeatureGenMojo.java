@@ -284,9 +284,9 @@ public class FeatureGenMojo extends AbstractMojo {
 			Bundle b;
 			if (obj instanceof Bundle) {
 				b = (Bundle) obj;
-				this.getLog().info("[getProcessedBundlesList] Bundle = "+b.toOSGIString());
+				//this.getLog().info("[getProcessedBundlesList] Bundle = "+b.toOSGIString());
 			} else if (obj instanceof String) {
-				this.getLog().info("[getProcessedBundlesList] String1 = "+obj.toString());
+				//this.getLog().info("[getProcessedBundlesList] String1 = "+obj.toString());
 				b = Bundle.getBundle(obj.toString());
 			} else
 				b = (Bundle) obj;
@@ -338,10 +338,10 @@ public class FeatureGenMojo extends AbstractMojo {
 			ImportFeature f;
 			if (obj instanceof ImportFeature) {
 				f = (ImportFeature) obj;
-				this.getLog().info("[getProcessedImportFeaturesList] String1 = "+f.toString());
+				//this.getLog().info("[getProcessedImportFeaturesList] String1 = "+f.toString());
 			} else if (obj instanceof String) {
 				f = ImportFeature.getFeature(obj.toString());
-				this.getLog().info("[getProcessedImportFeaturesList] String2 = "+f.toString());
+				//this.getLog().info("[getProcessedImportFeaturesList] String2 = "+f.toString());
 			} else
 				f = (ImportFeature) obj;
 			f.setFeatureVersion(project.getVersion());
@@ -791,10 +791,10 @@ public class FeatureGenMojo extends AbstractMojo {
 				Property prop = null;
 				if (property instanceof Property) {
 					prop = (Property) property;
-					this.getLog().info("[getProcessedAdviceProperties] String2 = "+prop.toString());
+					//this.getLog().info("[getProcessedAdviceProperties] String2 = "+prop.toString());
 				} else if (property instanceof String) {
 					prop = Property.getProperty(property.toString());
-					this.getLog().info("[getProcessedAdviceProperties] String2 = "+prop.toString());
+					//this.getLog().info("[getProcessedAdviceProperties] String2 = "+prop.toString());
 				} else
 					throw new MojoExecutionException("Unknown advice property definition: " + property.toString());
 				processedAdviceProperties.add(prop);
