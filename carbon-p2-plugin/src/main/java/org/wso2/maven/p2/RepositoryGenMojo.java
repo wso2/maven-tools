@@ -224,16 +224,11 @@ public class RepositoryGenMojo extends AbstractMojo {
     
     private String[] getGenerateRepositoryConfigurations()  throws Exception {
     	String[] result = new String[] {
-    		"-ar",
-    		String.format("%s", metadataRepository.toURI()),
-    		"-mr",
-    		String.format("%s", metadataRepository.toURI()),
-    		"-source",
-    		sourceDir.getAbsolutePath(),
-    		"-artifactRepositoryName",
-    		getRepositoryName(),
-    		"-metadataRepositoryName",
-    		getRepositoryName(),
+        	"-ar",String.format("%s", metadataRepository.toURI()),
+    		"-mr",String.format("%s", metadataRepository.toURI()),
+    		"-source",sourceDir.getAbsolutePath(),
+    		"-artifactRepositoryName",getRepositoryName(),
+    		"-metadataRepositoryName",getRepositoryName(),
     		"-publishArtifacts",
     		"-publishArtifactRepository",
     		"-compress",
