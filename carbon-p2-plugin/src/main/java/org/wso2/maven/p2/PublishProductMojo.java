@@ -47,21 +47,15 @@ public class PublishProductMojo extends AbstractMojo {
 	 */
 	@Parameter(name = "metadataRepository")
 	private URL metadataRepository;
+
 	/**
 	 * Artifact repository name
 	 */
 	@Parameter(name = "artifactRepository")
 	private URL artifactRepository;
 
-    /**
-	 * executable
-	 */
-	@Parameter(name = "executable")
-	private String executable;
-
 	@Component(role = org.codehaus.plexus.archiver.UnArchiver.class, hint = "zip")
     private UnArchiver deflater;
-
 
 	/**
 	 * The product configuration, a .product file. This file manages all aspects
@@ -84,11 +78,10 @@ public class PublishProductMojo extends AbstractMojo {
 
 
 	public void execute() throws MojoExecutionException, MojoFailureException {
+
 		try {
-
 			publishProduct();
-
-        }catch (Exception e) {
+        } catch (Exception e) {
 			throw new MojoExecutionException("Cannot generate P2 metadata", e);
 		}
 	}
@@ -104,8 +97,6 @@ public class PublishProductMojo extends AbstractMojo {
 		arguments.add(metadataRepository.toString());
 		arguments.add("-productFile");
 		arguments.add(productConfigurationFile.getCanonicalPath());
-//		arguments.add("-executables");
-//		arguments.add(executable.toString());
 		arguments.add("-publishArtifacts");
 		arguments.add("-configs");
 		arguments.add("gtk.linux.x86");
