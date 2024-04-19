@@ -42,18 +42,18 @@ public class MaterializeProductMojo extends AbstractMojo {
 
     @Parameter(name = "project", property = "project", required = true)
     protected MavenProject project;
+
     /**
      * Metadata repository name
      */
     @Parameter(name = "metadataRepository")
     private URL metadataRepository;
+
     /**
      * Artifact repository name
      */
     @Parameter(name = "artifactRepository")
     private URL artifactRepository;
-
-
 
     /**
      * The product configuration, a .product file. This file manages all aspects
@@ -86,28 +86,27 @@ public class MaterializeProductMojo extends AbstractMojo {
 
     public void execute() throws MojoExecutionException, MojoFailureException {
         try {
-            if (profile == null){
+            if (profile == null) {
                 profile = P2Constants.DEFAULT_PROFILE_ID;
             }
             deployRepository();
             //updating profile's config.ini p2.data.area property using relative path
             File profileConfigIni = FileManagementUtil.getProfileConfigIniFile(targetPath.getPath(), profile);
             FileManagementUtil.changeConfigIniProperty(profileConfigIni, "eclipse.p2.data.area", "@config.dir/../../p2/");
-        }catch (Exception e) {
+        } catch (Exception e) {
             throw new MojoExecutionException("Cannot generate P2 metadata", e);
         }
     }
 
-    private void regenerateCUs()
-            throws MojoExecutionException, MojoFailureException
-    {
+    private void regenerateCUs() throws MojoExecutionException, MojoFailureException {
+
         getLog().debug( "Regenerating config.ini" );
         Properties props = new Properties();
         String id = productConfiguration.getId();
 
         setPropertyIfNotNull(props, "osgi.bundles", getFeaturesOsgiBundles());
         setPropertyIfNotNull( props, "osgi.bundles.defaultStartLevel", "4" );
-        if(profile == null){
+        if (profile == null) {
             profile = "profile";
         }
         setPropertyIfNotNull( props, "eclipse.p2.profile", profile);
@@ -115,24 +114,18 @@ public class MaterializeProductMojo extends AbstractMojo {
         setPropertyIfNotNull( props, "eclipse.p2.data.area", "@config.dir/../p2/");
         setPropertyIfNotNull( props, "eclipse.application", productConfiguration.getApplication() );
 
-
-
-
         File configsFolder = new File( targetPath.toString(), "configuration" );
         configsFolder.mkdirs();
 
         File configIni = new File( configsFolder, "config.ini" );
-        try
-        {
+        try {
             FileOutputStream fos = new FileOutputStream( configIni );
             props.store( fos, "Product Runtime Configuration File" );
             fos.close();
         }
-        catch ( IOException e )
-        {
+        catch ( IOException e ) {
             throw new MojoExecutionException( "Error creating .eclipseproduct file.", e );
         }
-
     }
 
     private String getFeaturesOsgiBundles() {
@@ -177,7 +170,6 @@ public class MaterializeProductMojo extends AbstractMojo {
         if (result != IApplication.EXIT_OK) {
             throw new MojoFailureException("P2 publisher return code was " + result);
         }
-
     }
 
     protected DirectorApplication getPublisherApplication() {
@@ -191,5 +183,4 @@ public class MaterializeProductMojo extends AbstractMojo {
             properties.setProperty( key, value );
         }
     }
-
 }
