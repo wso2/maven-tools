@@ -10,7 +10,7 @@
 			<plugin>
 				<groupId>org.wso2.maven</groupId>
 				<artifactId>car-maven-plugin</artifactId>
-				<version>5.2.50-SNAPSHOT</version>
+				<version>5.2.52-SNAPSHOT</version>
 				<extensions>true</extensions>
 			</plugin>
 		</plugins>

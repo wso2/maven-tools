@@ -74,6 +74,8 @@ class Constants {
     static final String NAME = "name";
     static final String FILE = "file";
     static final String ITEM = "item";
+    static final String COLLECTION = "collection";
+    static final String DIRECTORY = "directory";
     static final String PATH = "path";
     static final String DEPENDENCY = "dependency";
     static final String INCLUDE = "include";

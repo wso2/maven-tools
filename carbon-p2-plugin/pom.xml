@@ -19,7 +19,7 @@ License. -->
 	<parent>
 		<groupId>org.wso2.maven</groupId>
 		<artifactId>maven-common-tools</artifactId>
-		<version>5.2.50-SNAPSHOT</version>
+		<version>5.2.52-SNAPSHOT</version>
 		<relativePath>../pom.xml</relativePath>
 	</parent>
 
