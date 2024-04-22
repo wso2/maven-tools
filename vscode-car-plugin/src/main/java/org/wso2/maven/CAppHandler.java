@@ -21,6 +21,7 @@ package org.wso2.maven;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.*;
 import javax.xml.namespace.QName;
@@ -218,20 +219,55 @@ class CAppHandler extends AbstractXMLDoc {
             for (OMElement artifact : artifactChildElements) {
                 String name = artifact.getAttributeValue(new QName(Constants.NAME));
                 String version = artifact.getAttributeValue(new QName(Constants.VERSION));
-                OMElement item = getFirstChildWithName(artifact, Constants.ITEM);
-                String fileName = item.getFirstChildWithName(new QName(Constants.FILE)).getText();
-                String path = item.getFirstChildWithName(new QName(Constants.PATH)).getText();
-                File registryResource;
-                if (path.startsWith(Constants.GOV_REG_PREFIX)) {
-                    path = path.substring(Constants.GOV_REG_PREFIX.length());
-                    registryResource = new File(registryFolder, Constants.GOV_FOLDER + path + "/" + fileName);
-                } else {
-                    path = path.substring(Constants.CONF_REG_PREFIX.length());
-                    registryResource = new File(registryFolder, Constants.CONF_FOLDER + path + "/" + fileName);
-                }
-                if (!registryResource.exists()) {
-                    mojoInstance.logError("Registry resource " + path + "/" + fileName + " does not exist");
-                    continue;
+                String commonPath = Paths.get(archiveDirectory, name + "_" + version).toString();
+                if (artifact.getFirstChildWithName(new QName(Constants.ITEM)) != null) {
+                    OMElement item = getFirstChildWithName(artifact, Constants.ITEM);
+                    String fileName = item.getFirstChildWithName(new QName(Constants.FILE)).getText();
+                    String path = item.getFirstChildWithName(new QName(Constants.PATH)).getText();
+                    File registryResource;
+                    if (path.startsWith(Constants.GOV_REG_PREFIX)) {
+                        path = path.substring(Constants.GOV_REG_PREFIX.length());
+                        registryResource = new File(registryFolder, Constants.GOV_FOLDER + path + "/" + fileName);
+                    } else {
+                        path = path.substring(Constants.CONF_REG_PREFIX.length());
+                        registryResource = new File(registryFolder, Constants.CONF_FOLDER + path + "/" + fileName);
+                    }
+                    if (!registryResource.exists()) {
+                        mojoInstance.logError("Registry resource " + path + "/" + fileName + " does not exist");
+                        continue;
+                    }
+                    org.wso2.developerstudio.eclipse.utils.file.FileUtils.copy(registryResource,
+                            new File(Paths.get(archiveDirectory, name + "_" + version, Constants.RESOURCES,
+                                    fileName).toString()));
+                    OMElement infoElement = getElement(Constants.RESOURCES, Constants.EMPTY_STRING);
+                    infoElement.addChild(item);
+                    org.wso2.developerstudio.eclipse.utils.file.FileUtils.createFile(
+                            new File(commonPath, Constants.REG_INFO_FILE), serialize(infoElement));
+                } else if (artifact.getFirstChildWithName(new QName(Constants.COLLECTION)) != null) {
+                    OMElement collection = getFirstChildWithName(artifact, Constants.COLLECTION);
+                    String directory = collection.getFirstChildWithName(new QName(Constants.DIRECTORY)).getText();
+                    String path = collection.getFirstChildWithName(new QName(Constants.PATH)).getText();
+                    File registryResource;
+                    if (path.startsWith(Constants.GOV_REG_PREFIX)) {
+                        path = path.substring(Constants.GOV_REG_PREFIX.length());
+                        registryResource = new File(registryFolder, Constants.GOV_FOLDER + path);
+                    } else {
+                        path = path.substring(Constants.CONF_REG_PREFIX.length());
+                        registryResource = new File(registryFolder, Constants.CONF_FOLDER + path);
+                    }
+                    if (!registryResource.exists()) {
+                        mojoInstance.logError("Registry resource " + path + " does not exist");
+                        continue;
+                    }
+
+                    File destFile = new File(Paths.get(archiveDirectory, name + "_" + version, Constants.RESOURCES,
+                            directory).toString());
+                    destFile.mkdirs();
+                    FileUtils.copyDirectory(registryResource, destFile);
+                    OMElement infoElement = getElement(Constants.RESOURCES, Constants.EMPTY_STRING);
+                    infoElement.addChild(collection);
+                    org.wso2.developerstudio.eclipse.utils.file.FileUtils.createFile(
+                            new File(commonPath, Constants.REG_INFO_FILE), serialize(infoElement));
                 }
                 dependencies.add(new ArtifactDependency(name, version, Constants.SERVER_ROLE_EI, true));
                 Artifact artifactObject = new Artifact();
@@ -242,16 +278,9 @@ class CAppHandler extends AbstractXMLDoc {
                 artifactObject.setFile(Constants.REG_INFO_FILE);
 
                 String artifactDataAsString = createArtifactData(artifactObject);
-                String commonPath = Paths.get(archiveDirectory, name + "_" + version).toString();
                 org.wso2.developerstudio.eclipse.utils.file.FileUtils.createFile(
                         new File(commonPath, Constants.ARTIFACT_XML), artifactDataAsString);
-                org.wso2.developerstudio.eclipse.utils.file.FileUtils.copy(registryResource,
-                        new File(Paths.get(archiveDirectory, name + "_" + version, Constants.RESOURCES,
-                                fileName).toString()));
-                OMElement infoElement = getElement(Constants.RESOURCES, Constants.EMPTY_STRING);
-                infoElement.addChild(item);
-                org.wso2.developerstudio.eclipse.utils.file.FileUtils.createFile(
-                        new File(commonPath, Constants.REG_INFO_FILE), serialize(infoElement));
+
             }
         } catch (IOException | XMLStreamException | MojoExecutionException e) {
             mojoInstance.logError("Error occurred while processing registry resources");
@@ -464,8 +493,8 @@ class CAppHandler extends AbstractXMLDoc {
     /**
      * Method to process class mediators in the project and create corresponding files in the archive directory.
      *
-     * @param dependencies     list of dependencies to be added to artifacts.xml file
-     * @param project          VSCode maven project
+     * @param dependencies list of dependencies to be added to artifacts.xml file
+     * @param project      VSCode maven project
      */
     void processClassMediators(List<ArtifactDependency> dependencies, MavenProject project) {
         String jarName = project.getArtifactId() + "-" + project.getVersion() + ".jar";
