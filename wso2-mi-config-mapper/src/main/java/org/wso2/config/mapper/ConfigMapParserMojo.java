@@ -18,23 +18,6 @@
 
 package org.wso2.config.mapper;
 
-import net.consensys.cava.toml.Toml;
-import net.consensys.cava.toml.TomlParseResult;
-import net.consensys.cava.toml.TomlTable;
-import net.lingala.zip4j.core.ZipFile;
-import net.lingala.zip4j.exception.ZipException;
-import org.apache.commons.codec.digest.DigestUtils;
-import org.apache.commons.io.IOUtils;
-import org.apache.commons.lang3.StringUtils;
-import org.apache.maven.plugin.AbstractMojo;
-import org.apache.maven.plugin.MojoExecutionException;
-import org.apache.maven.plugins.annotations.Mojo;
-import org.apache.maven.plugins.annotations.Parameter;
-import org.wso2.ciphertool.CipherTool;
-import org.wso2.ciphertool.utils.Constants;
-import org.wso2.config.mapper.model.Context;
-import org.wso2.config.mapper.util.FileUtils;
-
 import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
 import java.io.File;
@@ -56,7 +39,24 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
-import java.util.regex.Pattern;
+
+import org.apache.commons.codec.digest.DigestUtils;
+import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.maven.plugin.AbstractMojo;
+import org.apache.maven.plugin.MojoExecutionException;
+import org.apache.maven.plugins.annotations.Mojo;
+import org.apache.maven.plugins.annotations.Parameter;
+import org.wso2.ciphertool.CipherTool;
+import org.wso2.ciphertool.utils.Constants;
+import org.wso2.config.mapper.model.Context;
+import org.wso2.config.mapper.util.FileUtils;
+
+import net.consensys.cava.toml.Toml;
+import net.consensys.cava.toml.TomlParseResult;
+import net.consensys.cava.toml.TomlTable;
+import net.lingala.zip4j.core.ZipFile;
+import net.lingala.zip4j.exception.ZipException;
 
 @Mojo(name = "config-mapper-parser")
 public class ConfigMapParserMojo extends AbstractMojo {

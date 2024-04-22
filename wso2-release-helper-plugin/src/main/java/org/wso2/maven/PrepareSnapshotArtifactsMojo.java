@@ -15,19 +15,19 @@
 */
 package org.wso2.maven;
 
-import org.apache.maven.project.MavenProject;
-import org.codehaus.plexus.util.xml.pull.XmlPullParserException;
-
 import java.io.File;
 import java.io.IOException;
 import java.util.Properties;
 
+import org.apache.maven.plugins.annotations.Mojo;
+import org.apache.maven.project.MavenProject;
+import org.codehaus.plexus.util.xml.pull.XmlPullParserException;
+
 /**
  * Implementation of wso2-release:prepare-snapshots. This will modify versions in artifact.xml file
  * of ESB and Registry projects to next development version.
- *
- * @goal prepare-snapshots
  */
+@Mojo(name="prepare-snapshots")
 public class PrepareSnapshotArtifactsMojo extends AbstractMavenReleaseMojo {
 
     protected static final String GOAL_NAME = "prepare-snapshots";

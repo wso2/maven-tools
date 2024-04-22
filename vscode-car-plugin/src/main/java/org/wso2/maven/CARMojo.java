@@ -28,6 +28,9 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
 import org.apache.maven.plugin.AbstractMojo;
+import org.apache.maven.plugins.annotations.LifecyclePhase;
+import org.apache.maven.plugins.annotations.Mojo;
+import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.project.MavenProject;
 import org.apache.commons.lang.StringUtils;
 import org.wso2.maven.Model.ArchiveException;
@@ -35,32 +38,26 @@ import org.wso2.maven.Model.ArtifactDependency;
 
 /**
  * Goal which touches a timestamp file.
- *
- * @goal car
- * @phase package
  */
+@Mojo(name="car", defaultPhase = LifecyclePhase.PACKAGE)
 public class CARMojo extends AbstractMojo {
 
     /**
      * The Maven Project Object
-     *
-     * @parameter expression="${project}"
-     * @required
      */
+	@Parameter(property = "project", required = true)
     MavenProject project;
 
     /**
      * The location of the archive file
-     *
-     * @parameter expression="${archiveLocation}"
      */
+	@Parameter(property = "archiveLocation")
     String archiveLocation;
 
     /**
      * The name of the archive file
-     *
-     * @parameter expression="${archiveName}"
      */
+	@Parameter(property = "archiveName")
     String archiveName;
 
     public void logError(String message) {

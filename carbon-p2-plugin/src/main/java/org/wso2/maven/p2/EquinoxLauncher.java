@@ -17,22 +17,21 @@ package org.wso2.maven.p2;
 
 import java.util.ArrayList;
 
+import org.apache.maven.plugins.annotations.Parameter;
 import org.wso2.maven.p2.generate.utils.P2Constants;
 
 public class EquinoxLauncher {
 
     /**
      * Name of the launcher jar
-     *
-     * @parameter
      */
+	@Parameter
     private String launcherJar;
 
     /**
      * launcherFiles
-     *
-     * @parameter
      */
+	@Parameter
     private ArrayList launcherFiles;
 
     public EquinoxLauncher(){

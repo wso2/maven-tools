@@ -1,32 +1,35 @@
-<!-- Licensed to the Apache Software Foundation (ASF) under one or more contributor 
-	license agreements. See the NOTICE file distributed with this work for additional 
-	information regarding copyright ownership. The ASF licenses this file to 
-	you under the Apache License, Version 2.0 (the "License"); you may not use 
-	this file except in compliance with the License. You may obtain a copy of 
-	the License at http://www.apache.org/licenses/LICENSE-2.0 Unless required 
-	by applicable law or agreed to in writing, software distributed under the 
-	License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS 
-	OF ANY KIND, either express or implied. See the License for the specific 
+<!-- Licensed to the Apache Software Foundation (ASF) under one or more
+contributor
+	license agreements. See the NOTICE file distributed with this work for
+additional
+	information regarding copyright ownership. The ASF licenses this file to
+	you under the Apache License, Version 2.0 (the "License"); you may not use
+	this file except in compliance with the License. You may obtain a copy of
+	the License at http://www.apache.org/licenses/LICENSE-2.0 Unless required
+	by applicable law or agreed to in writing, software distributed under the
+	License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS
+	OF ANY KIND, either express or implied. See the License for the specific
 	language governing permissions and limitations under the License. -->
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 
 	<parent>
 		<groupId>org.wso2.maven</groupId>
 		<artifactId>maven-common-tools</artifactId>
 		<version>5.2.50-SNAPSHOT</version>
 		<relativePath>../pom.xml</relativePath>
-  	</parent>
+	</parent>
 
 	<modelVersion>4.0.0</modelVersion>
-	<groupId>org.wso2.maven</groupId>
-	<artifactId>maven-car-deploy-plugin</artifactId>
-	<version>5.2.50-SNAPSHOT</version>
+	<artifactId>car-deploy-maven-plugin</artifactId>
 	<packaging>maven-plugin</packaging>
 	<url>http://wso2.org</url>
 
 	<name>Maven CAR Deploy Plugin</name>
 
-	<description>Maven plugin which deploys the generated CAR artifacts to remote/local Carbon Servers.</description>
+	<description>Maven plugin which deploys the generated CAR artifacts to
+		remote/local Carbon Servers.</description>
 	<build>
 		<extensions>
 			<extension>
@@ -39,7 +42,6 @@
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-antrun-plugin</artifactId>
-				<version>1.7</version>
 				<executions>
 					<execution>
 						<id>source-code-generation</id>
@@ -48,31 +50,48 @@
 							<goal>run</goal>
 						</goals>
 						<configuration>
-							<tasks>
+							<target>
+								<!-- Why these hard-coded paths? -->
 								<path id="wsdl2java.classpath">
-									<pathelement location="${settings.localRepository}/org/apache/axis2/wso2/axis2-client/1.6.1.wso2v9/axis2-client-1.6.1.wso2v9.jar" />
-									<pathelement location="${settings.localRepository}/org/apache/axis2/wso2/axis2/1.6.1.wso2v3/axis2-1.6.1.wso2v3.jar" />
-									<pathelement location="${settings.localRepository}/wsdl4j/wso2/wsdl4j/1.6.2.wso2v2/wsdl4j-1.6.2.wso2v2.jar" />
-									<pathelement location="${settings.localRepository}/commons-logging/commons-logging/1.1.1/commons-logging-1.1.1.jar" />
-									<pathelement location="${settings.localRepository}/org/apache/neethi/wso2/neethi/2.0.4.wso2v3/neethi-2.0.4.wso2v3.jar" />
-									<!-- pathelement location="${settings.localRepository}/org/apache/ws/commons/axiom/axiom-impl/1.2.13/axiom-impl-1.2.13.jar" 
-										                                                                                                            /> <pathelement location="${settings.localRepository}/org/apache/ws/commons/axiom/axiom-api/1.2.13/axiom-api-1.2.13.jar" / -->
-									<pathelement location="${settings.localRepository}/org/apache/ws/commons/axiom/wso2/axiom/1.2.11.wso2v4/axiom-1.2.11.wso2v4.jar" />
-									<pathelement location="${settings.localRepository}/org/apache/ws/commons/schema/wso2/XmlSchema/1.4.7.wso2v1/XmlSchema-1.4.7.wso2v1.jar" />
+									<pathelement
+										location="${settings.localRepository}/com/sun/activation/javax.activation/${javax.activation.version}/javax.activation-${javax.activation.version}.jar" />
+									<pathelement
+										location="${settings.localRepository}/org/apache/axis2/wso2/axis2-client/${org.apache.axis2.client.version}/axis2-client-${org.apache.axis2.client.version}.jar" />
+									<pathelement
+										location="${settings.localRepository}/org/apache/axis2/wso2/axis2/${org.apache.axis2.wso2.axis2.version}/axis2-${org.apache.axis2.wso2.axis2.version}.jar" />
+									<pathelement
+										location="${settings.localRepository}/wsdl4j/wso2/wsdl4j/1.6.2.wso2v2/wsdl4j-1.6.2.wso2v2.jar" />
+									<pathelement
+										location="${settings.localRepository}/commons-logging/commons-logging/1.1.1/commons-logging-1.1.1.jar" />
+									<pathelement
+										location="${settings.localRepository}/org/apache/neethi/wso2/neethi/2.0.4.wso2v3/neethi-2.0.4.wso2v3.jar" />
+									<pathelement
+										location="${settings.localRepository}/org/apache/ws/commons/axiom/wso2/axiom/1.2.11.wso2v4/axiom-1.2.11.wso2v4.jar" />
+									<pathelement
+										location="${settings.localRepository}/org/apache/ws/commons/schema/wso2/XmlSchema/${org.apache.ws.commons.schema.wso2.xmlschema.version}/XmlSchema-${org.apache.ws.commons.schema.wso2.xmlschema.version}.jar" />
 								</path>
-								<java classname="org.apache.axis2.wsdl.WSDL2Java" fork="true">
-									<arg line="-uri src/main/resources/ApplicationAdmin.wsdl -u -uw -o ${project.build.directory}/generated-sources -p org.wso2.carbon.stub -ns2p http://mgt.application.carbon.wso2.org=org.wso2.carbon.application.mgt.stub,http://mgt.application.carbon.wso2.org/xsd=org.wso2.carbon.application.mgt.stub.types.carbon,http://org.apache.axis2/xsd=org.wso2.carbon.application.mgt.stub.types.axis2" />
+								<java
+									classname="org.apache.axis2.wsdl.WSDL2Java"
+									fork="true">
+									<arg
+										line="-uri src/main/resources/ApplicationAdmin.wsdl -u -uw -o ${project.build.directory}/generated-sources -p org.wso2.carbon.stub -ns2p http://mgt.application.carbon.wso2.org=org.wso2.carbon.application.mgt.stub,http://mgt.application.carbon.wso2.org/xsd=org.wso2.carbon.application.mgt.stub.types.carbon,http://org.apache.axis2/xsd=org.wso2.carbon.application.mgt.stub.types.axis2" />
 									<classpath refid="wsdl2java.classpath" />
 								</java>
-								<java classname="org.apache.axis2.wsdl.WSDL2Java" fork="true">
-									<arg line="-uri src/main/resources/CarbonAppUploader.wsdl -u -uw -o ${project.build.directory}/generated-sources -p org.wso2.carbon.stub -ns2p http://upload.application.carbon.wso2.org=org.wso2.carbon.application.mgt.stub.upload,http://upload.application.carbon.wso2.org/xsd=org.wso2.carbon.application.mgt.stub.upload.types.carbon,http://org.apache.axis2/xsd=org.wso2.carbon.application.mgt.stub.upload.types.axis2" />
+								<java
+									classname="org.apache.axis2.wsdl.WSDL2Java"
+									fork="true">
+									<arg
+										line="-uri src/main/resources/CarbonAppUploader.wsdl -u -uw -o ${project.build.directory}/generated-sources -p org.wso2.carbon.stub -ns2p http://upload.application.carbon.wso2.org=org.wso2.carbon.application.mgt.stub.upload,http://upload.application.carbon.wso2.org/xsd=org.wso2.carbon.application.mgt.stub.upload.types.carbon,http://org.apache.axis2/xsd=org.wso2.carbon.application.mgt.stub.upload.types.axis2" />
 									<classpath refid="wsdl2java.classpath" />
 								</java>
-								<java classname="org.apache.axis2.wsdl.WSDL2Java" fork="true">
-									<arg line="-uri src/main/resources/AuthenticationAdmin.wsdl -u -uw -o ${project.build.directory}/generated-sources -p org.wso2.carbon.stub -ns2p http://upload.application.carbon.wso2.org=org.wso2.carbon.application.mgt.stub.upload,http://upload.application.carbon.wso2.org/xsd=org.wso2.carbon.application.mgt.stub.upload.types.carbon,http://org.apache.axis2/xsd=org.wso2.carbon.application.mgt.stub.upload.types.axis2" />
+								<java
+									classname="org.apache.axis2.wsdl.WSDL2Java"
+									fork="true">
+									<arg
+										line="-uri src/main/resources/AuthenticationAdmin.wsdl -u -uw -o ${project.build.directory}/generated-sources -p org.wso2.carbon.stub -ns2p http://upload.application.carbon.wso2.org=org.wso2.carbon.application.mgt.stub.upload,http://upload.application.carbon.wso2.org/xsd=org.wso2.carbon.application.mgt.stub.upload.types.carbon,http://org.apache.axis2/xsd=org.wso2.carbon.application.mgt.stub.upload.types.axis2" />
 									<classpath refid="wsdl2java.classpath" />
 								</java>
-							</tasks>
+							</target>
 						</configuration>
 					</execution>
 				</executions>
@@ -80,6 +99,7 @@
 			<plugin>
 				<groupId>org.codehaus.mojo</groupId>
 				<artifactId>build-helper-maven-plugin</artifactId>
+				<version>${build.helper.maven.plugin.version}</version>
 				<executions>
 					<execution>
 						<id>add-source</id>
@@ -99,17 +119,25 @@
 			</plugin>
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-compiler-plugin</artifactId>
-				<version>2.3.2</version>
+				<artifactId>maven-plugin-plugin</artifactId>
 				<configuration>
-					<source>1.6</source>
-					<target>1.6</target>
+					<goalPrefix>car-deploy-maven-plugin</goalPrefix>
+					<skipErrorNoDescriptorsFound>true</skipErrorNoDescriptorsFound>
 				</configuration>
+			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-compiler-plugin</artifactId>
 			</plugin>
 		</plugins>
 	</build>
 	<dependencies>
+		<!-- See https://issues.apache.org/jira/browse/MNG-6965 -->
 		<dependency>
+	        <groupId>commons-logging</groupId>
+	        <artifactId>commons-logging</artifactId>
+        </dependency>
+        <dependency>
 			<groupId>biz.aQute</groupId>
 			<artifactId>bndlib</artifactId>
 			<version>${bndlib.version}</version>
@@ -136,18 +164,16 @@
 		</dependency>
 		<dependency>
 			<groupId>org.apache.maven</groupId>
-			<artifactId>maven-project</artifactId>
-			<version>${org.apache.maven.project.version}</version>
-		</dependency>
-		<dependency>
-			<groupId>org.apache.maven</groupId>
 			<artifactId>maven-model</artifactId>
 			<version>${org.apache.maven.model.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>org.apache.maven</groupId>
 			<artifactId>maven-plugin-api</artifactId>
-			<version>${org.apache.maven.plugin.api.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.maven.plugin-tools</groupId>
+			<artifactId>maven-plugin-annotations</artifactId>
 		</dependency>
 		<dependency>
 			<groupId>org.apache.maven</groupId>
@@ -219,12 +245,8 @@
 		<dependency>
 			<groupId>org.apache.geronimo.specs.wso2</groupId>
 			<artifactId>geronimo-stax-api_1.0_spec</artifactId>
-			<version>${org.apache.geronimo.specs.wso2.geronimo.stax.api_1.0_spec.version}</version>
-		</dependency>
-		<dependency>
-			<groupId>commons-logging</groupId>
-			<artifactId>commons-logging</artifactId>
-			<version>${commons.logging.version}</version>
+			<version>
+				${org.apache.geronimo.specs.wso2.geronimo.stax.api_1.0_spec.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>org.wso2.maven</groupId>
@@ -327,6 +349,10 @@
 					<artifactId>*</artifactId>
 				</exclusion>
 			</exclusions>
+		</dependency>
+		<dependency>
+			<groupId>com.sun.activation</groupId>
+			<artifactId>javax.activation</artifactId>
 		</dependency>
 	</dependencies>
 </project>

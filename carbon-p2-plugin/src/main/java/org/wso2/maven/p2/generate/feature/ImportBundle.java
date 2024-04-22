@@ -18,6 +18,7 @@
 package org.wso2.maven.p2.generate.feature;
 
 import org.apache.maven.plugin.MojoExecutionException;
+import org.apache.maven.plugins.annotations.Parameter;
 
 
 public class ImportBundle extends Bundle{
@@ -25,23 +26,20 @@ public class ImportBundle extends Bundle{
 	
 	/**
      * Version Compatibility of the Bundle
-     *
-     * @parameter default-value="false"
      */
+	@Parameter(defaultValue = "false")
 	private boolean exclude;
 
 	/**
      * OSGI Symbolic name
-     *
-     * @parameter 
      */
+	@Parameter
 	private String bundleSymbolicName;
 	
 	/**
      * OSGI Version
-     *
-     * @parameter
      */
+	@Parameter
 	private String bundleVersion;
 
 	public void setExclude(boolean exclude) {

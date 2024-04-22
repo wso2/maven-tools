@@ -1,37 +1,30 @@
 package org.wso2.maven.capp.model;
 
+import org.apache.maven.plugins.annotations.Parameter;
 
 public class ProjectMapping {
 	/**
 	 * project name
-	 * 
-	 * @parameter
-	 * @required
 	 */
+	@Parameter(required = true)
 	public String projectName;
 	
 	/**
 	 * maven group id
-	 * 
-	 * @parameter
-	 * @required
 	 */
+	@Parameter(required = true)
 	public String groupId;
 
 	/**
 	 * maven artifact id
-	 * 
-	 * @parameter
-	 * @required
 	 */
+	@Parameter(required = true)
 	public String artifactId;
 	
 	/**
 	 * maven version
-	 * 
-	 * @parameter
-	 * @required
 	 */
+	@Parameter(required = true)
 	public String version;
 	
 	public ProjectMapping(String projectName, String groupId, String artifactId, String version) {

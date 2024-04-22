@@ -23,6 +23,7 @@ import org.apache.commons.io.FileUtils;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
+import org.apache.maven.plugins.annotations.Component;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.project.MavenProject;
@@ -46,9 +47,8 @@ public class HumanTaskMojo extends AbstractMojo {
 
 	/**
 	 * Maven ProjectHelper.
-	 * 
-	 * @component
 	 */
+	@Component
 	private MavenProjectHelper projectHelper;
 
 	private static final String HUMANTASK_CONTENT_DIR = "humantaskcontent";

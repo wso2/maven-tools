@@ -17,38 +17,33 @@
 */
 package org.wso2.maven.p2;
 
-import java.util.Iterator;
 import java.util.List;
 import java.util.Properties;
 import java.util.regex.Pattern;
 
-import org.apache.maven.artifact.Artifact;
 import org.apache.maven.model.Dependency;
 import org.apache.maven.plugin.MojoExecutionException;
+import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.project.MavenProject;
+import org.eclipse.aether.artifact.Artifact;
 
 public class FeatureArtifact {
     /**
      * Group Id of the Bundle
-     *
-     * @parameter
-     * @required
      */
+	@Parameter(required = true)
 	private String groupId;
 	
 	/**
      * Artifact Id of the Bundle
-     *
-     * @parameter
-     * @required
      */
+	@Parameter(required = true)
 	private String artifactId;
 	
     /**
      * Version of the Bundle
-     *
-     * @parameter default-value=""
      */
+	@Parameter(defaultValue = "")
 	private String version;
 
 	private Artifact artifact;
@@ -95,23 +90,22 @@ public class FeatureArtifact {
 	}
 	public void resolveVersion(MavenProject project) throws MojoExecutionException{
 		if (version==null){
-			List dependencies = project.getDependencies();
-			for (Iterator iterator = dependencies.iterator(); iterator.hasNext();) {
-				Dependency dependancy = (Dependency) iterator.next();
-				if (dependancy.getGroupId().equalsIgnoreCase(getGroupId())&&dependancy.getArtifactId().equalsIgnoreCase(getArtifactId())){
-					setVersion(dependancy.getVersion());
+			//Check direct dependencies
+			List<Dependency> projectDependencies = project.getDependencies();
+			for (Dependency prjDependency : projectDependencies) {
+				if (prjDependency.getGroupId().equalsIgnoreCase(getGroupId())&&prjDependency.getArtifactId().equalsIgnoreCase(getArtifactId())){
+					setVersion(prjDependency.getVersion());
 				}
-				
 			}
+			
 		}
 		if (version==null) {
-			List dependencies = project.getDependencyManagement().getDependencies();
-			for (Iterator iterator = dependencies.iterator(); iterator.hasNext();) {
-				Dependency dependancy = (Dependency) iterator.next();
-				if (dependancy.getGroupId().equalsIgnoreCase(getGroupId())&&dependancy.getArtifactId().equalsIgnoreCase(getArtifactId())){
-					setVersion(dependancy.getVersion());
+			//Check inherited dependencies
+			List<Dependency> dependencies = project.getDependencyManagement().getDependencies();
+			for (Dependency dmDependency: dependencies) {
+				if (dmDependency.getGroupId().equalsIgnoreCase(getGroupId())&&dmDependency.getArtifactId().equalsIgnoreCase(getArtifactId())){
+					setVersion(dmDependency.getVersion());
 				}
-				
 			}
 		}
 		if (version==null) {
