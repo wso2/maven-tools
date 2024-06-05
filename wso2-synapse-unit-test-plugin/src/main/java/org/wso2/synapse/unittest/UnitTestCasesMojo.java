@@ -18,6 +18,8 @@
 
 package org.wso2.synapse.unittest;
 
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
@@ -27,12 +29,15 @@ import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
 import org.wso2.synapse.unittest.summarytable.ConsoleDataTable;
 
+import java.io.FileWriter;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.InetSocketAddress;
+import java.net.MalformedURLException;
 import java.net.Socket;
+import java.nio.file.Paths;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.AbstractMap;
@@ -153,7 +158,10 @@ public class UnitTestCasesMojo extends AbstractMojo {
         }
 
         getLog().info("");
-        generateUnitTestReport(testSummaryData);
+        if (!testSummaryData.isEmpty()) {
+            generateUnitTestReport(testSummaryData);
+            writeUnitTestReportToFile(testSummaryData);
+        }
     }
 
     /**
@@ -200,10 +208,6 @@ public class UnitTestCasesMojo extends AbstractMojo {
      * @param summaryData summary data of the unit test received from synapse server
      */
     private void generateUnitTestReport(Map<String, String> summaryData) throws IOException {
-        if (summaryData.isEmpty()) {
-            return;
-        }
-
         getLog().info("------------------------------------------------------------------------");
         getLog().info("U N I T - T E S T  R E P O R T");
         getLog().info("------------------------------------------------------------------------");
@@ -250,6 +254,35 @@ public class UnitTestCasesMojo extends AbstractMojo {
         //check overall result of the unit test
         if (testFailedSuccessList.contains(true)) {
             throw new IOException("Overall unit test failed");
+        }
+    }
+
+    /**
+     * Write the unit test report to the file.
+     *
+     * @param summaryData summary data of the unit test received from synapse server.
+     */
+    private void writeUnitTestReportToFile(Map<String, String> summaryData) throws MalformedURLException {
+        File targetFolder = new File(Paths.get("target").toUri());
+        if (!targetFolder.exists()) {
+            targetFolder.mkdir();
+        }
+        File reportFile = new File(Paths.get("target", Constants.REPORT_FILE_NAME).toUri());
+        if (reportFile.exists()) {
+            reportFile.delete();
+        }
+        JsonObject finalSummary = new JsonObject();
+        for (Map.Entry<String, String> summary : summaryData.entrySet()) {
+            String testFileName = summary.getKey();
+            JsonObject summaryJson = new JsonParser().parse(summary.getValue()).getAsJsonObject();
+            finalSummary.add(testFileName, summaryJson);
+        }
+        Gson gson = new GsonBuilder().setPrettyPrinting().create();
+        String prettyJson = gson.toJson(finalSummary);
+        try (FileWriter myWriter = new FileWriter(reportFile)) {
+            myWriter.write(prettyJson);
+        } catch (IOException e) {
+            getLog().error("Error in writing the unit test report to the file", e);
         }
     }
 
