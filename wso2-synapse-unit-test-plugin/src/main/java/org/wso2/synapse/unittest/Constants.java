@@ -76,4 +76,5 @@ class Constants {
     static final String OS_TYPE = "os.name";
     static final String OS_WINDOWS = "win";
     static final String NEW_LINE_SEPARATOR = "\n";
+    static final String REPORT_FILE_NAME = "unit-test-report.json";
 }
