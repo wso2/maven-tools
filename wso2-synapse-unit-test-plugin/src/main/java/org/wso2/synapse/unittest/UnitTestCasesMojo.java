@@ -71,6 +71,8 @@ public class UnitTestCasesMojo extends AbstractMojo {
 
     private DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 
+    private boolean overallTestFailure = false;
+
     /**
      * Execution method of Mojo class.
      *
@@ -161,6 +163,9 @@ public class UnitTestCasesMojo extends AbstractMojo {
         if (!testSummaryData.isEmpty()) {
             generateUnitTestReport(testSummaryData);
             writeUnitTestReportToFile(testSummaryData);
+        }
+        if (overallTestFailure) {
+            throw new IOException("Overall unit test failed");
         }
     }
 
@@ -253,7 +258,7 @@ public class UnitTestCasesMojo extends AbstractMojo {
 
         //check overall result of the unit test
         if (testFailedSuccessList.contains(true)) {
-            throw new IOException("Overall unit test failed");
+            overallTestFailure = true;
         }
     }
 
