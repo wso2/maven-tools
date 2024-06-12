@@ -18,14 +18,17 @@
 
 package org.wso2.config.mapper;
 
+import java.io.File;
 import java.util.regex.Pattern;
 
 class ConfigMapParserConstants {
 
     private ConfigMapParserConstants() {}
 
-    static final String DEPLOYMENT_TOML_PATH = "deployment.toml";
+    static final String DEPLOYMENT_TOML = "deployment.toml";
     static final String PARSER_OUTPUT_PATH = "CarbonHome";
+    static final String ORIGINAL_DOCKER_FOLDER_PATH = "deployment" + File.separator + "docker";
+    static final String TEMP_DOCKER_DIR = "target" + File.separator + "tmp_docker";
     static final String DOCKER_FILE = "Dockerfile";
     static final String METADATA_DIR = ".metadata";
     static final String CONF_DIR = "conf";
@@ -45,7 +48,9 @@ class ConfigMapParserConstants {
     static final String DOCKER_MAKE_DIR = "RUN mkdir";
 
     public static final String SECRET_PROPERTY_MAP_NAME = "secrets";
-    public static final String RESOURCE_DIR_PATH = "Resources";
+    public static final String RESOURCE_DIR_PATH = "resources";
+    public static final String DEPLOYMENT_DIR = "deployment";
+    public static final String LIBS_DIR = "libs";
     public static final String SECURITY_DIR_PATH = "security";
     public static final String SECRET_CONF_FILE_NAME = "secret-conf.properties";
     // system properties related to cipher tool
