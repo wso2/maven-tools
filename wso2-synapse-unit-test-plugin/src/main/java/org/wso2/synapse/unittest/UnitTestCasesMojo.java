@@ -161,8 +161,10 @@ public class UnitTestCasesMojo extends AbstractMojo {
 
         getLog().info("");
         if (!testSummaryData.isEmpty()) {
-            generateUnitTestReport(testSummaryData);
-            writeUnitTestReportToFile(testSummaryData);
+            Date timeStop = new Date();
+            long duration = timeStop.getTime() - timeStarted.getTime();
+            generateUnitTestReport(testSummaryData, duration);
+            writeUnitTestReportToFile(testSummaryData, duration);
         }
         if (overallTestFailure) {
             throw new IOException("Overall unit test failed");
@@ -212,16 +214,13 @@ public class UnitTestCasesMojo extends AbstractMojo {
      *
      * @param summaryData summary data of the unit test received from synapse server
      */
-    private void generateUnitTestReport(Map<String, String> summaryData) throws IOException {
+    private void generateUnitTestReport(Map<String, String> summaryData, long duration) throws IOException {
         getLog().info("------------------------------------------------------------------------");
         getLog().info("U N I T - T E S T  R E P O R T");
         getLog().info("------------------------------------------------------------------------");
 
         getLog().info("Start Time: " + dateFormat.format(timeStarted));
 
-
-        Date timeStop = new Date();
-        long duration = timeStop.getTime() - timeStarted.getTime();
         getLog().info("Test Run Duration: " + TimeUnit.MILLISECONDS.toSeconds(duration) + " seconds");
         getLog().info("Test Summary: ");
         getLog().info("");
@@ -267,7 +266,7 @@ public class UnitTestCasesMojo extends AbstractMojo {
      *
      * @param summaryData summary data of the unit test received from synapse server.
      */
-    private void writeUnitTestReportToFile(Map<String, String> summaryData) throws MalformedURLException {
+    private void writeUnitTestReportToFile(Map<String, String> summaryData, long duration) {
         File targetFolder = new File(Paths.get("target").toUri());
         if (!targetFolder.exists()) {
             targetFolder.mkdir();
@@ -282,6 +281,7 @@ public class UnitTestCasesMojo extends AbstractMojo {
             JsonObject summaryJson = new JsonParser().parse(summary.getValue()).getAsJsonObject();
             finalSummary.add(testFileName, summaryJson);
         }
+        finalSummary.addProperty("Time elapsed (ms)", duration);
         Gson gson = new GsonBuilder().setPrettyPrinting().create();
         String prettyJson = gson.toJson(finalSummary);
         try (FileWriter myWriter = new FileWriter(reportFile)) {
