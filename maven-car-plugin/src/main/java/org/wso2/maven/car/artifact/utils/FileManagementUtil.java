@@ -383,6 +383,9 @@ public class FileManagementUtil {
 	             int count;
 	             byte data[] = new byte[BUFFER];
 	             File file = new File(base,entry.getName());
+               if (!file.toPath().normalize().startsWith(base.toPath().normalize())) {
+                   throw new IOException("Bad zip entry");
+               }
 	             if (entry.getName().endsWith("/")){
 	            	 file.mkdirs();
 	            	 continue;
