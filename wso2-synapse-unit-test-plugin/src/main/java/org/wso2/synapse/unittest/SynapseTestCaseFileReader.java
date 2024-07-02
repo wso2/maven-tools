@@ -272,7 +272,7 @@ class SynapseTestCaseFileReader {
                     connectorResourceFile = new File(RELATIVE_PREVIOUS + File.separator +
                             RELATIVE_PREVIOUS + File.separator +  resource.getText());
                     if (!connectorResourceFile.exists()) {
-                        registryFilePath = resource.getText().substring(1);
+                        registryFilePath = resource.getText();
                     } else {
                         registryFilePath = RELATIVE_PREVIOUS + File.separator + resource.getText();
                     }
@@ -319,7 +319,7 @@ class SynapseTestCaseFileReader {
                     mockServiceFile = new File(RELATIVE_PREVIOUS + File.separator +
                             RELATIVE_PREVIOUS + File.separator +  mockServiceFilePath);
                     if (!mockServiceFile.exists()) {
-                        mockServiceFileDataAsString = FileUtils.readFileToString(new File(mockServiceFilePath.substring(1)));
+                        mockServiceFileDataAsString = FileUtils.readFileToString(new File(mockServiceFilePath));
                     } else {
                         mockServiceFileDataAsString = FileUtils.readFileToString(mockServiceFile);
                     }
