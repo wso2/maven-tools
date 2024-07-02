@@ -34,8 +34,8 @@ class Constants {
     static final String SEQUENCES_DIR_NAME = "sequences";
     static final String TASKS_DIR_NAME = "tasks";
     static final String TEMPLATES_DIR_NAME = "templates";
-    static final String DATASOURCE_DIR_NAME = "datasources";
-    static final String DATASERVICES_DIR_NAME = "dataservices";
+    static final String DATASOURCE_DIR_NAME = "data-sources";
+    static final String DATASERVICES_DIR_NAME = "data-services";
     static final String METADATA_DIR_NAME = "metadata";
     static final String CONNECTORS_DIR_NAME = "connectors";
     static final String REGISTRY_DIR_NAME = "registry";
