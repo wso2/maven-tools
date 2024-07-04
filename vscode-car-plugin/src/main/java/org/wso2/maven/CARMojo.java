@@ -76,6 +76,13 @@ public class CARMojo extends AbstractMojo {
     }
 
     public void execute() {
+        processCARCreation();
+    }
+
+    /**
+     * Handles the creation of the Composite Application Archive (CAR).
+     */
+    private void processCARCreation() {
         appendLogs();
         String basedir = project.getBasedir().toString();
         archiveLocation = StringUtils.isEmpty(archiveLocation) ? basedir + File.separator +
