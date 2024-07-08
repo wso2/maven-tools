@@ -123,7 +123,7 @@ public class DataMapperBundler {
                     throw new IllegalStateException("npm run build failed.");
                 }
 
-                copyBundledJsFile("./target/bundle.js", dataMapper);
+                copyBundledJsFile("./data-mapper/bundle.js", dataMapper);
 
                 removeTsFiles();
                 removeWebpackConfig();
@@ -133,6 +133,8 @@ public class DataMapperBundler {
 
         } catch (MavenInvocationException e) {
             e.printStackTrace();
+        } finally {
+            removeProjectArtifacts();
         }
     }
 
@@ -211,7 +213,7 @@ public class DataMapperBundler {
                 "    },\n" +
                 "    output: {\n" +
                 "        filename: \"bundle.js\",\n" +
-                "        path: path.resolve(__dirname, \"target\"),\n" +
+                "        path: path.resolve(__dirname, \"data-mapper\"),\n" +
                 "    },\n" +
                 "};";
 
@@ -346,5 +348,37 @@ public class DataMapperBundler {
             e.printStackTrace();
         }
         return null;
+    }
+
+    private static void removeProjectArtifacts() {
+        String[] pathsToDelete = {
+            "./node",
+            "./node_modules",
+            "./data-mapper",
+            "./target",
+            "package.json",
+            "package-lock.json",
+            "tsconfig.json",
+            "webpack.config.js"
+        };
+
+        for (String path : pathsToDelete) {
+            File file = new File(path);
+            deleteRecursively(file);
+        }
+    }
+
+    private static void deleteRecursively(File file) {
+        if (file.isDirectory()) {
+            File[] entries = file.listFiles();
+            if (entries != null) {
+                for (File entry : entries) {
+                    deleteRecursively(entry);
+                }
+            }
+        }
+        if (!file.delete()) {
+            System.err.println("Failed to delete " + file.getPath());
+        }
     }
 }
