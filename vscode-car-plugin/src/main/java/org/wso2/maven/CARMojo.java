@@ -30,6 +30,7 @@ import java.util.zip.ZipOutputStream;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.project.MavenProject;
 import org.apache.commons.lang.StringUtils;
+import org.wso2.maven.datamapper.DataMapperBundler;
 import org.wso2.maven.model.ArchiveException;
 import org.wso2.maven.model.ArtifactDependency;
 
@@ -76,19 +77,22 @@ public class CARMojo extends AbstractMojo {
     }
 
     public void execute() {
-        processCARCreation();
-    }
-
-    /**
-     * Handles the creation of the Composite Application Archive (CAR).
-     */
-    private void processCARCreation() {
-        appendLogs();
         String basedir = project.getBasedir().toString();
         archiveLocation = StringUtils.isEmpty(archiveLocation) ? basedir + File.separator +
                 Constants.DEFAULT_TARGET_FOLDER : archiveLocation;
         String artifactFolderPath = basedir + File.separator + Constants.ARTIFACTS_FOLDER_PATH;
         String resourcesFolderPath = basedir + File.separator + Constants.RESOURCES_FOLDER_PATH;
+
+        DataMapperBundler dataMapperBundler = new DataMapperBundler(this, resourcesFolderPath);
+        dataMapperBundler.bundleDataMapper();
+        processCARCreation(basedir, artifactFolderPath, resourcesFolderPath);
+    }
+
+    /**
+     * Handles the creation of the Composite Application Archive (CAR).
+     */
+    private void processCARCreation(String basedir, String artifactFolderPath, String resourcesFolderPath) {
+        appendLogs();
 
         File artifactFolder = new File(artifactFolderPath);
         File resourcesFolder = new File(resourcesFolderPath);
