@@ -16,7 +16,7 @@
 * under the License.
 */
 
-package org.wso2.maven.Model;
+package org.wso2.maven.model;
 
 /**
  * Class that represents the artifact in WSO2 ESB project.

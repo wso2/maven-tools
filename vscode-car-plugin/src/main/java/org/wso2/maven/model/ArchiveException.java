@@ -16,7 +16,7 @@
  * under the License.
  */
 
-package org.wso2.maven.Model;
+package org.wso2.maven.model;
 
 /**
  * Exception to be thrown at .car file creation failure.

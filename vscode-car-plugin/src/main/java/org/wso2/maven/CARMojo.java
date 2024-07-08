@@ -30,8 +30,8 @@ import java.util.zip.ZipOutputStream;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.project.MavenProject;
 import org.apache.commons.lang.StringUtils;
-import org.wso2.maven.Model.ArchiveException;
-import org.wso2.maven.Model.ArtifactDependency;
+import org.wso2.maven.model.ArchiveException;
+import org.wso2.maven.model.ArtifactDependency;
 
 /**
  * Goal which touches a timestamp file.
