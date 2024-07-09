@@ -385,6 +385,19 @@ public class DataMapperBundler {
     private String getMavenHome() {
         mojoInstance.logInfo("Finding maven home");
 
+        // First try to find Maven home using system property
+        String mavenHome = System.getProperty("maven.home");
+        if (mavenHome != null) {
+            return mavenHome;
+        }
+
+        // Fallback: Try to find Maven home using environment variable or default paths
+        mavenHome = System.getenv("M2_HOME");
+        if (mavenHome != null) {
+            return mavenHome;
+        }
+
+        // Fallback: Try to find Maven home using command line
         ProcessBuilder processBuilder = new ProcessBuilder();
         if (System.getProperty("os.name").toLowerCase().contains(Constants.OS_WINDOWS)) {
             processBuilder.command("cmd.exe", "/c", "mvn -v");
