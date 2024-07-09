@@ -43,123 +43,145 @@ import org.wso2.maven.CARMojo;
 public class DataMapperBundler {
     private final CARMojo mojoInstance;
     private final String resourcesDirectory;
+    private Invoker invoker;
 
     public DataMapperBundler(CARMojo mojoInstance, String resourcesDirectory) {
         this.mojoInstance = mojoInstance;
         this.resourcesDirectory = resourcesDirectory;
+        this.invoker = new DefaultInvoker();
     }
 
     public void bundleDataMapper() {
         String dataMapperDirectoryPath = resourcesDirectory + File.separator + Constants.DATA_MAPPER_DIR_PATH;
         List<Path> dataMappers = listSubDirectories(dataMapperDirectoryPath);
-
+    
         if (dataMappers.isEmpty()) {
             // No data mappers to bundle
             return;
         }
-
+    
         appendDataMapperLogs();
         String mavenHome = getMavenHome();
-
+    
         if (mavenHome == null) {
             mojoInstance.logError("Could not determine Maven home.");
             return;
         }
-
+    
         createDataMapperArtifacts();
-
-        Invoker invoker = new DefaultInvoker();
+        setupInvoker(mavenHome);
+    
+        if (!installNodeAndNPM()) {
+            return;
+        }
+    
+        if (!runNpmInstall()) {
+            return;
+        }
+    
+        bundleDataMappers(dataMappers);
+        removeBundlingArtifacts();
+    }
+    
+    private void setupInvoker(String mavenHome) {
         invoker.setMavenHome(new File(mavenHome));
         invoker.setOutputHandler(new InvocationOutputHandler() {
             @Override
             public void consumeLine(String line) {
-                // Filter out "BUILD SUCCESS" lines
                 if (!line.contains("BUILD SUCCESS")) {
                     System.out.println(line);
                 }
             }
         });
-
+    }
+    
+    private boolean installNodeAndNPM() {
+        InvocationRequest request = createBaseRequest();
+        mojoInstance.logInfo("Installing Node and NPM");
+        request.setGoals(Collections.singletonList(Constants.INSTALL_NODE_AND_NPM_GOAL));
+        setNodeAndNpmProperties(request);
+    
+        return executeRequest(request, "Node and NPM installation failed.");
+    }
+    
+    private boolean runNpmInstall() {
+        InvocationRequest request = createBaseRequest();
+        mojoInstance.logInfo("Running npm install");
+        request.setGoals(Collections.singletonList(Constants.NPM_GOAL));
+        setNpmInstallProperties(request);
+    
+        return executeRequest(request, "npm install failed.");
+    }
+    
+    private void bundleDataMappers(List<Path> dataMappers) {
+        for (Path dataMapper : dataMappers) {
+            if (!bundleSingleDataMapper(dataMapper)) {
+                return;
+            }
+        }
+        mojoInstance.logInfo("Data mapper bundling completed successfully");
+    }
+    
+    private boolean bundleSingleDataMapper(Path dataMapper) {
+        copyTsFiles(dataMapper);
+        String dataMapperName = dataMapper.getFileName().toString();
+        mojoInstance.logInfo("Bundling data mapper: " + dataMapperName);
+        createWebpackConfig(dataMapperName);
+    
+        InvocationRequest request = createBaseRequest();
+        request.setGoals(Collections.singletonList(Constants.NPM_RUN_BUILD_GOAL
+                + " -Dexec.executable=" + Constants.NPM_COMMAND
+                + " -Dexec.args=\"" + Constants.RUN_BUILD + "\""));
+    
+        boolean success = executeRequest(request, "Failed to bundle data mapper: " + dataMapperName);
+        if (success) {
+            mojoInstance.logInfo("Bundle completed for data mapper: " + dataMapperName);
+            Path bundledJsFilePath = Paths.get("." + File.separator
+                    + Constants.DATA_MAPPER_ARTIFACTS_DIR_NAME + File.separator + dataMapperName + ".dmc");
+            copyBundledJsFile(bundledJsFilePath.toString(), dataMapper);
+            removeTsFiles();
+            removeWebpackConfig();
+        }
+        return success;
+    }
+    
+    private InvocationRequest createBaseRequest() {
         InvocationRequest request = new DefaultInvocationRequest();
         Path baseDir = Paths.get(System.getProperty("user.dir"));
         Path pomPath = baseDir.resolve(Paths.get("." + File.separator + Constants.POM_FILE_NAME));
         request.setPomFile(pomPath.toFile());
-
+        request.setInputStream(new ByteArrayInputStream(new byte[0])); // Avoid interactive mode
+        return request;
+    }
+    
+    private void setNodeAndNpmProperties(InvocationRequest request) {
+        Properties properties = new Properties();
+        properties.setProperty("nodeVersion", Constants.NODE_VERSION);
+        properties.setProperty("npmVersion", Constants.NPM_VERSION);
+        request.setProperties(properties);
+    }
+    
+    private void setNpmInstallProperties(InvocationRequest request) {
+        Properties properties = new Properties();
+        properties.setProperty("arguments", Constants.NPM_INSTALL);
+        request.setProperties(properties);
+    }
+    
+    private boolean executeRequest(InvocationRequest request, String errorMessage) {
         try {
-            // Install Node and NPM
-            mojoInstance.logInfo("Installing Node and NPM");
-            request.setGoals(Collections.singletonList(Constants.INSTALL_NODE_AND_NPM_GOAL));
-            // Set an empty input stream to avoid interactive mode warning
-            request.setInputStream(new ByteArrayInputStream(new byte[0]));
-            Properties properties = new Properties();
-            properties.setProperty("nodeVersion", Constants.NODE_VERSION);
-            properties.setProperty("npmVersion", Constants.NPM_VERSION);
-            request.setProperties(properties);
             InvocationResult result = invoker.execute(request);
-
             if (result.getExitCode() != 0) {
-                mojoInstance.logError("Node and NPM installation failed.");
-                mojoInstance.logError(result.getExecutionException().getMessage());
-                return;
-            }
-
-            // Run npm install
-            mojoInstance.logInfo("Running npm install");
-            request = new DefaultInvocationRequest();
-            request.setGoals(Collections.singletonList(Constants.NPM_GOAL));
-            // Set an empty input stream to avoid interactive mode warning
-            request.setInputStream(new ByteArrayInputStream(new byte[0]));
-            properties = new Properties();
-            properties.setProperty("arguments", Constants.NPM_INSTALL);
-            request.setProperties(properties);
-            result = invoker.execute(request);
-
-            if (result.getExitCode() != 0) {
-                mojoInstance.logError("npm install failed.");
-                mojoInstance.logError(result.getExecutionException().getMessage());
-                return;
-            }
-
-            // Bundle data mappers
-            mojoInstance.logInfo("Start bundling data mappers");
-
-            for (Path dataMapper : dataMappers) {
-                copyTsFiles(dataMapper);
-                String dataMapperName = dataMapper.getFileName().toString();
-
-                mojoInstance.logInfo("Bundling data mapper: " + dataMapperName);
-
-                createWebpackConfig(dataMapperName);
-
-                request = new DefaultInvocationRequest();
-                request.setGoals(Collections.singletonList(Constants.NPM_RUN_BUILD_GOAL
-                        + " -Dexec.executable=" + Constants.NPM_COMMAND
-                        + " -Dexec.args=\"" + Constants.RUN_BUILD + "\""));
-                // Set an empty input stream to avoid interactive mode warning
-                request.setInputStream(new ByteArrayInputStream(new byte[0]));
-                result = invoker.execute(request);
-
-                if (result.getExitCode() != 0) {
-                    mojoInstance.logError("Failed to bundle data mapper: " + dataMapperName);
+                mojoInstance.logError(errorMessage);
+                if (result.getExecutionException() != null) {
                     mojoInstance.logError(result.getExecutionException().getMessage());
-                    return;
                 }
-
-                mojoInstance.logInfo("Bundle completed for data mapper: " + dataMapperName);
-                Path bundledJsFilePath = Paths.get("." + File.separator
-                        + Constants.DATA_MAPPER_ARTIFACTS_DIR_NAME + File.separator + dataMapperName + ".dmc");
-                copyBundledJsFile(bundledJsFilePath.toString(), dataMapper);
-
-                removeTsFiles();
-                removeWebpackConfig();
+                return false;
             }
-
-            mojoInstance.logInfo("Data mapper bundling completed successfully");
+            return true;
         } catch (MavenInvocationException e) {
-            mojoInstance.logError("Failed to bundle data mapper.");
+            mojoInstance.logError(errorMessage);
             mojoInstance.logError(e.getMessage());
-        } finally {
-            removeBundlingArtifacts();
+            return false;
         }
     }
 
@@ -296,7 +318,8 @@ public class DataMapperBundler {
                 }
             }
         } catch (IOException e) {
-            e.printStackTrace();
+            mojoInstance.logError("Failed to copy data mapper files.");
+            mojoInstance.logError(e.getMessage());
         }
     }
 
@@ -336,7 +359,8 @@ public class DataMapperBundler {
                         try {
                             Files.delete(file);
                         } catch (IOException e) {
-                            e.printStackTrace();
+                            mojoInstance.logError("Failed to remove data-mapper source file: " + file);
+                            mojoInstance.logError(e.getMessage());
                         }
                     }
                     return FileVisitResult.CONTINUE;
