@@ -24,7 +24,7 @@ class Constants {
     static final String REGISTRY_DIR_NAME = "registry";
     static final String GOV_DIR_NAME = "gov";
     static final String DATA_MAPPER_DIR_NAME = "datamapper";
-    static final String DATA_MAPPER_ARTIFACTS_DIR_NAME = "data-mapper";
+    static final String TARGET_DIR_NAME = "target";
     static final String PACKAGE_JSON_FILE_NAME = "package.json";
     static final String TS_CONFIG_FILE_NAME = "tsconfig.json";
     static final String WEBPACK_CONFIG_FILE_NAME = "webpack.config.js";
