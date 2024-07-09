@@ -19,6 +19,7 @@
 package org.wso2.maven.datamapper;
 
 import java.io.BufferedReader;
+import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -49,6 +50,14 @@ public class DataMapperBundler {
     }
 
     public void bundleDataMapper() {
+        String dataMapperDirectoryPath = resourcesDirectory + File.separator + Constants.DATA_MAPPER_DIR_PATH;
+        List<Path> dataMappers = listSubDirectories(dataMapperDirectoryPath);
+
+        if (dataMappers.isEmpty()) {
+            // No data mappers to bundle
+            return;
+        }
+
         appendDataMapperLogs();
         String mavenHome = getMavenHome();
 
@@ -64,7 +73,10 @@ public class DataMapperBundler {
         invoker.setOutputHandler(new InvocationOutputHandler() {
             @Override
             public void consumeLine(String line) {
-                // Do nothing to suppress maven output
+                // Filter out "BUILD SUCCESS" lines
+                if (!line.contains("BUILD SUCCESS")) {
+                    System.out.println(line);
+                }
             }
         });
 
@@ -77,6 +89,8 @@ public class DataMapperBundler {
             // Install Node and NPM
             mojoInstance.logInfo("Installing Node and NPM");
             request.setGoals(Collections.singletonList(Constants.INSTALL_NODE_AND_NPM_GOAL));
+            // Set an empty input stream to avoid interactive mode warning
+            request.setInputStream(new ByteArrayInputStream(new byte[0]));
             Properties properties = new Properties();
             properties.setProperty("nodeVersion", Constants.NODE_VERSION);
             properties.setProperty("npmVersion", Constants.NPM_VERSION);
@@ -93,6 +107,8 @@ public class DataMapperBundler {
             mojoInstance.logInfo("Running npm install");
             request = new DefaultInvocationRequest();
             request.setGoals(Collections.singletonList(Constants.NPM_GOAL));
+            // Set an empty input stream to avoid interactive mode warning
+            request.setInputStream(new ByteArrayInputStream(new byte[0]));
             properties = new Properties();
             properties.setProperty("arguments", Constants.NPM_INSTALL);
             request.setProperties(properties);
@@ -106,8 +122,6 @@ public class DataMapperBundler {
 
             // Bundle data mappers
             mojoInstance.logInfo("Start bundling data mappers");
-            String dataMapperDirectoryPath = resourcesDirectory + File.separator + Constants.DATA_MAPPER_DIR_PATH;
-            List<Path> dataMappers = listSubDirectories(dataMapperDirectoryPath);
 
             for (Path dataMapper : dataMappers) {
                 copyTsFiles(dataMapper);
@@ -121,6 +135,8 @@ public class DataMapperBundler {
                 request.setGoals(Collections.singletonList(Constants.NPM_RUN_BUILD_GOAL
                         + " -Dexec.executable=" + Constants.NPM_COMMAND
                         + " -Dexec.args=\"" + Constants.RUN_BUILD + "\""));
+                // Set an empty input stream to avoid interactive mode warning
+                request.setInputStream(new ByteArrayInputStream(new byte[0]));
                 result = invoker.execute(request);
 
                 if (result.getExitCode() != 0) {
@@ -138,7 +154,7 @@ public class DataMapperBundler {
                 removeWebpackConfig();
             }
 
-            mojoInstance.logInfo("Data mapper bundling completed successfully.");
+            mojoInstance.logInfo("Data mapper bundling completed successfully");
         } catch (MavenInvocationException e) {
             mojoInstance.logError("Failed to bundle data mapper.");
             mojoInstance.logError(e.getMessage());
@@ -370,7 +386,6 @@ public class DataMapperBundler {
         String[] pathsToDelete = {
             Constants.PACKAGE_JSON_FILE_NAME,
             Constants.TS_CONFIG_FILE_NAME,
-            Constants.WEBPACK_CONFIG_FILE_NAME,
             "package-lock.json",
             "." + File.separator + Constants.DATA_MAPPER_ARTIFACTS_DIR_NAME,
             "." + File.separator + "node",
