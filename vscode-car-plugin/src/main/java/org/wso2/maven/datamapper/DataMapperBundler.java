@@ -23,18 +23,12 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.nio.file.DirectoryStream;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.nio.file.StandardCopyOption;
+import java.nio.file.*;
+import java.nio.file.attribute.BasicFileAttributes;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Properties;
-import java.util.function.Consumer;
-import java.util.stream.Stream;
-import java.util.function.Predicate;
 
 import org.apache.maven.shared.invoker.InvocationOutputHandler;
 import org.apache.maven.shared.invoker.InvocationRequest;
@@ -59,83 +53,105 @@ public class DataMapperBundler {
         String mavenHome = getMavenHome();
 
         if (mavenHome == null) {
-            throw new RuntimeException("Could not determine Maven home.");
+            mojoInstance.logError("Could not determine Maven home.");
+            return;
         }
 
-        ensureDataMapperDirectoryExists();
-        createPackageJson();
-        createConfigJson();
+        createDataMapperArtifacts();
 
         Invoker invoker = new DefaultInvoker();
         invoker.setMavenHome(new File(mavenHome));
         invoker.setOutputHandler(new InvocationOutputHandler() {
             @Override
             public void consumeLine(String line) {
-                // Do nothing to suppress output
+                // Do nothing to suppress maven output
             }
         });
 
         InvocationRequest request = new DefaultInvocationRequest();
         Path baseDir = Paths.get(System.getProperty("user.dir"));
-        Path pomPath = baseDir.resolve("./pom.xml");
+        Path pomPath = baseDir.resolve(Paths.get("." + File.separator + Constants.POM_FILE_NAME));
         request.setPomFile(pomPath.toFile());
 
         try {
             // Install Node and NPM
-            request.setGoals(Collections.singletonList("com.github.eirslett:frontend-maven-plugin:1.12.0:install-node-and-npm"));
+            mojoInstance.logInfo("Installing Node and NPM");
+            request.setGoals(Collections.singletonList(Constants.INSTALL_NODE_AND_NPM_GOAL));
             Properties properties = new Properties();
-            properties.setProperty("nodeVersion", "v14.17.3"); // Ensure the version is prefixed with 'v'
-            properties.setProperty("npmVersion", "6.14.13");
+            properties.setProperty("nodeVersion", Constants.NODE_VERSION);
+            properties.setProperty("npmVersion", Constants.NPM_VERSION);
             request.setProperties(properties);
             InvocationResult result = invoker.execute(request);
 
             if (result.getExitCode() != 0) {
-                throw new IllegalStateException("Node and NPM installation failed.");
+                mojoInstance.logError("Node and NPM installation failed.");
+                mojoInstance.logError(result.getExecutionException().getMessage());
+                return;
             }
 
             // Run npm install
+            mojoInstance.logInfo("Running npm install");
             request = new DefaultInvocationRequest();
-            request.setGoals(Collections.singletonList("com.github.eirslett:frontend-maven-plugin:1.12.0:npm"));
+            request.setGoals(Collections.singletonList(Constants.NPM_GOAL));
             properties = new Properties();
-            properties.setProperty("arguments", "install");
+            properties.setProperty("arguments", Constants.NPM_INSTALL);
             request.setProperties(properties);
             result = invoker.execute(request);
 
             if (result.getExitCode() != 0) {
-                throw new IllegalStateException("NPM install failed.");
+                mojoInstance.logError("npm install failed.");
+                mojoInstance.logError(result.getExecutionException().getMessage());
+                return;
             }
 
-            String DataMapperDirectoryPath = resourcesDirectory + File.separator + Constants.DATA_MAPPER_DIR_PATH;
-
-            List<Path> dataMappers = listSubDirectories(DataMapperDirectoryPath);
+            // Bundle data mappers
+            mojoInstance.logInfo("Start bundling data mappers");
+            String dataMapperDirectoryPath = resourcesDirectory + File.separator + Constants.DATA_MAPPER_DIR_PATH;
+            List<Path> dataMappers = listSubDirectories(dataMapperDirectoryPath);
 
             for (Path dataMapper : dataMappers) {
                 copyTsFiles(dataMapper);
+                String dataMapperName = dataMapper.getFileName().toString();
 
-                createWebpackConfig(dataMapper.getFileName().toString());
+                mojoInstance.logInfo("Bundling data mapper: " + dataMapperName);
 
-                // Step 3: Run npm run build
+                createWebpackConfig(dataMapperName);
+
                 request = new DefaultInvocationRequest();
-                request.setGoals(Collections.singletonList("org.codehaus.mojo:exec-maven-plugin:1.6.0:exec@build -Dexec.executable=npm -Dexec.args=\"run build\""));
+                request.setGoals(Collections.singletonList(Constants.NPM_RUN_BUILD_GOAL
+                        + " -Dexec.executable=" + Constants.NPM_COMMAND
+                        + " -Dexec.args=\"" + Constants.RUN_BUILD + "\""));
                 result = invoker.execute(request);
 
                 if (result.getExitCode() != 0) {
-                    throw new IllegalStateException("npm run build failed.");
+                    mojoInstance.logError("Failed to bundle data mapper: " + dataMapperName);
+                    mojoInstance.logError(result.getExecutionException().getMessage());
+                    return;
                 }
 
-                copyBundledJsFile("./data-mapper/bundle.js", dataMapper);
+                mojoInstance.logInfo("Bundle completed for data mapper: " + dataMapperName);
+                Path bundledJsFilePath = Paths.get("." + File.separator
+                        + Constants.DATA_MAPPER_ARTIFACTS_DIR_NAME + File.separator + Constants.BUNDLED_JS_FILE_NAME);
+                copyBundledJsFile(bundledJsFilePath.toString(), dataMapper);
 
                 removeTsFiles();
                 removeWebpackConfig();
             }
 
-            System.out.println("All steps executed successfully.");
-
+            mojoInstance.logInfo("Data mapper bundling completed successfully.");
         } catch (MavenInvocationException e) {
-            e.printStackTrace();
+            mojoInstance.logError("Failed to bundle data mapper.");
+            mojoInstance.logError(e.getMessage());
         } finally {
-            removeProjectArtifacts();
+            removeBundlingArtifacts();
         }
+    }
+
+    private void createDataMapperArtifacts() {
+        mojoInstance.logInfo("Creating data mapper artifacts");
+        ensureDataMapperDirectoryExists();
+        createPackageJson();
+        createConfigJson();
     }
 
     /**
@@ -147,9 +163,9 @@ public class DataMapperBundler {
         mojoInstance.getLog().info("------------------------------------------------------------------------");
     }
 
-    private static void createPackageJson() {
-        String jsonContent = "{\n" +
-                "    \"name\": \"typescript-project\",\n" +
+    private void createPackageJson() {
+        String packageJsonContent = "{\n" +
+                "    \"name\": \"data-mapper-bundler\",\n" +
                 "    \"version\": \"1.0.0\",\n" +
                 "    \"scripts\": {\n" +
                 "        \"build\": \"tsc && webpack\"\n" +
@@ -162,18 +178,16 @@ public class DataMapperBundler {
                 "    }\n" +
                 "}";
 
-        String fileName = "package.json";
-
-        try (FileWriter fileWriter = new FileWriter(fileName)) {
-            fileWriter.write(jsonContent);
-            System.out.println("Successfully wrote " + fileName);
+        try (FileWriter fileWriter = new FileWriter(Constants.PACKAGE_JSON_FILE_NAME)) {
+            fileWriter.write(packageJsonContent);
         } catch (IOException e) {
-            e.printStackTrace();
+            mojoInstance.logError("Failed to create package.json file.");
+            mojoInstance.logError(e.getMessage());
         }
     }
-
-    private static void createConfigJson() {
-        String jsonContent = "{\n" +
+//
+    private void createConfigJson() {
+        String tsConfigContent = "{\n" +
                 "    \"compilerOptions\": {\n" +
                 "        \"outDir\": \"./target\",\n" +
                 "        \"module\": \"commonjs\",\n" +
@@ -181,24 +195,22 @@ public class DataMapperBundler {
                 "        \"sourceMap\": true\n" +
                 "    },\n" +
                 "    \"include\": [\n" +
-                "        \"./data-mapper/**/*\"\n" +
+                "        \"./" + Constants.DATA_MAPPER_ARTIFACTS_DIR_NAME + "/**/*\"\n" +
                 "    ]\n" +
                 "}";
 
-        String fileName = "tsconfig.json";
-
-        try (FileWriter fileWriter = new FileWriter(fileName)) {
-            fileWriter.write(jsonContent);
-            System.out.println("Successfully wrote " + fileName);
+        try (FileWriter fileWriter = new FileWriter(Constants.TS_CONFIG_FILE_NAME)) {
+            fileWriter.write(tsConfigContent);
         } catch (IOException e) {
-            e.printStackTrace();
+            mojoInstance.logError("Failed to create tsconfig.json file.");
+            mojoInstance.logError(e.getMessage());
         }
     }
-
-    private static void createWebpackConfig(String dataMapperName) {
-        String jsContent = "const path = require(\"path\");\n" +
+//
+    private void createWebpackConfig(String dataMapperName) {
+        String webPackConfigContent = "const path = require(\"path\");\n" +
                 "module.exports = {\n" +
-                "    entry: \"./data-mapper/" + dataMapperName + ".ts\",\n" +
+                "    entry: \"." + File.separator + Constants.DATA_MAPPER_ARTIFACTS_DIR_NAME + File.separator + dataMapperName + ".ts\",\n" +
                 "    module: {\n" +
                 "        rules: [\n" +
                 "            {\n" +
@@ -209,25 +221,23 @@ public class DataMapperBundler {
                 "        ],\n" +
                 "    },\n" +
                 "    resolve: {\n" +
-                "        extensions: [\".tsx\", \".ts\", \".js\"],\n" +
+                "        extensions: [\".ts\", \".js\"],\n" +
                 "    },\n" +
                 "    output: {\n" +
-                "        filename: \"bundle.js\",\n" +
-                "        path: path.resolve(__dirname, \"data-mapper\"),\n" +
+                "        filename: \"" + Constants.BUNDLED_JS_FILE_NAME + "\",\n" +
+                "        path: path.resolve(__dirname, \"" + Constants.DATA_MAPPER_ARTIFACTS_DIR_NAME + "\"),\n" +
                 "    },\n" +
                 "};";
 
-        String fileName = "webpack.config.js";
-
-        try (FileWriter fileWriter = new FileWriter(fileName)) {
-            fileWriter.write(jsContent);
-            System.out.println("Successfully wrote " + fileName);
+        try (FileWriter fileWriter = new FileWriter(Constants.WEBPACK_CONFIG_FILE_NAME)) {
+            fileWriter.write(webPackConfigContent);
         } catch (IOException e) {
-            e.printStackTrace();
+            mojoInstance.logError("Failed to create webpack.config.js file.");
+            mojoInstance.logError(e.getMessage());
         }
     }
 
-    private static List<Path> listSubDirectories(String directory) {
+    private List<Path> listSubDirectories(String directory) {
         Path dirPath = Paths.get(directory);
         List<Path> subDirectories = new ArrayList<>();
         try (DirectoryStream<Path> stream = Files.newDirectoryStream(dirPath)) {
@@ -237,100 +247,104 @@ public class DataMapperBundler {
                 }
             }
         } catch (IOException e) {
-            e.printStackTrace();
+            mojoInstance.logError("Failed to find data mapper directories.");
+            mojoInstance.logError(e.getMessage());
         }
         return subDirectories;
     }
 
-    private static void copyTsFiles(final Path sourceDir) {
-        final Path destDir = Paths.get("./data-mapper");
+    private void copyTsFiles(final Path sourceDir) {
+        final Path destDir = Paths.get("." + File.separator + Constants.DATA_MAPPER_ARTIFACTS_DIR_NAME);
 
-        try (Stream<Path> stream = Files.walk(sourceDir)) {
-            stream.filter(new Predicate<Path>() {
+        try {
+            final List<Path> fileList = new ArrayList<>();
+            Files.walkFileTree(sourceDir, new SimpleFileVisitor<Path>() {
                 @Override
-                public boolean test(Path file) {
-                    return file.toString().endsWith(".ts");
-                }
-            }).forEach(new Consumer<Path>() {
-                @Override
-                public void accept(Path sourcePath) {
-                    Path destPath = destDir.resolve(sourceDir.relativize(sourcePath));
-                    try {
-                        Files.copy(sourcePath, destPath, StandardCopyOption.REPLACE_EXISTING);
-                        System.out.println("Copied: " + sourcePath + " to " + destPath);
-                    } catch (IOException e) {
-                        e.printStackTrace();
+                public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) {
+                    if (file.toString().endsWith(".ts")) {
+                        fileList.add(file);
                     }
+                    return FileVisitResult.CONTINUE;
                 }
             });
+
+            for (Path sourcePath : fileList) {
+                Path destPath = destDir.resolve(sourceDir.relativize(sourcePath));
+                try {
+                    Files.copy(sourcePath, destPath, StandardCopyOption.REPLACE_EXISTING);
+                } catch (IOException e) {
+                    mojoInstance.logError("Failed to copy data mapper file: " + sourcePath);
+                    mojoInstance.logError(e.getMessage());
+                }
+            }
         } catch (IOException e) {
             e.printStackTrace();
         }
     }
 
-    private static void copyBundledJsFile(String sourceFile, Path destinationDir) {
+    private void copyBundledJsFile(String sourceFile, Path destinationDir) {
+        mojoInstance.logInfo("Copying bundled js file: " + sourceFile);
         Path sourcePath = Paths.get(sourceFile);
         Path destPath = destinationDir.resolve(sourcePath.getFileName());
 
         try {
             Files.copy(sourcePath, destPath, StandardCopyOption.REPLACE_EXISTING);
-            System.out.println("Copied: " + sourcePath + " to " + destPath);
         } catch (IOException e) {
-            e.printStackTrace();
+            mojoInstance.logError("Failed to copy bundled js file: " + sourcePath);
+            mojoInstance.logError(e.getMessage());
         }
     }
 
-    private static void ensureDataMapperDirectoryExists() {
-        Path dataMapperPath = Paths.get("./data-mapper");
+    private void ensureDataMapperDirectoryExists() {
+        Path dataMapperPath = Paths.get("." + File.separator + Constants.DATA_MAPPER_ARTIFACTS_DIR_NAME);
         if (!Files.exists(dataMapperPath)) {
             try {
                 Files.createDirectories(dataMapperPath);
-                System.out.println("Directory created: " + dataMapperPath);
             } catch (IOException e) {
-                e.printStackTrace();
-                System.out.println("Failed to create directory: " + dataMapperPath);
+                mojoInstance.logError("Failed to create data-mapper artifacts directory: " + dataMapperPath);
+                mojoInstance.logError(e.getMessage());
             }
         }
     }
 
-    private static void removeTsFiles() {
-        Path dirPath = Paths.get("./data-mapper");
+    private void removeTsFiles() {
+        Path dataMapperPath = Paths.get("." + File.separator + Constants.DATA_MAPPER_ARTIFACTS_DIR_NAME);
 
-        try (Stream<Path> stream = Files.walk(dirPath)) {
-            stream.filter(new Predicate<Path>() {
+        try {
+            Files.walkFileTree(dataMapperPath, new SimpleFileVisitor<Path>() {
                 @Override
-                public boolean test(Path file) {
-                    return file.toString().endsWith(".ts");
-                }
-            }).forEach(new Consumer<Path>() {
-                @Override
-                public void accept(Path tsFile) {
-                    try {
-                        Files.delete(tsFile);
-                        System.out.println("Deleted: " + tsFile);
-                    } catch (IOException e) {
-                        e.printStackTrace();
+                public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) {
+                    if (file.toString().endsWith(".ts")) {
+                        try {
+                            Files.delete(file);
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
                     }
+                    return FileVisitResult.CONTINUE;
                 }
             });
         } catch (IOException e) {
-            e.printStackTrace();
+            mojoInstance.logError("Error while removing data-mapper source files.");
+            mojoInstance.logError(e.getMessage());
         }
     }
 
-    private static void removeWebpackConfig() {
-        Path filePath = Paths.get("webpack.config.js");
+    private void removeWebpackConfig() {
+        Path filePath = Paths.get(Constants.WEBPACK_CONFIG_FILE_NAME);
         try {
             Files.delete(filePath);
-            System.out.println("Deleted: " + filePath);
         } catch (IOException e) {
-            e.printStackTrace();
+            mojoInstance.logError("Error while removing webpack.config.js file.");
+            mojoInstance.logError(e.getMessage());
         }
     }
 
-    private static String getMavenHome() {
+    private String getMavenHome() {
+        mojoInstance.logInfo("Finding maven home");
+
         ProcessBuilder processBuilder = new ProcessBuilder();
-        if (System.getProperty("os.name").toLowerCase().contains("windows")) {
+        if (System.getProperty("os.name").toLowerCase().contains(Constants.OS_WINDOWS)) {
             processBuilder.command("cmd.exe", "/c", "mvn -v");
         } else {
             processBuilder.command("sh", "-c", "mvn -v");
@@ -345,21 +359,23 @@ public class DataMapperBundler {
                 }
             }
         } catch (IOException e) {
-            e.printStackTrace();
+            mojoInstance.logError("Failed to find maven home");
+            mojoInstance.logError(e.getMessage());
         }
         return null;
     }
 
-    private static void removeProjectArtifacts() {
+    private void removeBundlingArtifacts() {
+        mojoInstance.logInfo("Cleaning up data mapper bundling artifacts");
         String[] pathsToDelete = {
-            "./node",
-            "./node_modules",
-            "./data-mapper",
-            "./target",
-            "package.json",
+            Constants.PACKAGE_JSON_FILE_NAME,
+            Constants.TS_CONFIG_FILE_NAME,
+            Constants.WEBPACK_CONFIG_FILE_NAME,
             "package-lock.json",
-            "tsconfig.json",
-            "webpack.config.js"
+            "." + File.separator + Constants.DATA_MAPPER_ARTIFACTS_DIR_NAME,
+            "." + File.separator + "node",
+            "." + File.separator + "node_modules",
+            "." + File.separator + "target"
         };
 
         for (String path : pathsToDelete) {
@@ -368,7 +384,7 @@ public class DataMapperBundler {
         }
     }
 
-    private static void deleteRecursively(File file) {
+    private void deleteRecursively(File file) {
         if (file.isDirectory()) {
             File[] entries = file.listFiles();
             if (entries != null) {
@@ -378,7 +394,7 @@ public class DataMapperBundler {
             }
         }
         if (!file.delete()) {
-            System.err.println("Failed to delete " + file.getPath());
+            mojoInstance.logError("Failed to delete " + file.getPath());
         }
     }
 }
