@@ -147,7 +147,7 @@ public class DataMapperBundler {
 
                 mojoInstance.logInfo("Bundle completed for data mapper: " + dataMapperName);
                 Path bundledJsFilePath = Paths.get("." + File.separator
-                        + Constants.DATA_MAPPER_ARTIFACTS_DIR_NAME + File.separator + Constants.BUNDLED_JS_FILE_NAME);
+                        + Constants.DATA_MAPPER_ARTIFACTS_DIR_NAME + File.separator + dataMapperName + ".dmc");
                 copyBundledJsFile(bundledJsFilePath.toString(), dataMapper);
 
                 removeTsFiles();
@@ -240,7 +240,7 @@ public class DataMapperBundler {
                 "        extensions: [\".ts\", \".js\"],\n" +
                 "    },\n" +
                 "    output: {\n" +
-                "        filename: \"" + Constants.BUNDLED_JS_FILE_NAME + "\",\n" +
+                "        filename: \"" + dataMapperName + ".dmc" + "\",\n" +
                 "        path: path.resolve(__dirname, \"" + Constants.DATA_MAPPER_ARTIFACTS_DIR_NAME + "\"),\n" +
                 "    },\n" +
                 "};";
@@ -262,6 +262,8 @@ public class DataMapperBundler {
                     subDirectories.add(path);
                 }
             }
+        } catch (NoSuchFileException e) {
+            mojoInstance.logInfo("datamapper directory not found");
         } catch (IOException e) {
             mojoInstance.logError("Failed to find data mapper directories.");
             mojoInstance.logError(e.getMessage());
@@ -299,14 +301,14 @@ public class DataMapperBundler {
     }
 
     private void copyBundledJsFile(String sourceFile, Path destinationDir) {
-        mojoInstance.logInfo("Copying bundled js file: " + sourceFile);
+        mojoInstance.logInfo("Copying bundled js file to registry");
         Path sourcePath = Paths.get(sourceFile);
         Path destPath = destinationDir.resolve(sourcePath.getFileName());
 
         try {
             Files.copy(sourcePath, destPath, StandardCopyOption.REPLACE_EXISTING);
         } catch (IOException e) {
-            mojoInstance.logError("Failed to copy bundled js file: " + sourcePath);
+            mojoInstance.logError("Failed to copy bundled js file to registry.");
             mojoInstance.logError(e.getMessage());
         }
     }
