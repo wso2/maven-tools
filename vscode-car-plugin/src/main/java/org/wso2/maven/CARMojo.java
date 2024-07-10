@@ -28,9 +28,12 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
 import org.apache.maven.plugin.AbstractMojo;
+import org.apache.maven.plugin.MojoExecutionException;
+import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.project.MavenProject;
 import org.apache.commons.lang.StringUtils;
 import org.wso2.maven.datamapper.DataMapperBundler;
+import org.wso2.maven.datamapper.DataMapperException;
 import org.wso2.maven.model.ArchiveException;
 import org.wso2.maven.model.ArtifactDependency;
 
@@ -76,15 +79,21 @@ public class CARMojo extends AbstractMojo {
         return archiveName == null ? project.getArtifactId() + "_" + project.getVersion() : archiveName;
     }
 
-    public void execute() {
+    public void execute() throws MojoExecutionException, MojoFailureException {
         String basedir = project.getBasedir().toString();
         archiveLocation = StringUtils.isEmpty(archiveLocation) ? basedir + File.separator +
                 Constants.DEFAULT_TARGET_FOLDER : archiveLocation;
         String artifactFolderPath = basedir + File.separator + Constants.ARTIFACTS_FOLDER_PATH;
         String resourcesFolderPath = basedir + File.separator + Constants.RESOURCES_FOLDER_PATH;
 
-        DataMapperBundler dataMapperBundler = new DataMapperBundler(this, resourcesFolderPath);
-        dataMapperBundler.bundleDataMapper();
+        try {
+            DataMapperBundler bundler = new DataMapperBundler(this, resourcesFolderPath);
+            bundler.bundleDataMapper();
+        } catch (DataMapperException e) {
+            getLog().error("Error during data mapper bundling: " + e.getMessage(), e);
+            throw new MojoExecutionException("Data Mapper bundling failed.", e);
+        }
+
         processCARCreation(basedir, artifactFolderPath, resourcesFolderPath);
     }
 

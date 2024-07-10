@@ -60,9 +60,14 @@ public class DataMapperBundler {
     }
 
     /**
-     * Bundles all data mappers found in the specified resources directory.
+     * Orchestrates the process of bundling all data mappers found within the specified resources directory.
+     * This includes setting up the Maven invoker, installing Node.js and NPM, running npm install, and
+     * executing the bundling process for each data mapper.
+     * It also handles the creation and cleanup of necessary artifacts.
+     *
+     * @throws DataMapperException if any step in the bundling process fails.
      */
-    public void bundleDataMapper() {
+    public void bundleDataMapper() throws DataMapperException {
         String dataMapperDirectoryPath = resourcesDirectory + File.separator + Constants.DATA_MAPPER_DIR_PATH;
         List<Path> dataMappers = listSubDirectories(dataMapperDirectoryPath);
     
@@ -74,23 +79,13 @@ public class DataMapperBundler {
         appendDataMapperLogs();
         String mavenHome = getMavenHome();
     
-        if (mavenHome == null) {
-            mojoInstance.logError("Could not determine Maven home.");
-            return;
-        }
-    
         createDataMapperArtifacts();
         setupInvoker(mavenHome);
     
-        if (!installNodeAndNPM()) {
-            return;
-        }
-    
-        if (!runNpmInstall()) {
-            return;
-        }
-    
+        installNodeAndNPM();
+        runNpmInstall();
         bundleDataMappers(dataMappers);
+
         removeBundlingArtifacts();
     }
     
@@ -114,37 +109,39 @@ public class DataMapperBundler {
     /**
      * Installs Node.js and NPM using Maven.
      *
-     * @return true if installation is successful, false otherwise.
+     * @throws DataMapperException if the Maven invocation fails.
      */
-    private boolean installNodeAndNPM() {
+    private void installNodeAndNPM() throws DataMapperException {
         InvocationRequest request = createBaseRequest();
         mojoInstance.logInfo("Installing Node and NPM");
         request.setGoals(Collections.singletonList(Constants.INSTALL_NODE_AND_NPM_GOAL));
         setNodeAndNpmProperties(request);
     
-        return executeRequest(request, "Node and NPM installation failed.");
+        executeRequest(request, "Node and NPM installation failed.");
     }
     
     /**
      * Runs 'npm install' to install dependencies.
      *
-     * @return true if the command executes successfully, false otherwise.
+     * @throws DataMapperException if the Maven invocation fails.
      */
-    private boolean runNpmInstall() {
+    private void runNpmInstall() throws DataMapperException {
         InvocationRequest request = createBaseRequest();
         mojoInstance.logInfo("Running npm install");
         request.setGoals(Collections.singletonList(Constants.NPM_GOAL));
         setNpmInstallProperties(request);
     
-        return executeRequest(request, "npm install failed.");
+        executeRequest(request, "npm install failed.");
     }
     
     /**
-     * Bundles each data mapper found in the list.
+     * Iterates over each data mapper directory provided in the list and attempts to bundle them individually.
+     * If any bundling fails, it stops further processing.
      *
      * @param dataMappers List of paths to data mapper directories.
+     * @throws DataMapperException if the bundling process for any data mapper fails.
      */
-    private void bundleDataMappers(List<Path> dataMappers) {
+    private void bundleDataMappers(List<Path> dataMappers) throws DataMapperException {
         for (Path dataMapper : dataMappers) {
             if (!bundleSingleDataMapper(dataMapper)) {
                 return;
@@ -158,8 +155,9 @@ public class DataMapperBundler {
      *
      * @param dataMapper The path to the data mapper directory.
      * @return true if the bundling is successful, false otherwise.
+     * @throws DataMapperException if any step in the bundling process fails.
      */
-    private boolean bundleSingleDataMapper(Path dataMapper) {
+    private boolean bundleSingleDataMapper(Path dataMapper) throws DataMapperException {
         copyTsFiles(dataMapper);
         String dataMapperName = dataMapper.getFileName().toString();
         mojoInstance.logInfo("Bundling data mapper: " + dataMapperName);
@@ -173,16 +171,16 @@ public class DataMapperBundler {
                 + " -Dexec.executable=" + Constants.NPM_COMMAND
                 + " -Dexec.args=\"" + Constants.RUN_BUILD + "\""));
     
-        boolean success = executeRequest(request, "Failed to bundle data mapper: " + dataMapperName);
-        if (success) {
-            mojoInstance.logInfo("Bundle completed for data mapper: " + dataMapperName);
-            Path bundledJsFilePath = Paths.get("." + File.separator
-                    + Constants.TARGET_DIR_NAME + File.separator + "src" + File.separator + dataMapperName + ".dmc");
-            copyBundledJsFile(bundledJsFilePath.toString(), dataMapper);
-            removeSourceFiles();
-            removeWebpackConfig();
-        }
-        return success;
+        executeRequest(request, "Failed to bundle data mapper: " + dataMapperName);
+
+        mojoInstance.logInfo("Bundle completed for data mapper: " + dataMapperName);
+        Path bundledJsFilePath = Paths.get("." + File.separator
+                + Constants.TARGET_DIR_NAME + File.separator + "src" + File.separator + dataMapperName + ".dmc");
+        copyBundledJsFile(bundledJsFilePath.toString(), dataMapper);
+        removeSourceFiles();
+        removeWebpackConfig();
+
+        return true;
     }
     
     /**
@@ -228,9 +226,9 @@ public class DataMapperBundler {
      *
      * @param request The Maven invocation request to execute.
      * @param errorMessage The error message to log if the execution fails.
-     * @return true if the execution is successful, false otherwise.
+     * @throws DataMapperException if the execution encounters an exception.
      */
-    private boolean executeRequest(InvocationRequest request, String errorMessage) {
+    private void executeRequest(InvocationRequest request, String errorMessage) throws DataMapperException{
         try {
             InvocationResult result = invoker.execute(request);
             if (result.getExitCode() != 0) {
@@ -238,20 +236,19 @@ public class DataMapperBundler {
                 if (result.getExecutionException() != null) {
                     mojoInstance.logError(result.getExecutionException().getMessage());
                 }
-                return false;
+                throw new DataMapperException(errorMessage);
             }
-            return true;
         } catch (MavenInvocationException e) {
-            mojoInstance.logError(errorMessage);
-            mojoInstance.logError(e.getMessage());
-            return false;
+            throw new DataMapperException(errorMessage, e);
         }
     }
 
     /**
      * Creates necessary artifacts for data mapper bundling.
+     * 
+     * @throws DataMapperException if an error occurs while creating the artifacts.
      */
-    private void createDataMapperArtifacts() {
+    private void createDataMapperArtifacts() throws DataMapperException {
         mojoInstance.logInfo("Creating data mapper artifacts");
         ensureDataMapperTargetExists();
         createPomFile();
@@ -270,8 +267,9 @@ public class DataMapperBundler {
 
     /**
      * Creates a Maven POM file for the data mapper project.
+     * @throws DataMapperException if an error occurs while creating the POM file.
      */
-    private void createPomFile() {
+    private void createPomFile() throws DataMapperException {
         String pomContent = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" +
             "<project xmlns=\"http://maven.apache.org/POM/4.0.0\"\n" +
             "         xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"\n" +
@@ -285,17 +283,16 @@ public class DataMapperBundler {
         Path pomPath = Paths.get("." + File.separator + Constants.TARGET_DIR_NAME + File.separator + "pom.xml");
         try {
             Files.write(pomPath, pomContent.getBytes(), StandardOpenOption.CREATE);
-            mojoInstance.logInfo("pom.xml created successfully at " + pomPath);
         } catch (IOException e) {
-            mojoInstance.logError("Failed to create pom.xml file.");
-            mojoInstance.logError(e.getMessage());
+            throw new DataMapperException("Failed to create pom.xml file.", e);
         }
     }
 
     /**
      * Creates a package.json file for managing npm packages.
+     * @throws DataMapperException if an error occurs while creating the package.json file.
      */
-    private void createPackageJson() {
+    private void createPackageJson() throws DataMapperException {
         String packageJsonContent = "{\n" +
                 "    \"name\": \"data-mapper-bundler\",\n" +
                 "    \"version\": \"1.0.0\",\n" +
@@ -314,15 +311,15 @@ public class DataMapperBundler {
             + File.separator + Constants.PACKAGE_JSON_FILE_NAME)) {
             fileWriter.write(packageJsonContent);
         } catch (IOException e) {
-            mojoInstance.logError("Failed to create package.json file.");
-            mojoInstance.logError(e.getMessage());
+            throw new DataMapperException("Failed to create package.json file.", e);
         }
     }
 
     /**
      * Creates a TypeScript configuration file (tsconfig.json).
+     * @throws DataMapperException if an error occurs while creating the tsconfig.json file.
      */
-    private void createConfigJson() {
+    private void createConfigJson() throws DataMapperException {
         String tsConfigContent = "{\n" +
                 "    \"compilerOptions\": {\n" +
                 "        \"outDir\": \"./target\",\n" +
@@ -339,8 +336,7 @@ public class DataMapperBundler {
             + File.separator + Constants.TS_CONFIG_FILE_NAME)) {
             fileWriter.write(tsConfigContent);
         } catch (IOException e) {
-            mojoInstance.logError("Failed to create tsconfig.json file.");
-            mojoInstance.logError(e.getMessage());
+            throw new DataMapperException("Failed to create tsconfig.json file.", e);
         }
     }
 
@@ -348,8 +344,9 @@ public class DataMapperBundler {
      * Creates a webpack configuration file for the data mapper.
      *
      * @param dataMapperName The name of the data mapper.
+     * @throws DataMapperException if an error occurs while creating the webpack.config.js file.
      */
-    private void createWebpackConfig(String dataMapperName) {
+    private void createWebpackConfig(String dataMapperName) throws DataMapperException {
         String webPackConfigContent = "const path = require(\"path\");\n" +
                 "module.exports = {\n" +
                 "    entry: \"./src/" + dataMapperName + ".ts\",\n" +
@@ -375,8 +372,7 @@ public class DataMapperBundler {
             + File.separator + Constants.WEBPACK_CONFIG_FILE_NAME)) {
             fileWriter.write(webPackConfigContent);
         } catch (IOException e) {
-            mojoInstance.logError("Failed to create webpack.config.js file.");
-            mojoInstance.logError(e.getMessage());
+            throw new DataMapperException("Failed to create webpack.config.js file.", e);
         }
     }
 
@@ -385,8 +381,9 @@ public class DataMapperBundler {
      *
      * @param directory The directory path to list subdirectories from.
      * @return A list of paths representing subdirectories.
+     * @throws DataMapperException if an error occurs while listing the subdirectories.
      */
-    private List<Path> listSubDirectories(String directory) {
+    private List<Path> listSubDirectories(String directory) throws DataMapperException {
         Path dirPath = Paths.get(directory);
         List<Path> subDirectories = new ArrayList<>();
         try (DirectoryStream<Path> stream = Files.newDirectoryStream(dirPath)) {
@@ -398,8 +395,7 @@ public class DataMapperBundler {
         } catch (NoSuchFileException e) {
             mojoInstance.logInfo("datamapper directory not found");
         } catch (IOException e) {
-            mojoInstance.logError("Failed to find data mapper directories.");
-            mojoInstance.logError(e.getMessage());
+            throw new DataMapperException("Failed to find data mapper directories.", e);
         }
         return subDirectories;
     }
@@ -408,8 +404,9 @@ public class DataMapperBundler {
      * Copies TypeScript files from the source directory to the target directory.
      *
      * @param sourceDir The source directory containing TypeScript files.
+     * @throws DataMapperException if an error occurs while copying the TypeScript files.
      */
-    private void copyTsFiles(final Path sourceDir) {
+    private void copyTsFiles(final Path sourceDir) throws DataMapperException {
         final Path destDir = Paths.get("." + File.separator + Constants.TARGET_DIR_NAME + File.separator + "src");
 
         try {
@@ -430,13 +427,11 @@ public class DataMapperBundler {
                 try {
                     Files.copy(sourcePath, destPath, StandardCopyOption.REPLACE_EXISTING);
                 } catch (IOException e) {
-                    mojoInstance.logError("Failed to copy data mapper file: " + sourcePath);
-                    mojoInstance.logError(e.getMessage());
+                    throw new DataMapperException("Failed to copy data mapper file: " + sourcePath, e);
                 }
             }
         } catch (IOException e) {
-            mojoInstance.logError("Failed to copy data mapper files.");
-            mojoInstance.logError(e.getMessage());
+            throw new DataMapperException("Failed to copy data mapper files.", e);
         }
     }
 
@@ -445,8 +440,9 @@ public class DataMapperBundler {
      *
      * @param sourceFile The source file path of the bundled JavaScript file.
      * @param destinationDir The destination directory to copy the file to.
+     * @throws DataMapperException if an error occurs while copying the bundled JavaScript file.
      */
-    private void copyBundledJsFile(String sourceFile, Path destinationDir) {
+    private void copyBundledJsFile(String sourceFile, Path destinationDir) throws DataMapperException {
         mojoInstance.logInfo("Copying bundled js file to registry");
         Path sourcePath = Paths.get(sourceFile);
         Path destPath = destinationDir.resolve(sourcePath.getFileName());
@@ -454,30 +450,30 @@ public class DataMapperBundler {
         try {
             Files.copy(sourcePath, destPath, StandardCopyOption.REPLACE_EXISTING);
         } catch (IOException e) {
-            mojoInstance.logError("Failed to copy bundled js file to registry.");
-            mojoInstance.logError(e.getMessage());
+            throw new DataMapperException("Failed to copy bundled js file to registry.", e);
         }
     }
 
     /**
      * Ensures that the data mapper target directory exists.
+     * @throws DataMapperException if an error occurs while creating the data-mapper artifacts directory.
      */
-    private void ensureDataMapperTargetExists() {
+    private void ensureDataMapperTargetExists() throws DataMapperException {
         Path dataMapperPath = Paths.get("." + File.separator + Constants.TARGET_DIR_NAME);
         if (!Files.exists(dataMapperPath)) {
             try {
                 Files.createDirectories(dataMapperPath);
             } catch (IOException e) {
-                mojoInstance.logError("Failed to create data-mapper artifacts directory: " + dataMapperPath);
-                mojoInstance.logError(e.getMessage());
+                throw new DataMapperException("Failed to create data-mapper artifacts directory: " + dataMapperPath, e);
             }
         }
     }
 
     /**
      * Removes source files from the target directory.
+     * @throws DataMapperException if an error occurs while removing the source files.
      */
-    private void removeSourceFiles() {
+    private void removeSourceFiles() throws DataMapperException {
         Path dataMapperPath = Paths.get("." + File.separator + Constants.TARGET_DIR_NAME + File.separator + "src");
 
         try {
@@ -495,22 +491,21 @@ public class DataMapperBundler {
                 }
             });
         } catch (IOException e) {
-            mojoInstance.logError("Error while removing data-mapper source directory.");
-            mojoInstance.logError(e.getMessage());
+            throw new DataMapperException("Error while removing data-mapper source directory.", e);
         }
     }
 
     /**
      * Removes the webpack configuration file.
+     * @throws DataMapperException if an error occurs while removing the webpack configuration file.
      */
-    private void removeWebpackConfig() {
+    private void removeWebpackConfig() throws DataMapperException {
         Path filePath = Paths.get("." + File.separator + Constants.TARGET_DIR_NAME
             + File.separator + Constants.WEBPACK_CONFIG_FILE_NAME);
         try {
             Files.delete(filePath);
         } catch (IOException e) {
-            mojoInstance.logError("Error while removing webpack.config.js file.");
-            mojoInstance.logError(e.getMessage());
+            throw new DataMapperException("Error while removing webpack.config.js file.", e);
         }
     }
 
@@ -518,8 +513,9 @@ public class DataMapperBundler {
      * Retrieves the Maven home directory.
      *
      * @return The Maven home directory path, or null if it cannot be determined.
+     * @throws DataMapperException if an error occurs while determining the Maven home directory.
      */
-    private String getMavenHome() {
+    private String getMavenHome() throws DataMapperException {
         mojoInstance.logInfo("Finding maven home");
 
         // First try to find Maven home using system property
@@ -551,10 +547,10 @@ public class DataMapperBundler {
                 }
             }
         } catch (IOException e) {
-            mojoInstance.logError("Failed to find maven home");
-            mojoInstance.logError(e.getMessage());
+            throw new DataMapperException("Could not determine Maven home.", e);
         }
-        return null;
+
+        throw new DataMapperException("Could not determine Maven home.");
     }
 
     /**
