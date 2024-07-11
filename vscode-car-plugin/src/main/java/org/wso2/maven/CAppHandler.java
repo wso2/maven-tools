@@ -21,7 +21,6 @@ package org.wso2.maven;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
-import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.*;
 import javax.xml.namespace.QName;
@@ -33,9 +32,9 @@ import org.apache.axiom.om.OMElement;
 import org.apache.commons.io.FileUtils;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.project.MavenProject;
-import org.wso2.maven.Model.Artifact;
-import org.wso2.maven.Model.ArtifactDependency;
-import org.wso2.maven.Model.ArtifactDetails;
+import org.wso2.maven.model.Artifact;
+import org.wso2.maven.model.ArtifactDependency;
+import org.wso2.maven.model.ArtifactDetails;
 import org.wso2.maven.core.model.AbstractXMLDoc;
 
 class CAppHandler extends AbstractXMLDoc {
