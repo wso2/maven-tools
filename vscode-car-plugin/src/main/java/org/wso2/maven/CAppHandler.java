@@ -436,7 +436,7 @@ class CAppHandler extends AbstractXMLDoc {
         OMElement artifactsElement = getElement(Constants.ARTIFACTS, Constants.EMPTY_STRING);
         OMElement artifactElement = getElement(Constants.ARTIFACT, Constants.EMPTY_STRING);
 
-        artifactElement = addAttribute(artifactElement, Constants.NAME, project.getArtifactId() + "CompositeExporter");
+        artifactElement = addAttribute(artifactElement, Constants.NAME, project.getArtifactId());
         artifactElement = addAttribute(artifactElement, Constants.VERSION, project.getVersion());
         artifactElement = addAttribute(artifactElement, Constants.TYPE, Constants.CAPP_TYPE);
         if (project.getProperties().containsKey(Constants.MAIN_SEQUENCE)) {
