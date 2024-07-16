@@ -22,6 +22,7 @@ import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
@@ -38,6 +39,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Properties;
 
+import org.apache.commons.io.FileUtils;
 import org.apache.maven.shared.invoker.InvocationOutputHandler;
 import org.apache.maven.shared.invoker.InvocationRequest;
 import org.apache.maven.shared.invoker.DefaultInvocationRequest;
@@ -84,8 +86,38 @@ public class DataMapperBundler {
         installNodeAndNPM();
         runNpmInstall();
         bundleDataMappers(dataMappers);
+        generateDataMapperSchemas(dataMappers);
 
         removeBundlingArtifacts();
+    }
+
+    /**
+     * Deletes the generated data mapper artifacts.
+     *
+     * @throws DataMapperException if an error occurs while deleting the generated data mapper artifacts.
+     */
+    public void deleteGeneratedDatamapperArtifacts() throws DataMapperException {
+        String dataMapperDirectoryPath = resourcesDirectory + File.separator + Constants.DATA_MAPPER_DIR_PATH;
+        List<Path> dataMappers = listSubDirectories(dataMapperDirectoryPath);
+
+        if (dataMappers.isEmpty()) {
+            // No data mappers to delete
+            return;
+        }
+
+        for (Path dataMapper : dataMappers) {
+            String dataMapperName = dataMapper.getFileName().toString();
+            Path bundledJsFilePath = Paths.get(dataMapper + File.separator + dataMapperName + ".dmc");
+            Path inputSchemaFilePath = Paths.get(dataMapper + File.separator + dataMapperName + "_inputSchema.json");
+            Path outputSchemaFilePath = Paths.get(dataMapper + File.separator + dataMapperName + "_outputSchema.json");
+            try {
+                Files.deleteIfExists(bundledJsFilePath);
+                Files.deleteIfExists(inputSchemaFilePath);
+                Files.deleteIfExists(outputSchemaFilePath);
+            } catch (IOException e) {
+                throw new DataMapperException("Failed to delete generated data mapper artifacts.", e);
+            }
+        }
     }
     
     /**
@@ -148,7 +180,18 @@ public class DataMapperBundler {
         }
         mojoInstance.logInfo("Data mapper bundling completed successfully");
     }
-    
+
+    /**
+     * Iterates over each data mapper directory provided in the list and generates the input and output
+     * schema for each data mapper.
+     */
+    private void generateDataMapperSchemas(List<Path> dataMappers) throws DataMapperException {
+        createConfigJsonForSchemaGeneration();
+        for (Path dataMapper : dataMappers) {
+            generateDataMapperSchema(dataMapper);
+        }
+    }
+
     /**
      * Handles the bundling process for a single data mapper.
      *
@@ -175,11 +218,31 @@ public class DataMapperBundler {
         mojoInstance.logInfo("Bundle completed for data mapper: " + dataMapperName);
         Path bundledJsFilePath = Paths.get("." + File.separator
                 + Constants.TARGET_DIR_NAME + File.separator + "src" + File.separator + dataMapperName + ".dmc");
-        copyBundledJsFile(bundledJsFilePath.toString(), dataMapper);
+        copyGenerateDataMapperFile(bundledJsFilePath.toString(), dataMapper);
+
         removeSourceFiles();
         removeWebpackConfig();
 
         return true;
+    }
+
+    /**
+     * Generates the input and output schema for a single data mapper.
+     *
+     * @param dataMapper The path to the data mapper directory.
+     */
+    private void generateDataMapperSchema(Path dataMapper) throws DataMapperException {
+        String dataMapperName = dataMapper.getFileName().toString();
+        mojoInstance.logInfo("Generating schema for data mapper: " + dataMapperName);
+        Path npmDirectory = Paths.get("." + File.separator + Constants.TARGET_DIR_NAME);
+        InvocationRequest request = createBaseRequest();
+        request.setBaseDirectory(npmDirectory.toFile());
+        request.setGoals(Collections.singletonList(Constants.NPM_RUN_BUILD_GOAL
+                + " -Dexec.executable=" + Constants.NPM_COMMAND
+                + " -Dexec.args=\"" + Constants.RUN_GENERATE + " " + dataMapper + File.separator
+                + dataMapperName + ".ts" + "\""));
+
+        executeRequest(request, "Failed to bundle data mapper: " + dataMapperName);
     }
     
     /**
@@ -253,6 +316,7 @@ public class DataMapperBundler {
         createPomFile();
         createPackageJson();
         createConfigJson();
+        createSchemaGenerator();
     }
 
     /**
@@ -288,6 +352,22 @@ public class DataMapperBundler {
     }
 
     /**
+     * Copy schemaGenerator.ts from resources to target directory.
+     */
+    public void createSchemaGenerator() throws DataMapperException {
+
+        try {
+            InputStream inputStream = getClass().getClassLoader().getResourceAsStream(Constants.SCHEMA_GENERATOR);
+            String targetPath = "." + File.separator + Constants.TARGET_DIR_NAME +
+                    File.separator + Constants.SCHEMA_GENERATOR;
+            File targetFile = new File(targetPath);
+            FileUtils.copyInputStreamToFile(inputStream, targetFile);
+        } catch (IOException e) {
+            throw new DataMapperException("Failed to read schemaGenerator.ts file.", e);
+        }
+    }
+
+    /**
      * Creates a package.json file for managing npm packages.
      * @throws DataMapperException if an error occurs while creating the package.json file.
      */
@@ -296,7 +376,8 @@ public class DataMapperBundler {
                 "    \"name\": \"data-mapper-bundler\",\n" +
                 "    \"version\": \"1.0.0\",\n" +
                 "    \"scripts\": {\n" +
-                "        \"build\": \"tsc && webpack\"\n" +
+                "        \"build\": \"tsc && webpack\",\n" +
+                "        \"generate\": \" tsc -p . && node schemaGenerator.js \"\n" +
                 "    },\n" +
                 "    \"devDependencies\": {\n" +
                 "        \"typescript\": \"^4.4.2\",\n" +
@@ -340,6 +421,30 @@ public class DataMapperBundler {
     }
 
     /**
+     * Creates a TypeScript configuration file (tsconfig.json).
+     * @throws DataMapperException if an error occurs while creating the tsconfig.json file.
+     */
+    private void createConfigJsonForSchemaGeneration() throws DataMapperException {
+        String tsConfigContent = "{\n" +
+                "    \"include\": [     \"schemaGenerator.ts\" ]," +
+                "    \"exclude\": [     \"node_modules\" ]," +
+                "    \"compilerOptions\": {\n" +
+                "        \"module\": \"commonjs\",\n" +
+                "        \"target\": \"es5\",\n" +
+                "        \"sourceMap\": true,\n" +
+                "        \"esModuleInterop\": true\n" +
+                "    }\n" +
+                "}";
+
+        try (FileWriter fileWriter = new FileWriter("." + File.separator + Constants.TARGET_DIR_NAME
+                + File.separator + Constants.TS_CONFIG_FILE_NAME)) {
+            fileWriter.write(tsConfigContent);
+        } catch (IOException e) {
+            throw new DataMapperException("Failed to create tsconfig.json file.", e);
+        }
+    }
+
+    /**
      * Creates a webpack configuration file for the data mapper.
      *
      * @param dataMapperName The name of the data mapper.
@@ -364,6 +469,7 @@ public class DataMapperBundler {
                 "    output: {\n" +
                 "        filename: \"./src/" + dataMapperName + ".dmc\",\n" +
                 "        path: path.resolve(__dirname),\n" +
+                "        iife: false,\n" +
                 "    },\n" +
                 "};";
     
@@ -435,13 +541,28 @@ public class DataMapperBundler {
     }
 
     /**
-     * Copies the bundled JavaScript file to the specified destination directory.
+     * Writes the schema content to the relevant registry location.
      *
-     * @param sourceFile The source file path of the bundled JavaScript file.
+     * @param content The content to write to the file.
+     * @param path The path of the file to write to.
+     * @throws DataMapperException if an error occurs while writing to the file.
+     */
+    private void writeSchemaToFile(String content, String path) throws DataMapperException {
+        try (FileWriter fileWriter = new FileWriter(path)) {
+            fileWriter.write(content);
+        } catch (IOException e) {
+            throw new DataMapperException("Failed to create file: " + path, e);
+        }
+    }
+
+    /**
+     * Copies the bundled JavaScript file and schema to the specified destination directory.
+     *
+     * @param sourceFile The source file path of the bundled JavaScript file/json schema file.
      * @param destinationDir The destination directory to copy the file to.
      * @throws DataMapperException if an error occurs while copying the bundled JavaScript file.
      */
-    private void copyBundledJsFile(String sourceFile, Path destinationDir) throws DataMapperException {
+    private void copyGenerateDataMapperFile(String sourceFile, Path destinationDir) throws DataMapperException {
         mojoInstance.logInfo("Copying bundled js file to registry");
         Path sourcePath = Paths.get(sourceFile);
         Path destPath = destinationDir.resolve(sourcePath.getFileName());
