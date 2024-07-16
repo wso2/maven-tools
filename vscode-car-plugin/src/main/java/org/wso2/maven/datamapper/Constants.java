@@ -39,11 +39,13 @@ class Constants {
     static final String NPM_INSTALL = "install";
     static final String BUILD_COMMAND = "build";
     static final String RUN_BUILD = "run build";
+    static final String RUN_GENERATE = "run generate";
     static final String NPM_COMMAND = "npm";
     static final String EXEC_MVN_PLUGIN_GROUP_ID = "org.codehaus.mojo";
     static final String EXEC_MVN_PLUGIN_ARTIFACT_ID = "exec-maven-plugin";
     static final String EXEC_MVN_PLUGIN_VERSION = "1.6.0";
     static final String EXEC_COMMAND = "exec";
+    static final String SCHEMA_GENERATOR = "schemaGenerator.ts";
     static final String DATA_MAPPER_DIR_PATH = REGISTRY_DIR_NAME + File.separator
         + GOV_DIR_NAME + File.separator + DATA_MAPPER_DIR_NAME;
     static final String INSTALL_NODE_AND_NPM_GOAL = FRONTEND_MVN_PLUGIN_GROUP_ID + ":"

@@ -85,16 +85,26 @@ public class CARMojo extends AbstractMojo {
                 Constants.DEFAULT_TARGET_FOLDER : archiveLocation;
         String artifactFolderPath = basedir + File.separator + Constants.ARTIFACTS_FOLDER_PATH;
         String resourcesFolderPath = basedir + File.separator + Constants.RESOURCES_FOLDER_PATH;
-
+        DataMapperBundler bundler = null;
         try {
-            DataMapperBundler bundler = new DataMapperBundler(this, resourcesFolderPath);
-            bundler.bundleDataMapper();
-        } catch (DataMapperException e) {
-            getLog().error("Error during data mapper bundling: " + e.getMessage(), e);
-            throw new MojoExecutionException("Data Mapper bundling failed.", e);
-        }
+            try {
+                bundler = new DataMapperBundler(this, resourcesFolderPath);
+                bundler.bundleDataMapper();
+            } catch (DataMapperException e) {
+                getLog().error("Error during data mapper bundling: " + e.getMessage(), e);
+                throw new MojoExecutionException("Data Mapper bundling failed.", e);
+            }
 
-        processCARCreation(basedir, artifactFolderPath, resourcesFolderPath);
+            processCARCreation(basedir, artifactFolderPath, resourcesFolderPath);
+        } finally {
+            if (bundler != null) {
+                try {
+                    bundler.deleteGeneratedDatamapperArtifacts();
+                } catch (DataMapperException e) {
+                    getLog().error("Error during data mapper cleanup: " + e.getMessage(), e);
+                }
+            }
+        }
     }
 
     /**
