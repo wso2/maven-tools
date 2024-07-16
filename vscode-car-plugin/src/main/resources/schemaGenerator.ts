@@ -145,7 +145,6 @@ function generateJsonSchemaFromAST(ast: ts.SourceFile): any {
   function getInterfaceName(ast: ts.SourceFile): string | null {
     for (const statement of ast.statements) {
       if (ts.isInterfaceDeclaration(statement)) {
-        // Assuming you are interested in the first interface declaration found
         return statement.name.text;
       }
     }
