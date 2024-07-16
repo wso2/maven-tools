@@ -3,13 +3,13 @@
     <parent>
         <groupId>org.wso2.maven</groupId>
         <artifactId>maven-common-tools</artifactId>
-        <version>5.2.61-SNAPSHOT</version>
+        <version>5.2.61</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
 
 	<modelVersion>4.0.0</modelVersion>
 	<artifactId>wso2-general-project-plugin</artifactId>
-	<version>5.2.61-SNAPSHOT</version>
+	<version>5.2.61</version>
 	<packaging>maven-plugin</packaging>
 
 	<name>Maven Registry Plugin</name>

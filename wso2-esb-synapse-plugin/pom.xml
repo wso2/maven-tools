@@ -13,13 +13,13 @@
     <parent>
         <artifactId>maven-common-tools</artifactId>
         <groupId>org.wso2.maven</groupId>
-        <version>5.2.61-SNAPSHOT</version>
+        <version>5.2.61</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
 
     <modelVersion>4.0.0</modelVersion>
     <artifactId>wso2-esb-synapse-plugin</artifactId>
-    <version>5.2.61-SNAPSHOT</version>
+    <version>5.2.61</version>
     <packaging>maven-plugin</packaging>
 
     <name>WSO2 ESB Synapse Configuration Plugin</name>
