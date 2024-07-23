@@ -51,5 +51,46 @@
 				</lifecycles>
 			</configuration>
 		</component>
+		<component>
+			<role>org.apache.maven.AbstractMavenLifecycleParticipant</role>
+			<role-hint>CarbonMavenLifecycleListener</role-hint>
+			<implementation>org.wso2.maven.p2.maven.CarbonMavenLifecycleParticipant</implementation>
+			<description />
+			<isolated-realm>false</isolated-realm>
+			<requirements>
+				<requirement>
+					<role>org.eclipse.tycho.core.osgitools.BundleReader</role>
+					<field-name>bundleReader</field-name>
+				</requirement>
+				<requirement>
+					<role>org.eclipse.tycho.resolver.TychoResolver</role>
+					<field-name>resolver</field-name>
+				</requirement>
+				<requirement>
+					<role>org.codehaus.plexus.PlexusContainer</role>
+					<field-name>plexus</field-name>
+				</requirement>
+				<requirement>
+					<role>org.codehaus.plexus.logging.Logger</role>
+					<field-name>log</field-name>
+				</requirement>
+				<requirement>
+					<role>org.eclipse.tycho.p2maven.MavenProjectDependencyProcessor</role>
+					<field-name>dependencyProcessor</field-name>
+				</requirement>
+				<requirement>
+					<role>org.apache.maven.model.io.ModelWriter</role>
+					<field-name>modelWriter</field-name>
+				</requirement>
+				<requirement>
+					<role>org.eclipse.tycho.build.BuildListeners</role>
+					<field-name>buildListeners</field-name>
+				</requirement>
+				<requirement>
+					<role>org.eclipse.tycho.core.TychoProjectManager</role>
+					<field-name>projectManager</field-name>
+				</requirement>
+			</requirements>
+		</component>
 	</components>
 </component-set>

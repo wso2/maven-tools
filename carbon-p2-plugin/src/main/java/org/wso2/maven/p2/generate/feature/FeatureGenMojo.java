@@ -40,6 +40,10 @@ import org.apache.maven.model.Resource;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
+import org.apache.maven.plugins.annotations.Component;
+import org.apache.maven.plugins.annotations.LifecyclePhase;
+import org.apache.maven.plugins.annotations.Mojo;
+import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.project.MavenProject;
 import org.apache.maven.project.MavenProjectHelper;
 import org.codehaus.plexus.util.DirectoryScanner;
@@ -55,124 +59,105 @@ import org.wso2.maven.p2.generate.utils.PropertyReplacer;
 
 /**
  * Write environment information for the current build to file.
- *
- * @goal p2-feature-gen
- * @phase package
  */
+@Mojo(name = "p2-feature-gen", defaultPhase = LifecyclePhase.PACKAGE)
 public class FeatureGenMojo extends AbstractMojo {
 
     /**
      * feature id
-     *
-     * @parameter
-     * @required
      */
+    @Parameter(name="id", required = true)
     private String id;
 
     /**
      * version
-     *
-     * @parameter default-value="${project.version}"
      */
+    @Parameter(name="version", defaultValue = "${project.version}")
     private String version;
 
     /**
      * label of the feature
-     *
-     * @parameter default-value="${project.name}"
      */
+    @Parameter(name="label", defaultValue="${project.name}")
     private String label;
 
     /**
      * description of the feature
-     *
-     * @parameter default-value="${project.description}"
      */
+    @Parameter(name="description", defaultValue = "${project.description}")
     private String description;
 
     /**
      * provider name
-     *
-     * @parameter default-value="%providerName"
      */
+    @Parameter(name="providerName", defaultValue = "%providerName")
     private String providerName;
 
     /**
-     * copyrite
-     *
-     * @parameter default-value="%copyright"
+     * copyright
      */
+    @Parameter(name="copyright", defaultValue = "%copyright")
     private String copyright;
 
     /**
      * licence url
-     *
-     * @parameter default-value="%licenseURL"
      */
+    @Parameter(name="licenceUrl", defaultValue = "%licenseURL")
     private String licenceUrl;
 
     /**
      * licence
-     *
-     * @parameter default-value="%license"
      */
+    @Parameter(name="licence", defaultValue = "%license")
     private String licence;
 
     /**
      * path to manifest file
-     *
-     * @parameter
      */
+    @Parameter(name="manifest")
     private File manifest;
 
     /**
      * path to properties file
-     *
-     * @parameter
      */
+    @Parameter(name = "propertiesFile")
     private File propertiesFile;
 
     /**
      * list of properties
-     * precedance over propertiesFile
-     *
-     * @parameter
+     * precedence over propertiesFile
      */
+    @Parameter(name = "properties")
     private Properties properties;
 
     /**
      * Collection of bundles
-     *
-     * @parameter
      */
+    @Parameter(name = "bundles")
     private ArrayList bundles;
 
     /**
      * Collection of import bundles
-     *
-     * @parameter
      */
+    @Parameter(name = "importBundles")
     private ArrayList importBundles;
 
     /**
      * Collection of required Features
-     *
-     * @parameter
      */
+    @Parameter(name = "importFeatures")
     private ArrayList importFeatures;
 
     /**
      * Collection of required Features
-     *
-     * @parameter
      */
+    @Parameter(name = "includedFeatures")
     private ArrayList includedFeatures;
 
     /**
      * define advice file content
-     *
-     * @parameter
      */
+    @Parameter(name = "adviceFile")
     private AdviceFile adviceFile;
 
 //    /**
@@ -181,46 +166,31 @@ public class FeatureGenMojo extends AbstractMojo {
 //     */
     //    private String category;
     //
-    /**
-     * @component
-     */
+    @Component
     private org.apache.maven.artifact.factory.ArtifactFactory artifactFactory;
 
-    /**
-     * @component
-     */
+    @Component
     private org.apache.maven.artifact.resolver.ArtifactResolver resolver;
 
-    /**
-     * @parameter default-value="${localRepository}"
-     */
+    @Parameter(name = "localRepository", defaultValue = "${localRepository}")
     private org.apache.maven.artifact.repository.ArtifactRepository localRepository;
 
-    /**
-     * @parameter default-value="${project.remoteArtifactRepositories}"
-     */
+    @Parameter(name = "remoteRepositories", defaultValue = "${project.remoteArtifactRepositories}")
     private java.util.List remoteRepositories;
 
-    /**
-     * @parameter default-value="${project.distributionManagementArtifactRepository}"
-     */
+    @Parameter(name = "deploymentRepository", defaultValue = "${project.distributionManagementArtifactRepository}")
     private ArtifactRepository deploymentRepository;
 
-    /**
-     * @component
-     */
+    @Component
     private ArtifactMetadataSource artifactMetadataSource;
 
-    /**
-     * @parameter default-value="${project}"
-     */
+    @Parameter(name = "project", defaultValue = "${project}")
     private MavenProject project;
 
     /**
      * Maven ProjectHelper.
-     *
-     * @component
      */
+    @Component
     private MavenProjectHelper projectHelper;
 
     private ArrayList<Bundle> processedBundles;
