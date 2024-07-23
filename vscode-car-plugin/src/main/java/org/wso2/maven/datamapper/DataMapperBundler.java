@@ -218,6 +218,7 @@ public class DataMapperBundler {
         mojoInstance.logInfo("Bundle completed for data mapper: " + dataMapperName);
         Path bundledJsFilePath = Paths.get("." + File.separator
                 + Constants.TARGET_DIR_NAME + File.separator + "src" + File.separator + dataMapperName + ".dmc");
+        appendMapFunction(bundledJsFilePath.toString());
         copyGenerateDataMapperFile(bundledJsFilePath.toString(), dataMapper);
 
         removeSourceFiles();
@@ -470,7 +471,10 @@ public class DataMapperBundler {
                 "        filename: \"./src/" + dataMapperName + ".dmc\",\n" +
                 "        path: path.resolve(__dirname),\n" +
                 "        iife: false,\n" +
+                "        library: 'DataMapper', \n" +
+                "        libraryTarget: 'var',\n" +
                 "    },\n" +
+                "    mode: \"production\",\n" +
                 "};";
     
         try (FileWriter fileWriter = new FileWriter("." + File.separator + Constants.TARGET_DIR_NAME
@@ -478,6 +482,23 @@ public class DataMapperBundler {
             fileWriter.write(webPackConfigContent);
         } catch (IOException e) {
             throw new DataMapperException("Failed to create webpack.config.js file.", e);
+        }
+    }
+
+    /**
+     * Appends the function to call the mapFunction inside webpack bundled file.
+     *
+     * @param dmcPath The path to the data mapper configuration file.
+     */
+    private void appendMapFunction(String dmcPath) {
+        String mapFunction = "\n\nfunction mapFunction(input) {\n" +
+                "    return DataMapper.mapFunction(input);\n" +
+                "}\n";
+
+        try (FileWriter fileWriter = new FileWriter(dmcPath, true)) {
+            fileWriter.write(mapFunction);
+        } catch (IOException e) {
+            mojoInstance.logError("Failed to append map function to the bundled js file.");
         }
     }
 

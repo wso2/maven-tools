@@ -166,9 +166,9 @@ function generateJsonSchemaFromAST(ast: ts.SourceFile): any {
             if (ts.isTypeLiteralNode(member.type.elementType)) {
               processMembers(member.type.elementType.members, nestedSchema);
             }
-            parentSchema.properties[propertyName] = { type: "array", items: nestedSchema };
+            parentSchema.properties[propertyName] = { type: "array", items: [nestedSchema] };
           } else {
-            parentSchema.properties[propertyName] = { type: "array", items: { type: elementType } };
+            parentSchema.properties[propertyName] = { type: "array", items: [{ type: elementType }] };
           }
         } else {
           parentSchema.properties[propertyName] = { type: getType(member.type) };
