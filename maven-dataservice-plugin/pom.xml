@@ -13,13 +13,13 @@
     <parent>
         <groupId>org.wso2.maven</groupId>
         <artifactId>maven-common-tools</artifactId>
-        <version>5.2.62-SNAPSHOT</version>
+        <version>5.2.62</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
 
     <modelVersion>4.0.0</modelVersion>
     <artifactId>maven-dataservice-plugin</artifactId>
-    <version>5.2.62-SNAPSHOT</version>
+    <version>5.2.62</version>
     <packaging>maven-plugin</packaging>
 
     <name>Maven Dataservice Plugin</name>
