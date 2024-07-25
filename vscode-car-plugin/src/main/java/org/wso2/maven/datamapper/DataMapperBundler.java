@@ -218,7 +218,7 @@ public class DataMapperBundler {
         mojoInstance.logInfo("Bundle completed for data mapper: " + dataMapperName);
         Path bundledJsFilePath = Paths.get("." + File.separator
                 + Constants.TARGET_DIR_NAME + File.separator + "src" + File.separator + dataMapperName + ".dmc");
-        appendMapFunction(bundledJsFilePath.toString());
+        appendMapFunction(dataMapper.toString(), dataMapperName, bundledJsFilePath.toString());
         copyGenerateDataMapperFile(bundledJsFilePath.toString(), dataMapper);
 
         removeSourceFiles();
@@ -487,19 +487,54 @@ public class DataMapperBundler {
 
     /**
      * Appends the function to call the mapFunction inside webpack bundled file.
-     *
+     * @param tsFolder The path to the data mapper directory.
+     * @param datamapperName The name of the data mapper.
      * @param dmcPath The path to the data mapper configuration file.
      */
-    private void appendMapFunction(String dmcPath) {
-        String mapFunction = "\n\nfunction mapFunction(input) {\n" +
-                "    return DataMapper.mapFunction(input);\n" +
-                "}\n";
-
+    private void appendMapFunction(String tsFolder, String datamapperName, String dmcPath) {
+        String mapFunction = generateMapFunction(tsFolder + File.separator + datamapperName + ".ts");
         try (FileWriter fileWriter = new FileWriter(dmcPath, true)) {
             fileWriter.write(mapFunction);
         } catch (IOException e) {
             mojoInstance.logError("Failed to append map function to the bundled js file.");
         }
+    }
+
+    /**
+    * Generates the map function to be appended to the bundled js file.
+    * @param tsPath The path to the data mapper configuration file.
+    * @return The generated map function.
+    */
+    private String generateMapFunction(String tsPath) {
+
+        String functionName = "";
+        String inputVariable = "";
+
+        try (BufferedReader br = new BufferedReader(new InputStreamReader(Files.newInputStream(Paths.get(tsPath))))) {
+            String line;
+            while ((line = br.readLine()) != null) {
+                line = line.trim();
+                if (line.startsWith("*") && line.contains("functionName") && line.contains("map_")) {
+                    functionName = line.split(":")[1].trim();
+                }
+                if (line.startsWith("*") && line.contains("inputVariable")) {
+                    inputVariable = line.split(":")[1].trim();
+                }
+            }
+        } catch (IOException e) {
+            mojoInstance.logError("Failed to read the file.");
+        }
+
+        String mapFunction = "\n\nfunction mapFunction(input) {\n" +
+                "    return DataMapper.mapFunction(input);\n" +
+                "}\n\n";
+
+        if (!functionName.isEmpty() && !inputVariable.isEmpty()) {
+            mapFunction += "function " + functionName + "() {\n" +
+                    "    return mapFunction(" + inputVariable + ");\n" +
+                    "}\n";
+        }
+        return mapFunction;
     }
 
     /**
