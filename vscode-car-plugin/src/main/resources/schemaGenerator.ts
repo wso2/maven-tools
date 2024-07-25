@@ -178,15 +178,22 @@ function generateJsonSchemaFromAST(ast: ts.SourceFile): any {
   }
 
   function formatPropertyName(name: string) {
+    // avoid formatting xml element value
+    if (name === "_ELEMVAL") {
+      return name;
+    }
     // Remove quotes and leading/trailing whitespace
     let formattedName = name.replace(/"/g, "").trim();
     if (formattedName.startsWith("attr_")) {
       // Remove the "attr_" prefix
       formattedName = formattedName.substring(5);
     }
+    // Replace underscores with colons for XML namespaces
     if (formattedName.includes("_")) {
-      // replace them with colon
-      formattedName = formattedName.replace("_", ":");
+      if ((schema.inputType && schema.inputType.toLowerCase() === "xml" && schema.namespaces) ||
+        (schema.outputType && schema.outputType.toLowerCase() === "xml" && schema.namespaces)) {
+          formattedName = formattedName.replace("_", ":");
+      }
     }
     return formattedName;
   }
@@ -218,6 +225,7 @@ function convertSchemaObjectToArray(schema: any): any {
   const arraySchema: any = {
     "$schema": schema["$schema"],
     type: "array",
+    title: schema.title,
     items: [{
       type: "object",
       properties: schema.properties
