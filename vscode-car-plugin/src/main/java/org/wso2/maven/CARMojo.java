@@ -126,7 +126,8 @@ public class CARMojo extends AbstractMojo {
         List<ArtifactDependency> metaDependencies = new ArrayList<>();
         if (createdArchiveDirectory || targetFolder.exists()) {
             String projectVersion = project.getVersion().replace("-SNAPSHOT", "");
-            cAppHandler.processArtifacts(artifactFolder, tempTargetDir, dependencies, projectVersion);
+            cAppHandler.processArtifacts(artifactFolder, tempTargetDir, dependencies, metaDependencies, projectVersion);
+            cAppHandler.processAPIDefinitions(resourcesFolder, tempTargetDir, metaDependencies, projectVersion);
             cAppHandler.processResourcesFolder(resourcesFolder, tempTargetDir, dependencies,
                     metaDependencies, projectVersion);
             cAppHandler.processClassMediators(dependencies, project);

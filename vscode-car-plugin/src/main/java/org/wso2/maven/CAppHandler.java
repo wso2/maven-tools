@@ -27,6 +27,7 @@ import javax.xml.namespace.QName;
 import javax.xml.stream.XMLStreamException;
 
 import org.apache.axiom.om.DeferredParsingException;
+import org.apache.axiom.om.OMAttribute;
 import org.apache.axiom.om.OMDocument;
 import org.apache.axiom.om.OMElement;
 import org.apache.commons.io.FileUtils;
@@ -73,7 +74,7 @@ class CAppHandler extends AbstractXMLDoc {
      * @param version          version of the project
      */
     void processArtifacts(File artifactsFolder, String archiveDirectory, List<ArtifactDependency> dependencies,
-                          String version) {
+                          List<ArtifactDependency> metadataDependencies, String version) {
         if (!artifactsFolder.exists()) {
             mojoInstance.logInfo("Could not find artifacts folder in " + artifactsFolder.getAbsolutePath());
             return;
@@ -81,7 +82,7 @@ class CAppHandler extends AbstractXMLDoc {
         mojoInstance.logInfo("Processing artifacts in " + artifactsFolder.getAbsolutePath());
         for (ArtifactDetails artifactDetails : artifactTypeList) {
             File artifactFolder = new File(artifactsFolder, artifactDetails.getDirectory());
-            processArtifactsInFolder(artifactFolder, dependencies, version, archiveDirectory,
+            processArtifactsInFolder(artifactFolder, dependencies, metadataDependencies, version, archiveDirectory,
                     artifactDetails.getServerRole(), artifactDetails.getType());
         }
     }
@@ -96,8 +97,9 @@ class CAppHandler extends AbstractXMLDoc {
      * @param serverRole       server role of the artifact
      * @param type             type of the artifact
      */
-    void processArtifactsInFolder(File artifactsDir, List<ArtifactDependency> dependencies, String version,
-                                  String archiveDirectory, String serverRole, String type) {
+    void processArtifactsInFolder(File artifactsDir, List<ArtifactDependency> dependencies,
+                                  List<ArtifactDependency> metadataDependencies, String version, String archiveDirectory,
+                                  String serverRole, String type) {
         File[] configFiles = artifactsDir.listFiles();
         if (configFiles != null) {
             for (File configFile : configFiles) {
@@ -119,6 +121,8 @@ class CAppHandler extends AbstractXMLDoc {
                         if (Constants.API_TYPE.equals(type)) {
                             // api version can be null
                             apiList.put(name, configVersion);
+                            writeMetadataFile(name, configElement, archiveDirectory, false, version);
+                            addMetadataDependencies(metadataDependencies, configElement, false, version);
                         }
                         if (configVersion == null) {
                             apiHasVersion = false;
@@ -126,6 +130,8 @@ class CAppHandler extends AbstractXMLDoc {
                         }
                         if (Constants.PROXY_SERVICE_TYPE.equals(type)) {
                             proxyList.put(name, configVersion);
+                            writeMetadataFile(name, configElement, archiveDirectory, true, version);
+                            addMetadataDependencies(metadataDependencies, configElement, true, version);
                         }
                         String fileName;
                         String folderName = "";
@@ -399,6 +405,250 @@ class CAppHandler extends AbstractXMLDoc {
             mojoInstance.logError("Error occurred while creating " + fileName);
             mojoInstance.logError(e.getMessage());
         }
+    }
+
+    /**
+     * Method to process API definitions in the resources folder and create corresponding files in the archive directory.
+     *
+     * @param resourcesFolder      path to resources folder
+     * @param archiveDirectory     path to archive directory
+     * @param metadataDependencies list of dependencies to be added to artifacts.xml file
+     */
+    void processAPIDefinitions(File resourcesFolder, String archiveDirectory, List<ArtifactDependency> metadataDependencies,
+                               String projectVersion) {
+
+        mojoInstance.logInfo("Processing API definitions in " + resourcesFolder.getAbsolutePath());
+        File metadataFolder = new File(resourcesFolder, Constants.API_DEFINITION_DIR);
+        if (!apiList.isEmpty()) {
+            for (Map.Entry<String, String> entry : apiList.entrySet()) {
+                String apiName = entry.getKey();
+                String apiVersion = entry.getValue();
+                String swaggerFilename = apiName + ".yaml";
+                boolean apiVersionExists = true;
+                if (apiVersion == null) {
+                    apiVersion = projectVersion;
+                    apiVersionExists = false;
+                }
+                File swaggerFile = new File(metadataFolder, swaggerFilename);
+                if (swaggerFile.exists()) {
+                    String folderName;
+                    String fileName;
+                    if (apiVersionExists) {
+                        fileName = apiName + "_" + apiVersion + "_swagger-" + apiVersion + ".yaml";
+                        folderName = Constants.METADATA_DIR_NAME + "/" + apiName + "_" + apiVersion + "_swagger_"
+                                + apiVersion;
+                        String name = apiName + "_" + apiVersion + "_swagger";
+                        metadataDependencies.add(new ArtifactDependency(name, apiVersion, Constants.SERVER_ROLE_EI, true));
+                        writeArtifactAndFile(swaggerFile, archiveDirectory, name, Constants.METADATA_TYPE,
+                                Constants.SERVER_ROLE_EI, apiVersion, fileName, folderName);
+                    } else {
+                        folderName = Constants.METADATA_DIR_NAME + "/" + apiName + "_swagger_" + apiVersion;
+                        fileName = apiName + "_swagger-" + apiVersion + ".yaml";
+                        String name = apiName + "_swagger";
+                        metadataDependencies.add(new ArtifactDependency(name, apiVersion,
+                                Constants.SERVER_ROLE_EI, true));
+                        writeArtifactAndFile(swaggerFile, archiveDirectory, name,
+                                Constants.METADATA_TYPE, Constants.SERVER_ROLE_EI, apiVersion, fileName, folderName);
+                    }
+                }
+            }
+        }
+    }
+
+    /**
+     * Method to write metadata file to the archive directory.
+     *
+     * @param name             name of the artifact
+     * @param apiElement       OMElement of the artifact
+     * @param archiveDirectory path to archive directory
+     * @param isProxy          whether the artifact is a proxy service
+     */
+    private void writeMetadataFile(String name, OMElement apiElement, String archiveDirectory, boolean isProxy,
+                                   String projectVersion) {
+
+        try {
+            String version = null;
+            OMAttribute versionAtt = apiElement.getAttribute(new QName(Constants.VERSION));
+            if (versionAtt != null) {
+                version = versionAtt.getAttributeValue();
+            }
+            String artifactName;
+            String metadataFolder;
+            String metadataFileName;
+            if (version != null) {
+                artifactName = name + "_" + version + "_metadata";
+                metadataFolder = name + "_" + version + "_metadata_" + version;
+                metadataFileName = name + "_" + version + "_metadata-" + version + ".yaml";
+            } else {
+                if (isProxy) {
+                    name = name + "_proxy";
+                }
+                artifactName = name + "_metadata";
+                metadataFolder = name + "_metadata_" + projectVersion;
+                metadataFileName = name + "_metadata-" + projectVersion + ".yaml";
+            }
+            Artifact artifactObject = new Artifact();
+            artifactObject.setName(artifactName);
+            artifactObject.setType(Constants.METADATA_TYPE);
+            artifactObject.setVersion(getAPIVersion(apiElement, projectVersion));
+            artifactObject.setServerRole(Constants.SERVER_ROLE_EI);
+            artifactObject.setFile(metadataFileName);
+
+            String artifactDataAsString = createArtifactData(artifactObject);
+            String metadata = Paths.get(archiveDirectory, "metadata", metadataFolder).toString();
+            org.wso2.developerstudio.eclipse.utils.file.FileUtils.createFile(
+                    new File(metadata, Constants.ARTIFACT_XML),
+                    artifactDataAsString);
+            if (isProxy) {
+                org.wso2.developerstudio.eclipse.utils.file.FileUtils.createFile(
+                        new File(metadata, metadataFileName),
+                        getProxyMetadataPropertiesAsString(apiElement, projectVersion));
+            } else {
+                org.wso2.developerstudio.eclipse.utils.file.FileUtils.createFile(
+                        new File(metadata, metadataFileName),
+                        getAPIMetadataPropertiesAsString(apiElement, projectVersion));
+            }
+        } catch (IOException | MojoExecutionException e) {
+            mojoInstance.logError("Error occurred while creating metadata file");
+            mojoInstance.logError(e.getMessage());
+        }
+    }
+
+    /**
+     * Method to get metadata properties as a string for an API.
+     *
+     * @param apiElement     OMElement of the API
+     * @param projectVersion version of the project
+     * @return metadata properties as a string
+     */
+    private String getAPIMetadataPropertiesAsString(OMElement apiElement, String projectVersion) {
+
+        String version = getAPIVersion(apiElement, projectVersion);
+        String key = apiElement.getAttributeValue(new QName(Constants.NAME)) + "-" + version;
+        String name = apiElement.getAttributeValue(new QName(Constants.NAME));
+        OMAttribute descriptionAtr = apiElement.getAttribute(new QName(Constants.DESCRIPTION));
+
+        StringBuilder builder = new StringBuilder();
+        // Creating the YAML file
+        builder.append("---\n");
+        builder.append("key: \"").append(key).append("\"\n");
+        builder.append("name: \"").append(name).append("\"\n");
+        builder.append("displayName: \"").append(name).append("\"\n");
+        if (descriptionAtr != null) {
+            builder.append("description: \"").append(descriptionAtr.getAttributeValue()).append("\"\n");
+        }
+        builder.append("version: \"").append(version).append("\"\n");
+        builder.append("serviceUrl: \"").append(getAPIURL(apiElement)).append("\"\n");
+        builder.append("definitionType: \"OAS3\"\n");
+        builder.append("securityType: \"BASIC\"\n");
+        builder.append("mutualSSLEnabled: false\n");
+        return builder.toString();
+    }
+
+    /**
+     * Method to get metadata properties as a string for a proxy service.
+     *
+     * @param proxyElement   OMElement of the proxy service
+     * @param projectVersion version of the project
+     * @return metadata properties as a string
+     */
+    private String getProxyMetadataPropertiesAsString(OMElement proxyElement, String projectVersion) {
+
+        String key = proxyElement.getAttributeValue(new QName(Constants.NAME)) + "_proxy-" + projectVersion;
+        String name = proxyElement.getAttributeValue(new QName(Constants.NAME));
+        OMAttribute descriptionAtr = proxyElement.getAttribute(new QName(Constants.DESCRIPTION));
+
+        StringBuilder builder = new StringBuilder();
+        // Creating the YAML file
+        builder.append("---\n");
+        builder.append("key: \"").append(key).append("\"\n");
+        builder.append("name: \"").append(name).append("\"\n");
+        builder.append("displayName: \"").append(name).append("\"\n");
+        if (descriptionAtr != null) {
+            builder.append("description: \"").append(descriptionAtr.getAttributeValue()).append("\"\n");
+        }
+        builder.append("version: \"").append(projectVersion).append("\"\n");
+        builder.append("serviceUrl: \"").append(getProxyServiceURL(name)).append("\"\n");
+        builder.append("definitionType: \"WSDL1\"\n");
+        builder.append("securityType: \"BASIC\"\n");
+        builder.append("mutualSSLEnabled: false\n");
+        return builder.toString();
+    }
+
+    /**
+     * Method to add metadata dependencies to the list.
+     *
+     * @param metadataDependencies list of metadata dependencies
+     * @param configElement        OMElement of the artifact
+     * @param isProxy              whether the artifact is a proxy service
+     * @param projectVersion       version of the project
+     */
+    private void addMetadataDependencies(List<ArtifactDependency> metadataDependencies, OMElement configElement,
+                                         boolean isProxy, String projectVersion) {
+
+        String name = configElement.getAttributeValue(new QName(Constants.NAME));
+        OMAttribute versionAtt = configElement.getAttribute(new QName(Constants.VERSION));
+        String dependencyName;
+        String version;
+        if (versionAtt != null) {
+            version = versionAtt.getAttributeValue();
+            dependencyName = name + "_" + version + "_metadata";
+        } else {
+            version = projectVersion;
+            if (isProxy) {
+                name = name + "_proxy";
+            }
+            dependencyName = name + "_metadata";
+        }
+        metadataDependencies.add(new ArtifactDependency(dependencyName, version,
+                Constants.SERVER_ROLE_EI, true));
+    }
+
+    /**
+     * Method to get API version from the API element.
+     *
+     * @param apiElement     OMElement of the API
+     * @param projectVersion version of the project
+     * @return API version if available, project version otherwise
+     */
+    private String getAPIVersion(OMElement apiElement, String projectVersion) {
+
+        OMAttribute versionAtt = apiElement.getAttribute(new QName(Constants.VERSION));
+        if (versionAtt != null) {
+            return versionAtt.getAttributeValue();
+        }
+        return projectVersion;
+    }
+
+    /**
+     * Method to get the service URL of a Proxy Service.
+     *
+     * @param name Name of the Proxy Service
+     * @return service URL
+     */
+    private String getProxyServiceURL(String name) {
+
+        return "https://{MI_HOST}:{MI_PORT}" + "/services/" + name;
+    }
+
+    /**
+     * Method to get the API URL from the API element.
+     *
+     * @param apiElement OMElement of the API
+     * @return API URL
+     */
+    private String getAPIURL(OMElement apiElement) {
+
+        String contextAtt = apiElement.getAttribute(new QName("context")).getAttributeValue();
+        OMAttribute versionTypeAtt = apiElement.getAttribute(new QName("version-type"));
+        OMAttribute versionAtt = apiElement.getAttribute(new QName(Constants.VERSION));
+        if (versionTypeAtt != null) {
+            String versionType = versionTypeAtt.getAttributeValue();
+            if ("url".equals(versionType)) {
+                return "https://{MI_HOST}:{MI_PORT}" + contextAtt + "/" + versionAtt.getAttributeValue();
+            }
+        }
+        return "https://{MI_HOST}:{MI_PORT}" + contextAtt;
     }
 
     /**

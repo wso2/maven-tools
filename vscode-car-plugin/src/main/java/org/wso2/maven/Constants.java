@@ -72,6 +72,7 @@ class Constants {
     static final String TYPE = "type";
     static final String SERVER_ROLE = "serverRole";
     static final String NAME = "name";
+    static final String DESCRIPTION = "description";
     static final String FILE = "file";
     static final String ITEM = "item";
     static final String COLLECTION = "collection";
@@ -85,6 +86,7 @@ class Constants {
     static final String EMPTY_STRING = "";
     static final String MAIN_SEQUENCE = "mainSequence";
     static final String TEMP_TARGET_DIR_NAME = "tmp";
+    static final String API_DEFINITION_DIR = "api-definitions";
 
     private Constants() {
     }
