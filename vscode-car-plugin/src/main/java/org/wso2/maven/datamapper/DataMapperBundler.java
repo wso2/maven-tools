@@ -549,7 +549,7 @@ public class DataMapperBundler {
         List<Path> subDirectories = new ArrayList<>();
         try (DirectoryStream<Path> stream = Files.newDirectoryStream(dirPath)) {
             for (Path path : stream) {
-                if (Files.isDirectory(path) && !path.equals(dirPath)) {
+                if (Files.isDirectory(path) && !path.equals(dirPath) && isDataMapperDirectory(path)) {
                     subDirectories.add(path);
                 }
             }
@@ -559,6 +559,12 @@ public class DataMapperBundler {
             throw new DataMapperException("Failed to find data mapper directories.", e);
         }
         return subDirectories;
+    }
+
+    private boolean isDataMapperDirectory(Path path) {
+
+        String dirName = path.getFileName().toString();
+        return Files.exists(Paths.get(path.toString(), dirName + ".ts"));
     }
 
     /**
