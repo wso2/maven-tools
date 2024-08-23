@@ -184,7 +184,7 @@ class CAppHandler extends AbstractXMLDoc {
             return;
         }
         for (File connector : connectorFiles) {
-            if (connector.isFile()) {
+            if (connector.isFile() && connector.getName().endsWith(".zip")) {
                 String fileName = connector.getName();
                 int lastIndex = fileName.lastIndexOf('-');
                 String name = fileName.substring(0, lastIndex);
@@ -505,6 +505,8 @@ class CAppHandler extends AbstractXMLDoc {
                             Constants.TEMP_TARGET_DIR_NAME, project.getArtifactId(), Constants.CLASS_MEDIATOR_TYPE,
                     Constants.SERVER_ROLE_EI, project.getVersion(), jarName, project.getArtifactId() + "_" +
                             project.getVersion());
+            // delete the jar file after copying to the CAPP
+            jarFile.delete();
         }
     }
 

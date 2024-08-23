@@ -743,10 +743,11 @@ public class DataMapperBundler {
         String[] pathsToDelete = {
             "." + File.separator + Constants.TARGET_DIR_NAME
         };
+        String excludeRegex = ".*\\.jar";
 
         for (String path : pathsToDelete) {
             File file = new File(path);
-            deleteRecursively(file);
+            deleteRecursively(file, excludeRegex);
         }
     }
 
@@ -754,18 +755,22 @@ public class DataMapperBundler {
      * Recursively deletes files and directories.
      *
      * @param file The file or directory to delete.
+     * @param excludeRegex The regex pattern to exclude files from deletion.
      */
-    private void deleteRecursively(File file) {
+    private void deleteRecursively(File file, String excludeRegex) {
+
         if (file.isDirectory()) {
             File[] entries = file.listFiles();
             if (entries != null) {
                 for (File entry : entries) {
-                    deleteRecursively(entry);
+                    deleteRecursively(entry, excludeRegex);
                 }
             }
         }
-        if (!file.delete()) {
-            mojoInstance.logError("Failed to delete " + file.getPath());
+        if (excludeRegex == null || !file.getAbsolutePath().matches(excludeRegex)) {
+            if (!file.delete()) {
+                mojoInstance.logError("Failed to delete " + file.getPath());
+            }
         }
     }
 }
