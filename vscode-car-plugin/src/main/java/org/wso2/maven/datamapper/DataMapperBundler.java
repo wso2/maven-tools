@@ -549,7 +549,7 @@ public class DataMapperBundler {
         List<Path> subDirectories = new ArrayList<>();
         try (DirectoryStream<Path> stream = Files.newDirectoryStream(dirPath)) {
             for (Path path : stream) {
-                if (Files.isDirectory(path) && !path.equals(dirPath)) {
+                if (Files.isDirectory(path) && !path.equals(dirPath) && isDataMapperDirectory(path)) {
                     subDirectories.add(path);
                 }
             }
@@ -559,6 +559,12 @@ public class DataMapperBundler {
             throw new DataMapperException("Failed to find data mapper directories.", e);
         }
         return subDirectories;
+    }
+
+    private boolean isDataMapperDirectory(Path path) {
+
+        String dirName = path.getFileName().toString();
+        return Files.exists(Paths.get(path.toString(), dirName + ".ts"));
     }
 
     /**
@@ -737,10 +743,11 @@ public class DataMapperBundler {
         String[] pathsToDelete = {
             "." + File.separator + Constants.TARGET_DIR_NAME
         };
+        String excludeRegex = ".*\\.jar";
 
         for (String path : pathsToDelete) {
             File file = new File(path);
-            deleteRecursively(file);
+            deleteRecursively(file, excludeRegex);
         }
     }
 
@@ -748,18 +755,22 @@ public class DataMapperBundler {
      * Recursively deletes files and directories.
      *
      * @param file The file or directory to delete.
+     * @param excludeRegex The regex pattern to exclude files from deletion.
      */
-    private void deleteRecursively(File file) {
+    private void deleteRecursively(File file, String excludeRegex) {
+
         if (file.isDirectory()) {
             File[] entries = file.listFiles();
             if (entries != null) {
                 for (File entry : entries) {
-                    deleteRecursively(entry);
+                    deleteRecursively(entry, excludeRegex);
                 }
             }
         }
-        if (!file.delete()) {
-            mojoInstance.logError("Failed to delete " + file.getPath());
+        if (excludeRegex == null || !file.getAbsolutePath().matches(excludeRegex)) {
+            if (!file.delete()) {
+                mojoInstance.logError("Failed to delete " + file.getPath());
+            }
         }
     }
 }

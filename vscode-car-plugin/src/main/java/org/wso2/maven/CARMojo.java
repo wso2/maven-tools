@@ -97,13 +97,14 @@ public class CARMojo extends AbstractMojo {
 
             processCARCreation(basedir, artifactFolderPath, resourcesFolderPath);
         } finally {
-            if (bundler != null) {
-                try {
-                    bundler.deleteGeneratedDatamapperArtifacts();
-                } catch (DataMapperException e) {
-                    getLog().error("Error during data mapper cleanup: " + e.getMessage(), e);
-                }
-            }
+            // TODO: Plugin should not delete the files in the project. Need to fix this.
+//            if (bundler != null) {
+//                try {
+//                    bundler.deleteGeneratedDatamapperArtifacts();
+//                } catch (DataMapperException e) {
+//                    getLog().error("Error during data mapper cleanup: " + e.getMessage(), e);
+//                }
+//            }
         }
     }
 
