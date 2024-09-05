@@ -107,6 +107,10 @@ public class DataMapperBundler {
 
         for (Path dataMapper : dataMappers) {
             String dataMapperName = dataMapper.getFileName().toString();
+            Path tsFilePath = dataMapper.resolve(dataMapperName + ".ts");
+            if (Files.notExists(tsFilePath)) {
+                return;
+            }
             Path bundledJsFilePath = Paths.get(dataMapper + File.separator + dataMapperName + ".dmc");
             Path inputSchemaFilePath = Paths.get(dataMapper + File.separator + dataMapperName + "_inputSchema.json");
             Path outputSchemaFilePath = Paths.get(dataMapper + File.separator + dataMapperName + "_outputSchema.json");
