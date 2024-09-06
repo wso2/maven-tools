@@ -56,6 +56,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
+import java.util.regex.Pattern;
 
 @Mojo(name = "config-mapper-parser")
 public class ConfigMapParserMojo extends AbstractMojo {
@@ -346,7 +347,7 @@ public class ConfigMapParserMojo extends AbstractMojo {
             innerBuilder.append(filePathSeparateList[filePathSeparateList.length - 1]);
             builder.append(ConfigMapParserConstants.DOCKER_COPY_FILE).append(filePath.replaceAll(
                     ConfigMapParserConstants.SPLIT_PATTERN, ConfigMapParserConstants.PATH_SEPARATOR)
-                            .replaceAll(ConfigMapParserConstants.TEMP_DOCKER_DIR + File.separator,""))
+                            .replaceAll(Pattern.quote(ConfigMapParserConstants.TEMP_DOCKER_DIR + File.separator), ""))
                     .append(ConfigMapParserConstants.DOCKER_MI_DIR_PATH).append(innerBuilder.toString());
             builder.append(System.lineSeparator());
         }
