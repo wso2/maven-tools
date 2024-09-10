@@ -345,9 +345,11 @@ public class ConfigMapParserMojo extends AbstractMojo {
                 innerBuilder.append(filePathSeparateList[x]).append(ConfigMapParserConstants.PATH_SEPARATOR);
             }
             innerBuilder.append(filePathSeparateList[filePathSeparateList.length - 1]);
-            builder.append(ConfigMapParserConstants.DOCKER_COPY_FILE).append(filePath.replaceAll(
-                    ConfigMapParserConstants.SPLIT_PATTERN, ConfigMapParserConstants.PATH_SEPARATOR)
-                            .replaceAll(Pattern.quote(ConfigMapParserConstants.TEMP_DOCKER_DIR + File.separator), ""))
+            builder.append(ConfigMapParserConstants.DOCKER_COPY_FILE)
+                    .append(filePath.replaceAll(Pattern.quote(
+                                    ConfigMapParserConstants.TEMP_DOCKER_DIR + File.separator), "")
+                            .replaceAll(
+                                    ConfigMapParserConstants.SPLIT_PATTERN, ConfigMapParserConstants.PATH_SEPARATOR))
                     .append(ConfigMapParserConstants.DOCKER_MI_DIR_PATH).append(innerBuilder.toString());
             builder.append(System.lineSeparator());
         }
