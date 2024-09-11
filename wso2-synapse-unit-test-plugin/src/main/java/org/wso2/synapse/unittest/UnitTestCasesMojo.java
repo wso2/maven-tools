@@ -85,6 +85,7 @@ public class UnitTestCasesMojo extends AbstractMojo {
                 appendTestLogs();
                 testCaseRunner();
             } catch (Exception e) {
+                stopTestingServer();
                 throw new MojoExecutionException("Exception occurred while running test cases: " + e.getMessage());
             } finally {
                 if (isUnitTestAgentStartTheServer) {
@@ -413,6 +414,16 @@ public class UnitTestCasesMojo extends AbstractMojo {
 
             } catch (Exception e) {
                 getLog().error("Error in closing the server", e);
+            }
+        } else if (server.getServerType() != null && server.getServerType().equals(REMOTE_SERVER)) {
+            try {
+                if (getLog().isDebugEnabled()) {
+                    getLog().debug("Stopping docker container ");
+                }
+                Runtime.getRuntime().exec("docker stop wso2-mi-container").waitFor();
+                Runtime.getRuntime().exec("docker container rm wso2-mi-container").waitFor();
+            } catch (Exception e) {
+                getLog().error("Error in stopping the container", e);
             }
         }
     }
