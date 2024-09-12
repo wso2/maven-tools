@@ -27,6 +27,7 @@ public class SynapseServer {
     private String testServerHost;
     private String testServerPort;
     private String testServerPath;
+    private String testServerVersion;
 
     /**
      * Get server type.
@@ -98,5 +99,23 @@ public class SynapseServer {
      */
     public void setServerPath(String localServer) {
         this.testServerPath = localServer;
+    }
+
+    /**
+     * Get local server version.
+     *
+     * @return local server version
+     */
+    String getServerVersion() {
+        return testServerVersion;
+    }
+
+    /**
+     * Set local server version.
+     *
+     * @param serverVersion local server version
+     */
+    public void setServerVersion(String serverVersion) {
+        this.testServerVersion = serverVersion;
     }
 }
