@@ -274,7 +274,7 @@ class SynapseTestCaseFileReader {
                     if (!connectorResourceFile.exists()) {
                         registryFilePath = resource.getText();
                     } else {
-                        registryFilePath = RELATIVE_PREVIOUS + File.separator + resource.getText();
+                        registryFilePath = RELATIVE_PREVIOUS + File.separator + RELATIVE_PREVIOUS + File.separator + resource.getText();
                     }
                 } else {
                     registryFilePath = RELATIVE_PREVIOUS + File.separator + resource.getText();
