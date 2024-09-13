@@ -747,19 +747,15 @@ public class UnitTestCasesMojo extends AbstractMojo {
                 downloadMiPack(downloadUrl.toString(), fullFilePath.toString());
             }
             unzipMiPack(fullFilePath.toString(), miDownloadPath.toString());
-            try {
-                FileUtils.copyDirectory(new File(Paths.get(projectRootPath, "deployment", "libs").
-                        toString()), new File(Paths.get(miDownloadPath.toString(),
-                        Constants.WSO2_MI_WITH_DASH + server.getServerVersion(), "lib").toString()));
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
+            FileUtils.copyDirectory(new File(Paths.get(projectRootPath, "deployment", "libs").toString()),
+                    new File(Paths.get(miDownloadPath.toString(), Constants.WSO2_MI_WITH_DASH +
+                            server.getServerVersion(), "lib").toString()));
             String scriptPath = Paths.get(miDownloadPath.toString(), Constants.WSO2_MI_WITH_DASH +
                     server.getServerVersion(), "bin", "micro-integrator.sh").toString();
             Runtime.getRuntime().exec("chmod +x " + scriptPath);
             server.setServerPath(scriptPath);
         } catch (IOException e) {
-            getLog().error("Local server startup failed: ", e);
+            getLog().error("Local server startup failed: " + e.getMessage(), e);
         }
     }
 
