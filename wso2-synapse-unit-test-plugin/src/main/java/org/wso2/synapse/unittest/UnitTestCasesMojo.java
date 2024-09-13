@@ -721,40 +721,38 @@ public class UnitTestCasesMojo extends AbstractMojo {
 
     private void runLocalServer(String projectRootPath) {
         try {
-            if (server.getServerPath() != null && server.getServerPath().equalsIgnoreCase("/")) {
-                String userHome;
-                if (System.getProperty(Constants.OS_TYPE).toLowerCase().contains(Constants.OS_WINDOWS)) {
-                    userHome = System.getenv(Constants.USER_PROFILE);
-                } else {
-                    userHome = System.getenv(Constants.HOME);
-                }
-                Path miDownloadPath = Paths.get(userHome, Constants.M2, Constants.REPOSITORY, Constants.ORG,
-                        Constants.WSO2, Constants.EI, Constants.WSO2_MI, server.getServerVersion());
-                URL fileURL = new URL("https://github.com/wso2/micro-integrator/releases/download/v" +
-                        server.getServerVersion() + "/wso2mi-" + server.getServerVersion() + Constants.ZIP);
-                if (Files.notExists(miDownloadPath)) {
-                    Files.createDirectories(miDownloadPath);
-                }
-                Path fullFilePath = Paths.get(miDownloadPath.toString(), Constants.WSO2_MI_WITH_DASH +
-                        server.getServerVersion() + Constants.ZIP);
-                if (Files.notExists(fullFilePath)) {
-                    getLog().info("Downloading wso2mi-" + server.getServerVersion() +
-                            " server to \"" + miDownloadPath + "\" for testing unit test ...");
-                    downloadMiPack(fileURL.toString(), fullFilePath.toString());
-                }
-                unzipMiPack(fullFilePath.toString(), miDownloadPath.toString());
-                try {
-                    FileUtils.copyDirectory(new File(Paths.get(projectRootPath, "deployment", "libs").
-                            toString()), new File(Paths.get(miDownloadPath.toString(),
-                            Constants.WSO2_MI_WITH_DASH + server.getServerVersion(), "lib").toString()));
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-                String scriptPath = Paths.get(miDownloadPath.toString(), Constants.WSO2_MI_WITH_DASH +
-                        server.getServerVersion(), "bin", "micro-integrator.sh").toString();
-                Runtime.getRuntime().exec("chmod +x " + scriptPath);
-                server.setServerPath(scriptPath);
+            String userHome;
+            if (System.getProperty(Constants.OS_TYPE).toLowerCase().contains(Constants.OS_WINDOWS)) {
+                userHome = System.getenv(Constants.USER_PROFILE);
+            } else {
+                userHome = System.getenv(Constants.HOME);
             }
+            Path miDownloadPath = Paths.get(userHome, Constants.M2, Constants.REPOSITORY, Constants.ORG,
+                    Constants.WSO2, Constants.EI, Constants.WSO2_MI, server.getServerVersion());
+            URL fileURL = new URL("https://github.com/wso2/micro-integrator/releases/download/v" +
+                    server.getServerVersion() + "/wso2mi-" + server.getServerVersion() + Constants.ZIP);
+            if (Files.notExists(miDownloadPath)) {
+                Files.createDirectories(miDownloadPath);
+            }
+            Path fullFilePath = Paths.get(miDownloadPath.toString(), Constants.WSO2_MI_WITH_DASH +
+                    server.getServerVersion() + Constants.ZIP);
+            if (Files.notExists(fullFilePath)) {
+                getLog().info("Downloading wso2mi-" + server.getServerVersion() +
+                        " server to \"" + miDownloadPath + "\" for testing unit test ...");
+                downloadMiPack(fileURL.toString(), fullFilePath.toString());
+            }
+            unzipMiPack(fullFilePath.toString(), miDownloadPath.toString());
+            try {
+                FileUtils.copyDirectory(new File(Paths.get(projectRootPath, "deployment", "libs").
+                        toString()), new File(Paths.get(miDownloadPath.toString(),
+                        Constants.WSO2_MI_WITH_DASH + server.getServerVersion(), "lib").toString()));
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            String scriptPath = Paths.get(miDownloadPath.toString(), Constants.WSO2_MI_WITH_DASH +
+                    server.getServerVersion(), "bin", "micro-integrator.sh").toString();
+            Runtime.getRuntime().exec("chmod +x " + scriptPath);
+            server.setServerPath(scriptPath);
         } catch (IOException e) {
             getLog().error("Local server startup failed: ", e);
         }
