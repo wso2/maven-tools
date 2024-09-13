@@ -77,4 +77,14 @@ class Constants {
     static final String OS_WINDOWS = "win";
     static final String NEW_LINE_SEPARATOR = "\n";
     static final String REPORT_FILE_NAME = "unit-test-report.json";
+    static final String USER_PROFILE = "USERPROFILE";
+    static final String HOME = "HOME";
+    static final String M2 = ".m2";
+    static final String REPOSITORY = "repository";
+    static final String ORG = "org";
+    static final String WSO2 = "wso2";
+    static final String EI = "ei";
+    static final String WSO2_MI = "wso2mi";
+    static final String WSO2_MI_WITH_DASH = "wso2mi-";
+    static final String ZIP = ".zip";
 }

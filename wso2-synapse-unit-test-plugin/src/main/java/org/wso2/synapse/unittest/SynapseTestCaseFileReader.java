@@ -128,6 +128,9 @@ class SynapseTestCaseFileReader {
                 testArtifactFile = new File(RELATIVE_PREVIOUS + File.separator +
                         RELATIVE_PREVIOUS + File.separator +  testArtifactFilePath);
                 if (!testArtifactFile.exists()) {
+                    if (testArtifactFilePath.startsWith(File.separator)) {
+                        testArtifactFilePath = testArtifactFilePath.substring(1);
+                    }
                     testArtifactFileAsString = FileUtils.readFileToString(new File(testArtifactFilePath));
                 } else {
                     testArtifactFileAsString = FileUtils.readFileToString(testArtifactFile);

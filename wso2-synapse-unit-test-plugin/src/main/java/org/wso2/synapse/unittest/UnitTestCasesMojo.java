@@ -23,20 +23,27 @@ import com.google.gson.GsonBuilder;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
+import org.apache.commons.io.FileUtils;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
 import org.wso2.synapse.unittest.summarytable.ConsoleDataTable;
 
+import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.net.HttpURLConnection;
 import java.net.InetSocketAddress;
 import java.net.MalformedURLException;
 import java.net.Socket;
+import java.net.URL;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
@@ -48,6 +55,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipInputStream;
 
 @Mojo(name = "synapse-unit-test")
 public class UnitTestCasesMojo extends AbstractMojo {
@@ -85,6 +94,7 @@ public class UnitTestCasesMojo extends AbstractMojo {
                 appendTestLogs();
                 testCaseRunner();
             } catch (Exception e) {
+                stopTestingServer();
                 throw new MojoExecutionException("Exception occurred while running test cases: " + e.getMessage());
             } finally {
                 if (isUnitTestAgentStartTheServer) {
@@ -138,6 +148,9 @@ public class UnitTestCasesMojo extends AbstractMojo {
         //start the synapse engine with enable the unit test agent
         if (synapseTestCasePaths.size() > 0) {
             checkTestParameters();
+            if (server.getServerPath() != null && server.getServerPath().equalsIgnoreCase("/")) {
+                runLocalServer(synapseTestCasePaths.get(0).split("src")[0]);
+            }
             startTestingServer();
         }
 
@@ -704,5 +717,127 @@ public class UnitTestCasesMojo extends AbstractMojo {
             getLog().info(line);
         }
         getLog().info("");
+    }
+
+    private void runLocalServer(String projectRootPath) {
+        try {
+            String userHome;
+            if (System.getProperty(Constants.OS_TYPE).toLowerCase().contains(Constants.OS_WINDOWS)) {
+                userHome = System.getenv(Constants.USER_PROFILE);
+            } else {
+                userHome = System.getenv(Constants.HOME);
+            }
+            Path miDownloadPath = Paths.get(userHome, Constants.M2, Constants.REPOSITORY, Constants.ORG,
+                    Constants.WSO2, Constants.EI, Constants.WSO2_MI, server.getServerVersion());
+            URL downloadUrl;
+            if (server.getServerDownloadLink() == null) {
+                downloadUrl = new URL("https://github.com/wso2/micro-integrator/releases/download/v" +
+                        server.getServerVersion() + "/wso2mi-" + server.getServerVersion() + Constants.ZIP);
+            } else {
+                downloadUrl = new URL(server.getServerDownloadLink());
+            }
+            if (Files.notExists(miDownloadPath)) {
+                Files.createDirectories(miDownloadPath);
+            }
+            Path fullFilePath = Paths.get(miDownloadPath.toString(), Constants.WSO2_MI_WITH_DASH +
+                    server.getServerVersion() + Constants.ZIP);
+            if (Files.notExists(fullFilePath)) {
+                getLog().info("Downloading wso2mi-" + server.getServerVersion() +
+                        " server to \"" + miDownloadPath + "\" for testing unit test ...");
+                downloadMiPack(downloadUrl.toString(), fullFilePath.toString());
+            }
+            unzipMiPack(fullFilePath.toString(), miDownloadPath.toString());
+            FileUtils.copyDirectory(new File(Paths.get(projectRootPath, "deployment", "libs").toString()),
+                    new File(Paths.get(miDownloadPath.toString(), Constants.WSO2_MI_WITH_DASH +
+                            server.getServerVersion(), "lib").toString()));
+            String scriptPath;
+            if (System.getProperty(Constants.OS_TYPE).toLowerCase().contains(Constants.OS_WINDOWS)) {
+                scriptPath = Paths.get(miDownloadPath.toString(), Constants.WSO2_MI_WITH_DASH +
+                        server.getServerVersion(), "bin", "micro-integrator.bat").toString();
+            } else {
+                scriptPath = Paths.get(miDownloadPath.toString(), Constants.WSO2_MI_WITH_DASH +
+                        server.getServerVersion(), "bin", "micro-integrator.sh").toString();
+
+            }
+            File file = new File(scriptPath);
+            file.setExecutable(true);
+            server.setServerPath(scriptPath);
+        } catch (IOException e) {
+            getLog().error("Local server startup failed: " + e.getMessage(), e);
+        }
+    }
+
+    private File newFile(File destinationDir, ZipEntry zipEntry) throws IOException {
+        File destFile = new File(destinationDir, zipEntry.getName());
+
+        String destDirPath = destinationDir.getCanonicalPath();
+        String destFilePath = destFile.getCanonicalPath();
+
+        if (!destFilePath.startsWith(destDirPath + File.separator)) {
+            getLog().error("Entry is outside of the target dir: " + zipEntry.getName());
+        }
+
+        return destFile;
+    }
+
+    private void downloadMiPack(String downloadFileUrl, String outputFile)  {
+        try {
+            URL url = new URL(downloadFileUrl);
+            HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+            connection.setRequestMethod("GET");
+            int responseCode = connection.getResponseCode();
+            if (responseCode == HttpURLConnection.HTTP_OK) {
+                try (InputStream inputStream = connection.getInputStream();
+                     FileOutputStream outputStream = new FileOutputStream(outputFile)) {
+
+                    byte[] buffer = new byte[4096];
+                    int bytesRead;
+
+                    while ((bytesRead = inputStream.read(buffer)) != -1) {
+                        outputStream.write(buffer, 0, bytesRead);
+                    }
+                } catch (IOException e) {
+                    getLog().error("An error occurred when downloading MI pack: " + e.getMessage());
+                }
+                getLog().info("MI pack downloaded successfully to " + outputFile);
+            } else {
+                getLog().error("Failed to download MI pack. Error code: " + responseCode);
+            }
+        } catch (IOException e) {
+            getLog().error("An error occurred when downloading MI pack: " + e.getMessage());
+        }
+    }
+
+    private void unzipMiPack(String fullFilePath, String miDownloadPath)  {
+        try (ZipInputStream zipInputStream = new ZipInputStream(Files.newInputStream(Paths.get(fullFilePath)))) {
+            ZipEntry zipEntry = zipInputStream.getNextEntry();
+            while (zipEntry != null) {
+                File newFile = newFile(new File(miDownloadPath), zipEntry);
+
+                if (zipEntry.isDirectory()) {
+                    if (!newFile.isDirectory() && !newFile.mkdirs()) {
+                        getLog().error("Failed to create directory for unzipping pack: " + newFile);
+                    }
+                } else {
+                    // Fix for Windows-created archives
+                    File parent = newFile.getParentFile();
+                    if (!parent.isDirectory() && !parent.mkdirs()) {
+                        getLog().error("Failed to create directory for unzipping pack: " + parent);
+                    }
+
+                    // Write file content
+                    try (FileOutputStream fos = new FileOutputStream(newFile)) {
+                        int len;
+                        byte[] buffer = new byte[1024];
+                        while ((len = zipInputStream.read(buffer)) > 0) {
+                            fos.write(buffer, 0, len);
+                        }
+                    }
+                }
+                zipEntry = zipInputStream.getNextEntry();
+            }
+        } catch (IOException e) {
+            getLog().error("An error occurred when unzipping MI pack: ", e);
+        }
     }
 }
