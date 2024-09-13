@@ -750,16 +750,24 @@ public class UnitTestCasesMojo extends AbstractMojo {
             FileUtils.copyDirectory(new File(Paths.get(projectRootPath, "deployment", "libs").toString()),
                     new File(Paths.get(miDownloadPath.toString(), Constants.WSO2_MI_WITH_DASH +
                             server.getServerVersion(), "lib").toString()));
-            String scriptPath = Paths.get(miDownloadPath.toString(), Constants.WSO2_MI_WITH_DASH +
-                    server.getServerVersion(), "bin", "micro-integrator.sh").toString();
-            Runtime.getRuntime().exec("chmod +x " + scriptPath);
+            String scriptPath;
+            if (System.getProperty(Constants.OS_TYPE).toLowerCase().contains(Constants.OS_WINDOWS)) {
+                scriptPath = Paths.get(miDownloadPath.toString(), Constants.WSO2_MI_WITH_DASH +
+                        server.getServerVersion(), "bin", "micro-integrator.bat").toString();
+            } else {
+                scriptPath = Paths.get(miDownloadPath.toString(), Constants.WSO2_MI_WITH_DASH +
+                        server.getServerVersion(), "bin", "micro-integrator.sh").toString();
+
+            }
+            File file = new File(scriptPath);
+            file.setExecutable(true);
             server.setServerPath(scriptPath);
         } catch (IOException e) {
             getLog().error("Local server startup failed: " + e.getMessage(), e);
         }
     }
 
-    public File newFile(File destinationDir, ZipEntry zipEntry) throws IOException {
+    private File newFile(File destinationDir, ZipEntry zipEntry) throws IOException {
         File destFile = new File(destinationDir, zipEntry.getName());
 
         String destDirPath = destinationDir.getCanonicalPath();
