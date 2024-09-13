@@ -20,12 +20,12 @@
     <parent>
         <artifactId>maven-common-tools</artifactId>
         <groupId>org.wso2.maven</groupId>
-        <version>5.2.69-SNAPSHOT</version>
+        <version>5.2.69</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
     <modelVersion>4.0.0</modelVersion>
     <artifactId>wso2-mi-synapse-plugin</artifactId>
-    <version>5.2.69-SNAPSHOT</version>
+    <version>5.2.69</version>
     <packaging>maven-plugin</packaging>
     <name>Maven MI Synapse Plugin</name>
 
