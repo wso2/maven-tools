@@ -729,8 +729,13 @@ public class UnitTestCasesMojo extends AbstractMojo {
             }
             Path miDownloadPath = Paths.get(userHome, Constants.M2, Constants.REPOSITORY, Constants.ORG,
                     Constants.WSO2, Constants.EI, Constants.WSO2_MI, server.getServerVersion());
-            URL fileURL = new URL("https://github.com/wso2/micro-integrator/releases/download/v" +
-                    server.getServerVersion() + "/wso2mi-" + server.getServerVersion() + Constants.ZIP);
+            URL downloadUrl;
+            if (server.getServerDownloadLink() == null) {
+                downloadUrl = new URL("https://github.com/wso2/micro-integrator/releases/download/v" +
+                        server.getServerVersion() + "/wso2mi-" + server.getServerVersion() + Constants.ZIP);
+            } else {
+                downloadUrl = new URL(server.getServerDownloadLink());
+            }
             if (Files.notExists(miDownloadPath)) {
                 Files.createDirectories(miDownloadPath);
             }
@@ -739,7 +744,7 @@ public class UnitTestCasesMojo extends AbstractMojo {
             if (Files.notExists(fullFilePath)) {
                 getLog().info("Downloading wso2mi-" + server.getServerVersion() +
                         " server to \"" + miDownloadPath + "\" for testing unit test ...");
-                downloadMiPack(fileURL.toString(), fullFilePath.toString());
+                downloadMiPack(downloadUrl.toString(), fullFilePath.toString());
             }
             unzipMiPack(fullFilePath.toString(), miDownloadPath.toString());
             try {
