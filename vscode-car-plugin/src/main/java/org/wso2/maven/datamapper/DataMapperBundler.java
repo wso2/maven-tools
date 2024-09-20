@@ -85,6 +85,7 @@ public class DataMapperBundler {
     
         installNodeAndNPM();
         runNpmInstall();
+        configureNpm();
         bundleDataMappers(dataMappers);
         generateDataMapperSchemas(dataMappers);
 
@@ -168,6 +169,23 @@ public class DataMapperBundler {
     
         executeRequest(request, "npm install failed.");
     }
+
+    /**
+     * Runs 'npm config set scripts-prepend-node-path auto' to configure node for npm.
+     *
+     * @throws DataMapperException
+     */
+    private void configureNpm() throws DataMapperException {
+
+        InvocationRequest request = createBaseRequest();
+        mojoInstance.logInfo("Configuring npm");
+        request.setGoals(Collections.singletonList(Constants.NPM_GOAL));
+
+        Properties properties = new Properties();
+        properties.setProperty("arguments", Constants.PREPEND_NODE_CONFIG);
+        request.setProperties(properties);
+        executeRequest(request, "npm configuration failed.");
+    }
     
     /**
      * Iterates over each data mapper directory provided in the list and attempts to bundle them individually.
@@ -210,13 +228,13 @@ public class DataMapperBundler {
         createWebpackConfig(dataMapperName);
 
         Path npmDirectory = Paths.get("." + File.separator + Constants.TARGET_DIR_NAME);
-    
+
         InvocationRequest request = createBaseRequest();
         request.setBaseDirectory(npmDirectory.toFile());
         request.setGoals(Collections.singletonList(Constants.NPM_RUN_BUILD_GOAL
-                + " -Dexec.executable=" + Constants.NPM_COMMAND
+                + " -Dexec.executable=" + getNpmExecutablePath()
                 + " -Dexec.args=\"" + Constants.RUN_BUILD + "\""));
-    
+
         executeRequest(request, "Failed to bundle data mapper: " + dataMapperName);
 
         mojoInstance.logInfo("Bundle completed for data mapper: " + dataMapperName);
@@ -243,11 +261,19 @@ public class DataMapperBundler {
         InvocationRequest request = createBaseRequest();
         request.setBaseDirectory(npmDirectory.toFile());
         request.setGoals(Collections.singletonList(Constants.NPM_RUN_BUILD_GOAL
-                + " -Dexec.executable=" + Constants.NPM_COMMAND
+                + " -Dexec.executable=" + getNpmExecutablePath()
                 + " -Dexec.args=\"" + Constants.RUN_GENERATE + " " + dataMapper + File.separator
                 + dataMapperName + ".ts" + "\""));
 
         executeRequest(request, "Failed to bundle data mapper: " + dataMapperName);
+    }
+
+    private String getNpmExecutablePath() {
+
+        String osName = System.getProperty("os.name").toLowerCase();
+        String npmExecutable = osName.contains("win") ? "npm.cmd" : "npm";
+        return Paths.get(System.getProperty("user.dir"), Constants.TARGET_DIR_NAME, "node", npmExecutable)
+                .toString();
     }
     
     /**
