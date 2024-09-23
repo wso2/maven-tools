@@ -88,8 +88,8 @@ public class DataMapperBundler {
         configureNpm();
         bundleDataMappers(dataMappers);
         generateDataMapperSchemas(dataMappers);
-
         removeBundlingArtifacts();
+        copyDataMapperFilesToTarget();
     }
 
     /**
@@ -211,6 +211,23 @@ public class DataMapperBundler {
         createConfigJsonForSchemaGeneration();
         for (Path dataMapper : dataMappers) {
             generateDataMapperSchema(dataMapper);
+        }
+    }
+
+    /**
+     * Copies the data mapper files to the target directory.
+     * This might be utilized for the unit tests
+     *
+     * @throws DataMapperException if an error occurs while removing the bundling artifacts.
+     */
+    private void copyDataMapperFilesToTarget() throws DataMapperException {
+        Path dataMapperPath = Paths.get(resourcesDirectory + File.separator + Constants.DATA_MAPPER_DIR_PATH);
+        try {
+            FileUtils.copyDirectory(dataMapperPath.toFile(),
+                    Paths.get("." + File.separator + Constants.TARGET_DIR_NAME + File.separator +
+                            Constants.DATA_MAPPER_DIR_NAME).toFile());
+        } catch (IOException e) {
+            throw new DataMapperException("Failed to copy data mapper files to target directory.", e);
         }
     }
 
