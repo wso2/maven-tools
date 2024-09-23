@@ -699,21 +699,6 @@ public class DataMapperBundler {
     }
 
     /**
-     * Ensures that the data mapper directory exists.
-     * @throws DataMapperException if an error occurs while creating the datamapper artifacts directory.
-     */
-    private void ensureDataMapperFolderExists() throws DataMapperException {
-        Path dataMapperPath = Paths.get("." + File.separator + Constants.DATA_MAPPER_DIR_NAME);
-        if (!Files.exists(dataMapperPath)) {
-            try {
-                Files.createDirectories(dataMapperPath);
-            } catch (IOException e) {
-                throw new DataMapperException("Failed to create data-mapper artifacts directory: " + dataMapperPath, e);
-            }
-        }
-    }
-
-    /**
      * Removes source files from the target directory.
      * @throws DataMapperException if an error occurs while removing the source files.
      */

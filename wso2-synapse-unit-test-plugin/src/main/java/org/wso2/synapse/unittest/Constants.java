@@ -87,4 +87,9 @@ class Constants {
     static final String WSO2_MI = "wso2mi";
     static final String WSO2_MI_WITH_DASH = "wso2mi-";
     static final String ZIP = ".zip";
+    static final String TS = ".ts";
+    static final String DMC = ".dmc";
+    static final String INPUT_SCHEMA = "_inputSchema.json";
+    static final String OUTPUT_SCHEMA = "_outputSchema.json";
+    static final String DATA_MAPPER = "datamapper";
 }
