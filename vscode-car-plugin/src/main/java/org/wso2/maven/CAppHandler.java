@@ -428,6 +428,8 @@ class CAppHandler extends AbstractXMLDoc {
                 if (apiVersion == null) {
                     apiVersion = projectVersion;
                     apiVersionExists = false;
+                } else {
+                    swaggerFilename = apiName + "_v" + apiVersion + ".yaml";
                 }
                 File swaggerFile = new File(metadataFolder, swaggerFilename);
                 if (swaggerFile.exists()) {
