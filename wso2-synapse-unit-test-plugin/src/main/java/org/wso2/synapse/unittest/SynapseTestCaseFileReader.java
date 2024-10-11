@@ -24,6 +24,7 @@ import org.apache.commons.io.FileUtils;
 import org.apache.maven.plugin.logging.Log;
 import org.apache.maven.plugin.logging.SystemStreamLog;
 import org.codehaus.plexus.util.Base64;
+import org.codehaus.plexus.util.StringUtils;
 
 import javax.xml.namespace.QName;
 import javax.xml.stream.XMLStreamException;
@@ -56,9 +57,10 @@ class SynapseTestCaseFileReader {
      * If not read artifact from given file and append data into the artifact data
      *
      * @param synapseTestCaseFilePath synapse test case file path
+     * @param synapseTestCaseName synapse test case name
      * @return SynapseTestCase data which is ready to send to the server
      */
-    static String processArtifactData(String synapseTestCaseFilePath) {
+    static String processArtifactData(String synapseTestCaseFilePath, String synapseTestCaseName) {
 
         try {
             String synapseTestCaseFileAsString = FileUtils.readFileToString(new File(synapseTestCaseFilePath));
@@ -70,8 +72,32 @@ class SynapseTestCaseFileReader {
 
             QName qualifiedTestCases = new QName("", Constants.TEST_CASES_TAG, "");
             OMElement testCasesNode = importedXMLFile.getFirstChildWithName(qualifiedTestCases);
-            Iterator<?> testCaseIterator = testCasesNode.getChildElements();
-            if (!testCaseIterator.hasNext()) {
+            if (testCasesNode != null) {
+                int numberOfTestCases = 0;
+                Iterator<OMElement> testCaseIterator = testCasesNode.getChildElements();
+                if (!testCaseIterator.hasNext()) {
+                    return Constants.NO_TEST_CASES;
+                } else {
+                    if (StringUtils.isNotBlank(synapseTestCaseName)) {
+                        List<OMElement> testCasesToRemove = new ArrayList<>();
+                        while (testCaseIterator.hasNext()) {
+                            numberOfTestCases++;
+                            OMElement testCase = testCaseIterator.next();
+                            String testCaseName = testCase.getAttributeValue(new QName("name"));
+                            if (!synapseTestCaseName.equals(testCaseName)) {
+                                testCasesToRemove.add(testCase);
+                            }
+                        }
+                        if (numberOfTestCases == testCasesToRemove.size()) {
+                            return Constants.NO_TEST_CASES;
+                        } else {
+                            for (OMElement testCase : testCasesToRemove) {
+                                testCase.detach();
+                            }
+                        }
+                    }
+                }
+            } else {
                 return Constants.NO_TEST_CASES;
             }
 
