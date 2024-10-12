@@ -73,12 +73,12 @@ class SynapseTestCaseFileReader {
             QName qualifiedTestCases = new QName("", Constants.TEST_CASES_TAG, "");
             OMElement testCasesNode = importedXMLFile.getFirstChildWithName(qualifiedTestCases);
             if (testCasesNode != null) {
-                int numberOfTestCases = 0;
                 Iterator<OMElement> testCaseIterator = testCasesNode.getChildElements();
                 if (!testCaseIterator.hasNext()) {
                     return Constants.NO_TEST_CASES;
                 } else {
                     if (StringUtils.isNotBlank(synapseTestCaseName)) {
+                        int numberOfTestCases = 0;
                         List<OMElement> testCasesToRemove = new ArrayList<>();
                         while (testCaseIterator.hasNext()) {
                             numberOfTestCases++;
