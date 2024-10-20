@@ -21,6 +21,9 @@ package org.wso2.maven;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.*;
 import javax.xml.namespace.QName;
@@ -173,6 +176,7 @@ class CAppHandler extends AbstractXMLDoc {
         processConnectors(resourcesFolder, archiveDirectory, dependencies);
         processRegistryResources(resourcesFolder, archiveDirectory, dependencies);
         processMetadata(resourcesFolder, archiveDirectory, metadataDependencies, version);
+        processPropertyFile(resourcesFolder, archiveDirectory, version, dependencies);
     }
 
     /**
@@ -200,6 +204,35 @@ class CAppHandler extends AbstractXMLDoc {
                 writeArtifactAndFile(connector, archiveDirectory, name, Constants.CONNECTOR_TYPE,
                         Constants.SERVER_ROLE_EI, version, fileName, name + "_" + version);
             }
+        }
+    }
+
+    void processPropertyFile(File resourcesFolder, String archiveDirectory, String version,
+                             List<ArtifactDependency> dependencies) {
+        File confFolder = new File(resourcesFolder, Constants.CONF_DIR_NAME);
+        File envFolder = new File(confFolder, Constants.ENVIRONMENT_FILE);
+        Properties props = new Properties();
+        try (InputStream inputStream = Files.newInputStream(envFolder.toPath())) {
+            props.load(inputStream);
+            ProcessBuilder processBuilder = new ProcessBuilder();
+            Map<String, String> env = processBuilder.environment();
+            for (Map.Entry<Object, Object> entry: props.entrySet()) {
+                env.put(entry.getKey().toString(), entry.getValue().toString());
+            }
+            //Process process = processBuilder.start();
+            processBuilder.start();
+            File propertyFile = new File(confFolder, Constants.PROPERTY_FILE);
+            if (!propertyFile.exists()) {
+                return;
+            }
+            mojoInstance.logInfo("Processing property file in " + confFolder.getAbsolutePath());
+            writeArtifactAndFile(
+                    propertyFile, archiveDirectory, Constants.PROPERTY_FILE_NAME, Constants.PROPERTY_TYPE,
+                    Constants.SERVER_ROLE_EI, version, Constants.PROPERTY_FILE,
+                    Constants.PROPERTY_FILE_NAME + "_" + version);
+            dependencies.add(new ArtifactDependency(Constants.PROPERTY_FILE_NAME, version, Constants.SERVER_ROLE_EI, true));
+        } catch (IOException e) {
+            throw new RuntimeException(e);
         }
     }
 
