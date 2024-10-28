@@ -23,7 +23,6 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
-import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.*;
 import javax.xml.namespace.QName;
@@ -210,7 +209,7 @@ class CAppHandler extends AbstractXMLDoc {
     void processPropertyFile(File resourcesFolder, String archiveDirectory, String version,
                              List<ArtifactDependency> dependencies) {
         File confFolder = new File(resourcesFolder, Constants.CONF_DIR_NAME);
-        File envFolder = new File(confFolder, Constants.ENVIRONMENT_FILE);
+        File envFolder = new File(confFolder, Constants.PROPERTY_FILE_EXTENSION);
         Properties props = new Properties();
         try (InputStream inputStream = Files.newInputStream(envFolder.toPath())) {
             props.load(inputStream);
@@ -219,7 +218,6 @@ class CAppHandler extends AbstractXMLDoc {
             for (Map.Entry<Object, Object> entry: props.entrySet()) {
                 env.put(entry.getKey().toString(), entry.getValue().toString());
             }
-            //Process process = processBuilder.start();
             processBuilder.start();
             File propertyFile = new File(confFolder, Constants.PROPERTY_FILE);
             if (!propertyFile.exists()) {
