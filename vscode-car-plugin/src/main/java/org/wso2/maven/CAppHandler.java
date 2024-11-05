@@ -21,8 +21,6 @@ package org.wso2.maven;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
-import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.*;
 import javax.xml.namespace.QName;
