@@ -214,8 +214,7 @@ class CAppHandler extends AbstractXMLDoc {
             return;
         }
         mojoInstance.logInfo("Processing property file in " + confFolder.getAbsolutePath());
-        writeArtifactAndFile(
-                propertyFile, archiveDirectory, Constants.PROPERTY_FILE_NAME, Constants.PROPERTY_TYPE,
+        writeArtifactAndFile(propertyFile, archiveDirectory, Constants.PROPERTY_FILE_NAME, Constants.PROPERTY_TYPE,
                 Constants.SERVER_ROLE_EI, version, Constants.PROPERTY_FILE,
                 Constants.PROPERTY_FILE_NAME + "_" + version);
         dependencies.add(new ArtifactDependency(Constants.PROPERTY_FILE_NAME, version, Constants.SERVER_ROLE_EI, true));
