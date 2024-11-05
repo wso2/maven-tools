@@ -86,7 +86,6 @@ class Constants {
     static final String ARCHIVE_EXCEPTION_MSG = "Error occurred while creating CAR file.";
     static final String ARTIFACT_XML = "artifact.xml";
     static final String PROPERTY_FILE = "config.properties";
-    static final String PROPERTY_FILE_EXTENSION = ".properties";
     static final String PROPERTY_FILE_NAME = "config";
     static final String EMPTY_STRING = "";
     static final String MAIN_SEQUENCE = "mainSequence";

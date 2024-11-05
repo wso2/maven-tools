@@ -209,29 +209,16 @@ class CAppHandler extends AbstractXMLDoc {
     void processPropertyFile(File resourcesFolder, String archiveDirectory, String version,
                              List<ArtifactDependency> dependencies) {
         File confFolder = new File(resourcesFolder, Constants.CONF_DIR_NAME);
-        File envFolder = new File(confFolder, Constants.PROPERTY_FILE_EXTENSION);
-        Properties props = new Properties();
-        try (InputStream inputStream = Files.newInputStream(envFolder.toPath())) {
-            props.load(inputStream);
-            ProcessBuilder processBuilder = new ProcessBuilder();
-            Map<String, String> env = processBuilder.environment();
-            for (Map.Entry<Object, Object> entry: props.entrySet()) {
-                env.put(entry.getKey().toString(), entry.getValue().toString());
-            }
-            processBuilder.start();
-            File propertyFile = new File(confFolder, Constants.PROPERTY_FILE);
-            if (!propertyFile.exists()) {
-                return;
-            }
-            mojoInstance.logInfo("Processing property file in " + confFolder.getAbsolutePath());
-            writeArtifactAndFile(
-                    propertyFile, archiveDirectory, Constants.PROPERTY_FILE_NAME, Constants.PROPERTY_TYPE,
-                    Constants.SERVER_ROLE_EI, version, Constants.PROPERTY_FILE,
-                    Constants.PROPERTY_FILE_NAME + "_" + version);
-            dependencies.add(new ArtifactDependency(Constants.PROPERTY_FILE_NAME, version, Constants.SERVER_ROLE_EI, true));
-        } catch (IOException e) {
-            throw new RuntimeException(e);
+        File propertyFile = new File(confFolder, Constants.PROPERTY_FILE);
+        if (!propertyFile.exists()) {
+            return;
         }
+        mojoInstance.logInfo("Processing property file in " + confFolder.getAbsolutePath());
+        writeArtifactAndFile(
+                propertyFile, archiveDirectory, Constants.PROPERTY_FILE_NAME, Constants.PROPERTY_TYPE,
+                Constants.SERVER_ROLE_EI, version, Constants.PROPERTY_FILE,
+                Constants.PROPERTY_FILE_NAME + "_" + version);
+        dependencies.add(new ArtifactDependency(Constants.PROPERTY_FILE_NAME, version, Constants.SERVER_ROLE_EI, true));
     }
 
     /**
