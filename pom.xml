@@ -229,7 +229,6 @@
     </dependencyManagement>
 
     <properties>
-        <maven.compiler.release>8</maven.compiler.release>
         <commons.logging.version>1.1.1</commons.logging.version>
         <commons.codec.wso2.commons.codec.version>1.4.0.wso2v1</commons.codec.wso2.commons.codec.version>
         <commons.httpclient.version>3.1</commons.httpclient.version>
