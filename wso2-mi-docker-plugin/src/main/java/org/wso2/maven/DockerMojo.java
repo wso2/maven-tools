@@ -45,7 +45,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
@@ -122,12 +121,6 @@ public class DockerMojo extends AbstractMojo {
         logInfo("Archive file exists in the given path: " + resolvedArchiveFilePath);
         Path extractedCarbonApp = extractCarbonApp(resolvedArchiveFilePath);
 
-        // Download wso2mi distribution from the URL
-        // https://github.com/wso2/micro-integrator/releases/download/v4.3.0/wso2mi-4.3.0.zip and extract it.
-        // Copy the extracted wso2mi-4.3.0 to the target/tmp_docker directory
-//        downloadWSO2MI(miVersion);
-//        Path miHomePath = copyAndExtractWSO2MI(miVersion);
-
         Path miHomePath = Paths.get(basedir, Constants.DEFAULT_TARGET_DIR, Constants.TMP_DOCKER_DIR, "carbon-home");
 
         // Build the app configuration by reading the artifacts.xml file from the extractedCarbonApp
@@ -146,16 +139,6 @@ public class DockerMojo extends AbstractMojo {
             ArtifactsParser parser = new ArtifactsParser();
             Application application = parser.parse(metaFile.getAbsolutePath());
             Artifact appArtifact = application.getApplicationArtifact();
-
-//            logInfo("Name: " + appArtifact.getName());
-//            logInfo("Version: " + appArtifact.getVersion());
-//            logInfo("Type: " + appArtifact.getType());
-//            for (Dependency dependency : appArtifact.getDependencies()) {
-//                logInfo("  Dependency Artifact: " + dependency.getArtifactName());
-//                logInfo("  Version: " + dependency.getVersion());
-//                logInfo("  Include: " + dependency.isInclude());
-//                logInfo("  ServerRole: " + dependency.getServerRole());
-//            }
 
             // If we don't have (artifacts) for this server image, ignore
             if (appArtifact.getDependencies().isEmpty()) {

@@ -18,9 +18,6 @@
 
 package org.wso2.maven.metadata;
 
-import java.util.ArrayList;
-import java.util.List;
-
 public class Application {
 
     private Artifact applicationArtifact;
