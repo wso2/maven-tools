@@ -172,6 +172,7 @@ class CAppHandler extends AbstractXMLDoc {
         }
         processConnectors(resourcesFolder, archiveDirectory, dependencies);
         processRegistryResources(resourcesFolder, archiveDirectory, dependencies);
+        processRegistryResources(new File(resourcesFolder, Constants.REGISTRY_DIR_NAME), archiveDirectory, dependencies);
         processMetadata(resourcesFolder, archiveDirectory, metadataDependencies, version);
     }
 
@@ -212,8 +213,7 @@ class CAppHandler extends AbstractXMLDoc {
      */
     void processRegistryResources(File resourcesFolder, String archiveDirectory, List<ArtifactDependency> dependencies) {
         mojoInstance.logInfo("Processing registry resources in " + resourcesFolder.getAbsolutePath());
-        File registryFolder = new File(resourcesFolder, Constants.REGISTRY_DIR_NAME);
-        File artifactFile = new File(registryFolder, Constants.ARTIFACT_XML);
+        File artifactFile = new File(resourcesFolder, Constants.ARTIFACT_XML);
         if (!artifactFile.exists()) {
             return;
         }
@@ -230,12 +230,15 @@ class CAppHandler extends AbstractXMLDoc {
                     String fileName = item.getFirstChildWithName(new QName(Constants.FILE)).getText();
                     String path = item.getFirstChildWithName(new QName(Constants.PATH)).getText();
                     File registryResource;
-                    if (path.startsWith(Constants.GOV_REG_PREFIX)) {
+                    if (path.startsWith(Constants.GOV_MI_RESOURCES_PREFIX)) {
+                        path = path.substring(Constants.GOV_MI_RESOURCES_PREFIX.length());
+                        registryResource = new File(resourcesFolder, path + "/" + fileName);
+                    } else if (path.startsWith(Constants.GOV_REG_PREFIX)) {
                         path = path.substring(Constants.GOV_REG_PREFIX.length());
-                        registryResource = new File(registryFolder, Constants.GOV_FOLDER + path + "/" + fileName);
+                        registryResource = new File(resourcesFolder, Constants.GOV_FOLDER + path + "/" + fileName);
                     } else {
                         path = path.substring(Constants.CONF_REG_PREFIX.length());
-                        registryResource = new File(registryFolder, Constants.CONF_FOLDER + path + "/" + fileName);
+                        registryResource = new File(resourcesFolder, Constants.CONF_FOLDER + path + "/" + fileName);
                     }
                     if (!registryResource.exists()) {
                         mojoInstance.logError("Registry resource " + path + "/" + fileName + " does not exist");
@@ -253,12 +256,15 @@ class CAppHandler extends AbstractXMLDoc {
                     String directory = collection.getFirstChildWithName(new QName(Constants.DIRECTORY)).getText();
                     String path = collection.getFirstChildWithName(new QName(Constants.PATH)).getText();
                     File registryResource;
-                    if (path.startsWith(Constants.GOV_REG_PREFIX)) {
+                    if (path.startsWith(Constants.GOV_MI_RESOURCES_PREFIX)) {
+                        path = path.substring(Constants.GOV_MI_RESOURCES_PREFIX.length());
+                        registryResource = new File(resourcesFolder, path);
+                    } else if (path.startsWith(Constants.GOV_REG_PREFIX)) {
                         path = path.substring(Constants.GOV_REG_PREFIX.length());
-                        registryResource = new File(registryFolder, Constants.GOV_FOLDER + path);
+                        registryResource = new File(resourcesFolder, Constants.GOV_FOLDER + path);
                     } else {
                         path = path.substring(Constants.CONF_REG_PREFIX.length());
-                        registryResource = new File(registryFolder, Constants.CONF_FOLDER + path);
+                        registryResource = new File(resourcesFolder, Constants.CONF_FOLDER + path);
                     }
                     if (!registryResource.exists()) {
                         mojoInstance.logError("Registry resource " + path + " does not exist");
