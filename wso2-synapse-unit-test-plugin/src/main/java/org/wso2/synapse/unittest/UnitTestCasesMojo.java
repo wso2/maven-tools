@@ -64,6 +64,9 @@ public class UnitTestCasesMojo extends AbstractMojo {
     @Parameter(property = "testCasesFilePath")
     private String testCasesFilePath;
 
+    @Parameter(property = "testCaseName")
+    private String synapseTestCaseName;
+
     @Parameter(property = "server")
     private SynapseServer server;
 
@@ -158,7 +161,7 @@ public class UnitTestCasesMojo extends AbstractMojo {
         for (String synapseTestCaseFile : synapseTestCasePaths) {
 
             String responseFromUnitTestFramework = UnitTestClient.executeTests
-                    (synapseTestCaseFile, serverHost, serverPort);
+                    (synapseTestCaseFile, serverHost, serverPort, synapseTestCaseName);
 
             if (responseFromUnitTestFramework != null
                     && !responseFromUnitTestFramework.equals(Constants.NO_TEST_CASES)) {
