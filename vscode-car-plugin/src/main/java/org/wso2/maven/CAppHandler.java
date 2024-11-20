@@ -173,6 +173,7 @@ class CAppHandler extends AbstractXMLDoc {
         processConnectors(resourcesFolder, archiveDirectory, dependencies);
         processRegistryResources(resourcesFolder, archiveDirectory, dependencies);
         processMetadata(resourcesFolder, archiveDirectory, metadataDependencies, version);
+        processPropertyFile(resourcesFolder, archiveDirectory, version, dependencies);
     }
 
     /**
@@ -201,6 +202,20 @@ class CAppHandler extends AbstractXMLDoc {
                         Constants.SERVER_ROLE_EI, version, fileName, name + "_" + version);
             }
         }
+    }
+
+    void processPropertyFile(File resourcesFolder, String archiveDirectory, String version,
+                             List<ArtifactDependency> dependencies) {
+        File confFolder = new File(resourcesFolder, Constants.CONF_DIR_NAME);
+        File propertyFile = new File(confFolder, Constants.PROPERTY_FILE);
+        if (!propertyFile.exists()) {
+            return;
+        }
+        mojoInstance.logInfo("Processing property file in " + confFolder.getAbsolutePath());
+        writeArtifactAndFile(propertyFile, archiveDirectory, Constants.PROPERTY_FILE_NAME, Constants.PROPERTY_TYPE,
+                Constants.SERVER_ROLE_EI, version, Constants.PROPERTY_FILE,
+                Constants.PROPERTY_FILE_NAME + "_" + version);
+        dependencies.add(new ArtifactDependency(Constants.PROPERTY_FILE_NAME, version, Constants.SERVER_ROLE_EI, true));
     }
 
     /**
