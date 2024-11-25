@@ -22,15 +22,20 @@ public class Constants {
     public static final String METADATA_XML = "metadata.xml";
 
     public static final String ARTIFACTS_XML = "artifacts.xml";
-    public static final String ARTIFACT_XML = "artifact.xml";
     public static final String TMP_DOCKER_DIR = "tmp_docker";
+    public static final String TMP_CARBON_HOME = "carbon-home";
+    public static final String TMP_CARBONAPPS_DIR = "carbonapps";
     public static final String DOCKER_FILE = "Dockerfile";
 
-    public static final String METADATA_DIR = "metadata";
-    public static final String SWAGGER_SUBSTRING = "_swagger";
-    public static final String API_TYPE = "synapse/api";
+    public static final String DEPLOYMENT_DIR = "deployment";
+    public static final String DOCKER_DIR = "docker";
+    public static final String DEPLOYMENT_TOML_FILE = "deployment.toml";
+    public static final String RESOURCES_DIR = "resources";
+    public static final String SECURITY_DIR = "security";
+    public static final String REPOSITORY_DIR = "repository";
+    public static final String DOCKERFILE_FILE = "Dockerfile";
+    public static final String CONF_DIR = "conf";
 
     static final String DEFAULT_TARGET_DIR = "target";
-    public static final String CARBON_APP_TYPE = "carbon/application";
     public static final String CAR_FILE_EXTENSION = ".car";
 }
