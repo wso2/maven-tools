@@ -27,6 +27,7 @@ import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
 import org.wso2.maven.CARMojo;
+import org.wso2.maven.Constants;
 import org.wso2.maven.MavenUtils;
 import org.wso2.maven.datamapper.DataMapperException;
 
@@ -51,24 +52,23 @@ public class ConnectorDependencyResolver {
      * @throws Exception If an error occurs while resolving dependencies.
      */
     public static void resolveDependencies(CARMojo carMojo) throws Exception {
-        String pomFilePath = "pom.xml";
-        String targetDir = "target";
-        String extractedDir = targetDir + File.separator + "extracted-connectors";
-        String libDir = targetDir + File.separator + "libs";
+
+        String extractedDir = Constants.POM_FILE + File.separator + Constants.EXTRACTED_CONNECTORS;
+        String libDir = Constants.DEFAULT_TARGET_FOLDER + File.separator + Constants.LIBS;
 
         // Ensure target directories exist
         new File(extractedDir).mkdirs();
         new File(libDir).mkdirs();
 
         // Resolve connector ZIP files from pom.xml
-        List<File> connectorZips = resolveConnectorZips(pomFilePath);
+        List<File> connectorZips = resolveConnectorZips(Constants.POM_FILE);
 
         List<File> dependencyFiles = new ArrayList<>();
         // Extract all connector ZIP files
         for (File zipFile : connectorZips) {
             String targetExtractDir = extractedDir + File.separator + zipFile.getName().replace(".zip", "");
             extractZipFile(zipFile, targetExtractDir);
-            dependencyFiles.add(new File(targetExtractDir + File.separator + "dependency.xml"));
+            dependencyFiles.add(new File(targetExtractDir + File.separator + Constants.DEPENDENCY_XML));
         }
 
         String mavenHome = MavenUtils.getMavenHome();
@@ -98,7 +98,7 @@ public class ConnectorDependencyResolver {
         Invoker invoker = new DefaultInvoker();
         invoker.execute(request);
 
-        File dependenciesDir = new File("target/dependency");
+        File dependenciesDir = new File(Constants.DEFAULT_TARGET_FOLDER + File.separator + Constants.DEPENDENCY);
         if (!dependenciesDir.exists()) {
             throw new IllegalStateException("Dependency resolution failed, no dependencies directory found.");
         }

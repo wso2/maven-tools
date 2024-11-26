@@ -17,9 +17,9 @@
 
 package org.wso2.maven;
 
+import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.shared.invoker.InvocationOutputHandler;
 import org.apache.maven.shared.invoker.Invoker;
-import org.wso2.maven.datamapper.DataMapperException;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -32,9 +32,9 @@ public class MavenUtils {
      * Retrieves the Maven home directory.
      *
      * @return The Maven home directory path, or null if it cannot be determined.
-     * @throws DataMapperException if an error occurs while determining the Maven home directory.
+     * @throws MojoExecutionException if an error occurs while determining the Maven home directory.
      */
-    public static String getMavenHome() throws DataMapperException {
+    public static String getMavenHome() throws MojoExecutionException {
 
         // First try to find Maven home using system property
         String mavenHome = System.getProperty("maven.home");
@@ -65,10 +65,10 @@ public class MavenUtils {
                 }
             }
         } catch (IOException e) {
-            throw new DataMapperException("Could not determine Maven home.", e);
+            throw new MojoExecutionException("Could not determine Maven home.", e);
         }
 
-        throw new DataMapperException("Could not determine Maven home.");
+        throw new MojoExecutionException("Could not determine Maven home.");
     }
 
     /**
@@ -88,5 +88,4 @@ public class MavenUtils {
             }
         });
     }
-
 }

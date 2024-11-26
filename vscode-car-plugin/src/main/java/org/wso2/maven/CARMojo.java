@@ -32,6 +32,7 @@ import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.project.MavenProject;
 import org.apache.commons.lang.StringUtils;
+import org.apache.maven.shared.invoker.MavenInvocationException;
 import org.wso2.maven.datamapper.DataMapperBundler;
 import org.wso2.maven.datamapper.DataMapperException;
 import org.wso2.maven.libraries.ConnectorDependencyResolver;

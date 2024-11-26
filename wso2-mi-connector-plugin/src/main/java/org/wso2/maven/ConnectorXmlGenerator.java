@@ -33,15 +33,17 @@ public class ConnectorXmlGenerator {
      * @param connectorName    The name of the connector
      * @param connectorPackage The package of the connector
      */
-    public static void generateConnectorXml(String connectorName, String connectorPackage) {
+    public static void generateConnectorXml(String connectorName, String connectorPackage,
+                                            ConnectorMojo connectorMojo) {
 
         // Specify the output file name
-        String outputFileName = "target/classes/connector.xml";
+        String outputFileName = Constants.DEFAULT_TARGET_FOLDER + File.separator + Constants.CLASSES +
+                File.separator + Constants.CONNECTOR_XML;
 
         // if file already exists, skip the generation
         File outputFile = new File(outputFileName);
         if (outputFile.exists()) {
-            System.out.println("connector.xml file already exists. Skipping the generation.");
+            connectorMojo.getLog().info("connector.xml file already exists. Skipping generation.");
             return;
         }
 
@@ -87,9 +89,9 @@ public class ConnectorXmlGenerator {
                 writer.write("    <icon>" + iconPath + "</icon>\n");
             }
             writer.write("</connector>\n");
-            System.out.println("connector.xml file generated successfully.");
+            connectorMojo.getLog().info("connector.xml file generated successfully.");
         } catch (IOException e) {
-            e.printStackTrace();
+            connectorMojo.getLog().error("Error occurred while generating connector.xml file.", e);
         }
     }
 
@@ -101,10 +103,10 @@ public class ConnectorXmlGenerator {
     private static String deriveIconPath() {
 
         String iconFolder = "src" + File.separator + "main" + File.separator + "resources" + File.separator + "icon";
-        if (new File(iconFolder + File.separator + "icon-small.gif").exists()) {
-            return "icon/icon-small.gif";
-        } else if (new File(iconFolder + File.separator + "icon-small.png").exists()) {
-            return "icon/icon-small.png";
+        if (new File(iconFolder + File.separator + Constants.ICON_SMALL_GIF).exists()) {
+            return Constants.ICON + File.separator + Constants.ICON_SMALL_GIF;
+        } else if (new File(iconFolder + File.separator + Constants.ICON_SMALL_PNG).exists()) {
+            return Constants.ICON + File.separator + Constants.ICON_SMALL_PNG;
         } else {
             return "";
         }

@@ -22,8 +22,10 @@ import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
+
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
+
 import java.io.File;
 import java.io.FileWriter;
 import java.util.HashMap;
@@ -36,23 +38,22 @@ public class DescriptorGenerator {
      *
      * @return the generated descriptor
      */
-    public static void generateDescriptor() {
+    public static void generateDescriptor(ConnectorMojo connectorMojo) {
+
         String pomFilePath = "pom.xml";
-        String outputFilePath = "target/classes/dependency.xml";
+        String outputFilePath = Constants.DEFAULT_TARGET_FOLDER + File.separator + Constants.CLASSES +
+                Constants.DEPENDENCY_XML;
         try {
             // Parse the POM file and load properties
             Map<String, String> properties = parsePomProperties(pomFilePath);
 
             // Parse dependencies and generate dependency.xml
             generateDependencyXml(pomFilePath, outputFilePath, properties);
-
-            System.out.println("Dependency file generated at: " + outputFilePath);
+            connectorMojo.getLog().info("Dependency file generated at: " + outputFilePath);
         } catch (Exception e) {
             e.printStackTrace();
         }
     }
-
-
 
     /**
      * Parses the <properties> section of the POM file and loads them into a map.
@@ -62,6 +63,7 @@ public class DescriptorGenerator {
      * @throws Exception If parsing fails or the file is missing.
      */
     private static Map<String, String> parsePomProperties(String pomFilePath) throws Exception {
+
         Map<String, String> propertiesMap = new HashMap<>();
 
         File pomFile = new File(pomFilePath);
@@ -109,7 +111,9 @@ public class DescriptorGenerator {
      * @param properties     Map of resolved properties.
      * @throws Exception If an error occurs during parsing or writing.
      */
-    private static void generateDependencyXml(String pomFilePath, String outputFilePath, Map<String, String> properties) throws Exception {
+    private static void generateDependencyXml(String pomFilePath, String outputFilePath, Map<String, String> properties)
+            throws Exception {
+
         File pomFile = new File(pomFilePath);
         if (!pomFile.exists()) {
             throw new Exception("POM file not found at: " + pomFilePath);
@@ -132,10 +136,8 @@ public class DescriptorGenerator {
 
         for (int i = 0; i < dependencyNodes.getLength(); i++) {
             Node dependencyNode = dependencyNodes.item(i);
-
             if (dependencyNode.getNodeType() == Node.ELEMENT_NODE) {
                 Element dependencyElement = (Element) dependencyNode;
-
                 String groupId = getTextContent(dependencyElement, "groupId");
                 String artifactId = getTextContent(dependencyElement, "artifactId");
                 String version = getTextContent(dependencyElement, "version");
@@ -149,7 +151,8 @@ public class DescriptorGenerator {
                         version = properties.get(propertyKey);
 
                         if (version == null) {
-                            throw new Exception("Version placeholder '" + propertyKey + "' is not defined in the POM properties.");
+                            throw new Exception(
+                                    "Version placeholder '" + propertyKey + "' is not defined in the POM properties.");
                         }
                     }
 
@@ -161,7 +164,6 @@ public class DescriptorGenerator {
                 }
             }
         }
-
         xmlBuilder.append("    </dependencies>\n");
         xmlBuilder.append("    <repositories>\n");
 
@@ -169,10 +171,8 @@ public class DescriptorGenerator {
         NodeList repositoryNodes = document.getElementsByTagName("repository");
         for (int i = 0; i < repositoryNodes.getLength(); i++) {
             Node repositoryNode = repositoryNodes.item(i);
-
             if (repositoryNode.getNodeType() == Node.ELEMENT_NODE) {
                 Element repositoryElement = (Element) repositoryNode;
-
                 String id = getTextContent(repositoryElement, "id");
                 String url = getTextContent(repositoryElement, "url");
 
@@ -194,11 +194,12 @@ public class DescriptorGenerator {
     /**
      * Utility method to get the text content of an XML element.
      *
-     * @param parent   The parent element.
-     * @param tagName  The tag name of the child element.
+     * @param parent  The parent element.
+     * @param tagName The tag name of the child element.
      * @return The text content, or an empty string if not found.
      */
     private static String getTextContent(Element parent, String tagName) {
+
         NodeList nodeList = parent.getElementsByTagName(tagName);
         if (nodeList.getLength() > 0) {
             return nodeList.item(0).getTextContent().trim();

@@ -40,7 +40,7 @@ import java.util.List;
 import java.util.Properties;
 
 import org.apache.commons.io.FileUtils;
-import org.apache.maven.shared.invoker.InvocationOutputHandler;
+import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.shared.invoker.InvocationRequest;
 import org.apache.maven.shared.invoker.DefaultInvocationRequest;
 import org.apache.maven.shared.invoker.InvocationResult;
@@ -48,7 +48,6 @@ import org.apache.maven.shared.invoker.Invoker;
 import org.apache.maven.shared.invoker.MavenInvocationException;
 import org.apache.maven.shared.invoker.DefaultInvoker;
 import org.wso2.maven.CARMojo;
-import org.wso2.maven.MavenUtils;
 
 import static org.wso2.maven.MavenUtils.getMavenHome;
 import static org.wso2.maven.MavenUtils.setupInvoker;
@@ -71,8 +70,9 @@ public class DataMapperBundler {
      * It also handles the creation and cleanup of necessary artifacts.
      *
      * @throws DataMapperException if any step in the bundling process fails.
+     * @throws MojoExecutionException if an error occurs while executing the Maven invoker.
      */
-    public void bundleDataMapper() throws DataMapperException {
+    public void bundleDataMapper() throws DataMapperException, MojoExecutionException {
         String dataMapperDirectoryPath = resourcesDirectory + File.separator + Constants.DATA_MAPPER_DIR_PATH;
         List<Path> dataMappers = listSubDirectories(dataMapperDirectoryPath);
     

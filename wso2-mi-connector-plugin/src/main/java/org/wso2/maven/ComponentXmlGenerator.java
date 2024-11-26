@@ -6,7 +6,6 @@ import javax.xml.parsers.DocumentBuilderFactory;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.FilenameFilter;
-import java.io.IOException;
 
 /**
  * Generates the component.xml files for the components.
@@ -16,7 +15,8 @@ public class ComponentXmlGenerator {
     /**
      * Generates the component.xml files for all components in the components directory.
      */
-    public static void generateComponentXmls() {
+    public static void generateComponentXmls(ConnectorMojo connectorMojo) {
+
         String componentsPath = "src" + File.separator + "main" + File.separator + "resources";
 
         // Get the list of folders in the components directory
@@ -37,18 +37,18 @@ public class ComponentXmlGenerator {
                 }
                 if (containsXml) {
                     String componentName = folder.getName();
-                    generateComponentXml(componentName, folder.getPath());
+                    generateComponentXml(componentName, folder.getPath(), connectorMojo);
                 }
             }
         }
     }
 
-    private static void generateComponentXml(String componentName, String folderPath) {
+    private static void generateComponentXml(String componentName, String folderPath, ConnectorMojo connectorMojo) {
 
         String targetComponentsPath = "target" + File.separator + "classes" + File.separator + componentName;
 
         // Specify the output file name
-        String outputFileName =  targetComponentsPath + File.separator + "component.xml";
+        String outputFileName = targetComponentsPath + File.separator + "component.xml";
 
         try (FileWriter writer = new FileWriter(outputFileName)) {
             // Write the header, comment, and start the <component> tag
@@ -62,10 +62,10 @@ public class ComponentXmlGenerator {
             File[] files = folder.listFiles(new FilenameFilter() {
                 @Override
                 public boolean accept(File dir, String name) {
+
                     return name.endsWith(".xml");
                 }
             });
-
             if (files != null) {
                 for (File file : files) {
                     String fileName = file.getName();
@@ -79,13 +79,11 @@ public class ComponentXmlGenerator {
                     writer.write("        </component>\n");
                 }
             }
-
             // Close the <subComponents> and <component> tags
             writer.write("    </subComponents>\n");
             writer.write("</component>\n");
-
-        } catch (IOException e) {
-            e.printStackTrace();
+        } catch (Exception e) {
+            connectorMojo.getLog().error("Error generating component.xml for " + componentName + ": " + e.getMessage());
         }
     }
 
@@ -96,24 +94,20 @@ public class ComponentXmlGenerator {
      * @param file The XML file to process.
      * @return The extracted description or a default message.
      */
-    private static String extractDescription(File file) {
-        try {
-            DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
-            DocumentBuilder builder = factory.newDocumentBuilder();
-            Document document = builder.parse(file);
+    private static String extractDescription(File file) throws Exception {
 
-            // Normalize the document
-            document.getDocumentElement().normalize();
+        DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+        DocumentBuilder builder = factory.newDocumentBuilder();
+        Document document = builder.parse(file);
 
-            // Get the description element
-            NodeList nodeList = document.getElementsByTagName("description");
-            if (nodeList.getLength() > 0) {
-                return nodeList.item(0).getTextContent().trim();
-            }
-        } catch (Exception e) {
-            System.err.println("Error reading file " + file.getName() + ": " + e.getMessage());
+        // Normalize the document
+        document.getDocumentElement().normalize();
+
+        // Get the description element
+        NodeList nodeList = document.getElementsByTagName("description");
+        if (nodeList.getLength() > 0) {
+            return nodeList.item(0).getTextContent().trim();
         }
-
         return "";
     }
 }

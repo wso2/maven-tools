@@ -40,15 +40,14 @@ public class ConnectorMojo extends AbstractMojo {
     public void execute() throws MojoExecutionException {
 
         populateConnectorData();
-        ConnectorXmlGenerator.generateConnectorXml(connectorName, packageName);
-        ComponentXmlGenerator.generateComponentXmls();
-        DescriptorGenerator.generateDescriptor();
+        ConnectorXmlGenerator.generateConnectorXml(connectorName, packageName, this);
+        ComponentXmlGenerator.generateComponentXmls(this);
+        DescriptorGenerator.generateDescriptor(this);
     }
 
     private void populateConnectorData() throws MojoExecutionException {
 
         String pomFilePath = "pom.xml"; // Update with your pom.xml path
-
         try {
             // Parse the POM file
             File pomFile = new File(pomFilePath);
