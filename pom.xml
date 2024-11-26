@@ -88,6 +88,7 @@
         <module>wso2-esb-template-plugin</module>
         <module>maven-dataservice-plugin</module>
         <module>wso2-mi-synapse-plugin</module>
+        <module>wso2-mi-connector-plugin</module>
     </modules>
     <build>
         <extensions>
