@@ -87,6 +87,7 @@ class Constants {
     static final String MAIN_SEQUENCE = "mainSequence";
     static final String TEMP_TARGET_DIR_NAME = "tmp";
     static final String API_DEFINITION_DIR = "api-definitions";
+    static final String OS_WINDOWS = "windows";
 
     private Constants() {
     }

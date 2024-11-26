@@ -762,6 +762,31 @@ class CAppHandler extends AbstractXMLDoc {
         }
     }
 
+    /**
+     * Method to process lib dependencies which are inside deployment/lib/ folder in the project and add to dependencies
+     *
+     * @param dependencies list of dependencies to be added to artifacts.xml file
+     * @param project      VSCode maven project
+     */
+    void processLibDependencies(List<ArtifactDependency> dependencies, MavenProject project) {
+        File libFolder = new File(Paths.get(project.getBasedir().toString(), "target", "libs").toString());
+        if (libFolder.exists()) {
+            File[] libFiles = libFolder.listFiles();
+            if (libFiles != null) {
+                for (File libFile : libFiles) {
+                    if (libFile.isFile() && libFile.getName().endsWith(".jar")) {
+                        dependencies.add(new ArtifactDependency(libFile.getName().substring(0, libFile.getName().length() - 4),
+                                project.getVersion(), Constants.SERVER_ROLE_EI, true));
+                        writeArtifactAndFile(libFile, project.getBasedir().toString() + File.separator +
+                                Constants.TEMP_TARGET_DIR_NAME, libFile.getName().substring(0, libFile.getName().length() - 4),
+                                Constants.CLASS_MEDIATOR_TYPE, Constants.SERVER_ROLE_EI, project.getVersion(), libFile.getName(),
+                                libFile.getName().substring(0, libFile.getName().length() - 4));
+                    }
+                }
+            }
+        }
+    }
+
     @Override
     protected void deserialize(OMElement documentElement) throws Exception {
 

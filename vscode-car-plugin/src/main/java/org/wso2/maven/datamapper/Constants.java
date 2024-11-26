@@ -29,7 +29,6 @@ class Constants {
     static final String WEBPACK_CONFIG_FILE_NAME = "webpack.config.js";
     static final String POM_FILE_NAME = "pom.xml";
     static final String BUNDLED_JS_FILE_NAME = "bundle.js";
-    static final String OS_WINDOWS = "windows";
     static final String NODE_VERSION = "v14.17.3";
     static final String NPM_VERSION = "6.14.13";
     static final String FRONTEND_MVN_PLUGIN_GROUP_ID = "com.github.eirslett";
