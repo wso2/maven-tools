@@ -20,7 +20,7 @@ package org.wso2.maven;
 
 import java.io.File;
 
-class Constants {
+public class Constants {
     static final String ARTIFACTS = "artifacts";
     static final String ARTIFACT = "artifact";
     static final String KEY = "key";
@@ -69,7 +69,6 @@ class Constants {
     static final String GOV_FOLDER= "gov";
     static final String CONF_FOLDER = "conf";
     static final String REG_INFO_FILE = "registry-info.xml";
-    static final String DEFAULT_TARGET_FOLDER = "target";
     static final String VERSION = "version";
     static final String TYPE = "type";
     static final String SERVER_ROLE = "serverRole";
@@ -80,7 +79,6 @@ class Constants {
     static final String COLLECTION = "collection";
     static final String DIRECTORY = "directory";
     static final String PATH = "path";
-    static final String DEPENDENCY = "dependency";
     static final String INCLUDE = "include";
     static final String RESOURCES = "resources";
     static final String ARCHIVE_EXCEPTION_MSG = "Error occurred while creating CAR file.";
@@ -91,6 +89,13 @@ class Constants {
     static final String MAIN_SEQUENCE = "mainSequence";
     static final String TEMP_TARGET_DIR_NAME = "tmp";
     static final String API_DEFINITION_DIR = "api-definitions";
+    static final String OS_WINDOWS = "windows";
+    public static final String POM_FILE = "pom.xml";
+    public static final String DEFAULT_TARGET_FOLDER = "target";
+    public static final String DEPENDENCY = "dependency";
+    public static final String DEPENDENCY_XML = "dependency.xml";
+    public static final String EXTRACTED_CONNECTORS = "extracted-connectors";
+    public static final String LIBS = "libs";
 
     private Constants() {
     }

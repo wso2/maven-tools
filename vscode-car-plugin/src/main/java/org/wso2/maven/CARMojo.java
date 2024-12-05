@@ -32,8 +32,10 @@ import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.project.MavenProject;
 import org.apache.commons.lang.StringUtils;
+import org.apache.maven.shared.invoker.MavenInvocationException;
 import org.wso2.maven.datamapper.DataMapperBundler;
 import org.wso2.maven.datamapper.DataMapperException;
+import org.wso2.maven.libraries.ConnectorDependencyResolver;
 import org.wso2.maven.model.ArchiveException;
 import org.wso2.maven.model.ArtifactDependency;
 
@@ -80,6 +82,7 @@ public class CARMojo extends AbstractMojo {
     }
 
     public void execute() throws MojoExecutionException, MojoFailureException {
+
         String basedir = project.getBasedir().toString();
         archiveLocation = StringUtils.isEmpty(archiveLocation) ? basedir + File.separator +
                 Constants.DEFAULT_TARGET_FOLDER : archiveLocation;
@@ -131,6 +134,8 @@ public class CARMojo extends AbstractMojo {
             cAppHandler.processResourcesFolder(resourcesFolder, tempTargetDir, dependencies,
                     metaDependencies, projectVersion);
             cAppHandler.processClassMediators(dependencies, project);
+            resolveConnectorDependencies();
+            cAppHandler.processLibDependencies(dependencies, project);
             cAppHandler.createDependencyArtifactsXmlFile(tempTargetDir, dependencies, metaDependencies, project);
             File fileToZip = new File(tempTargetDir);
             String fileExtension = ".car";
@@ -308,5 +313,13 @@ public class CARMojo extends AbstractMojo {
         }
         //call delete to delete files and empty directory
         file.delete();
+    }
+
+    private void resolveConnectorDependencies() {
+        try {
+            ConnectorDependencyResolver.resolveDependencies(this);
+        } catch (Exception e) {
+            getLog().error("Error occurred while resolving connector dependencies.", e);
+        }
     }
 }
