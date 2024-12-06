@@ -53,7 +53,7 @@ public class ConnectorDependencyResolver {
      */
     public static void resolveDependencies(CARMojo carMojo) throws Exception {
 
-        String extractedDir = Constants.POM_FILE + File.separator + Constants.EXTRACTED_CONNECTORS;
+        String extractedDir = Constants.DEFAULT_TARGET_FOLDER + File.separator + Constants.EXTRACTED_CONNECTORS;
         String libDir = Constants.DEFAULT_TARGET_FOLDER + File.separator + Constants.LIBS;
 
         // Ensure target directories exist
