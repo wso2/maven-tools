@@ -41,7 +41,7 @@ public class DescriptorGenerator {
     public static void generateDescriptor(ConnectorMojo connectorMojo) {
 
         String pomFilePath = "pom.xml";
-        String outputFilePath = Constants.DEFAULT_TARGET_FOLDER + File.separator + Constants.CLASSES +
+        String outputFilePath = Constants.DEFAULT_TARGET_FOLDER + File.separator + Constants.CLASSES + File.separator +
                 Constants.DEPENDENCY_XML;
         try {
             // Parse the POM file and load properties
