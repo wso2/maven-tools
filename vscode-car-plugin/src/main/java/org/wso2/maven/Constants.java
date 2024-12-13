@@ -66,6 +66,7 @@ public class Constants {
     static final String SERVER_ROLE_DSS = "EnterpriseServiceBus";
     static final String GOV_REG_PREFIX = "/_system/governance";
     static final String CONF_REG_PREFIX = "/_system/config";
+    static final String GOV_MI_RESOURCES_PREFIX = "/_system/governance/mi-resources";
     static final String GOV_FOLDER= "gov";
     static final String CONF_FOLDER = "conf";
     static final String REG_INFO_FILE = "registry-info.xml";
