@@ -73,9 +73,11 @@ public class DataMapperBundler {
      * @throws MojoExecutionException if an error occurs while executing the Maven invoker.
      */
     public void bundleDataMapper() throws DataMapperException, MojoExecutionException {
-        String dataMapperDirectoryPath = resourcesDirectory + File.separator + Constants.DATA_MAPPER_DIR_PATH;
-        List<Path> dataMappers = listSubDirectories(dataMapperDirectoryPath);
-    
+        String oldDataMapperDirectoryPath = resourcesDirectory + File.separator + Constants.DATA_MAPPER_DIR_PATH;
+        String newDataMapperDirectoryPath = resourcesDirectory + File.separator + Constants.DATA_MAPPER_DIR_NAME;
+        List<Path> dataMappers = listSubDirectories(oldDataMapperDirectoryPath);
+        dataMappers.addAll(listSubDirectories(newDataMapperDirectoryPath));
+
         if (dataMappers.isEmpty()) {
             // No data mappers to bundle
             return;
@@ -102,8 +104,10 @@ public class DataMapperBundler {
      * @throws DataMapperException if an error occurs while deleting the generated data mapper artifacts.
      */
     public void deleteGeneratedDatamapperArtifacts() throws DataMapperException {
-        String dataMapperDirectoryPath = resourcesDirectory + File.separator + Constants.DATA_MAPPER_DIR_PATH;
-        List<Path> dataMappers = listSubDirectories(dataMapperDirectoryPath);
+        String olDataMapperDirectoryPath = resourcesDirectory + File.separator + Constants.DATA_MAPPER_DIR_PATH;
+        String newDataMapperDirectoryPath = resourcesDirectory + File.separator + Constants.DATA_MAPPER_DIR_NAME;
+        List<Path> dataMappers = listSubDirectories(olDataMapperDirectoryPath);
+        dataMappers.addAll(listSubDirectories(newDataMapperDirectoryPath));
 
         if (dataMappers.isEmpty()) {
             // No data mappers to delete
@@ -208,11 +212,19 @@ public class DataMapperBundler {
      * @throws DataMapperException if an error occurs while removing the bundling artifacts.
      */
     private void copyDataMapperFilesToTarget() throws DataMapperException {
-        Path dataMapperPath = Paths.get(resourcesDirectory + File.separator + Constants.DATA_MAPPER_DIR_PATH);
+        Path oldDataMapperPath = Paths.get(resourcesDirectory + File.separator + Constants.DATA_MAPPER_DIR_PATH);
+        Path newDataMapperPath = Paths.get(resourcesDirectory + File.separator + Constants.DATA_MAPPER_DIR_NAME);
         try {
-            FileUtils.copyDirectory(dataMapperPath.toFile(),
-                    Paths.get("." + File.separator + Constants.TARGET_DIR_NAME + File.separator +
-                            Constants.DATA_MAPPER_DIR_NAME).toFile());
+            if (Files.exists(oldDataMapperPath)) {
+                FileUtils.copyDirectory(oldDataMapperPath.toFile(),
+                        Paths.get("." + File.separator + Constants.TARGET_DIR_NAME + File.separator +
+                                Constants.DATA_MAPPER_DIR_NAME).toFile());
+            }
+            if (Files.exists(newDataMapperPath)) {
+                FileUtils.copyDirectory(newDataMapperPath.toFile(),
+                        Paths.get("." + File.separator + Constants.TARGET_DIR_NAME + File.separator +
+                                Constants.DATA_MAPPER_DIR_NAME).toFile());
+            }
         } catch (IOException e) {
             throw new DataMapperException("Failed to copy data mapper files to target directory.", e);
         }
