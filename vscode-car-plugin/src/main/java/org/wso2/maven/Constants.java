@@ -20,7 +20,7 @@ package org.wso2.maven;
 
 import java.io.File;
 
-class Constants {
+public class Constants {
     static final String ARTIFACTS = "artifacts";
     static final String ARTIFACT = "artifact";
     static final String KEY = "key";
@@ -35,6 +35,7 @@ class Constants {
     static final String TASKS_DIR_NAME = "tasks";
     static final String TEMPLATES_DIR_NAME = "templates";
     static final String DATASOURCE_DIR_NAME = "data-sources";
+    static final String CONF_DIR_NAME = "conf";
     static final String DATASERVICES_DIR_NAME = "data-services";
     static final String METADATA_DIR_NAME = "metadata";
     static final String CONNECTORS_DIR_NAME = "connectors";
@@ -52,6 +53,7 @@ class Constants {
     static final String DATASOURCE_TYPE = "datasource/datasource";
     static final String DATASERVICE_TYPE = "service/dataservice";
     static final String REG_RESOURCE_TYPE = "registry/resource";
+    static final String PROPERTY_TYPE = "config/property";
     static final String CONNECTOR_TYPE = "synapse/lib";
     static final String METADATA_TYPE = "synapse/metadata";
     static final String CAPP_TYPE = "carbon/application";
@@ -64,27 +66,37 @@ class Constants {
     static final String SERVER_ROLE_DSS = "EnterpriseServiceBus";
     static final String GOV_REG_PREFIX = "/_system/governance";
     static final String CONF_REG_PREFIX = "/_system/config";
+    static final String GOV_MI_RESOURCES_PREFIX = "/_system/governance/mi-resources";
     static final String GOV_FOLDER= "gov";
     static final String CONF_FOLDER = "conf";
     static final String REG_INFO_FILE = "registry-info.xml";
-    static final String DEFAULT_TARGET_FOLDER = "target";
     static final String VERSION = "version";
     static final String TYPE = "type";
     static final String SERVER_ROLE = "serverRole";
     static final String NAME = "name";
+    static final String DESCRIPTION = "description";
     static final String FILE = "file";
     static final String ITEM = "item";
     static final String COLLECTION = "collection";
     static final String DIRECTORY = "directory";
     static final String PATH = "path";
-    static final String DEPENDENCY = "dependency";
     static final String INCLUDE = "include";
     static final String RESOURCES = "resources";
     static final String ARCHIVE_EXCEPTION_MSG = "Error occurred while creating CAR file.";
     static final String ARTIFACT_XML = "artifact.xml";
+    static final String PROPERTY_FILE = "config.properties";
+    static final String PROPERTY_FILE_NAME = "config";
     static final String EMPTY_STRING = "";
     static final String MAIN_SEQUENCE = "mainSequence";
     static final String TEMP_TARGET_DIR_NAME = "tmp";
+    static final String API_DEFINITION_DIR = "api-definitions";
+    static final String OS_WINDOWS = "windows";
+    public static final String POM_FILE = "pom.xml";
+    public static final String DEFAULT_TARGET_FOLDER = "target";
+    public static final String DEPENDENCY = "dependency";
+    public static final String DEPENDENCY_XML = "dependency.xml";
+    public static final String EXTRACTED_CONNECTORS = "extracted-connectors";
+    public static final String LIBS = "libs";
 
     private Constants() {
     }

@@ -42,16 +42,17 @@ class UnitTestClient {
      * @param synapseTestCaseFilePath synapse test case file path
      * @param synapseHost synapse unit test server host
      * @param synapsePort synapse unit test server port
+     * @param synapseTestCaseName synapse test case name
      * @return response from the unit testing agent received via TCP transport
      * @throws IOException when tcp socket not initialized
      */
-    static String executeTests(String synapseTestCaseFilePath, String synapseHost, String synapsePort)
+    static String executeTests(String synapseTestCaseFilePath, String synapseHost, String synapsePort, String synapseTestCaseName)
             throws IOException {
         String responseFromServer = null;
         String deployableMessage = null;
         try {
             //check whether unit test suite has test cases or not
-            deployableMessage = SynapseTestCaseFileReader.processArtifactData(synapseTestCaseFilePath);
+            deployableMessage = SynapseTestCaseFileReader.processArtifactData(synapseTestCaseFilePath, synapseTestCaseName);
             if (deployableMessage != null && deployableMessage.equals(Constants.NO_TEST_CASES)) {
                 return deployableMessage;
             }

@@ -64,6 +64,9 @@ public class UnitTestCasesMojo extends AbstractMojo {
     @Parameter(property = "testCasesFilePath")
     private String testCasesFilePath;
 
+    @Parameter(property = "testCaseName")
+    private String synapseTestCaseName;
+
     @Parameter(property = "server")
     private SynapseServer server;
 
@@ -142,6 +145,11 @@ public class UnitTestCasesMojo extends AbstractMojo {
     private void testCaseRunner() throws IOException {
         List<String> synapseTestCasePaths = getTestCasesFileNamesWithPaths(testCasesFilePath);
 
+        if (synapseTestCasePaths.isEmpty()) {
+            getLog().info("Project does not include any unit tests.");
+            return;
+        }
+
         getLog().info("Detect " + synapseTestCasePaths.size() + " Synapse test case files to execute");
         getLog().info("");
 
@@ -158,7 +166,7 @@ public class UnitTestCasesMojo extends AbstractMojo {
         for (String synapseTestCaseFile : synapseTestCasePaths) {
 
             String responseFromUnitTestFramework = UnitTestClient.executeTests
-                    (synapseTestCaseFile, serverHost, serverPort);
+                    (synapseTestCaseFile, serverHost, serverPort, synapseTestCaseName);
 
             if (responseFromUnitTestFramework != null
                     && !responseFromUnitTestFramework.equals(Constants.NO_TEST_CASES)) {
@@ -192,6 +200,10 @@ public class UnitTestCasesMojo extends AbstractMojo {
      */
     private ArrayList<String> getTestCasesFileNamesWithPaths(String testFileFolder) {
         ArrayList<String> fileNamesWithPaths = new ArrayList<>();
+
+        if (!(new File(testFileFolder).exists())) {
+            return fileNamesWithPaths;
+        }
 
         if (testFileFolder.endsWith(Constants.XML_EXTENSION)) {
             fileNamesWithPaths.add(testFileFolder);

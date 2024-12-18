@@ -40,7 +40,7 @@ import java.util.List;
 import java.util.Properties;
 
 import org.apache.commons.io.FileUtils;
-import org.apache.maven.shared.invoker.InvocationOutputHandler;
+import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.shared.invoker.InvocationRequest;
 import org.apache.maven.shared.invoker.DefaultInvocationRequest;
 import org.apache.maven.shared.invoker.InvocationResult;
@@ -48,6 +48,9 @@ import org.apache.maven.shared.invoker.Invoker;
 import org.apache.maven.shared.invoker.MavenInvocationException;
 import org.apache.maven.shared.invoker.DefaultInvoker;
 import org.wso2.maven.CARMojo;
+
+import static org.wso2.maven.MavenUtils.getMavenHome;
+import static org.wso2.maven.MavenUtils.setupInvoker;
 
 public class DataMapperBundler {
     private final CARMojo mojoInstance;
@@ -67,11 +70,14 @@ public class DataMapperBundler {
      * It also handles the creation and cleanup of necessary artifacts.
      *
      * @throws DataMapperException if any step in the bundling process fails.
+     * @throws MojoExecutionException if an error occurs while executing the Maven invoker.
      */
-    public void bundleDataMapper() throws DataMapperException {
-        String dataMapperDirectoryPath = resourcesDirectory + File.separator + Constants.DATA_MAPPER_DIR_PATH;
-        List<Path> dataMappers = listSubDirectories(dataMapperDirectoryPath);
-    
+    public void bundleDataMapper() throws DataMapperException, MojoExecutionException {
+        String oldDataMapperDirectoryPath = resourcesDirectory + File.separator + Constants.DATA_MAPPER_DIR_PATH;
+        String newDataMapperDirectoryPath = resourcesDirectory + File.separator + Constants.DATA_MAPPER_DIR_NAME;
+        List<Path> dataMappers = listSubDirectories(oldDataMapperDirectoryPath);
+        dataMappers.addAll(listSubDirectories(newDataMapperDirectoryPath));
+
         if (dataMappers.isEmpty()) {
             // No data mappers to bundle
             return;
@@ -81,14 +87,15 @@ public class DataMapperBundler {
         String mavenHome = getMavenHome();
     
         createDataMapperArtifacts();
-        setupInvoker(mavenHome);
+        setupInvoker(mavenHome, invoker);
     
         installNodeAndNPM();
         runNpmInstall();
+        configureNpm();
         bundleDataMappers(dataMappers);
         generateDataMapperSchemas(dataMappers);
-
         removeBundlingArtifacts();
+        copyDataMapperFilesToTarget();
     }
 
     /**
@@ -97,8 +104,10 @@ public class DataMapperBundler {
      * @throws DataMapperException if an error occurs while deleting the generated data mapper artifacts.
      */
     public void deleteGeneratedDatamapperArtifacts() throws DataMapperException {
-        String dataMapperDirectoryPath = resourcesDirectory + File.separator + Constants.DATA_MAPPER_DIR_PATH;
-        List<Path> dataMappers = listSubDirectories(dataMapperDirectoryPath);
+        String olDataMapperDirectoryPath = resourcesDirectory + File.separator + Constants.DATA_MAPPER_DIR_PATH;
+        String newDataMapperDirectoryPath = resourcesDirectory + File.separator + Constants.DATA_MAPPER_DIR_NAME;
+        List<Path> dataMappers = listSubDirectories(olDataMapperDirectoryPath);
+        dataMappers.addAll(listSubDirectories(newDataMapperDirectoryPath));
 
         if (dataMappers.isEmpty()) {
             // No data mappers to delete
@@ -122,23 +131,6 @@ public class DataMapperBundler {
                 throw new DataMapperException("Failed to delete generated data mapper artifacts.", e);
             }
         }
-    }
-    
-    /**
-     * Sets up the Maven Invoker with the specified Maven home directory.
-     *
-     * @param mavenHome The path to the Maven home directory.
-     */
-    private void setupInvoker(String mavenHome) {
-        invoker.setMavenHome(new File(mavenHome));
-        invoker.setOutputHandler(new InvocationOutputHandler() {
-            @Override
-            public void consumeLine(String line) {
-                if (!line.contains("BUILD SUCCESS")) {
-                    System.out.println(line);
-                }
-            }
-        });
     }
     
     /**
@@ -167,6 +159,23 @@ public class DataMapperBundler {
         setNpmInstallProperties(request);
     
         executeRequest(request, "npm install failed.");
+    }
+
+    /**
+     * Runs 'npm config set scripts-prepend-node-path auto' to configure node for npm.
+     *
+     * @throws DataMapperException
+     */
+    private void configureNpm() throws DataMapperException {
+
+        InvocationRequest request = createBaseRequest();
+        mojoInstance.logInfo("Configuring npm");
+        request.setGoals(Collections.singletonList(Constants.NPM_GOAL));
+
+        Properties properties = new Properties();
+        properties.setProperty("arguments", Constants.PREPEND_NODE_CONFIG);
+        request.setProperties(properties);
+        executeRequest(request, "npm configuration failed.");
     }
     
     /**
@@ -197,6 +206,31 @@ public class DataMapperBundler {
     }
 
     /**
+     * Copies the data mapper files to the target directory.
+     * This might be utilized for the unit tests
+     *
+     * @throws DataMapperException if an error occurs while removing the bundling artifacts.
+     */
+    private void copyDataMapperFilesToTarget() throws DataMapperException {
+        Path oldDataMapperPath = Paths.get(resourcesDirectory + File.separator + Constants.DATA_MAPPER_DIR_PATH);
+        Path newDataMapperPath = Paths.get(resourcesDirectory + File.separator + Constants.DATA_MAPPER_DIR_NAME);
+        try {
+            if (Files.exists(oldDataMapperPath)) {
+                FileUtils.copyDirectory(oldDataMapperPath.toFile(),
+                        Paths.get("." + File.separator + Constants.TARGET_DIR_NAME + File.separator +
+                                Constants.DATA_MAPPER_DIR_NAME).toFile());
+            }
+            if (Files.exists(newDataMapperPath)) {
+                FileUtils.copyDirectory(newDataMapperPath.toFile(),
+                        Paths.get("." + File.separator + Constants.TARGET_DIR_NAME + File.separator +
+                                Constants.DATA_MAPPER_DIR_NAME).toFile());
+            }
+        } catch (IOException e) {
+            throw new DataMapperException("Failed to copy data mapper files to target directory.", e);
+        }
+    }
+
+    /**
      * Handles the bundling process for a single data mapper.
      *
      * @param dataMapper The path to the data mapper directory.
@@ -210,13 +244,13 @@ public class DataMapperBundler {
         createWebpackConfig(dataMapperName);
 
         Path npmDirectory = Paths.get("." + File.separator + Constants.TARGET_DIR_NAME);
-    
+
         InvocationRequest request = createBaseRequest();
         request.setBaseDirectory(npmDirectory.toFile());
         request.setGoals(Collections.singletonList(Constants.NPM_RUN_BUILD_GOAL
-                + " -Dexec.executable=" + Constants.NPM_COMMAND
+                + " -Dexec.executable=\"" + getNpmExecutablePath() + "\""
                 + " -Dexec.args=\"" + Constants.RUN_BUILD + "\""));
-    
+
         executeRequest(request, "Failed to bundle data mapper: " + dataMapperName);
 
         mojoInstance.logInfo("Bundle completed for data mapper: " + dataMapperName);
@@ -243,11 +277,19 @@ public class DataMapperBundler {
         InvocationRequest request = createBaseRequest();
         request.setBaseDirectory(npmDirectory.toFile());
         request.setGoals(Collections.singletonList(Constants.NPM_RUN_BUILD_GOAL
-                + " -Dexec.executable=" + Constants.NPM_COMMAND
+                + " -Dexec.executable=\"" + getNpmExecutablePath() + "\""
                 + " -Dexec.args=\"" + Constants.RUN_GENERATE + " " + dataMapper + File.separator
                 + dataMapperName + ".ts" + "\""));
 
         executeRequest(request, "Failed to bundle data mapper: " + dataMapperName);
+    }
+
+    private String getNpmExecutablePath() {
+
+        String osName = System.getProperty("os.name").toLowerCase();
+        String npmExecutable = osName.contains("win") ? "npm.cmd" : "npm";
+        return Paths.get(System.getProperty("user.dir"), Constants.TARGET_DIR_NAME, "node", npmExecutable)
+                .toString();
     }
     
     /**
@@ -693,50 +735,6 @@ public class DataMapperBundler {
         } catch (IOException e) {
             throw new DataMapperException("Error while removing webpack.config.js file.", e);
         }
-    }
-
-    /**
-     * Retrieves the Maven home directory.
-     *
-     * @return The Maven home directory path, or null if it cannot be determined.
-     * @throws DataMapperException if an error occurs while determining the Maven home directory.
-     */
-    private String getMavenHome() throws DataMapperException {
-        mojoInstance.logInfo("Finding maven home");
-
-        // First try to find Maven home using system property
-        String mavenHome = System.getProperty("maven.home");
-        if (mavenHome != null) {
-            return mavenHome;
-        }
-
-        // Fallback: Try to find Maven home using environment variable or default paths
-        mavenHome = System.getenv("M2_HOME");
-        if (mavenHome != null) {
-            return mavenHome;
-        }
-
-        // Fallback: Try to find Maven home using command line
-        ProcessBuilder processBuilder = new ProcessBuilder();
-        if (System.getProperty("os.name").toLowerCase().contains(Constants.OS_WINDOWS)) {
-            processBuilder.command("cmd.exe", "/c", "mvn -v");
-        } else {
-            processBuilder.command("sh", "-c", "mvn -v");
-        }
-        try {
-            Process process = processBuilder.start();
-            BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
-            String line;
-            while ((line = reader.readLine()) != null) {
-                if (line.contains("Maven home: ")) {
-                    return line.split("Maven home: ")[1].trim();
-                }
-            }
-        } catch (IOException e) {
-            throw new DataMapperException("Could not determine Maven home.", e);
-        }
-
-        throw new DataMapperException("Could not determine Maven home.");
     }
 
     /**

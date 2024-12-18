@@ -1,9 +1,9 @@
 <?xml version="1.0"?>
 
 <!--
-  ~ Copyright (c) 2019, WSO2 Inc. (http://www.wso2.org) All Rights Reserved.
+  ~ Copyright (c) 2024, WSO2 LLC. (http://www.wso2.org) All Rights Reserved.
   ~
-  ~ WSO2 Inc. licenses this file to you under the Apache License,
+  ~ WSO2 LLC. licenses this file to you under the Apache License,
   ~ Version 2.0 (the "License"); you may not use this file except
   ~ in compliance with the License.
   ~ You may obtain a copy of the License at
@@ -27,10 +27,10 @@
         <relativePath>../pom.xml</relativePath>
     </parent>
     <groupId>org.wso2.maven</groupId>
-    <artifactId>vscode-car-plugin</artifactId>
+    <artifactId>wso2-mi-connector-plugin</artifactId>
     <packaging>maven-plugin</packaging>
     <version>5.2.83-SNAPSHOT</version>
-    <name>VSCode CAR Plugin</name>
+    <name>WSO2 MI Connector plugin</name>
     <url>http://wso2.org</url>
     <description>Maven plugin which creates CAR artifact</description>
     <build>
