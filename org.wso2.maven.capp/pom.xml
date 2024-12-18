@@ -24,7 +24,7 @@
 
 	<name>CApp Maven</name>
 
-	<description>Library to work with CApp application</description>
+	<description>Library to work with CApp artifacts</description>
 	<build>
 		<extensions>
 			<extension>
