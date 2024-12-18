@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<application>
+<artifacts>
     <artifact name="testEndpoint1" version="1.0.0" type="synapse/endpoint"
               serverRole="EnterpriseServiceBus">
         <item>
@@ -49,4 +49,4 @@
             <path>/_system/config/builder</path>
         </collection>
     </artifact>
-</application>
+</artifacts>
