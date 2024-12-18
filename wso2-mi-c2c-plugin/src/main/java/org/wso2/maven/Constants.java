@@ -19,10 +19,8 @@
 package org.wso2.maven;
 
 public class Constants {
-    public static final String METADATA_XML = "metadata.xml";
-
-    public static final String ARTIFACTS_XML = "artifacts.xml";
-    public static final String TMP_DOCKER_DIR = "tmp_docker";
+    public static final String TARGET_DOCKER_DIR = "docker";
+    public static final String TARGET_KUBERNETES_DIR = "kubernetes";
     public static final String TMP_CARBON_HOME = "carbon-home";
     public static final String TMP_CARBONAPPS_DIR = "carbonapps";
     public static final String DOCKER_FILE = "Dockerfile";
@@ -30,12 +28,16 @@ public class Constants {
     public static final String DEPLOYMENT_DIR = "deployment";
     public static final String DOCKER_DIR = "docker";
     public static final String DEPLOYMENT_TOML_FILE = "deployment.toml";
+    public static final String CLOUD_TOML_FILE = "cloud.toml";
     public static final String RESOURCES_DIR = "resources";
     public static final String SECURITY_DIR = "security";
     public static final String REPOSITORY_DIR = "repository";
     public static final String DOCKERFILE_FILE = "Dockerfile";
     public static final String CONF_DIR = "conf";
+    public static final String EXTRACTED_DIR = "extracted";
 
     static final String DEFAULT_TARGET_DIR = "target";
     public static final String CAR_FILE_EXTENSION = ".car";
+    public static final String WSO2_MI_DEFAULT_BASE_IMAGE = "wso2/wso2mi:latest";
+    public static final String MI_CONFIG_FILES = "env-file";
 }
