@@ -146,7 +146,7 @@ public class CloudMojo extends AbstractMojo {
         setArtifactOutputPath(dataHolder);
 
         Path deploymentTomlPath = Paths.get(basedir, DEPLOYMENT_DIR, DEPLOYMENT_TOML_FILE);
-        int offset = readServerOffset(deploymentTomlPath);
+        Integer offset = readServerOffset(deploymentTomlPath);
         addServices(dataHolder, offset);
         ArtifactManager artifactManager = new ArtifactManager(this, tomlResults);
         artifactManager.populateDeploymentModel();
@@ -157,25 +157,28 @@ public class CloudMojo extends AbstractMojo {
         }
     }
 
-    private int readServerOffset(Path deploymentTomlPath) throws MojoExecutionException {
+    private Integer readServerOffset(Path deploymentTomlPath) throws MojoExecutionException {
         try {
             TomlParseResult result = Toml.parse(Files.readString(deploymentTomlPath));
             if (result.hasErrors()) {
                 throw new MojoExecutionException("Error parsing deployment.toml file: " + result.errors());
-            } else if (!result.contains("server.offset")) {
-                return 0;
-            } else {
-                return Objects.requireNonNull(result.getLong("server.offset")).intValue();
             }
+
+            return result.getLong("server.offset") == null ? null :
+                    Objects.requireNonNull(result.getLong("server.offset")).intValue();
         } catch (IOException e) {
             logError("Error while reading the deployment.toml file: " + e.getMessage());
             throw new MojoExecutionException("Error while reading the deployment.toml file", e);
         }
     }
 
-    private void addServices(KubernetesDataHolder dataHolder, int offset) {
-        int httpServicePort = HTTP_DEFAULT_PORT - PORT_DEFAULT_OFFSET + offset;
-        int httpsServicePort = HTTPS_DEFAULT_PORT - PORT_DEFAULT_OFFSET + offset;
+    private void addServices(KubernetesDataHolder dataHolder, Integer offset) {
+        int httpServicePort = HTTP_DEFAULT_PORT;
+        int httpsServicePort = HTTPS_DEFAULT_PORT;
+        if (offset != null) {
+            httpServicePort = HTTP_DEFAULT_PORT - PORT_DEFAULT_OFFSET + offset;
+            httpsServicePort = HTTPS_DEFAULT_PORT - PORT_DEFAULT_OFFSET + offset;
+        }
         // Service model for HTTP service
         ServiceModel httpServiceModel = new ServiceModel();
         httpServiceModel.setPort(httpServicePort);
