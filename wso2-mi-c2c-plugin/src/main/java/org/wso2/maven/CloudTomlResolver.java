@@ -198,7 +198,7 @@ public class CloudTomlResolver {
                 configMapModel.setName(deploymentName + "-" + getValidName(fileName.toString()) + "cfg" + i);
                 configMapModel.setData(getData(path, false));
                 configMapModel.setMountPath(mountPathSr);
-                configMapModel.setBallerinaConf(false);
+                configMapModel.setMIConf(false);
                 dataHolder.addConfigMaps(Collections.singleton(configMapModel));
             }
         }
@@ -334,7 +334,7 @@ public class CloudTomlResolver {
                     Map<String, String> dataMap = new HashMap<>();
                     dataMap.put(fileName.toString(), content);
                     configMapModel.setData(dataMap);
-                    configMapModel.setBallerinaConf(true);
+                    configMapModel.setMIConf(true);
                     configMapModel.setReadOnly(false);
                     configMapModel.setDir(false);
                     dataHolder.addConfigMaps(Collections.singleton(configMapModel));

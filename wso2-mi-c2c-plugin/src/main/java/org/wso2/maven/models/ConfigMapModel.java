@@ -24,7 +24,7 @@ public class ConfigMapModel extends KubernetesModel {
     private Map<String, String> data;
     private String mountPath;
     private boolean readOnly;
-    private boolean isBallerinaConf;
+    private boolean isMIConf;
     private int defaultMode;
     private boolean dir;
 
@@ -57,12 +57,12 @@ public class ConfigMapModel extends KubernetesModel {
         this.readOnly = readOnly;
     }
 
-    public boolean isBallerinaConf() {
-        return isBallerinaConf;
+    public boolean isMIConf() {
+        return isMIConf;
     }
 
-    public void setBallerinaConf(boolean ballerinaConf) {
-        isBallerinaConf = ballerinaConf;
+    public void setMIConf(boolean MIConf) {
+        isMIConf = MIConf;
     }
 
     public int getDefaultMode() {

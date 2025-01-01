@@ -83,7 +83,7 @@ public class DeploymentHandler extends AbstractArtifactHandler {
                     .withName(configMapModel.getName() + "-volume")
                     .withReadOnly(configMapModel.isReadOnly());
 
-            if ((!configMapModel.isDir()) && (!configMapModel.isBallerinaConf())) {
+            if ((!configMapModel.isDir()) && (!configMapModel.isMIConf())) {
                 volumeMountBuilder.withSubPath(KubernetesUtils.getFileNameOfConfigMap(configMapModel));
             }
             volumeMounts.add(volumeMountBuilder.build());

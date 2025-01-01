@@ -68,8 +68,8 @@ public class ConfigMapHandler extends AbstractArtifactHandler {
         Collection<ConfigMapModel> configMapModels = dataHolder.getConfigMapModelSet();
         StringBuilder configTomlEnv = new StringBuilder();
         for (ConfigMapModel configMapModel : configMapModels) {
-            if (configMapModel.isBallerinaConf()) {
-                configTomlEnv.append(getBALConfigFiles(configMapModel));
+            if (configMapModel.isMIConf()) {
+                configTomlEnv.append(getMIConfigFiles(configMapModel));
             }
             generate(configMapModel);
         }
@@ -87,7 +87,7 @@ public class ConfigMapHandler extends AbstractArtifactHandler {
         cloudMojo.logInfo("\t@kubernetes:ConfigMap");
     }
 
-    private String getBALConfigFiles(ConfigMapModel configMapModel) {
+    private String getMIConfigFiles(ConfigMapModel configMapModel) {
         StringBuilder configPaths = new StringBuilder();
         for (String key : configMapModel.getData().keySet()) {
             configPaths.append(configMapModel.getMountPath()).append(key).append(":");
