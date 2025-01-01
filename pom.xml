@@ -88,10 +88,7 @@
         <module>wso2-esb-template-plugin</module>
         <module>maven-dataservice-plugin</module>
         <module>wso2-mi-synapse-plugin</module>
-<<<<<<< HEAD
         <module>wso2-mi-connector-plugin</module>
-=======
->>>>>>> a10da0ce (Add new mi c2c plugin)
         <module>wso2-mi-c2c-plugin</module>
     </modules>
     <build>
