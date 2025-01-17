@@ -70,7 +70,6 @@ public class Constants {
     static final String GOV_FOLDER= "gov";
     static final String CONF_FOLDER = "conf";
     static final String REG_INFO_FILE = "registry-info.xml";
-    static final String VERSION = "version";
     static final String TYPE = "type";
     static final String SERVER_ROLE = "serverRole";
     static final String NAME = "name";
@@ -94,9 +93,14 @@ public class Constants {
     public static final String POM_FILE = "pom.xml";
     public static final String DEFAULT_TARGET_FOLDER = "target";
     public static final String DEPENDENCY = "dependency";
-    public static final String DEPENDENCY_XML = "dependency.xml";
+    public static final String DESCRIPTOR_YAML = "descriptor.yml";
     public static final String EXTRACTED_CONNECTORS = "extracted-connectors";
     public static final String LIBS = "libs";
+    public static final String REPOSITORIES = "repositories";
+    public static final String DEPENDENCIES = "dependencies";
+    public static final String ARTIFACT_ID = "artifactId";
+    public static final String GROUP_ID = "groupId";
+    public static final String VERSION = "version";
 
     private Constants() {
     }
