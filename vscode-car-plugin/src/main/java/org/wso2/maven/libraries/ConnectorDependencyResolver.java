@@ -57,23 +57,28 @@ public class ConnectorDependencyResolver {
         new File(extractedDir).mkdirs();
         new File(libDir).mkdirs();
 
+        String mavenHome = MavenUtils.getMavenHome();
+        Invoker invoker = new DefaultInvoker();
+        setupInvoker(mavenHome, invoker);
+
         // Resolve connector ZIP files from pom.xml
-        List<File> connectorZips = resolveConnectorZips(Constants.POM_FILE);
+        List<File> connectorZips = resolveConnectorZips(Constants.POM_FILE, invoker);
 
         List<File> dependencyFiles = new ArrayList<>();
         // Extract all connector ZIP files
         for (File zipFile : connectorZips) {
             String targetExtractDir = extractedDir + File.separator + zipFile.getName().replace(".zip", "");
             extractZipFile(zipFile, targetExtractDir);
-            dependencyFiles.add(new File(targetExtractDir + File.separator + Constants.DESCRIPTOR_YAML));
+            File descriptorYaml = new File(targetExtractDir + File.separator + Constants.DESCRIPTOR_YAML);
+            if (descriptorYaml.exists()) {
+                carMojo.getLog().info("Found descriptor file: " + descriptorYaml.getPath());
+                dependencyFiles.add(descriptorYaml);
+            }
         }
 
-        String mavenHome = MavenUtils.getMavenHome();
-        Invoker invoker = new DefaultInvoker();
-        setupInvoker(mavenHome, invoker);
-
-        if (dependencyFiles != null) {
+        if (!dependencyFiles.isEmpty()){
             for (File dependencyFile : dependencyFiles) {
+                carMojo.logInfo("Resolving dependencies for " + dependencyFile.getPath());
                 resolveMavenDependencies(dependencyFile, libDir, invoker, carMojo);
             }
         }
@@ -84,15 +89,14 @@ public class ConnectorDependencyResolver {
      * Resolves connector ZIP files from the pom.xml file.
      *
      * @param pomFilePath The path to the pom.xml file.
+     * @param invoker The Maven Invoker.
      * @return The list of connector ZIP files.
      * @throws MavenInvocationException If an error occurs while resolving dependencies.
      */
-    private static List<File> resolveConnectorZips(String pomFilePath) throws MavenInvocationException {
+    private static List<File> resolveConnectorZips(String pomFilePath, Invoker invoker) throws MavenInvocationException {
         InvocationRequest request = new DefaultInvocationRequest();
         request.setPomFile(new File(pomFilePath));
         request.setGoals(Collections.singletonList("dependency:copy-dependencies -DincludeTypes=zip"));
-
-        Invoker invoker = new DefaultInvoker();
         invoker.execute(request);
 
         File dependenciesDir = new File(Constants.DEFAULT_TARGET_FOLDER + File.separator + Constants.DEPENDENCY);
@@ -210,7 +214,8 @@ public class ConnectorDependencyResolver {
 
         InvocationRequest request = new DefaultInvocationRequest();
         request.setGoals(Collections.singletonList(String.format("dependency:get -DgroupId=%s -DartifactId=%s " +
-                "-Dversion=%s -DremoteRepositories=\"%s\"", groupId, artifactId, version, repositories)));
+                "-Dtransitive=false -Dversion=%s -DremoteRepositories=\"%s\"",
+                groupId, artifactId, version, repositories)));
         executeRequest(request, "Failed to resolve Maven dependency: " + groupId + ":" +
                 artifactId + ":" + version, invoker, carMojo);
     }
