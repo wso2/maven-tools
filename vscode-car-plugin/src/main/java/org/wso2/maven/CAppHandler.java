@@ -172,6 +172,7 @@ class CAppHandler extends AbstractXMLDoc {
         }
         processConnectors(resourcesFolder, archiveDirectory, dependencies);
         processRegistryResources(resourcesFolder, archiveDirectory, dependencies);
+        processRegistryResources(new File(resourcesFolder, Constants.REGISTRY_DIR_NAME), archiveDirectory, dependencies);
         processMetadata(resourcesFolder, archiveDirectory, metadataDependencies, version);
         processPropertyFile(resourcesFolder, archiveDirectory, version, dependencies);
     }
@@ -227,8 +228,7 @@ class CAppHandler extends AbstractXMLDoc {
      */
     void processRegistryResources(File resourcesFolder, String archiveDirectory, List<ArtifactDependency> dependencies) {
         mojoInstance.logInfo("Processing registry resources in " + resourcesFolder.getAbsolutePath());
-        File registryFolder = new File(resourcesFolder, Constants.REGISTRY_DIR_NAME);
-        File artifactFile = new File(registryFolder, Constants.ARTIFACT_XML);
+        File artifactFile = new File(resourcesFolder, Constants.ARTIFACT_XML);
         if (!artifactFile.exists()) {
             return;
         }
@@ -245,12 +245,15 @@ class CAppHandler extends AbstractXMLDoc {
                     String fileName = item.getFirstChildWithName(new QName(Constants.FILE)).getText();
                     String path = item.getFirstChildWithName(new QName(Constants.PATH)).getText();
                     File registryResource;
-                    if (path.startsWith(Constants.GOV_REG_PREFIX)) {
+                    if (path.startsWith(Constants.GOV_MI_RESOURCES_PREFIX)) {
+                        path = path.substring(Constants.GOV_MI_RESOURCES_PREFIX.length());
+                        registryResource = new File(resourcesFolder, path + "/" + fileName);
+                    } else if (path.startsWith(Constants.GOV_REG_PREFIX)) {
                         path = path.substring(Constants.GOV_REG_PREFIX.length());
-                        registryResource = new File(registryFolder, Constants.GOV_FOLDER + path + "/" + fileName);
+                        registryResource = new File(resourcesFolder, Constants.GOV_FOLDER + path + "/" + fileName);
                     } else {
                         path = path.substring(Constants.CONF_REG_PREFIX.length());
-                        registryResource = new File(registryFolder, Constants.CONF_FOLDER + path + "/" + fileName);
+                        registryResource = new File(resourcesFolder, Constants.CONF_FOLDER + path + "/" + fileName);
                     }
                     if (!registryResource.exists()) {
                         mojoInstance.logError("Registry resource " + path + "/" + fileName + " does not exist");
@@ -268,12 +271,15 @@ class CAppHandler extends AbstractXMLDoc {
                     String directory = collection.getFirstChildWithName(new QName(Constants.DIRECTORY)).getText();
                     String path = collection.getFirstChildWithName(new QName(Constants.PATH)).getText();
                     File registryResource;
-                    if (path.startsWith(Constants.GOV_REG_PREFIX)) {
+                    if (path.startsWith(Constants.GOV_MI_RESOURCES_PREFIX)) {
+                        path = path.substring(Constants.GOV_MI_RESOURCES_PREFIX.length());
+                        registryResource = new File(resourcesFolder, path);
+                    } else if (path.startsWith(Constants.GOV_REG_PREFIX)) {
                         path = path.substring(Constants.GOV_REG_PREFIX.length());
-                        registryResource = new File(registryFolder, Constants.GOV_FOLDER + path);
+                        registryResource = new File(resourcesFolder, Constants.GOV_FOLDER + path);
                     } else {
                         path = path.substring(Constants.CONF_REG_PREFIX.length());
-                        registryResource = new File(registryFolder, Constants.CONF_FOLDER + path);
+                        registryResource = new File(resourcesFolder, Constants.CONF_FOLDER + path);
                     }
                     if (!registryResource.exists()) {
                         mojoInstance.logError("Registry resource " + path + " does not exist");
@@ -774,6 +780,31 @@ class CAppHandler extends AbstractXMLDoc {
                             project.getVersion());
             // delete the jar file after copying to the CAPP
             jarFile.delete();
+        }
+    }
+
+    /**
+     * Method to process lib dependencies which are inside deployment/lib/ folder in the project and add to dependencies
+     *
+     * @param dependencies list of dependencies to be added to artifacts.xml file
+     * @param project      VSCode maven project
+     */
+    void processLibDependencies(List<ArtifactDependency> dependencies, MavenProject project) {
+        File libFolder = new File(Paths.get(project.getBasedir().toString(), "target", "libs").toString());
+        if (libFolder.exists()) {
+            File[] libFiles = libFolder.listFiles();
+            if (libFiles != null) {
+                for (File libFile : libFiles) {
+                    if (libFile.isFile() && libFile.getName().endsWith(".jar")) {
+                        dependencies.add(new ArtifactDependency(libFile.getName().substring(0, libFile.getName().length() - 4),
+                                project.getVersion(), Constants.SERVER_ROLE_EI, true));
+                        writeArtifactAndFile(libFile, project.getBasedir().toString() + File.separator +
+                                Constants.TEMP_TARGET_DIR_NAME, libFile.getName().substring(0, libFile.getName().length() - 4),
+                                Constants.CLASS_MEDIATOR_TYPE, Constants.SERVER_ROLE_EI, project.getVersion(), libFile.getName(),
+                                libFile.getName().substring(0, libFile.getName().length() - 4));
+                    }
+                }
+            }
         }
     }
 
