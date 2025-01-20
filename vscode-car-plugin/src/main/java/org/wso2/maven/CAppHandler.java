@@ -798,12 +798,13 @@ class CAppHandler extends AbstractXMLDoc {
             File[] dependencyFiles = connectorDepFolder.listFiles();
             if (dependencyFiles != null) {
                 for (File dependencyFile : dependencyFiles) {
-                    if (dependencyFile.isFile() && dependencyFile.getName().endsWith(".zip")) {
+                    if (dependencyFile.isFile() && dependencyFile.getName().endsWith(Constants.ZIP_EXTENSION)) {
                         String fileName = dependencyFile.getName();
                         int lastIndex = fileName.lastIndexOf('-');
                         String name = fileName.substring(0, lastIndex);
                         // remove .zip at the end
-                        String version = fileName.substring(lastIndex + 1, fileName.length() - 4);
+                        String version = fileName.substring(lastIndex + 1,
+                                fileName.length() - Constants.ZIP_EXTENSION.length());
                         dependencies.add(new ArtifactDependency(name, version, Constants.SERVER_ROLE_EI, true));
                         writeArtifactAndFile(dependencyFile, project.getBasedir().toString() + File.separator +
                                 Constants.TEMP_TARGET_DIR_NAME, name, Constants.CONNECTOR_TYPE,
