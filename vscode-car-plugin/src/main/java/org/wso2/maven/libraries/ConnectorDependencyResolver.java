@@ -100,7 +100,7 @@ public class ConnectorDependencyResolver {
 
         File dependenciesDir = new File(Constants.DEFAULT_TARGET_FOLDER + File.separator + Constants.DEPENDENCY);
         if (!dependenciesDir.exists()) {
-            throw new IllegalStateException("Dependency resolution failed, no dependencies directory found.");
+            return Collections.EMPTY_LIST;
         }
         List<File> connectorZips = new ArrayList<>();
         for (File file : dependenciesDir.listFiles()) {
