@@ -789,8 +789,34 @@ class CAppHandler extends AbstractXMLDoc {
      * @param dependencies list of dependencies to be added to artifacts.xml file
      * @param project      VSCode maven project
      */
-    void processLibDependencies(List<ArtifactDependency> dependencies, MavenProject project) {
-        File libFolder = new File(Paths.get(project.getBasedir().toString(), "target", "libs").toString());
+    void processConnectorLibDependencies(List<ArtifactDependency> dependencies, MavenProject project) {
+
+        // process connector dependencies
+        File connectorDepFolder = new File(Paths.get(project.getBasedir().toString(),
+                Constants.DEFAULT_TARGET_FOLDER, Constants.DEPENDENCY).toString());
+        if (connectorDepFolder.exists()) {
+            File[] dependencyFiles = connectorDepFolder.listFiles();
+            if (dependencyFiles != null) {
+                for (File dependencyFile : dependencyFiles) {
+                    if (dependencyFile.isFile() && dependencyFile.getName().endsWith(Constants.ZIP_EXTENSION)) {
+                        String fileName = dependencyFile.getName();
+                        int lastIndex = fileName.lastIndexOf('-');
+                        String name = fileName.substring(0, lastIndex);
+                        // remove .zip at the end
+                        String version = fileName.substring(lastIndex + 1,
+                                fileName.length() - Constants.ZIP_EXTENSION.length());
+                        dependencies.add(new ArtifactDependency(name, version, Constants.SERVER_ROLE_EI, true));
+                        writeArtifactAndFile(dependencyFile, project.getBasedir().toString() + File.separator +
+                                Constants.TEMP_TARGET_DIR_NAME, name, Constants.CONNECTOR_TYPE,
+                                Constants.SERVER_ROLE_EI, version, fileName, name + "_" + version);
+                    }
+                }
+            }
+        }
+
+        // process lib dependencies of connectors
+        File libFolder = new File(Paths.get(project.getBasedir().toString(), Constants.DEFAULT_TARGET_FOLDER,
+                Constants.LIBS).toString());
         if (libFolder.exists()) {
             File[] libFiles = libFolder.listFiles();
             if (libFiles != null) {

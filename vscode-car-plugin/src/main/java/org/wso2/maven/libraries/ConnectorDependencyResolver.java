@@ -23,17 +23,14 @@ import org.apache.maven.shared.invoker.InvocationRequest;
 import org.apache.maven.shared.invoker.InvocationResult;
 import org.apache.maven.shared.invoker.Invoker;
 import org.apache.maven.shared.invoker.MavenInvocationException;
-import org.w3c.dom.Document;
-import org.w3c.dom.Element;
-import org.w3c.dom.NodeList;
 import org.wso2.maven.CARMojo;
 import org.wso2.maven.Constants;
 import org.wso2.maven.MavenUtils;
 import org.wso2.maven.datamapper.DataMapperException;
+import org.yaml.snakeyaml.Yaml;
 
-import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
 import java.io.*;
+import java.nio.file.Files;
 import java.util.*;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
@@ -60,23 +57,28 @@ public class ConnectorDependencyResolver {
         new File(extractedDir).mkdirs();
         new File(libDir).mkdirs();
 
+        String mavenHome = MavenUtils.getMavenHome();
+        Invoker invoker = new DefaultInvoker();
+        setupInvoker(mavenHome, invoker);
+
         // Resolve connector ZIP files from pom.xml
-        List<File> connectorZips = resolveConnectorZips(Constants.POM_FILE);
+        List<File> connectorZips = resolveConnectorZips(Constants.POM_FILE, invoker);
 
         List<File> dependencyFiles = new ArrayList<>();
         // Extract all connector ZIP files
         for (File zipFile : connectorZips) {
             String targetExtractDir = extractedDir + File.separator + zipFile.getName().replace(".zip", "");
             extractZipFile(zipFile, targetExtractDir);
-            dependencyFiles.add(new File(targetExtractDir + File.separator + Constants.DEPENDENCY_XML));
+            File descriptorYaml = new File(targetExtractDir + File.separator + Constants.DESCRIPTOR_YAML);
+            if (descriptorYaml.exists()) {
+                carMojo.getLog().info("Found descriptor file: " + descriptorYaml.getPath());
+                dependencyFiles.add(descriptorYaml);
+            }
         }
 
-        String mavenHome = MavenUtils.getMavenHome();
-        Invoker invoker = new DefaultInvoker();
-        setupInvoker(mavenHome, invoker);
-
-        if (dependencyFiles != null) {
+        if (!dependencyFiles.isEmpty()){
             for (File dependencyFile : dependencyFiles) {
+                carMojo.logInfo("Resolving dependencies for " + dependencyFile.getPath());
                 resolveMavenDependencies(dependencyFile, libDir, invoker, carMojo);
             }
         }
@@ -87,15 +89,14 @@ public class ConnectorDependencyResolver {
      * Resolves connector ZIP files from the pom.xml file.
      *
      * @param pomFilePath The path to the pom.xml file.
+     * @param invoker The Maven Invoker.
      * @return The list of connector ZIP files.
      * @throws MavenInvocationException If an error occurs while resolving dependencies.
      */
-    private static List<File> resolveConnectorZips(String pomFilePath) throws MavenInvocationException {
+    private static List<File> resolveConnectorZips(String pomFilePath, Invoker invoker) throws MavenInvocationException {
         InvocationRequest request = new DefaultInvocationRequest();
         request.setPomFile(new File(pomFilePath));
         request.setGoals(Collections.singletonList("dependency:copy-dependencies -DincludeTypes=zip"));
-
-        Invoker invoker = new DefaultInvoker();
         invoker.execute(request);
 
         File dependenciesDir = new File(Constants.DEFAULT_TARGET_FOLDER + File.separator + Constants.DEPENDENCY);
@@ -154,42 +155,46 @@ public class ConnectorDependencyResolver {
     }
 
     /**
-     * Resolves Maven dependencies from a dependency.xml file.
+     * Resolves Maven dependencies from a descriptor.yml file.
      *
-     * @param dependencyXml The dependency.xml file.
+     * @param descriptorYaml The descriptor.yml file.
      * @param libDir The directory to copy the dependencies to.
      * @param invoker The Maven Invoker.
      * @param carMojo The Mojo instance.
      * @throws Exception If an error occurs while resolving dependencies.
      */
-    private static void resolveMavenDependencies(File dependencyXml, String libDir, Invoker invoker, CARMojo carMojo)
+    private static void resolveMavenDependencies(File descriptorYaml, String libDir, Invoker invoker, CARMojo carMojo)
             throws Exception {
 
-        if (!dependencyXml.exists()) {
+        if (!descriptorYaml.exists()) {
             return;
         }
-        DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
-        DocumentBuilder builder = factory.newDocumentBuilder();
-        Document doc = builder.parse(dependencyXml);
 
-        NodeList dependencyNodes = doc.getElementsByTagName("dependency");
-        NodeList repositoryNodes = doc.getElementsByTagName("repository");
+        Yaml yaml = new Yaml();
+        Map<String, Object> yamlData = yaml.load(Files.newInputStream(descriptorYaml.toPath()));
+
+        // Extract repositories
+        List<Map<String, String>> repositories = (List<Map<String, String>>) yamlData.get(Constants.REPOSITORIES);
         StringBuilder repositoriesUrl = new StringBuilder();
-        for (int i = 0; i < repositoryNodes.getLength(); i++) {
-            if (i > 0) {
-                repositoriesUrl.append(",");
+        if (repositories != null) {
+            for (int i = 0; i < repositories.size(); i++) {
+                if (i > 0) {
+                    repositoriesUrl.append(",");
+                }
+                repositoriesUrl.append(repositories.get(i).get("url"));
             }
-            Element repository = (Element) repositoryNodes.item(i);
-            String url = repository.getElementsByTagName("url").item(0).getTextContent();
-            repositoriesUrl.append(url);
         }
-        for (int i = 0; i < dependencyNodes.getLength(); i++) {
-            Element dependency = (Element) dependencyNodes.item(i);
-            String groupId = dependency.getElementsByTagName("groupId").item(0).getTextContent();
-            String artifactId = dependency.getElementsByTagName("artifactId").item(0).getTextContent();
-            String version = dependency.getElementsByTagName("version").item(0).getTextContent();
-            resolveMavenDependency(groupId, artifactId, version, invoker, carMojo, repositoriesUrl.toString());
-            copyMavenDependency(groupId, artifactId, version, libDir, invoker, carMojo);
+
+        // Extract dependencies
+        List<Map<String, String>> dependencies = (List<Map<String, String>>) yamlData.get(Constants.DEPENDENCIES);
+        if (dependencies != null) {
+            for (Map<String, String> dependency : dependencies) {
+                String groupId = dependency.get(Constants.GROUP_ID);
+                String artifactId = dependency.get(Constants.ARTIFACT_ID);
+                String version = dependency.get(Constants.VERSION);
+                resolveMavenDependency(groupId, artifactId, version, invoker, carMojo, repositoriesUrl.toString());
+                copyMavenDependency(groupId, artifactId, version, libDir, invoker, carMojo);
+            }
         }
     }
 
@@ -209,7 +214,8 @@ public class ConnectorDependencyResolver {
 
         InvocationRequest request = new DefaultInvocationRequest();
         request.setGoals(Collections.singletonList(String.format("dependency:get -DgroupId=%s -DartifactId=%s " +
-                "-Dversion=%s -DremoteRepositories=\"%s\"", groupId, artifactId, version, repositories)));
+                "-Dtransitive=false -Dversion=%s -DremoteRepositories=\"%s\"",
+                groupId, artifactId, version, repositories)));
         executeRequest(request, "Failed to resolve Maven dependency: " + groupId + ":" +
                 artifactId + ":" + version, invoker, carMojo);
     }
