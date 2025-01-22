@@ -112,7 +112,8 @@ public class CARMojo extends AbstractMojo {
     /**
      * Handles the creation of the Composite Application Archive (CAR).
      */
-    private void processCARCreation(String basedir, String artifactFolderPath, String resourcesFolderPath) {
+    private void processCARCreation(String basedir, String artifactFolderPath, String resourcesFolderPath)
+            throws MojoExecutionException {
         appendLogs();
 
         File artifactFolder = new File(artifactFolderPath);
@@ -314,11 +315,12 @@ public class CARMojo extends AbstractMojo {
         file.delete();
     }
 
-    private void resolveConnectorDependencies() {
+    private void resolveConnectorDependencies() throws MojoExecutionException {
         try {
             ConnectorDependencyResolver.resolveDependencies(this);
         } catch (Exception e) {
             getLog().error("Error occurred while resolving connector dependencies.", e);
+            throw new MojoExecutionException("Connector dependency resolution failed.", e);
         }
     }
 }
