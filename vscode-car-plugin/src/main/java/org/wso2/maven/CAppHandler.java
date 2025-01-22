@@ -121,8 +121,15 @@ class CAppHandler extends AbstractXMLDoc {
                         if (Constants.API_TYPE.equals(type)) {
                             // api version can be null
                             apiList.put(name, configVersion);
-                            writeMetadataFile(name, configElement, archiveDirectory, false, version);
-                            addMetadataDependencies(metadataDependencies, configElement, false, version);
+                            String metadataFilename = name + "_metadata.yaml";
+                            File resourcesFolder = artifactsDir.toPath().getParent().getParent()
+                                    .resolve(Constants.RESOURCES).toFile();
+                            File metadataFolder = new File(resourcesFolder, Constants.METADATA_DIR_NAME);
+                            File metaFile = new File(metadataFolder, metadataFilename);
+                            if (!metaFile.exists()) {
+                                writeMetadataFile(name, configElement, archiveDirectory, false, version);
+                                addMetadataDependencies(metadataDependencies, configElement, false, version);
+                            }
                         }
                         if (configVersion == null) {
                             apiHasVersion = false;
