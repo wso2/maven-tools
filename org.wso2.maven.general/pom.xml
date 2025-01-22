@@ -13,13 +13,13 @@
 	<parent>
 		<groupId>org.wso2.maven</groupId>
 		<artifactId>maven-common-tools</artifactId>
-		<version>5.2.85-SNAPSHOT</version>
+		<version>5.2.85</version>
 		<relativePath>../pom.xml</relativePath>
 	</parent>
 
 	<modelVersion>4.0.0</modelVersion>
 	<artifactId>org.wso2.maven.registry</artifactId>
-	<version>5.2.85-SNAPSHOT</version>
+	<version>5.2.85</version>
 	<packaging>jar</packaging>
 
 	<name>CApp Maven</name>
