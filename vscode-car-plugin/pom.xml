@@ -23,13 +23,13 @@
     <parent>
         <groupId>org.wso2.maven</groupId>
         <artifactId>maven-common-tools</artifactId>
-        <version>5.2.87</version>
+        <version>5.2.88-SNAPSHOT</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
     <groupId>org.wso2.maven</groupId>
     <artifactId>vscode-car-plugin</artifactId>
     <packaging>maven-plugin</packaging>
-    <version>5.2.87</version>
+    <version>5.2.88-SNAPSHOT</version>
     <name>VSCode CAR Plugin</name>
     <url>http://wso2.org</url>
     <description>Maven plugin which creates CAR artifact</description>
