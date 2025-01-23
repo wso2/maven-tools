@@ -772,12 +772,12 @@ class CAppHandler extends AbstractXMLDoc {
         String jarName = project.getArtifactId() + "-" + project.getVersion() + ".jar";
         File jarFile = new File(Paths.get(project.getBasedir().toString(), "target", jarName).toString());
         if (jarFile.exists()) {
-            dependencies.add(new ArtifactDependency(project.getArtifactId(), project.getVersion(),
-                    Constants.SERVER_ROLE_EI, true));
+            dependencies.add(new ArtifactDependency(project.getArtifactId() + Constants.CLASS_MEDIATORS
+                    , project.getVersion(), Constants.SERVER_ROLE_EI, true));
             writeArtifactAndFile(jarFile, project.getBasedir().toString() + File.separator +
-                            Constants.TEMP_TARGET_DIR_NAME, project.getArtifactId(), Constants.CLASS_MEDIATOR_TYPE,
-                    Constants.SERVER_ROLE_EI, project.getVersion(), jarName, project.getArtifactId() + "_" +
-                            project.getVersion());
+                            Constants.TEMP_TARGET_DIR_NAME, project.getArtifactId() + Constants.CLASS_MEDIATORS,
+                    Constants.CLASS_MEDIATOR_TYPE, Constants.SERVER_ROLE_EI, project.getVersion(), jarName,
+                    project.getArtifactId() + Constants.CLASS_MEDIATORS + "_" + project.getVersion());
             // delete the jar file after copying to the CAPP
             jarFile.delete();
         }

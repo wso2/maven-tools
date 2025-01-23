@@ -102,6 +102,7 @@ public class Constants {
     public static final String GROUP_ID = "groupId";
     public static final String VERSION = "version";
     public static final String ZIP_EXTENSION = ".zip";
+    public static final String CLASS_MEDIATORS = "_class_mediators";
 
     private Constants() {
     }
