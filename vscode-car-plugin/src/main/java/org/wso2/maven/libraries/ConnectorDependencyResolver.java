@@ -259,52 +259,6 @@ public class ConnectorDependencyResolver {
         return tempPom;
     }
 
-
-    /**
-     * Resolves a Maven dependency.
-     *
-     * @param groupId The group ID of the dependency.
-     * @param artifactId The artifact ID of the dependency.
-     * @param version The version of the dependency.
-     * @param invoker The Maven Invoker.
-     * @param carMojo The Mojo instance.
-     * @param repositories The repositories to use for resolving the dependency.
-     * @throws LibraryResolverException If an error occurs while resolving the dependency.
-     */
-    private static void resolveMavenDependency(String groupId, String artifactId, String version, Invoker invoker,
-                                               CARMojo carMojo, String repositories) throws LibraryResolverException {
-
-        InvocationRequest request = new DefaultInvocationRequest();
-        request.setGoals(Collections.singletonList(String.format("dependency:get -DgroupId=%s -DartifactId=%s " +
-                "-Dtransitive=false -Dversion=%s -DremoteRepositories=\"%s\"",
-                groupId, artifactId, version, repositories)));
-        executeRequest(request, "Failed to resolve Maven dependency: " + groupId + ":" +
-                artifactId + ":" + version, invoker, carMojo);
-    }
-
-    /**
-     * Copies a Maven dependency to the specified directory.
-     *
-     * @param groupId The group ID of the dependency.
-     * @param artifactId The artifact ID of the dependency.
-     * @param version The version of the dependency.
-     * @param libDir The directory to copy the dependency to.
-     * @param invoker The Maven Invoker.
-     * @param carMojo The Mojo instance.
-     * @throws LibraryResolverException If an error occurs while copying the dependency.
-     */
-    private static void copyMavenDependency(String groupId, String artifactId, String version, String libDir,
-                                            Invoker invoker, CARMojo carMojo) throws LibraryResolverException {
-
-        InvocationRequest request = new DefaultInvocationRequest();
-        request.setGoals(Collections.singletonList(String.format(
-                "dependency:copy -Dartifact=%s:%s:%s -DoutputDirectory=\"%s\" -DlocalRepositoryDirectory=\"%s\" " +
-                        "-Dmaven.legacyLocalRepo=true",
-                groupId, artifactId, version, libDir, libDir)));
-        executeRequest(request, "Failed to copy Maven dependency: " + groupId + ":" +
-                artifactId + ":" + version, invoker, carMojo);
-    }
-
     /**
      * Executes a Maven invocation request and logs any errors.
      *
