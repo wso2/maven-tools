@@ -55,7 +55,9 @@ public class ConnectorDependencyResolver {
 
         // Ensure target directories exist
         new File(extractedDir).mkdirs();
-        new File(libDir).mkdirs();
+        File libDirFile = new File(libDir);
+        libDirFile.mkdirs();
+        String libDirPath = libDirFile.getAbsolutePath();
 
         String mavenHome = MavenUtils.getMavenHome();
         Invoker invoker = new DefaultInvoker();
@@ -79,7 +81,7 @@ public class ConnectorDependencyResolver {
         if (!dependencyFiles.isEmpty()){
             for (File dependencyFile : dependencyFiles) {
                 carMojo.logInfo("Resolving dependencies for " + dependencyFile.getPath());
-                resolveMavenDependencies(dependencyFile, libDir, invoker, carMojo);
+                resolveMavenDependencies(dependencyFile, libDirPath, invoker, carMojo);
             }
         }
         carMojo.logInfo("All dependencies resolved and extracted successfully.");
@@ -175,72 +177,86 @@ public class ConnectorDependencyResolver {
 
         // Extract repositories
         List<Map<String, String>> repositories = (List<Map<String, String>>) yamlData.get(Constants.REPOSITORIES);
-        StringBuilder repositoriesUrl = new StringBuilder();
+        List<String> repositoriesList = new ArrayList<>();
         if (repositories != null) {
             for (int i = 0; i < repositories.size(); i++) {
-                if (i > 0) {
-                    repositoriesUrl.append(",");
-                }
-                repositoriesUrl.append(repositories.get(i).get("url"));
+                repositoriesList.add(repositories.get(i).get("url"));
             }
         }
 
         // Extract dependencies
         List<Map<String, String>> dependencies = (List<Map<String, String>>) yamlData.get(Constants.DEPENDENCIES);
+        List<String> dependenciesList = new ArrayList<>();
         if (dependencies != null) {
             for (Map<String, String> dependency : dependencies) {
                 String groupId = dependency.get(Constants.GROUP_ID);
                 String artifactId = dependency.get(Constants.ARTIFACT_ID);
                 String version = dependency.get(Constants.VERSION);
-                resolveMavenDependency(groupId, artifactId, version, invoker, carMojo, repositoriesUrl.toString());
-                copyMavenDependency(groupId, artifactId, version, libDir, invoker, carMojo);
+                dependenciesList.add(groupId + ":" + artifactId + ":" + version);
             }
+        }
+        resolveAndCopyDependencies(dependenciesList, repositoriesList, libDir, invoker, carMojo);
+    }
+
+    public static void resolveAndCopyDependencies(List<String> dependencies, List<String> repositories,
+                                                  String libDir, Invoker invoker, CARMojo carMojo)
+            throws LibraryResolverException {
+        try {
+            File tempPom = createPomFile(dependencies, repositories);
+
+            InvocationRequest request = new DefaultInvocationRequest();
+            request.setPomFile(tempPom);
+            request.setGoals(Collections.singletonList(String.format("dependency:copy-dependencies " +
+                    "-DexcludeTransitive=true -DoutputDirectory=%s", libDir)));
+
+            executeRequest(request, "Failed to resolve and copy dependencies", invoker, carMojo);
+            if (!tempPom.delete()) {
+                carMojo.getLog().warn("Failed to delete temporary pom.xml: " + tempPom.getAbsolutePath());
+            }
+        } catch (IOException e) {
+            throw new LibraryResolverException("Failed to create temporary pom.xml", e);
         }
     }
 
-    /**
-     * Resolves a Maven dependency.
-     *
-     * @param groupId The group ID of the dependency.
-     * @param artifactId The artifact ID of the dependency.
-     * @param version The version of the dependency.
-     * @param invoker The Maven Invoker.
-     * @param carMojo The Mojo instance.
-     * @param repositories The repositories to use for resolving the dependency.
-     * @throws LibraryResolverException If an error occurs while resolving the dependency.
-     */
-    private static void resolveMavenDependency(String groupId, String artifactId, String version, Invoker invoker,
-                                               CARMojo carMojo, String repositories) throws LibraryResolverException {
+    private static File createPomFile(List<String> dependencies, List<String> repositories) throws IOException {
 
-        InvocationRequest request = new DefaultInvocationRequest();
-        request.setGoals(Collections.singletonList(String.format("dependency:get -DgroupId=%s -DartifactId=%s " +
-                "-Dtransitive=false -Dversion=%s -DremoteRepositories=\"%s\"",
-                groupId, artifactId, version, repositories)));
-        executeRequest(request, "Failed to resolve Maven dependency: " + groupId + ":" +
-                artifactId + ":" + version, invoker, carMojo);
-    }
+        File tempPom = File.createTempFile("temp-pom", ".xml");
+        try (FileWriter writer = new FileWriter(tempPom)) {
+            writer.write("<project xmlns=\"http://maven.apache.org/POM/4.0.0\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"\n" +
+                    "         xsi:schemaLocation=\"http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd\">\n" +
+                    "    <modelVersion>4.0.0</modelVersion>\n" +
+                    "    <groupId>temp</groupId>\n" +
+                    "    <artifactId>temp</artifactId>\n" +
+                    "    <version>1.0-SNAPSHOT</version>\n" +
+                    "    <dependencies>\n");
 
-    /**
-     * Copies a Maven dependency to the specified directory.
-     *
-     * @param groupId The group ID of the dependency.
-     * @param artifactId The artifact ID of the dependency.
-     * @param version The version of the dependency.
-     * @param libDir The directory to copy the dependency to.
-     * @param invoker The Maven Invoker.
-     * @param carMojo The Mojo instance.
-     * @throws LibraryResolverException If an error occurs while copying the dependency.
-     */
-    private static void copyMavenDependency(String groupId, String artifactId, String version, String libDir,
-                                            Invoker invoker, CARMojo carMojo) throws LibraryResolverException {
+            // Add dependencies
+            for (String dependency : dependencies) {
+                String[] parts = dependency.split(":");
+                writer.write(String.format("        <dependency>\n" +
+                        "            <groupId>%s</groupId>\n" +
+                        "            <artifactId>%s</artifactId>\n" +
+                        "            <version>%s</version>\n" +
+                        "        </dependency>\n", parts[0], parts[1], parts[2]));
+            }
 
-        InvocationRequest request = new DefaultInvocationRequest();
-        request.setGoals(Collections.singletonList(String.format(
-                "dependency:copy -Dartifact=%s:%s:%s -DoutputDirectory=\"%s\" -DlocalRepositoryDirectory=\"%s\" " +
-                        "-Dmaven.legacyLocalRepo=true",
-                groupId, artifactId, version, libDir, libDir)));
-        executeRequest(request, "Failed to copy Maven dependency: " + groupId + ":" +
-                artifactId + ":" + version, invoker, carMojo);
+            writer.write("    </dependencies>\n");
+
+            // Add repositories
+            if (repositories != null && !repositories.isEmpty()) {
+                writer.write("    <repositories>\n");
+                for (String repository : repositories) {
+                    writer.write(String.format("        <repository>\n" +
+                            "            <id>repo-%d</id>\n" +
+                            "            <url>%s</url>\n" +
+                            "        </repository>\n", repositories.indexOf(repository) + 1, repository));
+                }
+                writer.write("    </repositories>\n");
+            }
+
+            writer.write("</project>\n");
+        }
+        return tempPom;
     }
 
     /**
