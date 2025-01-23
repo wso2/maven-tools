@@ -31,6 +31,7 @@ import org.apache.axiom.om.OMAttribute;
 import org.apache.axiom.om.OMDocument;
 import org.apache.axiom.om.OMElement;
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.lang.StringUtils;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.project.MavenProject;
 import org.wso2.maven.model.Artifact;
@@ -121,7 +122,12 @@ class CAppHandler extends AbstractXMLDoc {
                         if (Constants.API_TYPE.equals(type)) {
                             // api version can be null
                             apiList.put(name, configVersion);
-                            String metadataFilename = name + "_metadata.yaml";
+                            String metadataFilename;
+                            if (StringUtils.isBlank(configVersion)) {
+                                metadataFilename = name + "_metadata.yaml";
+                            } else {
+                                metadataFilename = name + "_" + configVersion + "_metadata.yaml";
+                            }
                             File resourcesFolder = artifactsDir.toPath().getParent().getParent()
                                     .resolve(Constants.RESOURCES).toFile();
                             File metadataFolder = new File(resourcesFolder, Constants.METADATA_DIR_NAME);
