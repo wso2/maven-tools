@@ -67,7 +67,7 @@ public class Constants {
     static final String GOV_REG_PREFIX = "/_system/governance";
     static final String CONF_REG_PREFIX = "/_system/config";
     static final String GOV_MI_RESOURCES_PREFIX = "/_system/governance/mi-resources";
-    static final String GOV_FOLDER= "gov";
+    static final String GOV_FOLDER = "gov";
     static final String CONF_FOLDER = "conf";
     static final String REG_INFO_FILE = "registry-info.xml";
     static final String TYPE = "type";
@@ -103,6 +103,10 @@ public class Constants {
     public static final String VERSION = "version";
     public static final String ZIP_EXTENSION = ".zip";
     public static final String CLASS_MEDIATORS = "_class_mediators";
+
+    public static final String CONNECTION_TYPE = "connectionType";
+    public static final String CONNECTOR_XML = "connector.xml";
+    public static final String LOCAL_ENTRIES_FOLDER_PATH = ARTIFACTS_FOLDER_PATH + File.separator + LOCAL_ENTRIES_DIR_NAME;
 
     private Constants() {
     }
