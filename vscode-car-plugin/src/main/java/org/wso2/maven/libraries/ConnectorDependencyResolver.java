@@ -23,6 +23,8 @@ import org.apache.maven.shared.invoker.InvocationRequest;
 import org.apache.maven.shared.invoker.InvocationResult;
 import org.apache.maven.shared.invoker.Invoker;
 import org.apache.maven.shared.invoker.MavenInvocationException;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
 import org.wso2.maven.CARMojo;
 import org.wso2.maven.Constants;
 import org.wso2.maven.MavenUtils;
@@ -34,6 +36,10 @@ import java.nio.file.Files;
 import java.util.*;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
+
+import javax.xml.namespace.QName;
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
 
 import static org.wso2.maven.MavenUtils.setupInvoker;
 
@@ -66,22 +72,27 @@ public class ConnectorDependencyResolver {
         // Resolve connector ZIP files from pom.xml
         List<File> connectorZips = resolveConnectorZips(Constants.POM_FILE, invoker);
 
-        List<File> dependencyFiles = new ArrayList<>();
+        Map<QName, File> dependencyFiles = new HashMap<>();
         // Extract all connector ZIP files
         for (File zipFile : connectorZips) {
             String targetExtractDir = extractedDir + File.separator + zipFile.getName().replace(".zip", "");
             extractZipFile(zipFile, targetExtractDir);
+            QName qualifiedConnectorName = extractConnectorInfo(carMojo, targetExtractDir);
+            if (qualifiedConnectorName == null) {
+                carMojo.logError("Failed to extract connector information from " + zipFile.getName());
+                continue;
+            }
             File descriptorYaml = new File(targetExtractDir + File.separator + Constants.DESCRIPTOR_YAML);
             if (descriptorYaml.exists()) {
                 carMojo.getLog().info("Found descriptor file: " + descriptorYaml.getPath());
-                dependencyFiles.add(descriptorYaml);
+                dependencyFiles.put(qualifiedConnectorName, descriptorYaml);
             }
         }
 
         if (!dependencyFiles.isEmpty()){
-            for (File dependencyFile : dependencyFiles) {
-                carMojo.logInfo("Resolving dependencies for " + dependencyFile.getPath());
-                resolveMavenDependencies(dependencyFile, libDirPath, invoker, carMojo);
+            for (Map.Entry<QName, File> entry : dependencyFiles.entrySet()) {
+                carMojo.logInfo("Resolving dependencies for " + entry.getKey());
+                resolveMavenDependencies(entry.getValue(), libDirPath, invoker, carMojo, entry.getKey().toString());
             }
         }
         carMojo.logInfo("All dependencies resolved and extracted successfully.");
@@ -163,10 +174,11 @@ public class ConnectorDependencyResolver {
      * @param libDir The directory to copy the dependencies to.
      * @param invoker The Maven Invoker.
      * @param carMojo The Mojo instance.
+     * @param connectorName The connector name.
      * @throws Exception If an error occurs while resolving dependencies.
      */
-    private static void resolveMavenDependencies(File descriptorYaml, String libDir, Invoker invoker, CARMojo carMojo)
-            throws Exception {
+    private static void resolveMavenDependencies(File descriptorYaml, String libDir, Invoker invoker, CARMojo carMojo,
+                                                 String connectorName) throws Exception {
 
         if (!descriptorYaml.exists()) {
             return;
@@ -195,19 +207,24 @@ public class ConnectorDependencyResolver {
                 dependenciesList.add(groupId + ":" + artifactId + ":" + version);
             }
         }
-        resolveAndCopyDependencies(dependenciesList, repositoriesList, libDir, invoker, carMojo);
+        resolveAndCopyDependencies(dependenciesList, repositoriesList, libDir, invoker, carMojo, connectorName);
     }
 
     public static void resolveAndCopyDependencies(List<String> dependencies, List<String> repositories,
-                                                  String libDir, Invoker invoker, CARMojo carMojo)
+                                                  String libDir, Invoker invoker, CARMojo carMojo, String connectorName)
             throws LibraryResolverException {
+
+        File targetDir = new File(libDir + File.separator + connectorName);
+        if (!targetDir.exists() && !targetDir.mkdirs()) {
+            throw new LibraryResolverException("Failed to create directory: " + targetDir.getAbsolutePath());
+        }
         try {
             File tempPom = createPomFile(dependencies, repositories);
 
             InvocationRequest request = new DefaultInvocationRequest();
             request.setPomFile(tempPom);
             request.setGoals(Collections.singletonList(String.format("dependency:copy-dependencies " +
-                    "-DexcludeTransitive=true -DoutputDirectory=%s", libDir)));
+                    "-DexcludeTransitive=true -DoutputDirectory=%s", libDir + File.separator + connectorName)));
 
             executeRequest(request, "Failed to resolve and copy dependencies", invoker, carMojo);
             if (!tempPom.delete()) {
@@ -280,6 +297,33 @@ public class ConnectorDependencyResolver {
             }
         } catch (MavenInvocationException e) {
             throw new LibraryResolverException(errorMessage, e);
+        }
+    }
+
+    public static QName extractConnectorInfo(CARMojo carMojo, String filePath) {
+
+        try {
+            File xmlFile = new File(filePath + File.separator + Constants.CONNECTOR_XML);
+            if (!xmlFile.exists()) {
+                return null;
+            }
+            DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+            DocumentBuilder builder = factory.newDocumentBuilder();
+            Document document = builder.parse(xmlFile);
+            document.getDocumentElement().normalize();
+
+            Element componentElement = (Element) document.getElementsByTagName(Constants.COMPONENT).item(0);
+            if (componentElement != null) {
+                String name = componentElement.getAttribute(Constants.NAME);
+                String packageName = componentElement.getAttribute(Constants.PACKAGE);
+                QName qName = new QName(packageName, name);
+                return qName;
+            } else {
+                return null;
+            }
+        } catch (Exception e) {
+            carMojo.logError("Error occurred while extracting connector information: " + e.getMessage());
+            return null;
         }
     }
 }
