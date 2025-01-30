@@ -190,10 +190,12 @@ function generateJsonSchemaFromAST(ast: ts.SourceFile): any {
     }
     // Replace underscores with colons for XML namespaces
     if (formattedName.includes("_")) {
-      if ((schema.inputType && schema.inputType.toLowerCase() === "xml" && schema.namespaces) ||
-        (schema.outputType && schema.outputType.toLowerCase() === "xml" && schema.namespaces)) {
-          formattedName = formattedName.replace("_", ":");
-      }
+        const prefix = formattedName.split("_")[0];
+        const namespaceExists = schema.namespaces && schema.namespaces.some(ns => ns.prefix === prefix);
+        if ((schema.inputType && schema.inputType.toLowerCase() === "xml" && namespaceExists) ||
+            (schema.outputType && schema.outputType.toLowerCase() === "xml" && namespaceExists)) {
+            formattedName = formattedName.replace("_", ":");
+        }
     }
     return formattedName;
   }
