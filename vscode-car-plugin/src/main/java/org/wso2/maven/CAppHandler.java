@@ -895,7 +895,8 @@ class CAppHandler extends AbstractXMLDoc {
                 // Write artifact and file details
                 writeArtifactAndFile(libFile, project.getBasedir() + File.separator + Constants.TEMP_TARGET_DIR_NAME,
                         fileNameWithoutExt, Constants.CONNECTOR_DEPENDENCY_TYPE, Constants.SERVER_ROLE_EI,
-                        project.getVersion(), libFile.getName(), fileNameWithoutExt, connectorName);
+                        project.getVersion(), libFile.getName(), connectorName + "_" +
+                        fileNameWithoutExt, connectorName);
             }
         }
     }
