@@ -32,7 +32,6 @@ import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.project.MavenProject;
 import org.apache.commons.lang.StringUtils;
-import org.apache.maven.shared.invoker.MavenInvocationException;
 import org.wso2.maven.datamapper.DataMapperBundler;
 import org.wso2.maven.datamapper.DataMapperException;
 import org.wso2.maven.libraries.ConnectorDependencyResolver;
@@ -113,7 +112,8 @@ public class CARMojo extends AbstractMojo {
     /**
      * Handles the creation of the Composite Application Archive (CAR).
      */
-    private void processCARCreation(String basedir, String artifactFolderPath, String resourcesFolderPath) {
+    private void processCARCreation(String basedir, String artifactFolderPath, String resourcesFolderPath)
+            throws MojoExecutionException {
         appendLogs();
 
         File artifactFolder = new File(artifactFolderPath);
@@ -135,7 +135,7 @@ public class CARMojo extends AbstractMojo {
                     metaDependencies, projectVersion);
             cAppHandler.processClassMediators(dependencies, project);
             resolveConnectorDependencies();
-            cAppHandler.processLibDependencies(dependencies, project);
+            cAppHandler.processConnectorLibDependencies(dependencies, project);
             cAppHandler.createDependencyArtifactsXmlFile(tempTargetDir, dependencies, metaDependencies, project);
             File fileToZip = new File(tempTargetDir);
             String fileExtension = ".car";
@@ -315,11 +315,12 @@ public class CARMojo extends AbstractMojo {
         file.delete();
     }
 
-    private void resolveConnectorDependencies() {
+    private void resolveConnectorDependencies() throws MojoExecutionException {
         try {
             ConnectorDependencyResolver.resolveDependencies(this);
         } catch (Exception e) {
             getLog().error("Error occurred while resolving connector dependencies.", e);
+            throw new MojoExecutionException("Connector dependency resolution failed.", e);
         }
     }
 }

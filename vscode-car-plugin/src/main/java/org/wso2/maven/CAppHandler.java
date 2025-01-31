@@ -31,6 +31,7 @@ import org.apache.axiom.om.OMAttribute;
 import org.apache.axiom.om.OMDocument;
 import org.apache.axiom.om.OMElement;
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.lang.StringUtils;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.project.MavenProject;
 import org.wso2.maven.model.Artifact;
@@ -121,8 +122,20 @@ class CAppHandler extends AbstractXMLDoc {
                         if (Constants.API_TYPE.equals(type)) {
                             // api version can be null
                             apiList.put(name, configVersion);
-                            writeMetadataFile(name, configElement, archiveDirectory, false, version);
-                            addMetadataDependencies(metadataDependencies, configElement, false, version);
+                            String metadataFilename;
+                            if (StringUtils.isBlank(configVersion)) {
+                                metadataFilename = name + "_metadata.yaml";
+                            } else {
+                                metadataFilename = name + "_" + configVersion + "_metadata.yaml";
+                            }
+                            File resourcesFolder = artifactsDir.toPath().getParent().getParent()
+                                    .resolve(Constants.RESOURCES).toFile();
+                            File metadataFolder = new File(resourcesFolder, Constants.METADATA_DIR_NAME);
+                            File metaFile = new File(metadataFolder, metadataFilename);
+                            if (!metaFile.exists()) {
+                                writeMetadataFile(name, configElement, archiveDirectory, false, version);
+                                addMetadataDependencies(metadataDependencies, configElement, false, version);
+                            }
                         }
                         if (configVersion == null) {
                             apiHasVersion = false;
@@ -772,12 +785,12 @@ class CAppHandler extends AbstractXMLDoc {
         String jarName = project.getArtifactId() + "-" + project.getVersion() + ".jar";
         File jarFile = new File(Paths.get(project.getBasedir().toString(), "target", jarName).toString());
         if (jarFile.exists()) {
-            dependencies.add(new ArtifactDependency(project.getArtifactId(), project.getVersion(),
-                    Constants.SERVER_ROLE_EI, true));
+            dependencies.add(new ArtifactDependency(project.getArtifactId() + Constants.CLASS_MEDIATORS
+                    , project.getVersion(), Constants.SERVER_ROLE_EI, true));
             writeArtifactAndFile(jarFile, project.getBasedir().toString() + File.separator +
-                            Constants.TEMP_TARGET_DIR_NAME, project.getArtifactId(), Constants.CLASS_MEDIATOR_TYPE,
-                    Constants.SERVER_ROLE_EI, project.getVersion(), jarName, project.getArtifactId() + "_" +
-                            project.getVersion());
+                            Constants.TEMP_TARGET_DIR_NAME, project.getArtifactId() + Constants.CLASS_MEDIATORS,
+                    Constants.CLASS_MEDIATOR_TYPE, Constants.SERVER_ROLE_EI, project.getVersion(), jarName,
+                    project.getArtifactId() + Constants.CLASS_MEDIATORS + "_" + project.getVersion());
             // delete the jar file after copying to the CAPP
             jarFile.delete();
         }
@@ -789,8 +802,34 @@ class CAppHandler extends AbstractXMLDoc {
      * @param dependencies list of dependencies to be added to artifacts.xml file
      * @param project      VSCode maven project
      */
-    void processLibDependencies(List<ArtifactDependency> dependencies, MavenProject project) {
-        File libFolder = new File(Paths.get(project.getBasedir().toString(), "target", "libs").toString());
+    void processConnectorLibDependencies(List<ArtifactDependency> dependencies, MavenProject project) {
+
+        // process connector dependencies
+        File connectorDepFolder = new File(Paths.get(project.getBasedir().toString(),
+                Constants.DEFAULT_TARGET_FOLDER, Constants.DEPENDENCY).toString());
+        if (connectorDepFolder.exists()) {
+            File[] dependencyFiles = connectorDepFolder.listFiles();
+            if (dependencyFiles != null) {
+                for (File dependencyFile : dependencyFiles) {
+                    if (dependencyFile.isFile() && dependencyFile.getName().endsWith(Constants.ZIP_EXTENSION)) {
+                        String fileName = dependencyFile.getName();
+                        int lastIndex = fileName.lastIndexOf('-');
+                        String name = fileName.substring(0, lastIndex);
+                        // remove .zip at the end
+                        String version = fileName.substring(lastIndex + 1,
+                                fileName.length() - Constants.ZIP_EXTENSION.length());
+                        dependencies.add(new ArtifactDependency(name, version, Constants.SERVER_ROLE_EI, true));
+                        writeArtifactAndFile(dependencyFile, project.getBasedir().toString() + File.separator +
+                                Constants.TEMP_TARGET_DIR_NAME, name, Constants.CONNECTOR_TYPE,
+                                Constants.SERVER_ROLE_EI, version, fileName, name + "_" + version);
+                    }
+                }
+            }
+        }
+
+        // process lib dependencies of connectors
+        File libFolder = new File(Paths.get(project.getBasedir().toString(), Constants.DEFAULT_TARGET_FOLDER,
+                Constants.LIBS).toString());
         if (libFolder.exists()) {
             File[] libFiles = libFolder.listFiles();
             if (libFiles != null) {
