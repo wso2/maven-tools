@@ -197,7 +197,7 @@ public class ConnectorDependencyResolver {
 
         // Extract dependencies
         List<Map<String, String>> dependencies = (List<Map<String, String>>) yamlData.get(Constants.DEPENDENCIES);
-        List<String> dependenciesList = new ArrayList<>();
+        Set<String> dependencySet = new HashSet<>();
         if (dependencies != null) {
             for (Map<String, String> dependency : dependencies) {
                 String groupId = dependency.get(Constants.GROUP_ID);
@@ -216,9 +216,11 @@ public class ConnectorDependencyResolver {
                     }
                 }
 
-                dependenciesList.add(groupId + ":" + artifactId + ":" + version);
+                dependencySet.add(groupId + ":" + artifactId + ":" + version);
             }
         }
+
+        List<String> dependenciesList = new ArrayList<>(dependencySet);
         resolveAndCopyDependencies(dependenciesList, repositoriesList, libDir, invoker, carMojo);
     }
 
