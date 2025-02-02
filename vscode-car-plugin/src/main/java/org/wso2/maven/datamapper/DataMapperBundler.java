@@ -249,7 +249,7 @@ public class DataMapperBundler {
         request.setBaseDirectory(npmDirectory.toFile());
         request.setGoals(Collections.singletonList(Constants.NPM_RUN_BUILD_GOAL
                 + " -Dexec.executable=\"" + getNpmExecutablePath() + "\""
-                + " -Dexec.args=\"" + Constants.RUN_BUILD + "\""));
+                + " -Dexec.args=\"" + Constants.RUN_BUILD + " " + Constants.PREPEND_NODE_CONFIG_FLAG + "\""));
 
         executeRequest(request, "Failed to bundle data mapper: " + dataMapperName);
 
@@ -279,7 +279,7 @@ public class DataMapperBundler {
         request.setGoals(Collections.singletonList(Constants.NPM_RUN_BUILD_GOAL
                 + " -Dexec.executable=\"" + getNpmExecutablePath() + "\""
                 + " -Dexec.args=\"" + Constants.RUN_GENERATE + " " + dataMapper + File.separator
-                + dataMapperName + ".ts" + "\""));
+                + dataMapperName + ".ts" + " " + Constants.PREPEND_NODE_CONFIG_FLAG + "\""));
 
         executeRequest(request, "Failed to bundle data mapper: " + dataMapperName);
     }
