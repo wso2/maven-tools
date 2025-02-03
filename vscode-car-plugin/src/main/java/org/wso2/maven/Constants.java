@@ -58,6 +58,7 @@ public class Constants {
     static final String METADATA_TYPE = "synapse/metadata";
     static final String CAPP_TYPE = "carbon/application";
     static final String CLASS_MEDIATOR_TYPE = "lib/synapse/mediator";
+    static final String CONNECTOR_DEPENDENCY_TYPE = "lib/connector/dependency";
     static final String ARTIFACTS_FOLDER_PATH = "src" + File.separator + "main" + File.separator
             + "wso2mi" + File.separator + "artifacts";
     static final String RESOURCES_FOLDER_PATH = "src" + File.separator + "main" + File.separator
@@ -72,7 +73,6 @@ public class Constants {
     static final String REG_INFO_FILE = "registry-info.xml";
     static final String TYPE = "type";
     static final String SERVER_ROLE = "serverRole";
-    static final String NAME = "name";
     static final String DESCRIPTION = "description";
     static final String FILE = "file";
     static final String ITEM = "item";
@@ -103,6 +103,11 @@ public class Constants {
     public static final String VERSION = "version";
     public static final String ZIP_EXTENSION = ".zip";
     public static final String CLASS_MEDIATORS = "_class_mediators";
+    public static final String CONNECTOR_XML = "connector.xml";
+    public static final String COMPONENT = "component";
+    public static final String NAME = "name";
+    public static final String PACKAGE = "package";
+    public static final String CONNECTOR = "connector";
 
     private Constants() {
     }
