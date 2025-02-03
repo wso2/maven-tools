@@ -210,7 +210,7 @@ public class ConnectorDependencyResolver {
         resolveAndCopyDependencies(dependenciesList, repositoriesList, libDir, invoker, carMojo, connectorName);
     }
 
-    public static void resolveAndCopyDependencies(List<String> dependencies, List<String> repositories,
+    private static void resolveAndCopyDependencies(List<String> dependencies, List<String> repositories,
                                                   String libDir, Invoker invoker, CARMojo carMojo, String connectorName)
             throws LibraryResolverException {
 
