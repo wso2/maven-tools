@@ -233,6 +233,13 @@ function convertSchemaObjectToArray(schema: any): any {
       properties: schema.properties
     }]
   };
+  // check if schema contains inputType or outputType
+    if (schema.inputType) {
+      arraySchema.inputType = schema.inputType;
+    }
+    if (schema.outputType) {
+      arraySchema.outputType = schema.outputType;
+    }
   return arraySchema;
 }
 
