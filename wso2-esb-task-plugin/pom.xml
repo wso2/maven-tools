@@ -13,13 +13,13 @@
     <parent>
         <artifactId>maven-common-tools</artifactId>
         <groupId>org.wso2.maven</groupId>
-        <version>5.2.91</version>
+        <version>5.2.92-SNAPSHOT</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
 
     <modelVersion>4.0.0</modelVersion>
     <artifactId>wso2-esb-task-plugin</artifactId>
-    <version>5.2.91</version>
+    <version>5.2.92-SNAPSHOT</version>
     <packaging>maven-plugin</packaging>
     <name>Maven Task Plugin</name>
 
