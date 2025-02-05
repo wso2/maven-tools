@@ -20,6 +20,7 @@ package org.wso2.maven;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.FilenameFilter;
 import java.io.IOException;
 import java.nio.file.Paths;
 import java.util.*;
@@ -422,12 +423,37 @@ class CAppHandler extends AbstractXMLDoc {
      */
     private void writeArtifactAndFile(File configFile, String archiveDirectory, String name, String type,
                                       String serverRole, String configVersion, String fileName, String folderName) {
+
+        writeArtifactAndFile(configFile, archiveDirectory, name, type, serverRole, configVersion, fileName,
+                folderName, null);
+    }
+
+    /**
+     * Method to write artifact.xml and file to the archive directory.
+     *
+     * @param configFile       configuration file to write to the archive
+     * @param archiveDirectory path to archive directory
+     * @param name             name of the artifact
+     * @param type             type of the artifact
+     * @param serverRole       server role of the artifact
+     * @param configVersion    version of the artifact
+     * @param fileName         name of the file
+     * @param folderName       name of the folder
+     * @param connectorName    name of the connector
+     */
+    private void writeArtifactAndFile(File configFile, String archiveDirectory, String name, String type,
+                                      String serverRole, String configVersion, String fileName, String folderName,
+                                      String connectorName) {
+
         Artifact artifactObject = new Artifact();
         artifactObject.setName(name);
         artifactObject.setType(type);
         artifactObject.setVersion(configVersion);
         artifactObject.setServerRole(serverRole);
         artifactObject.setFile(fileName);
+        if (connectorName != null) {
+            artifactObject.setConnector(connectorName);
+        }
         try {
             String artifactDataAsString = createArtifactData(artifactObject);
             org.wso2.developerstudio.eclipse.utils.file.FileUtils.createFile(
@@ -699,6 +725,9 @@ class CAppHandler extends AbstractXMLDoc {
         artifactElement = addAttribute(artifactElement, Constants.VERSION, artifact.getVersion());
         artifactElement = addAttribute(artifactElement, Constants.TYPE, artifact.getType());
         artifactElement = addAttribute(artifactElement, Constants.SERVER_ROLE, artifact.getServerRole());
+        if (artifact.getConnector() != null) {
+            artifactElement = addAttribute(artifactElement, Constants.CONNECTOR, artifact.getConnector());
+        }
         OMElement fileChildElement = getElement(Constants.FILE, artifact.getFile());
         artifactElement.addChild(fileChildElement);
 
@@ -827,22 +856,47 @@ class CAppHandler extends AbstractXMLDoc {
             }
         }
 
-        // process lib dependencies of connectors
-        File libFolder = new File(Paths.get(project.getBasedir().toString(), Constants.DEFAULT_TARGET_FOLDER,
-                Constants.LIBS).toString());
-        if (libFolder.exists()) {
-            File[] libFiles = libFolder.listFiles();
-            if (libFiles != null) {
-                for (File libFile : libFiles) {
-                    if (libFile.isFile() && libFile.getName().endsWith(".jar")) {
-                        dependencies.add(new ArtifactDependency(libFile.getName().substring(0, libFile.getName().length() - 4),
-                                project.getVersion(), Constants.SERVER_ROLE_EI, true));
-                        writeArtifactAndFile(libFile, project.getBasedir().toString() + File.separator +
-                                Constants.TEMP_TARGET_DIR_NAME, libFile.getName().substring(0, libFile.getName().length() - 4),
-                                Constants.CLASS_MEDIATOR_TYPE, Constants.SERVER_ROLE_EI, project.getVersion(), libFile.getName(),
-                                libFile.getName().substring(0, libFile.getName().length() - 4));
-                    }
+        // Process library dependencies of connectors
+        File libFolder = new File(project.getBasedir(), Constants.DEFAULT_TARGET_FOLDER + File.separator + Constants.LIBS);
+
+        if (!libFolder.exists()) {
+            return; // Exit if the lib folder does not exist
+        }
+
+        File[] connectorDeps = libFolder.listFiles();
+        if (connectorDeps == null) {
+            return; // Exit if no files/folders exist inside lib folder
+        }
+
+        for (File connectorDir : connectorDeps) {
+            if (!connectorDir.isDirectory()) {
+                continue; // Skip if not a directory
+            }
+
+            String connectorName = connectorDir.getName();
+            File[] libFiles = connectorDir.listFiles(new FilenameFilter() {
+                @Override
+                public boolean accept(File dir, String name) {
+                    return name.endsWith(".jar");
                 }
+            }); // Filter only JAR files
+
+            if (libFiles == null) {
+                continue;
+            }
+
+            for (File libFile : libFiles) {
+                String fileNameWithoutExt = libFile.getName().substring(0, libFile.getName().length() - 4);
+
+                // Add dependency to the list
+                dependencies.add(new ArtifactDependency(
+                        fileNameWithoutExt, project.getVersion(), Constants.SERVER_ROLE_EI, true));
+
+                // Write artifact and file details
+                writeArtifactAndFile(libFile, project.getBasedir() + File.separator + Constants.TEMP_TARGET_DIR_NAME,
+                        fileNameWithoutExt, Constants.CONNECTOR_DEPENDENCY_TYPE, Constants.SERVER_ROLE_EI,
+                        project.getVersion(), libFile.getName(), connectorName + "_" +
+                        fileNameWithoutExt, connectorName);
             }
         }
     }

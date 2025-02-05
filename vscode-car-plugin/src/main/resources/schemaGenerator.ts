@@ -190,10 +190,12 @@ function generateJsonSchemaFromAST(ast: ts.SourceFile): any {
     }
     // Replace underscores with colons for XML namespaces
     if (formattedName.includes("_")) {
-      if ((schema.inputType && schema.inputType.toLowerCase() === "xml" && schema.namespaces) ||
-        (schema.outputType && schema.outputType.toLowerCase() === "xml" && schema.namespaces)) {
-          formattedName = formattedName.replace("_", ":");
-      }
+        const prefix = formattedName.split("_")[0];
+        const namespaceExists = schema.namespaces && schema.namespaces.some(ns => ns.prefix === prefix);
+        if ((schema.inputType && schema.inputType.toLowerCase() === "xml" && namespaceExists) ||
+            (schema.outputType && schema.outputType.toLowerCase() === "xml" && namespaceExists)) {
+            formattedName = formattedName.replace("_", ":");
+        }
     }
     return formattedName;
   }
@@ -231,6 +233,13 @@ function convertSchemaObjectToArray(schema: any): any {
       properties: schema.properties
     }]
   };
+  // check if schema contains inputType or outputType
+    if (schema.inputType) {
+      arraySchema.inputType = schema.inputType;
+    }
+    if (schema.outputType) {
+      arraySchema.outputType = schema.outputType;
+    }
   return arraySchema;
 }
 

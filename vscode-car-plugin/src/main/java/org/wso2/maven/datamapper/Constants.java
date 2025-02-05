@@ -55,6 +55,8 @@ class Constants {
         + EXEC_MVN_PLUGIN_ARTIFACT_ID + ":" + EXEC_MVN_PLUGIN_VERSION + ":" + EXEC_COMMAND;
     static final String NPM_RUN_BUILD_GOAL = EXEC_GOAL + "@" + BUILD_COMMAND;
     public static final String PREPEND_NODE_CONFIG = "config set scripts-prepend-node-path auto";
+    public static final String PREPEND_NODE_CONFIG_FLAG = "--scripts-prepend-node-path=auto";
+
 
     private Constants() {
     }
