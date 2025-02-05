@@ -49,6 +49,10 @@ import static org.wso2.maven.MavenUtils.setupInvoker;
  */
 public class ConnectorDependencyResolver {
 
+    // connectionTypeMap and flag to check if connections are scanned
+    private static Map<String, String> connectionTypeMap;
+    private static boolean scannedConnections = false;
+
     /**
      * Resolves dependencies for connectors.
      *
@@ -85,14 +89,10 @@ public class ConnectorDependencyResolver {
             }
         }
 
-        // Scan local entries folder for connections
-        Map<String, String> connectionTypeMap = scanLocalEntriesForConnections(Constants.LOCAL_ENTRIES_FOLDER_PATH,
-                carMojo);
-
         if (!dependencyFiles.isEmpty()){
             for (File dependencyFile : dependencyFiles) {
                 carMojo.logInfo("Resolving dependencies for " + dependencyFile.getPath());
-                resolveMavenDependencies(dependencyFile, libDirPath, invoker, carMojo, connectionTypeMap);
+                resolveMavenDependencies(dependencyFile, libDirPath, invoker, carMojo);
             }
         }
         carMojo.logInfo("All dependencies resolved and extracted successfully.");
@@ -176,8 +176,8 @@ public class ConnectorDependencyResolver {
      * @param carMojo The Mojo instance.
      * @throws Exception If an error occurs while resolving dependencies.
      */
-    private static void resolveMavenDependencies(File descriptorYaml, String libDir, Invoker invoker, CARMojo carMojo,
-            Map<String, String> connectionTypeMap) throws Exception {
+    private static void resolveMavenDependencies(File descriptorYaml, String libDir, Invoker invoker,
+            CARMojo carMojo) throws Exception {
 
         if (!descriptorYaml.exists()) {
             return;
@@ -207,6 +207,13 @@ public class ConnectorDependencyResolver {
                 // check if connectionType is provided
                 if (dependency.containsKey(Constants.CONNECTION_TYPE)) {
                     String connectionType = dependency.get(Constants.CONNECTION_TYPE);
+
+                    // scan local entries folder for connections if not already scanned
+                    if (!scannedConnections) {
+                        carMojo.logInfo("Scanning local entries folder for connections.");
+                        connectionTypeMap = scanLocalEntriesForConnections(Constants.LOCAL_ENTRIES_FOLDER_PATH, carMojo);
+                        scannedConnections = true;
+                    }
 
                     // skip the dependency if connectionType is not used
                     if (!connectionTypeMap.containsKey(connectionType)) {
