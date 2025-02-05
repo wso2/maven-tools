@@ -25,6 +25,8 @@ import org.apache.maven.shared.invoker.Invoker;
 import org.apache.maven.shared.invoker.MavenInvocationException;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
+import org.w3c.dom.NodeList;
+import org.w3c.dom.Node;
 import org.wso2.maven.CARMojo;
 import org.wso2.maven.Constants;
 import org.wso2.maven.MavenUtils;
@@ -47,6 +49,10 @@ import static org.wso2.maven.MavenUtils.setupInvoker;
  * Resolves dependencies for connectors.
  */
 public class ConnectorDependencyResolver {
+
+    // connectionTypeMap and flag to check if connections are scanned
+    private static Map<String, String> connectionTypeMap;
+    private static boolean scannedConnections = false;
 
     /**
      * Resolves dependencies for connectors.
@@ -198,15 +204,37 @@ public class ConnectorDependencyResolver {
 
         // Extract dependencies
         List<Map<String, String>> dependencies = (List<Map<String, String>>) yamlData.get(Constants.DEPENDENCIES);
-        List<String> dependenciesList = new ArrayList<>();
+        Set<String> dependencySet = new HashSet<>();
         if (dependencies != null) {
             for (Map<String, String> dependency : dependencies) {
                 String groupId = dependency.get(Constants.GROUP_ID);
                 String artifactId = dependency.get(Constants.ARTIFACT_ID);
                 String version = dependency.get(Constants.VERSION);
-                dependenciesList.add(groupId + ":" + artifactId + ":" + version);
+
+                // check if connectionType is provided
+                if (dependency.containsKey(Constants.CONNECTION_TYPE)) {
+                    String connectionType = dependency.get(Constants.CONNECTION_TYPE);
+
+                    // scan local entries folder for connections if not already scanned
+                    if (!scannedConnections) {
+                        carMojo.logInfo("Scanning local entries folder for connections.");
+                        connectionTypeMap = scanLocalEntriesForConnections(Constants.LOCAL_ENTRIES_FOLDER_PATH, carMojo);
+                        scannedConnections = true;
+                    }
+
+                    // skip the dependency if connectionType is not used
+                    if (connectionTypeMap == null || !connectionTypeMap.containsKey(connectionType)) {
+                        carMojo.logInfo("Skipping dependency: " + groupId + ":" + artifactId + ":" + version
+                                + " as the connectionType: " + connectionType + " is not found in the local entries.");
+                        continue;
+                    }
+                }
+
+                dependencySet.add(groupId + ":" + artifactId + ":" + version);
             }
         }
+
+        List<String> dependenciesList = new ArrayList<>(dependencySet);
         resolveAndCopyDependencies(dependenciesList, repositoriesList, libDir, invoker, carMojo, connectorName);
     }
 
@@ -299,6 +327,62 @@ public class ConnectorDependencyResolver {
             throw new LibraryResolverException(errorMessage, e);
         }
     }
+
+    /**
+     * Scans the local entries folder for connections and returns a map of
+     * connection types.
+     *
+     * @param carMojo The Mojo instance.
+     * @return The map of connection types.
+     * @throws Exception If an error occurs while scanning the local entries folder.
+     */
+    private static Map<String, String> scanLocalEntriesForConnections(String folderPath, CARMojo carMojo)
+            throws Exception {
+        Map<String, String> connectionTypeMap = new HashMap<>();
+
+        File localEntriesFolder = new File(folderPath);
+        if (!localEntriesFolder.exists()) {
+            return connectionTypeMap;
+        }
+
+        File[] localEntries = localEntriesFolder.listFiles();
+        if (localEntries == null) {
+            return connectionTypeMap;
+        }
+
+        for (File localEntry : localEntries) {
+            if (localEntry.isFile() && localEntry.getName().endsWith(".xml")) {
+                DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+                factory.setNamespaceAware(true);
+                DocumentBuilder builder = factory.newDocumentBuilder();
+                Document doc = builder.parse(localEntry);
+                Element root = doc.getDocumentElement();
+
+                String connectorName = "", connectionType = "";
+                NodeList initNodes = root.getElementsByTagName("*");
+                for (int i = 0; i < initNodes.getLength(); i++) {
+                    Element element = (Element) initNodes.item(i);
+                    String nodeName = element.getNodeName();
+                    if (nodeName.endsWith(".init")) {
+                        connectorName = nodeName.substring(0, nodeName.indexOf(".init"));
+                        NodeList ctNodes = element.getElementsByTagName("connectionType");
+                        if (ctNodes.getLength() > 0) {
+                            connectionType = ctNodes.item(0).getTextContent();
+                            connectionTypeMap.put(connectionType, connectorName);
+
+                            break;
+                        }
+                    }
+                }
+
+                carMojo.getLog().info("Found local entry file: " + localEntry.getPath() + " with connectionType: "
+                        + connectionType + " and connectorName: " + connectorName);
+            }
+        }
+
+        return connectionTypeMap;
+    }
+
 
     public static QName extractConnectorInfo(CARMojo carMojo, String filePath) {
 
