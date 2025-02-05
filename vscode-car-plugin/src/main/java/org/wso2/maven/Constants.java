@@ -110,7 +110,6 @@ public class Constants {
     public static final String CONNECTOR = "connector";
 
     public static final String CONNECTION_TYPE = "connectionType";
-    public static final String CONNECTOR_XML = "connector.xml";
     public static final String LOCAL_ENTRIES_FOLDER_PATH = ARTIFACTS_FOLDER_PATH + File.separator + LOCAL_ENTRIES_DIR_NAME;
 
     private Constants() {
