@@ -216,7 +216,7 @@ public class ConnectorDependencyResolver {
                     }
 
                     // skip the dependency if connectionType is not used
-                    if (!connectionTypeMap.containsKey(connectionType)) {
+                    if (connectionTypeMap == null || !connectionTypeMap.containsKey(connectionType)) {
                         carMojo.logInfo("Skipping dependency: " + groupId + ":" + artifactId + ":" + version
                                 + " as the connectionType: " + connectionType + " is not found in the local entries.");
                         continue;
