@@ -352,6 +352,9 @@ class CAppHandler extends AbstractXMLDoc {
                     apiVersion = version;
                     apiVersionExists = false;
                 }
+                if (isApiDefinitionPresent(apiName, apiVersion, apiVersionExists, metadataDependencies)) {
+                    continue;
+                }
                 File swaggerFile = new File(metadataFolder, swaggerFilename);
                 File metaFile = new File(metadataFolder, metadataFilename);
                 if (swaggerFile.exists() && metaFile.exists()) {
@@ -921,6 +924,17 @@ class CAppHandler extends AbstractXMLDoc {
             throw new MojoExecutionException("Error serializing", e);
         }
         return outputStream.toString();
+    }
+
+    private boolean isApiDefinitionPresent(String apiName, String apiVersion, boolean apiVersionExists,
+                                           List<ArtifactDependency> metadataDependencies) {
+        apiName = apiVersionExists ? (apiName + "_" + apiVersion + "_swagger") : (apiName + "_swagger");
+        for (ArtifactDependency dependency : metadataDependencies) {
+            if (dependency.getArtifact().equals(apiName) && dependency.getVersion().equals(apiVersion)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     @Override
