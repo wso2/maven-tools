@@ -13,13 +13,13 @@
     <parent>
         <artifactId>maven-common-tools</artifactId>
         <groupId>org.wso2.maven</groupId>
-        <version>5.2.96</version>
+        <version>5.2.97-SNAPSHOT</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
 
     <modelVersion>4.0.0</modelVersion>
     <artifactId>wso2-esb-sequence-plugin</artifactId>
-    <version>5.2.96</version>
+    <version>5.2.97-SNAPSHOT</version>
     <packaging>maven-plugin</packaging>
 
     <name>Maven ESB Sequence Plugin</name>
