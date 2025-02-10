@@ -38,7 +38,6 @@ public class Constants {
     static final String CONF_DIR_NAME = "conf";
     static final String DATASERVICES_DIR_NAME = "data-services";
     static final String METADATA_DIR_NAME = "metadata";
-    static final String CONNECTORS_DIR_NAME = "connectors";
     static final String REGISTRY_DIR_NAME = "registry";
     static final String API_TYPE = "synapse/api";
     static final String ENDPOINT_TYPE = "synapse/endpoint";
@@ -61,8 +60,6 @@ public class Constants {
     static final String CONNECTOR_DEPENDENCY_TYPE = "lib/connector/dependency";
     static final String ARTIFACTS_FOLDER_PATH = "src" + File.separator + "main" + File.separator
             + "wso2mi" + File.separator + "artifacts";
-    static final String RESOURCES_FOLDER_PATH = "src" + File.separator + "main" + File.separator
-            + "wso2mi" + File.separator + "resources";
     static final String SERVER_ROLE_EI = "EnterpriseIntegrator";
     static final String SERVER_ROLE_DSS = "EnterpriseServiceBus";
     static final String GOV_REG_PREFIX = "/_system/governance";
@@ -108,9 +105,11 @@ public class Constants {
     public static final String NAME = "name";
     public static final String PACKAGE = "package";
     public static final String CONNECTOR = "connector";
-
+    public static final String CONNECTORS_DIR_NAME = "connectors";
     public static final String CONNECTION_TYPE = "connectionType";
     public static final String LOCAL_ENTRIES_FOLDER_PATH = ARTIFACTS_FOLDER_PATH + File.separator + LOCAL_ENTRIES_DIR_NAME;
+    public static final String RESOURCES_FOLDER_PATH = "src" + File.separator + "main" + File.separator
+            + "wso2mi" + File.separator + "resources";
 
     private Constants() {
     }
