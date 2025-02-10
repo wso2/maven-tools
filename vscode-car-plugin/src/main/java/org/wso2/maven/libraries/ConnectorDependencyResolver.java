@@ -26,7 +26,6 @@ import org.apache.maven.shared.invoker.MavenInvocationException;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
-import org.w3c.dom.Node;
 import org.wso2.maven.CARMojo;
 import org.wso2.maven.Constants;
 import org.wso2.maven.MavenUtils;
@@ -76,12 +75,19 @@ public class ConnectorDependencyResolver {
         setupInvoker(mavenHome, invoker);
 
         // Resolve connector ZIP files from pom.xml
-        List<File> connectorZips = resolveConnectorZips(Constants.POM_FILE, invoker);
+        ArrayList<File> connectorZips = resolveConnectorZips(invoker);
+
+        // Resolve connectors from resources folder
+        resolveConnectorZipsFromResources(connectorZips);
 
         Map<QName, File> dependencyFiles = new HashMap<>();
         // Extract all connector ZIP files
         for (File zipFile : connectorZips) {
             String targetExtractDir = extractedDir + File.separator + zipFile.getName().replace(".zip", "");
+            if (new File(targetExtractDir).exists()) {
+                carMojo.logInfo("Connector already extracted: " + zipFile.getName());
+                continue;
+            }
             extractZipFile(zipFile, targetExtractDir);
             QName qualifiedConnectorName = extractConnectorInfo(carMojo, targetExtractDir);
             if (qualifiedConnectorName == null) {
@@ -107,28 +113,41 @@ public class ConnectorDependencyResolver {
     /**
      * Resolves connector ZIP files from the pom.xml file.
      *
-     * @param pomFilePath The path to the pom.xml file.
      * @param invoker The Maven Invoker.
      * @return The list of connector ZIP files.
      * @throws MavenInvocationException If an error occurs while resolving dependencies.
      */
-    private static List<File> resolveConnectorZips(String pomFilePath, Invoker invoker) throws MavenInvocationException {
+    private static ArrayList<File> resolveConnectorZips(Invoker invoker) throws MavenInvocationException {
         InvocationRequest request = new DefaultInvocationRequest();
-        request.setPomFile(new File(pomFilePath));
+        request.setPomFile(new File(Constants.POM_FILE));
         request.setGoals(Collections.singletonList("dependency:copy-dependencies -DincludeTypes=zip"));
         invoker.execute(request);
 
         File dependenciesDir = new File(Constants.DEFAULT_TARGET_FOLDER + File.separator + Constants.DEPENDENCY);
         if (!dependenciesDir.exists()) {
-            return Collections.EMPTY_LIST;
+            return new ArrayList<>();
         }
-        List<File> connectorZips = new ArrayList<>();
+        ArrayList<File> connectorZips = new ArrayList<>();
         for (File file : dependenciesDir.listFiles()) {
             if (file.getName().endsWith(".zip")) {
                 connectorZips.add(file);
             }
         }
         return connectorZips;
+    }
+
+    private static void resolveConnectorZipsFromResources(ArrayList<File> connectorZips) {
+
+        File connectorsDir = new File(Constants.RESOURCES_FOLDER_PATH, Constants.CONNECTORS_DIR_NAME);
+        if (!connectorsDir.exists()) {
+            return;
+        }
+
+        for (File file : Objects.requireNonNull(connectorsDir.listFiles())) {
+            if (file.getName().endsWith(".zip")) {
+                connectorZips.add(file);
+            }
+        }
     }
 
     /**
