@@ -123,29 +123,22 @@ class CAppHandler extends AbstractXMLDoc {
                         if (Constants.API_TYPE.equals(type)) {
                             // api version can be null
                             apiList.put(name, configVersion);
-                            String metadataFilename;
-                            if (StringUtils.isBlank(configVersion)) {
-                                metadataFilename = name + "_metadata.yaml";
-                            } else {
-                                metadataFilename = name + "_" + configVersion + "_metadata.yaml";
-                            }
-                            File resourcesFolder = artifactsDir.toPath().getParent().getParent()
-                                    .resolve(Constants.RESOURCES).toFile();
-                            File metadataFolder = new File(resourcesFolder, Constants.METADATA_DIR_NAME);
-                            File metaFile = new File(metadataFolder, metadataFilename);
-                            if (!metaFile.exists()) {
+
+                            if (!isMetadataPresent(name, configVersion, artifactsDir, "_metadata.yaml")) {
                                 writeMetadataFile(name, configElement, archiveDirectory, false, version);
                                 addMetadataDependencies(metadataDependencies, configElement, false, version);
+                            }
+                        }
+                        if (Constants.PROXY_SERVICE_TYPE.equals(type)) {
+                            proxyList.put(name, configVersion);
+                            if (!isMetadataPresent(name, configVersion, artifactsDir, "_proxy_metadata.yaml")) {
+                                writeMetadataFile(name, configElement, archiveDirectory, true, version);
+                                addMetadataDependencies(metadataDependencies, configElement, true, version);
                             }
                         }
                         if (configVersion == null) {
                             apiHasVersion = false;
                             configVersion = version;
-                        }
-                        if (Constants.PROXY_SERVICE_TYPE.equals(type)) {
-                            proxyList.put(name, configVersion);
-                            writeMetadataFile(name, configElement, archiveDirectory, true, version);
-                            addMetadataDependencies(metadataDependencies, configElement, true, version);
                         }
                         String fileName;
                         String folderName = "";
@@ -169,6 +162,21 @@ class CAppHandler extends AbstractXMLDoc {
                 }
             }
         }
+    }
+
+    private boolean isMetadataPresent(String name, String configVersion, File artifactsDir, String suffix) {
+
+        String metadataFilename;
+        if (StringUtils.isBlank(configVersion)) {
+            metadataFilename = name + suffix;
+        } else {
+            metadataFilename = name + "_" + configVersion + suffix;
+        }
+        File resourcesFolder = artifactsDir.toPath().getParent().getParent()
+                .resolve(Constants.RESOURCES).toFile();
+        File metadataFolder = new File(resourcesFolder, Constants.METADATA_DIR_NAME);
+        File metaFile = new File(metadataFolder, metadataFilename);
+        return metaFile.exists();
     }
 
     /**
@@ -399,6 +407,9 @@ class CAppHandler extends AbstractXMLDoc {
             for (Map.Entry<String, String> entry : proxyList.entrySet()) {
                 String proxyName = entry.getKey();
                 String proxyVersion = entry.getValue();
+                if (proxyVersion == null) {
+                    proxyVersion = version;
+                }
                 File metaFile = new File(metadataFolder, proxyName + "_proxy_metadata.yaml");
                 if (metaFile.exists()) {
                     writeArtifactAndFile(metaFile, archiveDirectory, proxyName + "_proxy_metadata",
