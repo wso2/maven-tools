@@ -107,6 +107,8 @@ public class Constants {
     public static final String CONNECTOR = "connector";
     public static final String CONNECTORS_DIR_NAME = "connectors";
     public static final String CONNECTION_TYPE = "connectionType";
+    public static final String PROJECT_RUNTIME_VERSION = "project.runtime.version";
+    public static final String RUNTIME_VERSION = "4.4.0";
     public static final String LOCAL_ENTRIES_FOLDER_PATH = ARTIFACTS_FOLDER_PATH + File.separator + LOCAL_ENTRIES_DIR_NAME;
     public static final String RESOURCES_FOLDER_PATH = "src" + File.separator + "main" + File.separator
             + "wso2mi" + File.separator + "resources";

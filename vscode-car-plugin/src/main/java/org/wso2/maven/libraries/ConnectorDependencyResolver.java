@@ -17,6 +17,7 @@
 
 package org.wso2.maven.libraries;
 
+import org.apache.maven.project.MavenProject;
 import org.apache.maven.shared.invoker.DefaultInvocationRequest;
 import org.apache.maven.shared.invoker.DefaultInvoker;
 import org.apache.maven.shared.invoker.InvocationRequest;
@@ -59,7 +60,7 @@ public class ConnectorDependencyResolver {
      * @param carMojo The Mojo instance.
      * @throws Exception If an error occurs while resolving dependencies.
      */
-    public static void resolveDependencies(CARMojo carMojo) throws Exception {
+    public static void resolveDependencies(CARMojo carMojo, MavenProject project) throws Exception {
 
         String extractedDir = Constants.DEFAULT_TARGET_FOLDER + File.separator + Constants.EXTRACTED_CONNECTORS;
         String libDir = Constants.DEFAULT_TARGET_FOLDER + File.separator + Constants.LIBS;
@@ -76,6 +77,11 @@ public class ConnectorDependencyResolver {
 
         // Resolve connector ZIP files from pom.xml
         ArrayList<File> connectorZips = resolveConnectorZips(invoker);
+
+        if (!MavenUtils.bundleConnectorDependencies(project)) {
+            // runtime version is not 4.4.0 or higher, skip resolving dependencies
+            return;
+        }
 
         // Resolve connectors from resources folder
         resolveConnectorZipsFromResources(connectorZips);

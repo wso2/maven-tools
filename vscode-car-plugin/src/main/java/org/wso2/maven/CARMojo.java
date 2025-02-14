@@ -317,7 +317,7 @@ public class CARMojo extends AbstractMojo {
 
     private void resolveConnectorDependencies() throws MojoExecutionException {
         try {
-            ConnectorDependencyResolver.resolveDependencies(this);
+            ConnectorDependencyResolver.resolveDependencies(this, project);
         } catch (Exception e) {
             getLog().error("Error occurred while resolving connector dependencies.", e);
             throw new MojoExecutionException("Connector dependency resolution failed.", e);
