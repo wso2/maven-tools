@@ -78,7 +78,7 @@ public class ConnectorDependencyResolver {
         // Resolve connector ZIP files from pom.xml
         ArrayList<File> connectorZips = resolveConnectorZips(invoker);
 
-        if (!MavenUtils.bundleConnectorDependencies(project)) {
+        if (MavenUtils.ignoreConnectorDependencies(project)) {
             // runtime version is not 4.4.0 or higher, skip resolving dependencies
             return;
         }
