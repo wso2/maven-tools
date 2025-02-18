@@ -71,9 +71,8 @@ public class ConnectorDependencyResolver {
         libDirFile.mkdirs();
         String libDirPath = libDirFile.getAbsolutePath();
 
-        String mavenHome = MavenUtils.getMavenHome();
         Invoker invoker = new DefaultInvoker();
-        setupInvoker(mavenHome, invoker);
+        setupInvoker(invoker, project.getBasedir().getAbsolutePath());
 
         // Resolve connector ZIP files from pom.xml
         ArrayList<File> connectorZips = resolveConnectorZips(invoker);

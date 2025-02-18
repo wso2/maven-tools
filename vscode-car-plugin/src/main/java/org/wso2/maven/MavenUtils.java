@@ -76,11 +76,21 @@ public class MavenUtils {
     /**
      * Sets up the Maven Invoker with the specified Maven home directory.
      *
-     * @param mavenHome The path to the Maven home directory.
-     * @param invoker   The Maven Invoker to set up.
+     * @param projectPath       The project directory.
+     * @param invoker           The Maven Invoker to set up.
      */
-    public static void setupInvoker(String mavenHome, Invoker invoker) {
-        invoker.setMavenHome(new File(mavenHome));
+    public static void setupInvoker(Invoker invoker, String projectPath) throws MojoExecutionException {
+
+        File mvnwFile = new File(projectPath, System.getProperty("os.name").toLowerCase().
+                contains("win") ? "mvnw.cmd" : "mvnw");
+        boolean useMavenWrapper = mvnwFile.exists() && mvnwFile.canExecute();
+
+        if (useMavenWrapper) {
+            invoker.setMavenExecutable(mvnwFile);
+        } else {
+            invoker.setMavenHome(new File(getMavenHome()));
+        }
+
         invoker.setOutputHandler(new InvocationOutputHandler() {
             @Override
             public void consumeLine(String line) {

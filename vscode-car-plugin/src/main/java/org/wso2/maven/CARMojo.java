@@ -90,7 +90,7 @@ public class CARMojo extends AbstractMojo {
         DataMapperBundler bundler = null;
         try {
             try {
-                bundler = new DataMapperBundler(this, resourcesFolderPath);
+                bundler = new DataMapperBundler(this, resourcesFolderPath, basedir);
                 bundler.bundleDataMapper();
             } catch (DataMapperException e) {
                 getLog().error("Error during data mapper bundling: " + e.getMessage(), e);
