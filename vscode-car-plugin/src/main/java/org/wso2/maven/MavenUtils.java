@@ -17,7 +17,9 @@
 
 package org.wso2.maven;
 
+import org.apache.maven.artifact.versioning.ComparableVersion;
 import org.apache.maven.plugin.MojoExecutionException;
+import org.apache.maven.project.MavenProject;
 import org.apache.maven.shared.invoker.InvocationOutputHandler;
 import org.apache.maven.shared.invoker.Invoker;
 
@@ -87,5 +89,24 @@ public class MavenUtils {
                 }
             }
         });
+    }
+
+    /**
+     * Checks the project runtime version and decides
+     * whether to pack connector dependencies or not
+     * @param project Maven project
+     * @return whether to pack connector dependencies or not
+     */
+    public static boolean ignoreConnectorDependencies(MavenProject project) {
+        String runtimeVersion = project.getProperties().getProperty(Constants.PROJECT_RUNTIME_VERSION);
+
+        if (runtimeVersion != null) {
+            // Compare the version
+            ComparableVersion currentVersion = new ComparableVersion(runtimeVersion);
+            ComparableVersion targetVersion = new ComparableVersion(Constants.RUNTIME_VERSION_440);
+
+            return currentVersion.compareTo(targetVersion) < 0;
+        }
+        return true;
     }
 }

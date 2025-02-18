@@ -870,6 +870,12 @@ class CAppHandler extends AbstractXMLDoc {
             }
         }
 
+        if (MavenUtils.ignoreConnectorDependencies(project)) {
+            mojoInstance.getLog().info("The connector dependencies are not bundled as the runtime version " +
+                    "is less than " + Constants.RUNTIME_VERSION_440);
+            return;
+        }
+
         // Process library dependencies of connectors
         File libFolder = new File(project.getBasedir(), Constants.DEFAULT_TARGET_FOLDER + File.separator + Constants.LIBS);
 
