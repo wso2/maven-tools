@@ -49,17 +49,18 @@ import org.apache.maven.shared.invoker.MavenInvocationException;
 import org.apache.maven.shared.invoker.DefaultInvoker;
 import org.wso2.maven.CARMojo;
 
-import static org.wso2.maven.MavenUtils.getMavenHome;
 import static org.wso2.maven.MavenUtils.setupInvoker;
 
 public class DataMapperBundler {
     private final CARMojo mojoInstance;
     private final String resourcesDirectory;
+    private final String projectDirectory;
     private final Invoker invoker;
 
-    public DataMapperBundler(CARMojo mojoInstance, String resourcesDirectory) {
+    public DataMapperBundler(CARMojo mojoInstance, String resourcesDirectory, String projectDirectory) {
         this.mojoInstance = mojoInstance;
         this.resourcesDirectory = resourcesDirectory;
+        this.projectDirectory = projectDirectory;
         this.invoker = new DefaultInvoker();
     }
 
@@ -84,10 +85,9 @@ public class DataMapperBundler {
         }
     
         appendDataMapperLogs();
-        String mavenHome = getMavenHome();
     
         createDataMapperArtifacts();
-        setupInvoker(mavenHome, invoker);
+        setupInvoker(invoker, projectDirectory);
     
         installNodeAndNPM();
         runNpmInstall();
