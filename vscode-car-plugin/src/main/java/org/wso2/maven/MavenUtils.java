@@ -87,6 +87,7 @@ public class MavenUtils {
 
         if (useMavenWrapper) {
             invoker.setMavenExecutable(mvnwFile);
+            invoker.setMavenHome(new File(projectPath));
         } else {
             invoker.setMavenHome(new File(getMavenHome()));
         }
