@@ -68,6 +68,13 @@ public class CARMojo extends AbstractMojo {
      */
     String archiveName;
 
+    /**
+     * The source directory
+     *
+     * @parameter expression="${sourceDirectory}"
+     */
+    private String sourceDirectory;
+
     public void logError(String message) {
         getLog().error(message);
     }
@@ -85,12 +92,15 @@ public class CARMojo extends AbstractMojo {
         String basedir = project.getBasedir().toString();
         archiveLocation = StringUtils.isEmpty(archiveLocation) ? basedir + File.separator +
                 Constants.DEFAULT_TARGET_FOLDER : archiveLocation;
-        String artifactFolderPath = basedir + File.separator + Constants.ARTIFACTS_FOLDER_PATH;
-        String resourcesFolderPath = basedir + File.separator + Constants.RESOURCES_FOLDER_PATH;
+        if (StringUtils.isEmpty(sourceDirectory)) {
+            sourceDirectory = basedir;
+        }
+        String artifactFolderPath = sourceDirectory + File.separator + Constants.ARTIFACTS_FOLDER_PATH;
+        String resourcesFolderPath = sourceDirectory + File.separator + Constants.RESOURCES_FOLDER_PATH;
         DataMapperBundler bundler = null;
         try {
             try {
-                bundler = new DataMapperBundler(this, resourcesFolderPath, basedir);
+                bundler = new DataMapperBundler(this, basedir, sourceDirectory, resourcesFolderPath);
                 bundler.bundleDataMapper();
             } catch (DataMapperException e) {
                 getLog().error("Error during data mapper bundling: " + e.getMessage(), e);

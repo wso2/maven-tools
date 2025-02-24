@@ -53,12 +53,15 @@ import static org.wso2.maven.MavenUtils.setupInvoker;
 
 public class DataMapperBundler {
     private final CARMojo mojoInstance;
+    private final String sourceDirectory;
     private final String resourcesDirectory;
     private final String projectDirectory;
     private final Invoker invoker;
 
-    public DataMapperBundler(CARMojo mojoInstance, String resourcesDirectory, String projectDirectory) {
+    public DataMapperBundler(CARMojo mojoInstance, String projectDirectory, String sourceDirectory,
+                             String resourcesDirectory) {
         this.mojoInstance = mojoInstance;
+        this.sourceDirectory = sourceDirectory;
         this.resourcesDirectory = resourcesDirectory;
         this.projectDirectory = projectDirectory;
         this.invoker = new DefaultInvoker();
@@ -201,7 +204,7 @@ public class DataMapperBundler {
     private void generateDataMapperSchemas(List<Path> dataMappers) throws DataMapperException {
         createConfigJsonForSchemaGeneration();
         for (Path dataMapper : dataMappers) {
-            generateDataMapperSchema(dataMapper);
+            generateDataMapperSchema(dataMapper.toAbsolutePath());
         }
     }
 
@@ -761,6 +764,9 @@ public class DataMapperBundler {
      */
     private void deleteRecursively(File file, String excludeRegex) {
 
+        if (isInsideSourceDirectory(file)) {
+            return;
+        }
         if (file.isDirectory()) {
             File[] entries = file.listFiles();
             if (entries != null) {
@@ -774,5 +780,12 @@ public class DataMapperBundler {
                 mojoInstance.logError("Failed to delete " + file.getPath());
             }
         }
+    }
+
+    private boolean isInsideSourceDirectory(File file) {
+        Path sourcePath = Paths.get(sourceDirectory).toAbsolutePath().normalize();
+        Path filePath = file.toPath().toAbsolutePath().normalize();
+
+        return filePath.startsWith(sourcePath);
     }
 }
