@@ -92,7 +92,7 @@ public class CARMojo extends AbstractMojo {
         String basedir = project.getBasedir().toString();
         archiveLocation = StringUtils.isEmpty(archiveLocation) ? basedir + File.separator +
                 Constants.DEFAULT_TARGET_FOLDER : archiveLocation;
-        if (sourceDirectory == null) {
+        if (StringUtils.isEmpty(sourceDirectory)) {
             sourceDirectory = basedir;
         }
         String artifactFolderPath = sourceDirectory + File.separator + Constants.ARTIFACTS_FOLDER_PATH;
