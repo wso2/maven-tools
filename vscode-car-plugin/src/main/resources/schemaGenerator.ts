@@ -13,7 +13,7 @@ function parseTypeScriptInterface(filePath: string): ts.SourceFile {
     fileContents,
     ts.ScriptTarget.Latest, // Parse using the latest TypeScript version
     true // Set parent nodes
-  )
+  );
 
   return sourceFile;
 }
@@ -22,7 +22,7 @@ function getSeparateInterfacesWithComments(sourceFile: ts.SourceFile): ts.Source
   const resultSourceFiles: ts.SourceFile[] = [];
 
   const visitNode = (node: ts.Node) => {
-    if (ts.isInterfaceDeclaration(node)) {
+    if (ts.isInterfaceDeclaration(node) || ts.isTypeAliasDeclaration(node)) {
       const commentsBeforeNode = ts.getLeadingCommentRanges(sourceFile.text, node.getFullStart());
       let commentText = '';
       if (commentsBeforeNode) {
@@ -47,7 +47,7 @@ function getFunctionFromSourceFile(sourceFile: ts.SourceFile): ts.FunctionDeclar
 
   const visitNode = (node: ts.Node) => {
     if (ts.isFunctionDeclaration(node)) {
-      if (node.name?.getText() === "mapFunction"){
+      if (node.name?.getText() === "mapFunction") {
         functionNode = node;
       }
     }
@@ -74,10 +74,9 @@ function checkIfOutputIsArray(functionNode: ts.FunctionDeclaration): boolean {
   return false;
 }
 
-
 function generateJsonSchemaFromAST(ast: ts.SourceFile): any {
   const schema: any = {
-    "$schema" : "http://wso2.org/json-schema/wso2-data-mapper-v5.0.0/schema#",
+    "$schema": "http://wso2.org/json-schema/wso2-data-mapper-v5.0.0/schema#",
     type: "object",
     title: getInterfaceName(ast) || "Unknown",
     properties: {}
@@ -190,12 +189,12 @@ function generateJsonSchemaFromAST(ast: ts.SourceFile): any {
     }
     // Replace underscores with colons for XML namespaces
     if (formattedName.includes("_")) {
-        const prefix = formattedName.split("_")[0];
-        const namespaceExists = schema.namespaces && schema.namespaces.some(ns => ns.prefix === prefix);
-        if ((schema.inputType && schema.inputType.toLowerCase() === "xml" && namespaceExists) ||
-            (schema.outputType && schema.outputType.toLowerCase() === "xml" && namespaceExists)) {
-            formattedName = formattedName.replace("_", ":");
-        }
+      const prefix = formattedName.split("_")[0];
+      const namespaceExists = schema.namespaces && schema.namespaces.some(ns => ns.prefix === prefix);
+      if ((schema.inputType && schema.inputType.toLowerCase() === "xml" && namespaceExists) ||
+        (schema.outputType && schema.outputType.toLowerCase() === "xml" && namespaceExists)) {
+        formattedName = formattedName.replace(/_/g, ":");
+      }
     }
     return formattedName;
   }
@@ -204,6 +203,23 @@ function generateJsonSchemaFromAST(ast: ts.SourceFile): any {
     if (ts.isInterfaceDeclaration(node)) {
       // Assuming a single interface in the file for simplicity
       processMembers(node.members, schema);
+    } else if (ts.isTypeAliasDeclaration(node)) {
+      const aliasName = node.name.text;
+      schema.title = aliasName;
+      schema.type = "object";
+      schema.properties = {};
+      if (ts.isUnionTypeNode(node.type)) {
+        node.type.types.forEach(typeNode => {
+          if (ts.isTypeReferenceNode(typeNode)) {
+            const typeName = (typeNode.typeName as ts.Identifier).text;
+            const interfaceDeclaration = ast.statements.find(statement => ts.isInterfaceDeclaration(statement) &&
+             statement.name.text === typeName) as ts.InterfaceDeclaration;
+            if (interfaceDeclaration) {
+              processMembers(interfaceDeclaration.members, schema);
+            }
+          }
+        });
+      }
     }
     ts.forEachChild(node, visit);
   }
@@ -234,12 +250,12 @@ function convertSchemaObjectToArray(schema: any): any {
     }]
   };
   // check if schema contains inputType or outputType
-    if (schema.inputType) {
-      arraySchema.inputType = schema.inputType;
-    }
-    if (schema.outputType) {
-      arraySchema.outputType = schema.outputType;
-    }
+  if (schema.inputType) {
+    arraySchema.inputType = schema.inputType;
+  }
+  if (schema.outputType) {
+    arraySchema.outputType = schema.outputType;
+  }
   return arraySchema;
 }
 
