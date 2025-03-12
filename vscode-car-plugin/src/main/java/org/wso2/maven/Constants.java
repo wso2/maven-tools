@@ -98,6 +98,13 @@ public class Constants {
     public static final String ARTIFACT_ID = "artifactId";
     public static final String GROUP_ID = "groupId";
     public static final String VERSION = "version";
+    public static final String PROXY = "proxy";
+    public static final String PROXY_FILE_NAME_SUFFIX = "_proxy_metadata.yaml";
+    public static final String DATA_SERVICE_FILE_NAME_SUFFIX = "_data_service_metadata.yaml";
+    public static final String PROXY_WITH_UNDERSCORE = "_proxy";
+    public static final String DATA_SERVICE_WITH_UNDERSCORE = "_data_service";
+    public static final String API = "api";
+    public static final String DATA_SERVICE = "dataService";
     public static final String ZIP_EXTENSION = ".zip";
     public static final String CLASS_MEDIATORS = "_class_mediators";
     public static final String CONNECTOR_XML = "connector.xml";
