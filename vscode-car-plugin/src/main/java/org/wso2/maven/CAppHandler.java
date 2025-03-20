@@ -125,20 +125,30 @@ class CAppHandler extends AbstractXMLDoc {
                             apiList.put(name, configVersion);
 
                             if (!isMetadataPresent(name, configVersion, artifactsDir, "_metadata.yaml")) {
-                                writeMetadataFile(name, configElement, archiveDirectory, false, version);
-                                addMetadataDependencies(metadataDependencies, configElement, false, version);
+                                writeMetadataFile(name, configElement, archiveDirectory, Constants.API, version);
+                                addMetadataDependencies(metadataDependencies, configElement, Constants.API, version);
                             }
                         }
                         if (Constants.PROXY_SERVICE_TYPE.equals(type)) {
                             proxyList.put(name, configVersion);
-                            if (!isMetadataPresent(name, configVersion, artifactsDir, "_proxy_metadata.yaml")) {
-                                writeMetadataFile(name, configElement, archiveDirectory, true, version);
-                                addMetadataDependencies(metadataDependencies, configElement, true, version);
+                            if (!isMetadataPresent(name, configVersion, artifactsDir,
+                                    Constants.PROXY_FILE_NAME_SUFFIX)) {
+                                writeMetadataFile(name, configElement, archiveDirectory, Constants.PROXY, version);
+                                addMetadataDependencies(metadataDependencies, configElement, Constants.PROXY, version);
                             }
                         }
                         if (configVersion == null) {
                             apiHasVersion = false;
                             configVersion = version;
+                        }
+                        if (Constants.DATASERVICE_TYPE.equals(type)) {
+                            if (!isMetadataPresent(name, configVersion, artifactsDir,
+                                    Constants.DATA_SERVICE_FILE_NAME_SUFFIX)) {
+                                writeMetadataFile(name, configElement, archiveDirectory,
+                                        Constants.DATA_SERVICE, version);
+                                addMetadataDependencies(metadataDependencies, configElement,
+                                        Constants.DATA_SERVICE, version);
+                            }
                         }
                         String fileName;
                         String folderName = "";
@@ -537,11 +547,12 @@ class CAppHandler extends AbstractXMLDoc {
      * @param name             name of the artifact
      * @param apiElement       OMElement of the artifact
      * @param archiveDirectory path to archive directory
-     * @param isProxy          whether the artifact is a proxy service
+     * @param artifactType     artifact type
      */
-    private void writeMetadataFile(String name, OMElement apiElement, String archiveDirectory, boolean isProxy,
+    private void writeMetadataFile(String name, OMElement apiElement, String archiveDirectory, String artifactType,
                                    String projectVersion) {
-
+        boolean isProxy = artifactType.equalsIgnoreCase(Constants.PROXY);
+        boolean isDataService = artifactType.equalsIgnoreCase(Constants.DATA_SERVICE);
         try {
             String version = null;
             OMAttribute versionAtt = apiElement.getAttribute(new QName(Constants.VERSION));
@@ -557,7 +568,9 @@ class CAppHandler extends AbstractXMLDoc {
                 metadataFileName = name + "_" + version + "_metadata-" + version + ".yaml";
             } else {
                 if (isProxy) {
-                    name = name + "_proxy";
+                    name = name + Constants.PROXY_WITH_UNDERSCORE;
+                } else {
+                    name = name + Constants.DATA_SERVICE_WITH_UNDERSCORE;
                 }
                 artifactName = name + "_metadata";
                 metadataFolder = name + "_metadata_" + projectVersion;
@@ -580,9 +593,15 @@ class CAppHandler extends AbstractXMLDoc {
                         new File(metadata, metadataFileName),
                         getProxyMetadataPropertiesAsString(apiElement, projectVersion));
             } else {
-                org.wso2.developerstudio.eclipse.utils.file.FileUtils.createFile(
-                        new File(metadata, metadataFileName),
-                        getAPIMetadataPropertiesAsString(apiElement, projectVersion));
+                if (isDataService) {
+                    org.wso2.developerstudio.eclipse.utils.file.FileUtils.createFile(
+                            new File(metadata, metadataFileName),
+                            getAPIMetadataPropertiesAsString(apiElement, projectVersion, true));
+                } else {
+                    org.wso2.developerstudio.eclipse.utils.file.FileUtils.createFile(
+                            new File(metadata, metadataFileName),
+                            getAPIMetadataPropertiesAsString(apiElement, projectVersion, false));
+                }
             }
         } catch (IOException | MojoExecutionException e) {
             mojoInstance.logError("Error occurred while creating metadata file");
@@ -597,10 +616,16 @@ class CAppHandler extends AbstractXMLDoc {
      * @param projectVersion version of the project
      * @return metadata properties as a string
      */
-    private String getAPIMetadataPropertiesAsString(OMElement apiElement, String projectVersion) {
+    private String getAPIMetadataPropertiesAsString(OMElement apiElement, String projectVersion, boolean isDataService) {
 
         String version = getAPIVersion(apiElement, projectVersion);
-        String key = apiElement.getAttributeValue(new QName(Constants.NAME)) + "-" + version;
+        String key;
+        if (isDataService) {
+            key = apiElement.getAttributeValue(new QName(Constants.NAME)) +
+                    Constants.PROXY_WITH_UNDERSCORE + "-" + version;
+        } else {
+            key = apiElement.getAttributeValue(new QName(Constants.NAME)) + "-" + version;
+        }
         String name = apiElement.getAttributeValue(new QName(Constants.NAME));
         OMAttribute descriptionAtr = apiElement.getAttribute(new QName(Constants.DESCRIPTION));
 
@@ -614,7 +639,12 @@ class CAppHandler extends AbstractXMLDoc {
             builder.append("description: \"").append(descriptionAtr.getAttributeValue()).append("\"\n");
         }
         builder.append("version: \"").append(version).append("\"\n");
-        builder.append("serviceUrl: \"").append(getAPIURL(apiElement)).append("\"\n");
+        if (isDataService) {
+            builder.append("serviceUrl: \"").append(getProxyServiceURL(apiElement.
+                    getAttributeValue(new QName(Constants.NAME)))).append("\"\n");
+        } else {
+            builder.append("serviceUrl: \"").append(getAPIURL(apiElement)).append("\"\n");
+        }
         builder.append("definitionType: \"OAS3\"\n");
         builder.append("securityType: \"BASIC\"\n");
         builder.append("mutualSSLEnabled: false\n");
@@ -656,11 +686,11 @@ class CAppHandler extends AbstractXMLDoc {
      *
      * @param metadataDependencies list of metadata dependencies
      * @param configElement        OMElement of the artifact
-     * @param isProxy              whether the artifact is a proxy service
+     * @param artifactType         artifact type
      * @param projectVersion       version of the project
      */
     private void addMetadataDependencies(List<ArtifactDependency> metadataDependencies, OMElement configElement,
-                                         boolean isProxy, String projectVersion) {
+                                         String artifactType, String projectVersion) {
 
         String name = configElement.getAttributeValue(new QName(Constants.NAME));
         OMAttribute versionAtt = configElement.getAttribute(new QName(Constants.VERSION));
@@ -671,8 +701,10 @@ class CAppHandler extends AbstractXMLDoc {
             dependencyName = name + "_" + version + "_metadata";
         } else {
             version = projectVersion;
-            if (isProxy) {
-                name = name + "_proxy";
+            if (artifactType.equalsIgnoreCase(Constants.PROXY)) {
+                name = name + Constants.PROXY_WITH_UNDERSCORE;
+            } else if (artifactType.equalsIgnoreCase(Constants.DATA_SERVICE)) {
+                name = name + Constants.DATA_SERVICE_WITH_UNDERSCORE ;
             }
             dependencyName = name + "_metadata";
         }
