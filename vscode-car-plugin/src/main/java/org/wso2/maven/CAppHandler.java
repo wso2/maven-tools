@@ -360,12 +360,8 @@ class CAppHandler extends AbstractXMLDoc {
                     apiVersion = version;
                     apiVersionExists = false;
                 }
-                if (isApiDefinitionPresent(apiName, apiVersion, apiVersionExists, metadataDependencies)) {
-                    continue;
-                }
-                File swaggerFile = new File(metadataFolder, swaggerFilename);
                 File metaFile = new File(metadataFolder, metadataFilename);
-                if (swaggerFile.exists() && metaFile.exists()) {
+                if (metaFile.exists()) {
                     String folderName = Constants.METADATA_DIR_NAME + "/" + apiName + "_metadata_" + apiVersion;
                     String fileName = apiName + "_metadata-" + apiVersion + ".yaml";
                     if (apiVersionExists) {
@@ -382,9 +378,14 @@ class CAppHandler extends AbstractXMLDoc {
                         writeArtifactAndFile(metaFile, archiveDirectory, apiName + "_metadata",
                                 Constants.METADATA_TYPE, Constants.SERVER_ROLE_EI, apiVersion, fileName, folderName);
                     }
-
-                    folderName = Constants.METADATA_DIR_NAME + "/" + apiName + "_swagger_" + apiVersion;
-                    fileName = apiName + "_swagger-" + apiVersion + ".yaml";
+                }
+                if (isApiDefinitionPresent(apiName, apiVersion, apiVersionExists, metadataDependencies)) {
+                    continue;
+                }
+                File swaggerFile = new File(metadataFolder, swaggerFilename);
+                if (swaggerFile.exists()) {
+                    String folderName = Constants.METADATA_DIR_NAME + "/" + apiName + "_swagger_" + apiVersion;
+                    String fileName = apiName + "_swagger-" + apiVersion + ".yaml";
                     if (apiVersionExists) {
                         fileName = apiName + "_" + apiVersion + "_swagger-" + apiVersion + ".yaml";
                         folderName = Constants.METADATA_DIR_NAME + "/" + apiName + "_" + apiVersion + "_swagger_"
@@ -399,7 +400,6 @@ class CAppHandler extends AbstractXMLDoc {
                         writeArtifactAndFile(swaggerFile, archiveDirectory, apiName + "_swagger",
                                 Constants.METADATA_TYPE, Constants.SERVER_ROLE_EI, apiVersion, fileName, folderName);
                     }
-
                 }
             }
         }
