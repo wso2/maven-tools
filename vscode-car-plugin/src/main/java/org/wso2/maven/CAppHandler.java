@@ -569,7 +569,7 @@ class CAppHandler extends AbstractXMLDoc {
             } else {
                 if (isProxy) {
                     name = name + Constants.PROXY_WITH_UNDERSCORE;
-                } else {
+                } else if (isDataService) {
                     name = name + Constants.DATA_SERVICE_WITH_UNDERSCORE;
                 }
                 artifactName = name + "_metadata";
