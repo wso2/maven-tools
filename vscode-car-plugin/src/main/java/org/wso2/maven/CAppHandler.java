@@ -939,14 +939,17 @@ class CAppHandler extends AbstractXMLDoc {
 
             for (File libFile : libFiles) {
                 String fileNameWithoutExt = libFile.getName().substring(0, libFile.getName().length() - 4);
-
-                // Add dependency to the list
+                
+                // Create a unique name for the dependency by appending connector name as a prefix
+                String uniqueDependencyName = connectorName + "_" + fileNameWithoutExt;
+            
+                // Add dependency to the list with the unique name
                 dependencies.add(new ArtifactDependency(
-                        fileNameWithoutExt, project.getVersion(), Constants.SERVER_ROLE_EI, true));
-
-                // Write artifact and file details
+                        uniqueDependencyName, project.getVersion(), Constants.SERVER_ROLE_EI, true));
+            
+                // Write artifact and file details using the unique dependency name
                 writeArtifactAndFile(libFile, project.getBasedir() + File.separator + Constants.TEMP_TARGET_DIR_NAME,
-                        fileNameWithoutExt, Constants.CONNECTOR_DEPENDENCY_TYPE, Constants.SERVER_ROLE_EI,
+                        uniqueDependencyName, Constants.CONNECTOR_DEPENDENCY_TYPE, Constants.SERVER_ROLE_EI,
                         project.getVersion(), libFile.getName(), connectorName + "_" +
                         fileNameWithoutExt, connectorName);
             }
