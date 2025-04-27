@@ -158,7 +158,10 @@ public class ArchiveManipulator {
             ZipEntry entry;
             while ((entry = zin.getNextEntry()) != null) {
                 String entryName = entry.getName();
-                File f = new File(extractDir + File.separator + entryName);
+                File f = new File(extractDir, entryName);
+                if (!f.toPath().normalize().startsWith(extractDir)) {
+                    throw new IOException("Bad zip entry");
+                }
 
                 if (entryName.endsWith("/") && !f.exists()) { // this is a
                     // directory
@@ -171,7 +174,7 @@ public class ArchiveManipulator {
                 String dirPath = "";
                 if (lastIndexOfSlash != -1) {
                     dirPath = entryName.substring(0, lastIndexOfSlash);
-                    File dir = new File(extractDir + File.separator + dirPath);
+                    File dir = new File(extractDir, dirPath);
                     if (!dir.exists()) {
                         dir.mkdirs();
                     }
