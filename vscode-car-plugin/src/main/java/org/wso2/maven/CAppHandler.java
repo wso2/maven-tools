@@ -40,6 +40,8 @@ import org.wso2.maven.model.ArtifactDependency;
 import org.wso2.maven.model.ArtifactDetails;
 import org.wso2.maven.core.model.AbstractXMLDoc;
 
+import static org.wso2.maven.libraries.CAppDependencyResolver.getTopLevelCAppDependencies;
+
 class CAppHandler extends AbstractXMLDoc {
     private final String cAppName;
     private final CARMojo mojoInstance;
@@ -784,6 +786,35 @@ class CAppHandler extends AbstractXMLDoc {
         artifactElement.addChild(fileChildElement);
 
         return serialize(artifactElement);
+    }
+
+    /**
+     * Creates the `descriptor.xml` file in the specified archive directory.
+     * This file contains the dependencies of the Composite Application (CApp).
+     *
+     * @param archiveDirectory The path to the archive directory where the `descriptor.xml` file will be created.
+     */
+    void createDependencyDescriptorFile(String archiveDirectory) {
+
+        List<CAppDependency> cAppDependencies = getTopLevelCAppDependencies();
+        OMElement dependenciesElement = getElement(Constants.DEPENDENCIES, Constants.EMPTY_STRING);
+        for (CAppDependency cAppDependency : cAppDependencies) {
+            OMElement dependencyElement = getElement(Constants.DEPENDENCY, Constants.EMPTY_STRING);
+            dependencyElement = addAttribute(dependencyElement, Constants.GROUP_ID, cAppDependency.getGroupId());
+            dependencyElement = addAttribute(dependencyElement, Constants.ARTIFACT_ID, cAppDependency.getArtifactId());
+            dependencyElement = addAttribute(dependencyElement, Constants.VERSION, cAppDependency.getVersion());
+            dependencyElement = addAttribute(dependencyElement, Constants.TYPE, Constants.CAR_TYPE);
+            dependenciesElement.addChild(dependencyElement);
+        }
+        try {
+            // Create descriptor.xml file in archive file.
+            String descriptorXmlFileDataAsString = serialize(dependenciesElement);
+            org.wso2.developerstudio.eclipse.utils.file.FileUtils.createFile(new File(archiveDirectory, "descriptor.xml"),
+                    descriptorXmlFileDataAsString);
+        } catch (MojoExecutionException | IOException e) {
+            mojoInstance.logError("Error occurred while creating descriptor.xml file");
+            mojoInstance.logError(e.getMessage());
+        }
     }
 
     /**

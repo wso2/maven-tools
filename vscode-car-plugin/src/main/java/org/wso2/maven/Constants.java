@@ -69,6 +69,7 @@ public class Constants {
     static final String CONF_FOLDER = "conf";
     static final String REG_INFO_FILE = "registry-info.xml";
     static final String TYPE = "type";
+    static final String CAR_TYPE = "car";
     static final String SERVER_ROLE = "serverRole";
     static final String DESCRIPTION = "description";
     static final String FILE = "file";
@@ -106,6 +107,7 @@ public class Constants {
     public static final String API = "api";
     public static final String DATA_SERVICE = "dataService";
     public static final String ZIP_EXTENSION = ".zip";
+    public static final String CAR_EXTENSION = ".car";
     public static final String CLASS_MEDIATORS = "_class_mediators";
     public static final String CONNECTOR_XML = "connector.xml";
     public static final String COMPONENT = "component";
