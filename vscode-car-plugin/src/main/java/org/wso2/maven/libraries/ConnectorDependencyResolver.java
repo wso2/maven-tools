@@ -77,13 +77,16 @@ public class ConnectorDependencyResolver {
         // Resolve connector ZIP files from pom.xml
         ArrayList<File> connectorZips = resolveConnectorZips(invoker);
 
-        if (MavenUtils.ignoreConnectorDependencies(project)) {
+        if (!MavenUtils.isConnectorPackingSupported(project)) {
             // runtime version is not 4.4.0 or higher, skip resolving dependencies
             return;
         }
 
         // Resolve connectors from resources folder
-        resolveConnectorZipsFromResources(connectorZips);
+        List<String> directories = Arrays.asList(Constants.CONNECTORS_DIR_NAME, Constants.INBOUND_CONNECTORS_DIR_NAME);
+        for (String directoryName : directories) {
+            resolveConnectorZipsFromResources(connectorZips, directoryName);
+        }
 
         Map<QName, File> dependencyFiles = new HashMap<>();
         // Extract all connector ZIP files
@@ -141,9 +144,9 @@ public class ConnectorDependencyResolver {
         return connectorZips;
     }
 
-    private static void resolveConnectorZipsFromResources(ArrayList<File> connectorZips) {
+    private static void resolveConnectorZipsFromResources(ArrayList<File> connectorZips, String directoryName) {
 
-        File connectorsDir = new File(Constants.RESOURCES_FOLDER_PATH, Constants.CONNECTORS_DIR_NAME);
+        File connectorsDir = new File(Constants.RESOURCES_FOLDER_PATH, directoryName);
         if (!connectorsDir.exists()) {
             return;
         }

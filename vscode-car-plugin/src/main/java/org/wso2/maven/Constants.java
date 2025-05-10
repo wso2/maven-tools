@@ -113,6 +113,8 @@ public class Constants {
     public static final String PACKAGE = "package";
     public static final String CONNECTOR = "connector";
     public static final String CONNECTORS_DIR_NAME = "connectors";
+    public static final String INBOUND_CONNECTORS_DIR_NAME = "inbound-connectors";
+    public static final String INBOUND_CONNECTORS_PREFIX = "mi-inbound-";
     public static final String CONNECTION_TYPE = "connectionType";
     public static final String PROJECT_RUNTIME_VERSION = "project.runtime.version";
     public static final String RUNTIME_VERSION_440 = "4.4.0";
