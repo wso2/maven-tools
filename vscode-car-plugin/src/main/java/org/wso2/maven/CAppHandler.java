@@ -197,12 +197,15 @@ class CAppHandler extends AbstractXMLDoc {
      * @param dependencies     list of dependencies to be added to artifacts.xml file
      */
     void processResourcesFolder(File resourcesFolder, String archiveDirectory, List<ArtifactDependency> dependencies,
-                                List<ArtifactDependency> metadataDependencies, String version) {
+                                List<ArtifactDependency> metadataDependencies, String version, MavenProject project) {
         if (!resourcesFolder.exists()) {
             mojoInstance.logInfo("Could not find resources folder in " + resourcesFolder.getAbsolutePath());
             return;
         }
-        processConnectors(resourcesFolder, archiveDirectory, dependencies);
+        processConnectors(resourcesFolder, archiveDirectory, dependencies, Constants.CONNECTORS_DIR_NAME);
+        if (MavenUtils.isConnectorPackingSupported(project)) {
+            processConnectors(resourcesFolder, archiveDirectory, dependencies, Constants.INBOUND_CONNECTORS_DIR_NAME);
+        }
         processRegistryResources(resourcesFolder, archiveDirectory, dependencies);
         processRegistryResources(new File(resourcesFolder, Constants.REGISTRY_DIR_NAME), archiveDirectory, dependencies);
         processMetadata(resourcesFolder, archiveDirectory, metadataDependencies, version);
@@ -216,9 +219,12 @@ class CAppHandler extends AbstractXMLDoc {
      * @param archiveDirectory path to archive directory
      * @param dependencies     list of dependencies to be added to artifacts.xml file
      */
-    void processConnectors(File resourcesFolder, String archiveDirectory, List<ArtifactDependency> dependencies) {
+    void processConnectors(File resourcesFolder, String archiveDirectory, List<ArtifactDependency> dependencies, String dirName) {
         mojoInstance.logInfo("Processing connectors in " + resourcesFolder.getAbsolutePath());
-        File connectorFolder = new File(resourcesFolder, Constants.CONNECTORS_DIR_NAME);
+        File connectorFolder = new File(resourcesFolder, dirName);
+        if (!connectorFolder.exists()) {
+            return;
+        }
         File[] connectorFiles = connectorFolder.listFiles();
         if (connectorFiles == null) {
             return;
@@ -887,6 +893,10 @@ class CAppHandler extends AbstractXMLDoc {
             if (dependencyFiles != null) {
                 for (File dependencyFile : dependencyFiles) {
                     if (dependencyFile.isFile() && dependencyFile.getName().endsWith(Constants.ZIP_EXTENSION)) {
+                        if (dependencyFile.getName().contains(Constants.INBOUND_CONNECTORS_PREFIX) &&
+                                !MavenUtils.isConnectorPackingSupported(project)) {
+                            continue;
+                        }
                         String fileName = dependencyFile.getName();
                         int lastIndex = fileName.lastIndexOf('-');
                         String name = fileName.substring(0, lastIndex);
@@ -902,7 +912,7 @@ class CAppHandler extends AbstractXMLDoc {
             }
         }
 
-        if (MavenUtils.ignoreConnectorDependencies(project)) {
+        if (!MavenUtils.isConnectorPackingSupported(project)) {
             mojoInstance.getLog().info("The connector dependencies are not bundled as the runtime version " +
                     "is less than " + Constants.RUNTIME_VERSION_440);
             return;
