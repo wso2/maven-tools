@@ -142,7 +142,7 @@ public class CARMojo extends AbstractMojo {
             cAppHandler.processArtifacts(artifactFolder, tempTargetDir, dependencies, metaDependencies, projectVersion);
             cAppHandler.processAPIDefinitions(resourcesFolder, tempTargetDir, metaDependencies, projectVersion);
             cAppHandler.processResourcesFolder(resourcesFolder, tempTargetDir, dependencies,
-                    metaDependencies, projectVersion);
+                    metaDependencies, projectVersion, project);
             cAppHandler.processClassMediators(dependencies, project);
             resolveConnectorDependencies();
             cAppHandler.processConnectorLibDependencies(dependencies, project);
