@@ -116,8 +116,8 @@ public class MavenUtils {
             ComparableVersion currentVersion = new ComparableVersion(runtimeVersion);
             ComparableVersion targetVersion = new ComparableVersion(Constants.RUNTIME_VERSION_440);
 
-            return currentVersion.compareTo(targetVersion) > 0;
+            return currentVersion.compareTo(targetVersion) >= 0;
         }
-        return true;
+        return false;
     }
 }
