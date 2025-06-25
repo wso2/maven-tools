@@ -34,7 +34,7 @@ import org.apache.maven.project.MavenProject;
 import org.apache.commons.lang.StringUtils;
 import org.wso2.maven.datamapper.DataMapperBundler;
 import org.wso2.maven.datamapper.DataMapperException;
-import org.wso2.maven.libraries.CappDependencyResolver;
+import org.wso2.maven.libraries.CAppDependencyResolver;
 import org.wso2.maven.libraries.ConnectorDependencyResolver;
 import org.wso2.maven.model.ArchiveException;
 import org.wso2.maven.model.ArtifactDependency;
@@ -147,8 +147,9 @@ public class CARMojo extends AbstractMojo {
             cAppHandler.processClassMediators(dependencies, project);
             resolveConnectorDependencies();
             cAppHandler.processConnectorLibDependencies(dependencies, project);
-            CappDependencyResolver.resolveDependencies(this, project, tempTargetDir, dependencies);
+            CAppDependencyResolver.resolveDependencies(this, project, tempTargetDir, dependencies, metaDependencies);
             cAppHandler.createDependencyArtifactsXmlFile(tempTargetDir, dependencies, metaDependencies, project);
+            cAppHandler.createDependencyDescriptorFile(tempTargetDir, project);
             File fileToZip = new File(tempTargetDir);
             String fileExtension = ".car";
             try {
@@ -334,5 +335,10 @@ public class CARMojo extends AbstractMojo {
             getLog().error("Error occurred while resolving connector dependencies.", e);
             throw new MojoExecutionException("Connector dependency resolution failed.", e);
         }
+    }
+
+    public MavenProject getProject() {
+
+        return project;
     }
 }

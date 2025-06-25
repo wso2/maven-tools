@@ -35,6 +35,7 @@ import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.project.MavenProject;
+import org.wso2.maven.libraries.CAppDependencyResolver;
 import org.wso2.maven.model.Artifact;
 import org.wso2.maven.model.ArtifactDependency;
 import org.wso2.maven.model.ArtifactDetails;
@@ -42,7 +43,7 @@ import org.wso2.maven.core.model.AbstractXMLDoc;
 
 import static org.wso2.maven.libraries.CAppDependencyResolver.getTopLevelCAppDependencies;
 
-class CAppHandler extends AbstractXMLDoc {
+public class CAppHandler extends AbstractXMLDoc {
     private final String cAppName;
     private final CARMojo mojoInstance;
     private final List<ArtifactDetails> artifactTypeList;
@@ -793,10 +794,60 @@ class CAppHandler extends AbstractXMLDoc {
      * This file contains the dependencies of the Composite Application (CApp).
      *
      * @param archiveDirectory The path to the archive directory where the `descriptor.xml` file will be created.
+     * @param project The Maven project for which the dependency descriptor is generated.
      */
-    void createDependencyDescriptorFile(String archiveDirectory) {
+    public void createDependencyDescriptorFile(String archiveDirectory, MavenProject project) {
 
-        List<CAppDependency> cAppDependencies = getTopLevelCAppDependencies();
+        String projectIdentifier = buildProjectName(project.getGroupId(), project.getArtifactId(), project.getVersion());
+        OMElement projectElement;
+        boolean fatCarEnabled = CAppDependencyResolver.isFatCarEnabled(project);
+        if (!fatCarEnabled) {
+            List<CAppDependency> cAppDependencies = getTopLevelCAppDependencies(project);
+            projectElement = createDependencyDescriptorXml(projectIdentifier, cAppDependencies);
+        } else {
+            projectElement = createDependencyDescriptorXml(projectIdentifier);
+        }
+        try {
+            String descriptorXmlFileDataAsString = serialize(projectElement);
+            org.wso2.developerstudio.eclipse.utils.file.FileUtils.createFile(
+                    new File(archiveDirectory, Constants.DESCRIPTOR_XML), descriptorXmlFileDataAsString);
+        } catch (MojoExecutionException | IOException e) {
+            mojoInstance.logError("Error occurred while creating descriptor.xml file");
+            mojoInstance.logError(e.getMessage());
+        }
+    }
+
+    /**
+     * Builds a project name by concatenating the groupId, artifactId, and version with underscores.
+     *
+     * @param groupId    the group ID of the project
+     * @param artifactId the artifact ID of the project
+     * @param version    the version of the project
+     * @return the constructed project name in the format groupId_artifactId_version
+     */
+    static String buildProjectName(String groupId, String artifactId, String version) {
+
+        return groupId + Constants.UNDERSCORE + artifactId + Constants.UNDERSCORE + version;
+    }
+
+    OMElement createDependencyDescriptorXml(String projectName) {
+
+        return createDependencyDescriptorXml(projectName, Collections.<CAppDependency>emptyList());
+    }
+
+    /**
+     * Creates the dependency descriptor XML element for the given project and its CApp dependencies.
+     *
+     * @param projectName      the name of the project
+     * @param cAppDependencies the list of CApp dependencies
+     * @return OMElement representing the dependency descriptor XML
+     */
+    OMElement createDependencyDescriptorXml(String projectName, List<CAppDependency> cAppDependencies) {
+
+        OMElement projectElement = getElement(Constants.PROJECT, Constants.EMPTY_STRING);
+        OMElement idElement = getElement(Constants.ID, projectName);
+        projectElement.addChild(idElement);
+
         OMElement dependenciesElement = getElement(Constants.DEPENDENCIES, Constants.EMPTY_STRING);
         for (CAppDependency cAppDependency : cAppDependencies) {
             OMElement dependencyElement = getElement(Constants.DEPENDENCY, Constants.EMPTY_STRING);
@@ -806,19 +857,12 @@ class CAppHandler extends AbstractXMLDoc {
             dependencyElement = addAttribute(dependencyElement, Constants.TYPE, Constants.CAR_TYPE);
             dependenciesElement.addChild(dependencyElement);
         }
-        try {
-            // Create descriptor.xml file in archive file.
-            String descriptorXmlFileDataAsString = serialize(dependenciesElement);
-            org.wso2.developerstudio.eclipse.utils.file.FileUtils.createFile(new File(archiveDirectory, "descriptor.xml"),
-                    descriptorXmlFileDataAsString);
-        } catch (MojoExecutionException | IOException e) {
-            mojoInstance.logError("Error occurred while creating descriptor.xml file");
-            mojoInstance.logError(e.getMessage());
-        }
+        projectElement.addChild(dependenciesElement);
+        return projectElement;
     }
 
     /**
-     * Create artifacts.xml file including meta data of each artifact in WSO2-ESB project.
+     * Create artifacts.xml file including metadata of each artifact in WSO2-ESB project.
      *
      * @param archiveDirectory: path to archive directory
      * @param dependencies      to be added to artifacts.xml file
