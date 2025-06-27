@@ -361,6 +361,11 @@ class SynapseTestCaseFileReader {
 
             String encodedConnectorFile;
             if (!resource.getText().isEmpty()) {
+                if (!resource.getText().endsWith(Constants.ZIP)) {
+                    String connectorZipPath = Paths.get(Constants.TARGET, Constants.DEPENDENCY,
+                            resource.getText() + Constants.ZIP).toString();
+                    resource.setText(connectorZipPath);
+                }
                 String registryFilePath;
                 File connectorResourceFile = new File(RELATIVE_PREVIOUS + File.separator + resource.getText());
                 if (!connectorResourceFile.exists()) {

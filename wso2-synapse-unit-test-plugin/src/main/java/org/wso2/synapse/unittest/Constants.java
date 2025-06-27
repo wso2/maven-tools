@@ -92,4 +92,6 @@ class Constants {
     static final String INPUT_SCHEMA = "_inputSchema.json";
     static final String OUTPUT_SCHEMA = "_outputSchema.json";
     static final String DATA_MAPPER = "datamapper";
+    static final String DEPENDENCY = "dependency";
+    static final String TARGET = "target";
 }
