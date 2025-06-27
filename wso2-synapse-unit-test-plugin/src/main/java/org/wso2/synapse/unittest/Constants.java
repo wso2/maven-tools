@@ -79,14 +79,14 @@ class Constants {
     static final String REPORT_FILE_NAME = "unit-test-report.json";
     static final String USER_PROFILE = "USERPROFILE";
     static final String HOME = "HOME";
-    static final String M2 = ".m2";
-    static final String REPOSITORY = "repository";
-    static final String ORG = "org";
-    static final String WSO2 = "wso2";
-    static final String EI = "ei";
-    static final String WSO2_MI = "wso2mi";
+    static final String WSO2_MI = ".wso2-mi";
+    static final String MICRO_INTEGRATOR = "micro-integrator";
     static final String WSO2_MI_WITH_DASH = "wso2mi-";
     static final String ZIP = ".zip";
+    static final String UPDATED = "-UPDATED";
+    static final String MI_4_4_0 = "4.4.0";
+    static final String SLASH_WSO2_MI_WITH_DASH = "/wso2mi-";
+
     static final String TS = ".ts";
     static final String DMC = ".dmc";
     static final String INPUT_SCHEMA = "_inputSchema.json";

@@ -35,11 +35,8 @@ import java.io.FileWriter;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.net.HttpURLConnection;
 import java.net.InetSocketAddress;
-import java.net.MalformedURLException;
 import java.net.Socket;
 import java.net.URL;
 import java.nio.file.Files;
@@ -55,6 +52,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
@@ -75,6 +73,7 @@ public class UnitTestCasesMojo extends AbstractMojo {
 
     private static final String LOCAL_SERVER = "local";
     private static final String REMOTE_SERVER = "remote";
+    private String baseUrl = "https://mi-distribution.wso2.com/";
 
     private Date timeStarted;
     private String serverHost;
@@ -157,7 +156,7 @@ public class UnitTestCasesMojo extends AbstractMojo {
         if (synapseTestCasePaths.size() > 0) {
             checkTestParameters();
             if (server.getServerPath() != null && server.getServerPath().equalsIgnoreCase("/")) {
-                runLocalServer(synapseTestCasePaths.get(0).split("src")[0]);
+                setupLocalServer(synapseTestCasePaths.get(0).split("src")[0]);
             }
             startTestingServer();
         }
@@ -730,34 +729,40 @@ public class UnitTestCasesMojo extends AbstractMojo {
         getLog().info("");
     }
 
-    private void runLocalServer(String projectRootPath) {
+    private void setupLocalServer(String projectRootPath) {
         try {
-            String userHome;
-            if (System.getProperty(Constants.OS_TYPE).toLowerCase().contains(Constants.OS_WINDOWS)) {
-                userHome = System.getenv(Constants.USER_PROFILE);
-            } else {
-                userHome = System.getenv(Constants.HOME);
-            }
-            Path miDownloadPath = Paths.get(userHome, Constants.M2, Constants.REPOSITORY, Constants.ORG,
-                    Constants.WSO2, Constants.EI, Constants.WSO2_MI, server.getServerVersion());
-            URL downloadUrl;
+            URL downloadUrl = new URL(baseUrl + server.getServerVersion() + Constants.SLASH_WSO2_MI_WITH_DASH +
+                    server.getServerVersion() + Constants.ZIP);
+            String userHome = getUserHome();
+            Path miDownloadPath = Paths.get(userHome, Constants.WSO2_MI, Constants.MICRO_INTEGRATOR);
+            Path fullFilePath = Paths.get(miDownloadPath.toString(), Constants.WSO2_MI_WITH_DASH +
+                    server.getServerVersion());
+            Path zipFilePath = Paths.get(fullFilePath + Constants.ZIP);
             if (server.getServerDownloadLink() == null) {
-                downloadUrl = new URL("https://github.com/wso2/micro-integrator/releases/download/v" +
-                        server.getServerVersion() + "/wso2mi-" + server.getServerVersion() + Constants.ZIP);
+                if (server.getServerVersion().equals(Constants.MI_4_4_0)) {
+                    downloadUrl = new URL(baseUrl + server.getServerVersion() + Constants.SLASH_WSO2_MI_WITH_DASH
+                            + server.getServerVersion() + Constants.UPDATED + Constants.ZIP);
+                    zipFilePath = Paths.get(fullFilePath + Constants.UPDATED + Constants.ZIP);
+                } else if (Integer.parseInt(server.getServerVersion().replaceAll("\\.", "")) <= 420) {
+                    getLog().error("Automatic server download is not supported for " +
+                            "versions below 4.3.0. Please host the server at a publicly accessible URL and provide " +
+                            "it using -DserverDownloadLink=<link>.");
+                    return;
+                }
             } else {
                 downloadUrl = new URL(server.getServerDownloadLink());
             }
-            if (Files.notExists(miDownloadPath)) {
-                Files.createDirectories(miDownloadPath);
+            if (Files.notExists(fullFilePath) && Files.notExists(zipFilePath)) {
+                getLog().info("Downloading wso2mi-" + server.getServerVersion() + " server to \"" +
+                        miDownloadPath + "\" for testing unit test ...");
+                if (Files.notExists(miDownloadPath)) {
+                    Files.createDirectories(miDownloadPath);
+                }
+                downloadMiPack(downloadUrl.toString(), zipFilePath.toString());
             }
-            Path fullFilePath = Paths.get(miDownloadPath.toString(), Constants.WSO2_MI_WITH_DASH +
-                    server.getServerVersion() + Constants.ZIP);
             if (Files.notExists(fullFilePath)) {
-                getLog().info("Downloading wso2mi-" + server.getServerVersion() +
-                        " server to \"" + miDownloadPath + "\" for testing unit test ...");
-                downloadMiPack(downloadUrl.toString(), fullFilePath.toString());
+                unzipMiPack(zipFilePath.toString(), miDownloadPath.toString());
             }
-            unzipMiPack(fullFilePath.toString(), miDownloadPath.toString());
             FileUtils.copyDirectory(new File(Paths.get(projectRootPath, "deployment", "libs").toString()),
                     new File(Paths.get(miDownloadPath.toString(), Constants.WSO2_MI_WITH_DASH +
                             server.getServerVersion(), "lib").toString()));
@@ -778,6 +783,14 @@ public class UnitTestCasesMojo extends AbstractMojo {
         }
     }
 
+    private String getUserHome() {
+        if (System.getProperty(Constants.OS_TYPE).toLowerCase().contains(Constants.OS_WINDOWS)) {
+            return System.getenv(Constants.USER_PROFILE);
+        } else {
+            return System.getenv(Constants.HOME);
+        }
+    }
+
     private File newFile(File destinationDir, ZipEntry zipEntry) throws IOException {
         File destFile = new File(destinationDir, zipEntry.getName());
 
@@ -791,30 +804,19 @@ public class UnitTestCasesMojo extends AbstractMojo {
         return destFile;
     }
 
-    private void downloadMiPack(String downloadFileUrl, String outputFile)  {
+    private void downloadMiPack(String downloadFileUrl, String outputFile) {
         try {
-            URL url = new URL(downloadFileUrl);
-            HttpURLConnection connection = (HttpURLConnection) url.openConnection();
-            connection.setRequestMethod("GET");
-            int responseCode = connection.getResponseCode();
-            if (responseCode == HttpURLConnection.HTTP_OK) {
-                try (InputStream inputStream = connection.getInputStream();
-                     FileOutputStream outputStream = new FileOutputStream(outputFile)) {
-
-                    byte[] buffer = new byte[4096];
-                    int bytesRead;
-
-                    while ((bytesRead = inputStream.read(buffer)) != -1) {
-                        outputStream.write(buffer, 0, bytesRead);
-                    }
-                } catch (IOException e) {
-                    getLog().error("An error occurred when downloading MI pack: " + e.getMessage());
-                }
+            Process p = new ProcessBuilder("curl", "-L", "-o", outputFile, downloadFileUrl)
+                    .inheritIO().start();
+            int exit = p.waitFor();
+            if (exit == 0) {
                 getLog().info("MI pack downloaded successfully to " + outputFile);
             } else {
-                getLog().error("Failed to download MI pack. Error code: " + responseCode);
+                String errorMsg = new BufferedReader(new InputStreamReader(p.getErrorStream()))
+                        .lines().collect(Collectors.joining(System.lineSeparator()));
+                getLog().error("Unsuccessful download. Error: " + errorMsg);
             }
-        } catch (IOException e) {
+        } catch (IOException | InterruptedException e) {
             getLog().error("An error occurred when downloading MI pack: " + e.getMessage());
         }
     }
