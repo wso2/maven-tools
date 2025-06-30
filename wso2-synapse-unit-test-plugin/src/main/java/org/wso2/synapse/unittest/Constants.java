@@ -94,4 +94,6 @@ class Constants {
     static final String REGISTRY_PATH = "registry-path";
     static final String MEDIA_TYPE = "media-type";
     static final String FILE_NAME = "file-name";
+    static final String DEPENDENCY = "dependency";
+    static final String TARGET = "target";
 }
