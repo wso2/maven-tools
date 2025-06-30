@@ -125,7 +125,7 @@ public class UnitTestCasesMojo extends AbstractMojo {
         if (server.getServerType() != null && server.getServerType().equals(LOCAL_SERVER)) {
             Path jsonFile = Paths.get(projectRootPath, ".vscode", "settings.json");
             if (Files.exists(jsonFile)) {
-                readMiFileName(jsonFile);
+                readServerPath(jsonFile);
             }
             if (server.getServerPath() == null || server.getServerPath().isEmpty() ||
                     server.getServerPath().trim().equals("/")) {
@@ -134,7 +134,7 @@ public class UnitTestCasesMojo extends AbstractMojo {
                     int serverVersion = Integer.parseInt(server.getServerVersion().replaceAll("\\.",
                             ""));
                     URL downloadUrl;
-                    if (serverVersion >= 440) {
+                    if (serverVersion == 440) {
                         downloadUrl = new URL(baseUrl + server.getServerVersion() +
                                 Constants.SLASH_WSO2_MI_WITH_DASH + server.getServerVersion() + Constants.UPDATED +
                                 Constants.ZIP);
@@ -166,7 +166,7 @@ public class UnitTestCasesMojo extends AbstractMojo {
         }
     }
 
-    private void readMiFileName(Path filePath) {
+    private void readServerPath(Path filePath) {
         Pattern extractor = Pattern.compile(
                 "\"(" + Pattern.quote("MI.SERVER_PATH") + ")\"\\s*:\\s*\"([^\"]+)\"");
         try (BufferedReader br = Files.newBufferedReader(filePath)) {
@@ -185,7 +185,7 @@ public class UnitTestCasesMojo extends AbstractMojo {
     }
 
     private void setServerPath(String basePath) {
-        if (!basePath.endsWith(".bat") && !basePath.endsWith(".sh")) {
+        if (!(basePath.endsWith(".bat") || basePath.endsWith(".sh"))) {
             basePath = Paths.get(basePath, "bin",
                             System.getProperty("os.name").toLowerCase().contains("windows") ? WIN_LAUNCHER :
                                     UNIX_LAUNCHER).toString();
