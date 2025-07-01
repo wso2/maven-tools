@@ -283,14 +283,22 @@ class SynapseTestCaseFileReader {
                                                        OMElement registryResourcesNode)
             throws IOException, XMLStreamException {
 
-        OMElement dataMapperFileNodeName = registryResourcesNode.getFirstChildWithName(new QName("", "file-name", ""));
+        OMElement dataMapperFileNodeName = registryResourcesNode.getFirstChildWithName(new QName("",
+                Constants.FILE_NAME, ""));
+        String registryPath = registryResourcesNode.getFirstChildWithName(new QName("",
+                Constants.REGISTRY_PATH, "")).getText();
+        String mediaType = registryResourcesNode.getFirstChildWithName(new QName("",
+                Constants.MEDIA_TYPE, "")).getText();
         if (dataMapperFileNodeName.getText().isEmpty()) {
             return;
         }
         String dataMapperName = dataMapperFileNodeName.getText().replace(Constants.TS, "");
-        createDataMapperResourceEntry(dataMapperName, dataMapperName + Constants.DMC, datamapperDataNodeList);
-        createDataMapperResourceEntry(dataMapperName, dataMapperName + Constants.INPUT_SCHEMA, datamapperDataNodeList);
-        createDataMapperResourceEntry(dataMapperName, dataMapperName + Constants.OUTPUT_SCHEMA, datamapperDataNodeList);
+        createDataMapperResourceEntry(dataMapperName, dataMapperName + Constants.DMC, mediaType,
+                datamapperDataNodeList, registryPath);
+        createDataMapperResourceEntry(dataMapperName, dataMapperName + Constants.INPUT_SCHEMA, mediaType,
+                datamapperDataNodeList, registryPath);
+        createDataMapperResourceEntry(dataMapperName, dataMapperName + Constants.OUTPUT_SCHEMA, mediaType,
+                datamapperDataNodeList, registryPath);
     }
 
     /**
@@ -301,7 +309,8 @@ class SynapseTestCaseFileReader {
      * @param dataMapperNodes list of data mapper nodes
      *
      */
-    private static void createDataMapperResourceEntry(String dataMapperName, String resourceName, List<OMElement> dataMapperNodes)
+    private static void createDataMapperResourceEntry(String dataMapperName, String resourceName, String mediaType,
+                                                      List<OMElement> dataMapperNodes, String registryPath)
             throws IOException, XMLStreamException {
 
         OMElement dmNode = AXIOMUtil.stringToOM("<registry-resource></registry-resource>");
@@ -311,9 +320,8 @@ class SynapseTestCaseFileReader {
         String resourceAsString = getResourceFileAsString(dmcArtifactNode);
         dmcArtifactNode.setText(resourceAsString);
         dmNode.addChild(dmcArtifactNode);
-        dmNode.addChild(AXIOMUtil.stringToOM(
-                "<registry-path>/_system/governance/datamapper/" + dataMapperName + "</registry-path>"));
-        dmNode.addChild(AXIOMUtil.stringToOM("<media-type>text/plain</media-type>"));
+        dmNode.addChild(AXIOMUtil.stringToOM("<registry-path>" + registryPath + "</registry-path>"));
+        dmNode.addChild(AXIOMUtil.stringToOM("<media-type>" + mediaType + "</media-type>"));
         dataMapperNodes.add(dmNode);
     }
 
