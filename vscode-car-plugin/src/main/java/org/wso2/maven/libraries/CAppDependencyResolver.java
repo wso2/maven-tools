@@ -90,7 +90,8 @@ public class CAppDependencyResolver {
                         project.getArtifactId(), project.getVersion(), carMojo);
                 for (File cappFile : cAppFiles) {
                     File extractDir =
-                            new File(cappFile.getParent(), cappFile.getName().replace(Constants.CAR_EXTENSION, ""));
+                            new File(cappFile.getParent(),
+                                    cappFile.getName().replace(Constants.CAR_EXTENSION, StringUtils.EMPTY));
                     unzipFile(cappFile, extractDir);
                     // copy each dir in cApp to archiveDir
                     for (File file : Objects.requireNonNull(extractDir.listFiles())) {
@@ -362,8 +363,7 @@ public class CAppDependencyResolver {
         Set<String> visited = new HashSet<>();
 
         // Add the current project artifact to the visited set
-        String currentProjectCar = artifactId + Constants.HYPHEN + version;
-        visited.add(currentProjectCar);  // e.g., "my-service-1.0.0"
+        visited.add(artifactId + Constants.HYPHEN + version);  // e.g., "my-service-1.0.0"
 
         for (File file : Objects.requireNonNull(dependenciesDir.listFiles())) {
             if (file.getName().endsWith(Constants.CAR_EXTENSION)) {
@@ -416,9 +416,10 @@ public class CAppDependencyResolver {
                 String artifactId = dependencyElement.getAttribute(Constants.ARTIFACT_ID);
                 String version = dependencyElement.getAttribute(Constants.VERSION);
 
-                carMojo.logInfo("Resolving dependency: " + groupId + ":" + artifactId + ":" + version);
+                carMojo.logInfo(
+                        "Resolving dependency: " + groupId + Constants.COLON + artifactId + Constants.COLON + version);
                 if (StringUtils.isNotEmpty(artifactId) && StringUtils.isNotEmpty(version)) {
-                    String key = artifactId + "-" + version;
+                    String key = artifactId + Constants.HYPHEN + version;
                     if (visited.contains(key)) {
                         continue; // Skip already processed dependency
                     }
@@ -438,8 +439,8 @@ public class CAppDependencyResolver {
                             collectDependentCAppFiles(mavenRepoPath, dependenciesDir, copiedFile, cAppFiles, visited,
                                     carMojo);
                         } else {
-                            carMojo.logError(
-                                    "Could not resolve dependency: " + groupId + ":" + artifactId + ":" + version);
+                            carMojo.logError("Could not resolve dependency: " + groupId + Constants.COLON + artifactId +
+                                    Constants.COLON + version);
                         }
                     }
                 }
@@ -482,8 +483,7 @@ public class CAppDependencyResolver {
      * @return The copied \`.car\` file if found and copied, otherwise null.
      */
     public static File fetchCarFileFromMavenRepo(String mavenRepoPath, File dependenciesDir, String groupId,
-                                                 String artifactId, String version)
-            throws IOException {
+                                                 String artifactId, String version) throws IOException {
 
         String relativePath =
                 groupId.replace(Constants.DOT_CHAR, File.separatorChar) + File.separator + artifactId + File.separator +

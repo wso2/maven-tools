@@ -136,6 +136,7 @@ public class Constants {
     public static final String METADATA_DIR = "metadata";
     public static final String HYPHEN = "-";
     public static final String UNDERSCORE = "_";
+    public static final String COLON = ":";
     public static final Character DOT_CHAR = '.';
     public static final String USER_HOME = "user.home";
     public static final String REPOSITORY = "repository";
