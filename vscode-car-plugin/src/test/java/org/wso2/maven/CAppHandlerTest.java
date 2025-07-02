@@ -68,10 +68,8 @@ public class CAppHandlerTest {
         CARMojo mojo = new MockCARMojo();
         CAppHandler handler = new CAppHandler("test", mojo);
 
-        List<CAppDependency> deps = Arrays.asList(
-                new CAppDependency("group1", "artifact1", "1.0.0"),
-                new CAppDependency("group2", "artifact2", "2.0.0")
-                                                 );
+        List<CAppDependency> deps = Arrays.asList(new CAppDependency("group1", "artifact1", "1.0.0"),
+                new CAppDependency("group2", "artifact2", "2.0.0"));
 
         OMElement result = handler.createDependencyDescriptorXml(projectName, deps);
 
