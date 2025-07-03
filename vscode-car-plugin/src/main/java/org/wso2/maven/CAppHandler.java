@@ -798,7 +798,7 @@ public class CAppHandler extends AbstractXMLDoc {
      */
     public void createDependencyDescriptorFile(String archiveDirectory, MavenProject project) {
 
-        String projectIdentifier = buildProjectName(project.getGroupId(), project.getArtifactId(), project.getVersion());
+        String projectIdentifier = generateProjectIdentifier(project.getGroupId(), project.getArtifactId(), project.getVersion());
         OMElement projectElement;
         boolean fatCarEnabled = CAppDependencyResolver.isFatCarEnabled(project);
         if (!fatCarEnabled) {
@@ -818,14 +818,14 @@ public class CAppHandler extends AbstractXMLDoc {
     }
 
     /**
-     * Builds a project name by concatenating the groupId, artifactId, and version with underscores.
+     * Generates a project identifier by concatenating the groupId, artifactId, and version with underscores.
      *
      * @param groupId    the group ID of the project
      * @param artifactId the artifact ID of the project
      * @param version    the version of the project
      * @return the constructed project name in the format groupId_artifactId_version
      */
-    static String buildProjectName(String groupId, String artifactId, String version) {
+    private String generateProjectIdentifier(String groupId, String artifactId, String version) {
 
         return groupId + Constants.UNDERSCORE + artifactId + Constants.UNDERSCORE + version;
     }

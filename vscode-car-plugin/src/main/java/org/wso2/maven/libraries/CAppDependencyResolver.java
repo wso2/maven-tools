@@ -23,6 +23,7 @@ import org.apache.maven.project.MavenProject;
 import org.apache.maven.shared.invoker.DefaultInvocationRequest;
 import org.apache.maven.shared.invoker.DefaultInvoker;
 import org.apache.maven.shared.invoker.Invoker;
+import org.apache.maven.shared.invoker.MavenInvocationException;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
@@ -63,11 +64,6 @@ import static org.wso2.maven.MavenUtils.createPomFile;
  */
 public class CAppDependencyResolver {
 
-    private static final String MAVEN_REPO_PATH = System.getProperty(Constants.USER_HOME) + File.separator +
-            Constants.M2 + File.separator + Constants.REPOSITORY;
-    private static final File DEPENDENCIES_DIR =
-            new File(Constants.DEFAULT_TARGET_FOLDER + File.separator + Constants.DEPENDENCY);
-
     /**
      * Resolves CApp (Carbon Application) dependencies for the given Maven project.
      * Executes the Maven dependency copy, checks for fat CAR packaging, extracts dependent CApp files,
@@ -80,50 +76,47 @@ public class CAppDependencyResolver {
      */
     public static void resolveDependencies(CARMojo carMojo, MavenProject project, String archiveDir,
                                            List<ArtifactDependency> dependencies,
-                                           List<ArtifactDependency> metaDependencies) {
+                                           List<ArtifactDependency> metaDependencies) throws Exception {
 
-        try {
-            executeDependencyCopy(carMojo, new File(project.getBasedir(), Constants.POM_FILE), DEPENDENCIES_DIR);
-            boolean fatCarEnabled = CAppDependencyResolver.isFatCarEnabled(project);
-            if (fatCarEnabled) {
-                ArrayList<File> cAppFiles = getResolvedDependentCAppFiles(DEPENDENCIES_DIR,
-                        project.getArtifactId(), project.getVersion(), carMojo);
-                for (File cappFile : cAppFiles) {
-                    File extractDir =
-                            new File(cappFile.getParent(),
-                                    cappFile.getName().replace(Constants.CAR_EXTENSION, StringUtils.EMPTY));
-                    unzipFile(cappFile, extractDir);
-                    // copy each dir in cApp to archiveDir
-                    for (File file : Objects.requireNonNull(extractDir.listFiles())) {
-                        if (file.isDirectory()) {
-                            File targetDir = new File(archiveDir, file.getName());
-                            if (file.getName().startsWith(Constants.CONFIG_DIR_PREFIX)) {
-                                handleConfigPropertiesFile(file, targetDir, carMojo);
-                            } else if (file.getName().equals(Constants.METADATA_DIR)) {
-                                for (File innerFile : Objects.requireNonNull(file.listFiles())) {
-                                    File targetFile = new File(targetDir, innerFile.getName());
-                                    if (innerFile.isDirectory()) {
-                                        copyDirectory(innerFile, targetFile);
-                                    } else {
-                                        copyFile(innerFile, targetFile);
-                                    }
+        File dependenciesDir = new File(Constants.DEFAULT_TARGET_FOLDER + File.separator + Constants.DEPENDENCY);
+        executeDependencyCopy(new File(project.getBasedir(), Constants.POM_FILE), dependenciesDir);
+        boolean fatCarEnabled = CAppDependencyResolver.isFatCarEnabled(project);
+        if (fatCarEnabled) {
+            ArrayList<File> cAppFiles = getResolvedDependentCAppFiles(dependenciesDir,
+                    project.getArtifactId(), project.getVersion(), carMojo);
+            for (File cappFile : cAppFiles) {
+                File extractDir =
+                        new File(cappFile.getParent(),
+                                cappFile.getName().replace(Constants.CAR_EXTENSION, StringUtils.EMPTY));
+                unzipFile(cappFile, extractDir);
+                // copy each dir in cApp to archiveDir
+                for (File file : Objects.requireNonNull(extractDir.listFiles())) {
+                    if (file.isDirectory()) {
+                        File targetDir = new File(archiveDir, file.getName());
+                        if (file.getName().startsWith(Constants.CONFIG_DIR_PREFIX)) {
+                            handleConfigPropertiesFile(file, targetDir);
+                        } else if (file.getName().equals(Constants.METADATA_DIR)) {
+                            for (File innerFile : Objects.requireNonNull(file.listFiles())) {
+                                File targetFile = new File(targetDir, innerFile.getName());
+                                if (innerFile.isDirectory()) {
+                                    copyDirectory(innerFile, targetFile);
+                                } else {
+                                    copyFile(innerFile, targetFile);
                                 }
-                            } else {
-                                if (targetDir.exists()) {
-                                    carMojo.logError("Multiple entries with the name :" + file.getName());
-                                }
-                                copyDirectory(file, targetDir);
                             }
+                        } else {
+                            if (targetDir.exists()) {
+                                carMojo.logError("Multiple entries with the name :" + file.getName());
+                            }
+                            copyDirectory(file, targetDir);
                         }
                     }
-                    updateArtifactDependencies(new File(extractDir, Constants.ARTIFACTS_XML_FILE), dependencies,
-                            carMojo);
-                    updateArtifactDependencies(new File(extractDir, Constants.METADATA_XML_FILE), metaDependencies,
-                            carMojo);
                 }
+                updateArtifactDependencies(new File(extractDir, Constants.ARTIFACTS_XML_FILE), dependencies,
+                        carMojo);
+                updateArtifactDependencies(new File(extractDir, Constants.METADATA_XML_FILE), metaDependencies,
+                        carMojo);
             }
-        } catch (Exception e) {
-            carMojo.logError("Error while resolving dependent CAPPs.");
         }
     }
 
@@ -146,10 +139,9 @@ public class CAppDependencyResolver {
      *
      * @param srcDir    The source directory containing the `config.properties` file.
      * @param targetDir The target directory where the `config.properties` file will be copied or merged.
-     * @param carMojo   The `CARMojo` instance used for logging.
      * @throws IOException If an error occurs during file operations.
      */
-    public static void handleConfigPropertiesFile(File srcDir, File targetDir, CARMojo carMojo) throws IOException {
+    public static void handleConfigPropertiesFile(File srcDir, File targetDir) throws IOException {
 
         File srcConfigFile = new File(srcDir, Constants.CONFIG_PROPERTIES_FILE);
         File targetConfigFile = new File(targetDir, Constants.CONFIG_PROPERTIES_FILE);
@@ -163,10 +155,7 @@ public class CAppDependencyResolver {
         if (!targetConfigFile.exists()) {
             targetConfigFile.createNewFile();
         }
-
-        carMojo.logInfo(
-                "Copying config file " + srcConfigFile.getAbsolutePath() + " to " + targetConfigFile.getAbsolutePath());
-        mergePropertiesFiles(srcConfigFile, targetConfigFile, carMojo);
+        mergePropertiesFiles(srcConfigFile, targetConfigFile);
     }
 
     /**
@@ -176,9 +165,8 @@ public class CAppDependencyResolver {
      *
      * @param sourceFile The source properties file to merge from.
      * @param targetFile The target properties file to merge into.
-     * @param carMojo    The `CARMojo` instance used for logging.
      */
-    public static void mergePropertiesFiles(File sourceFile, File targetFile, CARMojo carMojo) {
+    public static void mergePropertiesFiles(File sourceFile, File targetFile) throws IOException {
 
         List<String> mergedLines = new ArrayList<>();
 
@@ -200,7 +188,7 @@ public class CAppDependencyResolver {
                 }
             }
         } catch (IOException e) {
-            carMojo.logError("Error reading properties files: " + e.getMessage());
+            throw new IOException("Error reading properties files: " + e.getMessage(), e);
         }
 
         try (BufferedWriter writer = new BufferedWriter(new FileWriter(targetFile))) {
@@ -209,7 +197,7 @@ public class CAppDependencyResolver {
                 writer.newLine();
             }
         } catch (IOException e) {
-            carMojo.logError("Error writing merged properties file: " + e.getMessage());
+            throw new IOException("Error writing merged properties file: " + e.getMessage(), e);
         }
     }
 
@@ -223,7 +211,8 @@ public class CAppDependencyResolver {
      * @param carMojo                The CARMojo instance used for logging.
      */
     public static void updateArtifactDependencies(File artifactDependencyFile,
-                                                  List<ArtifactDependency> artifactDependencies, CARMojo carMojo) {
+                                                  List<ArtifactDependency> artifactDependencies, CARMojo carMojo)
+            throws Exception {
 
         if (artifactDependencyFile.exists()) {
             try {
@@ -262,11 +251,10 @@ public class CAppDependencyResolver {
                     }
                 }
             } catch (Exception e) {
-                carMojo.logError("Error while reading dependency file: " + artifactDependencyFile.getAbsolutePath());
-                carMojo.logError(e.getMessage());
+                throw new Exception("Error while reading artifacts XML file: " + artifactDependencyFile.getAbsolutePath(), e);
             }
         } else {
-            carMojo.logError("Artifact Dependency file not found: " + artifactDependencyFile.getAbsolutePath());
+            throw new Exception("Artifacts XML file not found: " + artifactDependencyFile.getAbsolutePath());
         }
     }
 
@@ -325,21 +313,17 @@ public class CAppDependencyResolver {
      * to the target directory. This method uses the Maven Invoker API to programmatically invoke
      * the Maven goal.
      *
-     * @param carMojo The `CARMojo` instance used for logging and project context.
      */
-    protected static void executeDependencyCopy(CARMojo carMojo, File pomFile, File outputDir) {
+     static void executeDependencyCopy(File pomFile, File outputDir)
+            throws MavenInvocationException {
 
-        try {
-            Invoker invoker = new DefaultInvoker();
-            DefaultInvocationRequest request = new DefaultInvocationRequest();
-            request.setPomFile(pomFile);
-            request.setGoals(Collections.singletonList(
-                    String.format("dependency:copy-dependencies -DincludeTypes=car -DoutputDirectory=%s",
-                            outputDir.getAbsolutePath())));
-            invoker.execute(request);
-        } catch (Exception e) {
-            carMojo.logError("Error while copying dependent CAPPs.");
-        }
+        Invoker invoker = new DefaultInvoker();
+        DefaultInvocationRequest request = new DefaultInvocationRequest();
+        request.setPomFile(pomFile);
+        request.setGoals(Collections.singletonList(
+                String.format("dependency:copy-dependencies -DincludeTypes=car -DoutputDirectory=%s",
+                        outputDir.getAbsolutePath())));
+        invoker.execute(request);
     }
 
     /**
@@ -352,7 +336,8 @@ public class CAppDependencyResolver {
      * @return An ArrayList of resolved dependent CApp files.
      */
     public static ArrayList<File> getResolvedDependentCAppFiles(File dependenciesDir,
-                                                                String artifactId, String version, CARMojo carMojo) {
+                                                                String artifactId, String version, CARMojo carMojo)
+            throws Exception {
 
         if (!dependenciesDir.exists()) {
             return new ArrayList<>();
@@ -393,7 +378,8 @@ public class CAppDependencyResolver {
      * @param carMojo   The `CARMojo` instance used for logging and project context.
      */
     public static void collectDependentCAppFiles(File dependenciesDir, File carFile,
-                                                 ArrayList<File> cAppFiles, Set<String> visited, CARMojo carMojo) {
+                                                 ArrayList<File> cAppFiles, Set<String> visited, CARMojo carMojo)
+            throws Exception {
 
         try (ZipFile zipFile = new ZipFile(carFile)) {
             ZipEntry descriptorEntry = zipFile.getEntry(Constants.DESCRIPTOR_XML);
@@ -438,15 +424,12 @@ public class CAppDependencyResolver {
                             collectDependentCAppFiles(dependenciesDir, copiedFile, cAppFiles, visited,
                                     carMojo);
                         } else {
-                            carMojo.logError("Could not resolve dependency: " + groupId + Constants.COLON + artifactId +
-                                    Constants.COLON + version);
+                            throw new Exception("Could not find .car in maven repository for groupId: " + groupId +
+                                    ", artifactId: " + artifactId + ", version: " + version);
                         }
                     }
                 }
             }
-        } catch (Exception e) {
-            carMojo.logError("Error while processing .car file: " + carFile.getName());
-            carMojo.logError(e.getMessage());
         }
     }
 
@@ -480,14 +463,14 @@ public class CAppDependencyResolver {
      * @return The copied \`.car\` file if found and copied, otherwise null.
      */
     public static File fetchCarFileFromMavenRepo(File dependenciesDir, String groupId,
-                                                 String artifactId, String version, CARMojo carMojo) throws IOException {
+                                                 String artifactId, String version, CARMojo carMojo) throws Exception {
 
         File tempPomFile = createPomFile(
                 Collections.singletonList(groupId + Constants.COLON + artifactId + Constants.COLON + version + Constants.COLON + Constants.CAR_TYPE),
                 Collections.<String>emptyList());
 
         try {
-            executeDependencyCopy(carMojo, tempPomFile, dependenciesDir);
+            executeDependencyCopy(tempPomFile, dependenciesDir);
             File fetchedCarFile = new File(dependenciesDir, artifactId + Constants.HYPHEN + version + Constants.CAR_EXTENSION);
             if (fetchedCarFile.exists()) {
                 return fetchedCarFile;
@@ -495,32 +478,10 @@ public class CAppDependencyResolver {
             if (!tempPomFile.delete()) {
                 carMojo.getLog().warn("Failed to delete temporary pom.xml: " + tempPomFile.getAbsolutePath());
             }
-        } catch (Exception e) {
-            carMojo.logError("Error while fetching .car from Maven repo: " + e.getMessage());
+        } catch (MavenInvocationException e) {
+            throw new Exception("Error while fetching .car from Maven repo: " + e.getMessage(), e);
         }
         return null;
-    }
-
-    /**
-     * Copies a given \`.car\` file from the source location to the dependencies directory.
-     * If the dependencies directory does not exist, it will be created.
-     * The copied file will be named as \`artifactId-version.car\`.
-     *
-     * @param dependenciesDir The directory where the dependency \`.car\` files are stored.
-     * @param sourceFile      The source \`.car\` file to copy.
-     * @param artifactId      The artifact ID of the dependency.
-     * @param version         The version of the dependency.
-     * @return The copied \`.car\` file if successful, otherwise null.
-     */
-    private static File copyCarToDependencies(File dependenciesDir, File sourceFile, String artifactId, String version)
-            throws IOException {
-
-        if (!dependenciesDir.exists()) {
-            dependenciesDir.mkdirs();
-        }
-        File destFile = new File(dependenciesDir, artifactId + Constants.HYPHEN + version + Constants.CAR_EXTENSION);
-        Files.copy(sourceFile.toPath(), destFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
-        return destFile;
     }
 
     /**

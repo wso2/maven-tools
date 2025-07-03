@@ -147,7 +147,7 @@ public class CARMojo extends AbstractMojo {
             cAppHandler.processClassMediators(dependencies, project);
             resolveConnectorDependencies();
             cAppHandler.processConnectorLibDependencies(dependencies, project);
-            CAppDependencyResolver.resolveDependencies(this, project, tempTargetDir, dependencies, metaDependencies);
+            resolveCAppDependencies(tempTargetDir, dependencies, metaDependencies);
             cAppHandler.createDependencyArtifactsXmlFile(tempTargetDir, dependencies, metaDependencies, project);
             cAppHandler.createDependencyDescriptorFile(tempTargetDir, project);
             File fileToZip = new File(tempTargetDir);
@@ -334,6 +334,16 @@ public class CARMojo extends AbstractMojo {
         } catch (Exception e) {
             getLog().error("Error occurred while resolving connector dependencies.", e);
             throw new MojoExecutionException("Connector dependency resolution failed.", e);
+        }
+    }
+
+    private void resolveCAppDependencies(String tempTargetDir, List<ArtifactDependency> dependencies,
+                                         List<ArtifactDependency> metaDependencies) throws MojoExecutionException {
+        try {
+            CAppDependencyResolver.resolveDependencies(this, project, tempTargetDir, dependencies, metaDependencies);
+        } catch (Exception e) {
+            getLog().error("Error occurred while resolving CApp dependencies.", e);
+            throw new MojoExecutionException("CApp dependency resolution failed.", e);
         }
     }
 
