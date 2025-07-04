@@ -43,6 +43,7 @@ import javax.xml.namespace.QName;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 
+import static org.wso2.maven.MavenUtils.createPomFile;
 import static org.wso2.maven.MavenUtils.setupInvoker;
 
 /**
@@ -288,47 +289,6 @@ public class ConnectorDependencyResolver {
         } catch (IOException e) {
             throw new LibraryResolverException("Failed to create temporary pom.xml", e);
         }
-    }
-
-    private static File createPomFile(List<String> dependencies, List<String> repositories) throws IOException {
-
-        File tempPom = File.createTempFile("temp-pom", ".xml");
-        try (FileWriter writer = new FileWriter(tempPom)) {
-            writer.write("<project xmlns=\"http://maven.apache.org/POM/4.0.0\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"\n" +
-                    "         xsi:schemaLocation=\"http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd\">\n" +
-                    "    <modelVersion>4.0.0</modelVersion>\n" +
-                    "    <groupId>temp</groupId>\n" +
-                    "    <artifactId>temp</artifactId>\n" +
-                    "    <version>1.0-SNAPSHOT</version>\n" +
-                    "    <dependencies>\n");
-
-            // Add dependencies
-            for (String dependency : dependencies) {
-                String[] parts = dependency.split(":");
-                writer.write(String.format("        <dependency>\n" +
-                        "            <groupId>%s</groupId>\n" +
-                        "            <artifactId>%s</artifactId>\n" +
-                        "            <version>%s</version>\n" +
-                        "        </dependency>\n", parts[0], parts[1], parts[2]));
-            }
-
-            writer.write("    </dependencies>\n");
-
-            // Add repositories
-            if (repositories != null && !repositories.isEmpty()) {
-                writer.write("    <repositories>\n");
-                for (String repository : repositories) {
-                    writer.write(String.format("        <repository>\n" +
-                            "            <id>repo-%d</id>\n" +
-                            "            <url>%s</url>\n" +
-                            "        </repository>\n", repositories.indexOf(repository) + 1, repository));
-                }
-                writer.write("    </repositories>\n");
-            }
-
-            writer.write("</project>\n");
-        }
-        return tempPom;
     }
 
     /**
