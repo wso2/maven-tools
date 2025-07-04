@@ -80,6 +80,10 @@ public class CARMojo extends AbstractMojo {
         getLog().error(message);
     }
 
+    public void logWarn(String message) {
+        getLog().warn(message);
+    }
+
     public void logInfo(String message) {
         getLog().info(message);
     }
