@@ -17,7 +17,7 @@
        <parent>
 		<groupId>org.wso2.maven</groupId>
 		<artifactId>maven-common-tools</artifactId>
-		<version>5.2.110-SNAPSHOT</version>
+		<version>5.3.0-SNAPSHOT</version>
 		<relativePath>../pom.xml</relativePath>
        </parent>
 	
@@ -51,8 +51,8 @@
 					<artifactId>maven-compiler-plugin</artifactId>
 					<version>${maven.compiler.plugin.version}</version>
 					<configuration>
-						<source>1.7</source>
-						<target>1.7</target>
+						<source>11</source>
+						<target>11</target>
 					</configuration>
 				</plugin>
 				<plugin>
@@ -112,7 +112,7 @@
 		<repository>
 			<id>wso2-nexus</id>
 			<name>WSO2 internal Repository</name>
-			<url>http://maven.wso2.org/nexus/content/groups/wso2-public/</url>
+			<url>https://maven.wso2.org/nexus/content/groups/wso2-public/</url>
 			<releases>
 				<enabled>true</enabled>
 				<updatePolicy>daily</updatePolicy>
@@ -127,7 +127,6 @@
 		<tag>HEAD</tag>
 	</scm>
 	<properties>
-	<maven.plugin.plugin.version>3.4</maven.plugin.plugin.version>
 	<maven.compiler.plugin.version>3.5.1</maven.compiler.plugin.version>
 	<maven.plugin.api.version>3.3.9</maven.plugin.api.version>
 	<maven.core.version>3.3.9</maven.core.version>

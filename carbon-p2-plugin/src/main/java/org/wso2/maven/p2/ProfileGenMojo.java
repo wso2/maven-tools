@@ -99,26 +99,36 @@ public class ProfileGenMojo extends AbstractMojo {
     private P2Repository p2Repository;
 
     /**
+     * Maven project instance.
+     *
      * @parameter default-value="${project}"
      */
     private MavenProject project;
 
     /**
+     * Artifact factory to create artifacts.
+     *
      * @component
      */
     private org.apache.maven.artifact.factory.ArtifactFactory artifactFactory;
 
     /**
+     * Artifact resolver to resolve artifacts.
+     *
      * @component
      */
     private org.apache.maven.artifact.resolver.ArtifactResolver resolver;
 
     /**
+     * Local repository where artifacts are stored.
+     *
      * @parameter default-value="${localRepository}"
      */
     private org.apache.maven.artifact.repository.ArtifactRepository localRepository;
 
     /**
+     * List of remote repositories to use for resolving artifacts.
+     *
      * @parameter default-value="${project.remoteArtifactRepositories}"
      */
     private java.util.List remoteRepositories;
@@ -137,7 +147,11 @@ public class ProfileGenMojo extends AbstractMojo {
      */
     private MavenProjectHelper projectHelper;
 
-    /** @component */
+    /**
+     * The name of the repository to be created.
+     *
+     * @component
+     */
     private P2ApplicationLauncher launcher;
 
     /**

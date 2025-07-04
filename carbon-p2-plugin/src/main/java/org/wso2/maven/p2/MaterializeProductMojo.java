@@ -66,7 +66,11 @@ public class MaterializeProductMojo extends AbstractMojo {
      */
     private File productConfigurationFile;
 
-    /** @parameter */
+    /**
+     * The target path where the product will be materialized.
+     *
+     * @parameter
+     */
     private URL targetPath;
     /**
      * Parsed product configuration file
@@ -82,7 +86,11 @@ public class MaterializeProductMojo extends AbstractMojo {
     private String profile;
 
 
-    /** @component */
+    /**
+     * The P2 application launcher to be used for the p2 director.
+     *
+     * @component
+     */
     private P2ApplicationLauncher launcher;
 
     /**
