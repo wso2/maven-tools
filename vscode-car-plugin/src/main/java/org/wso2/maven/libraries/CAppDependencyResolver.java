@@ -106,9 +106,11 @@ public class CAppDependencyResolver {
                             }
                         } else {
                             if (targetDir.exists()) {
-                                carMojo.logError("Multiple entries with the name :" + file.getName());
+                                carMojo.logWarn("An artifact for: " + file.getName() +
+                                        " already exists in between dependencies or between a dependency and your project.");
+                            } else {
+                                copyDirectory(file, targetDir);
                             }
-                            copyDirectory(file, targetDir);
                         }
                     }
                 }
@@ -243,9 +245,6 @@ public class CAppDependencyResolver {
                             boolean exists = artifactDependencyExists(artifactDependencies, artifactDependency);
                             if (!exists) {
                                 artifactDependencies.add(artifactDependency);
-                            } else {
-                                carMojo.logError("Artifact named: " + artifact +
-                                        " already exists in between dependencies or between a dependency and your project.");
                             }
                         }
                     }
