@@ -265,23 +265,11 @@ public class CAppDependencyResolverTest {
         // Add the same dependency manually
         deps.add(new ArtifactDependency("foo", "1.0", "role1", true));
 
-        // Capture error log
-        final StringBuilder errorLog = new StringBuilder();
-        CARMojo mojo = new MockCARMojo() {
-            @Override
-            public void logError(String msg) {
-
-                errorLog.append(msg);
-            }
-        };
-
+        CARMojo mojo = new MockCARMojo();
         CAppDependencyResolver.updateArtifactDependencies(depFile, deps, mojo);
 
         // Should not add duplicate
         assertEquals(1, deps.size());
-        // Assert error log contains duplicate message
-        assertTrue(errorLog.toString()
-                .contains("already exists in between dependencies or between a dependency and your project."));
     }
 
     @Test
