@@ -21,8 +21,8 @@ package org.wso2.maven;
 import java.io.File;
 
 public class Constants {
-    static final String ARTIFACTS = "artifacts";
-    static final String ARTIFACT = "artifact";
+    public static final String ARTIFACTS = "artifacts";
+    public static final String ARTIFACT = "artifact";
     static final String KEY = "key";
     static final String API_DIR_NAME = "apis";
     static final String ENDPOINTS_DIR_NAME = "endpoints";
@@ -69,14 +69,15 @@ public class Constants {
     static final String CONF_FOLDER = "conf";
     static final String REG_INFO_FILE = "registry-info.xml";
     static final String TYPE = "type";
-    static final String SERVER_ROLE = "serverRole";
+    public static final String CAR_TYPE = "car";
+    public static final String SERVER_ROLE = "serverRole";
     static final String DESCRIPTION = "description";
     static final String FILE = "file";
     static final String ITEM = "item";
     static final String COLLECTION = "collection";
     static final String DIRECTORY = "directory";
     static final String PATH = "path";
-    static final String INCLUDE = "include";
+    public static final String INCLUDE = "include";
     static final String RESOURCES = "resources";
     static final String ARCHIVE_EXCEPTION_MSG = "Error occurred while creating CAR file.";
     static final String ARTIFACT_XML = "artifact.xml";
@@ -106,6 +107,7 @@ public class Constants {
     public static final String API = "api";
     public static final String DATA_SERVICE = "dataService";
     public static final String ZIP_EXTENSION = ".zip";
+    public static final String CAR_EXTENSION = ".car";
     public static final String CLASS_MEDIATORS = "_class_mediators";
     public static final String CONNECTOR_XML = "connector.xml";
     public static final String COMPONENT = "component";
@@ -116,11 +118,29 @@ public class Constants {
     public static final String INBOUND_CONNECTORS_DIR_NAME = "inbound-connectors";
     public static final String INBOUND_CONNECTORS_PREFIX = "mi-inbound-";
     public static final String CONNECTION_TYPE = "connectionType";
+    public static final String ID = "id";
+    public static final String PROJECT = "project";
+    public static final String PROPERTIES = "properties";
+    public static final String FAT_CAR_ENABLE = "fat.car.enable";
     public static final String PROJECT_RUNTIME_VERSION = "project.runtime.version";
     public static final String RUNTIME_VERSION_440 = "4.4.0";
     public static final String LOCAL_ENTRIES_FOLDER_PATH = ARTIFACTS_FOLDER_PATH + File.separator + LOCAL_ENTRIES_DIR_NAME;
     public static final String RESOURCES_FOLDER_PATH = "src" + File.separator + "main" + File.separator
             + "wso2mi" + File.separator + "resources";
+    public static final String FAT_CAR_ENABLE_PROPERTY = "fat.car.enable";
+    public static final String DESCRIPTOR_XML = "descriptor.xml";
+    public static final String CONFIG_PROPERTIES_FILE = "config.properties";
+    public static final String ARTIFACTS_XML_FILE = "artifacts.xml";
+    public static final String METADATA_XML_FILE = "metadata.xml";
+    public static final String CONFIG_DIR_PREFIX = "config_";
+    public static final String METADATA_DIR = "metadata";
+    public static final String HYPHEN = "-";
+    public static final String UNDERSCORE = "_";
+    public static final String COLON = ":";
+    public static final Character DOT_CHAR = '.';
+    public static final String USER_HOME = "user.home";
+    public static final String REPOSITORY = "repository";
+    public static final String M2 = ".m2";
 
     private Constants() {
     }

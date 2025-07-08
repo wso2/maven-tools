@@ -25,8 +25,10 @@ import org.apache.maven.shared.invoker.Invoker;
 
 import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.util.List;
 
 public class MavenUtils {
 
@@ -119,5 +121,55 @@ public class MavenUtils {
             return currentVersion.compareTo(targetVersion) >= 0;
         }
         return false;
+    }
+
+    public static File createPomFile(List<String> dependencies, List<String> repositories) throws IOException {
+
+        File tempPom = File.createTempFile("temp-pom", ".xml");
+        try (FileWriter writer = new FileWriter(tempPom)) {
+            writer.write("<project xmlns=\"http://maven.apache.org/POM/4.0.0\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"\n" +
+                    "         xsi:schemaLocation=\"http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd\">\n" +
+                    "    <modelVersion>4.0.0</modelVersion>\n" +
+                    "    <groupId>temp</groupId>\n" +
+                    "    <artifactId>temp</artifactId>\n" +
+                    "    <version>1.0-SNAPSHOT</version>\n" +
+                    "    <dependencies>\n");
+
+            // Add dependencies
+            for (String dependency : dependencies) {
+                String[] parts = dependency.split(":");
+                if (parts.length > 3) {
+                    writer.write(String.format("        <dependency>\n" +
+                            "            <groupId>%s</groupId>\n" +
+                            "            <artifactId>%s</artifactId>\n" +
+                            "            <version>%s</version>\n" +
+                            "            <type>%s</type>\n" +
+                            "        </dependency>\n", parts[0], parts[1], parts[2], parts[3]));
+                } else {
+                    writer.write(String.format("        <dependency>\n" +
+                            "            <groupId>%s</groupId>\n" +
+                            "            <artifactId>%s</artifactId>\n" +
+                            "            <version>%s</version>\n" +
+                            "        </dependency>\n", parts[0], parts[1], parts[2]));
+                }
+            }
+
+            writer.write("    </dependencies>\n");
+
+            // Add repositories
+            if (repositories != null && !repositories.isEmpty()) {
+                writer.write("    <repositories>\n");
+                for (String repository : repositories) {
+                    writer.write(String.format("        <repository>\n" +
+                            "            <id>repo-%d</id>\n" +
+                            "            <url>%s</url>\n" +
+                            "        </repository>\n", repositories.indexOf(repository) + 1, repository));
+                }
+                writer.write("    </repositories>\n");
+            }
+
+            writer.write("</project>\n");
+        }
+        return tempPom;
     }
 }
