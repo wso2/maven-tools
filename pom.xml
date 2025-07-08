@@ -87,6 +87,14 @@
             </extension>
         </extensions>
         <plugins>
+            <!-- TODO: migrate all legacy Javadoc-based plugin configuration to annotations and remove this. -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-javadoc-plugin</artifactId>
+                <configuration>
+                    <skip>true</skip>
+                </configuration>
+            </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-plugin-plugin</artifactId>
