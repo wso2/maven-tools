@@ -113,7 +113,7 @@ public class ConnectorDependencyResolver {
         if (!dependencyFiles.isEmpty()){
             for (Map.Entry<QName, File> entry : dependencyFiles.entrySet()) {
                 carMojo.logInfo("Resolving dependencies for " + entry.getKey());
-                resolveMavenDependencies(entry.getValue(), libDirPath, invoker, carMojo, entry.getKey().toString());
+                resolveMavenDependencies(entry.getValue(), libDirPath, invoker, carMojo, entry.getKey().toString(), project.getBasedir());
             }
         }
         carMojo.logInfo("All dependencies resolved and extracted successfully.");
@@ -212,7 +212,7 @@ public class ConnectorDependencyResolver {
      * @throws Exception If an error occurs while resolving dependencies.
      */
     private static void resolveMavenDependencies(File descriptorYaml, String libDir, Invoker invoker, CARMojo carMojo,
-                                                 String connectorName) throws Exception {
+                                                 String connectorName, File projectDir) throws Exception {
 
         if (!descriptorYaml.exists()) {
             return;
@@ -263,11 +263,12 @@ public class ConnectorDependencyResolver {
         }
 
         List<String> dependenciesList = new ArrayList<>(dependencySet);
-        resolveAndCopyDependencies(dependenciesList, repositoriesList, libDir, invoker, carMojo, connectorName);
+        resolveAndCopyDependencies(dependenciesList, repositoriesList, libDir, invoker, carMojo, connectorName, projectDir);
     }
 
     private static void resolveAndCopyDependencies(List<String> dependencies, List<String> repositories,
-                                                  String libDir, Invoker invoker, CARMojo carMojo, String connectorName)
+                                                  String libDir, Invoker invoker, CARMojo carMojo,
+                                                   String connectorName, File projectDir)
             throws LibraryResolverException {
 
         File targetDir = new File(libDir + File.separator + connectorName);
@@ -278,9 +279,10 @@ public class ConnectorDependencyResolver {
             File tempPom = createPomFile(dependencies, repositories);
 
             InvocationRequest request = new DefaultInvocationRequest();
-            request.setPomFile(tempPom);
-            request.setGoals(Collections.singletonList(String.format("dependency:copy-dependencies " +
-                    "-DexcludeTransitive=true -DoutputDirectory=%s", libDir + File.separator + connectorName)));
+            request.setBaseDirectory(projectDir);
+            request.setGoals(Collections.singletonList(String.format("-f %s dependency:copy-dependencies " +
+                    "-DexcludeTransitive=true -DoutputDirectory=%s", tempPom.getAbsolutePath(),
+                    libDir + File.separator + connectorName)));
 
             executeRequest(request, "Failed to resolve and copy dependencies", invoker, carMojo);
             if (!tempPom.delete()) {
