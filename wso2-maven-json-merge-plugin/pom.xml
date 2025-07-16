@@ -3,13 +3,13 @@
     <parent>
         <groupId>org.wso2.maven</groupId>
         <artifactId>maven-common-tools</artifactId>
-        <version>5.3.2</version>
+        <version>5.3.3-SNAPSHOT</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
     <groupId>org.wso2.maven</groupId>
     <modelVersion>4.0.0</modelVersion>
     <artifactId>wso2-maven-json-merge-plugin</artifactId>
-    <version>5.3.2</version>
+    <version>5.3.3-SNAPSHOT</version>
     <packaging>maven-plugin</packaging>
 
     <name>Maven Library Plugin</name>
