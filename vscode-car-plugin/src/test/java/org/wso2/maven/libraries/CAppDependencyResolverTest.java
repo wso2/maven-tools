@@ -17,6 +17,7 @@
 
 package org.wso2.maven.libraries;
 
+import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.shared.invoker.MavenInvocationException;
 import org.junit.Rule;
 import org.junit.Test;
@@ -44,13 +45,9 @@ import java.util.zip.ZipOutputStream;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.Mockito.doAnswer;
-import static org.mockito.Mockito.mockStatic;
-import static org.mockito.Mockito.spy;
 
 public class CAppDependencyResolverTest {
 
@@ -130,15 +127,16 @@ public class CAppDependencyResolverTest {
         try {
             MockedStatic<CAppDependencyResolver> mockedStatic = Mockito.mockStatic(CAppDependencyResolver.class);
             mockedStatic.when(new MockedStatic.Verification() {
-                public void apply() throws MavenInvocationException {
+                public void apply() throws MavenInvocationException, MojoExecutionException {
 
-                    CAppDependencyResolver.executeDependencyCopy(any(File.class), any(File.class));
+                    CAppDependencyResolver.executeDependencyCopy(any(File.class), any(File.class), any(File.class));
                 }
             }).thenAnswer(new org.mockito.stubbing.Answer<Object>() {
                 public Object answer(org.mockito.invocation.InvocationOnMock invocation) throws Throwable {
 
-                    File pomFile = (File) invocation.getArgument(0);
-                    File outputDir = (File) invocation.getArgument(1);
+                    File projectDir = (File) invocation.getArgument(0);
+                    File pomFile = (File) invocation.getArgument(1);
+                    File outputDir = (File) invocation.getArgument(2);
 
                     // Parse dependencies from pomFile
                     List<String[]> dependencies = extractDependencies(pomFile);
@@ -165,7 +163,16 @@ public class CAppDependencyResolverTest {
                 @Override
                 public void apply() throws Exception {
 
-                    CAppDependencyResolver.fetchCarFileFromMavenRepo(any(File.class), anyString(), anyString(),
+                    CAppDependencyResolver.fetchCarFileFromMavenRepo(any(File.class), any(File.class), anyString(),
+                            anyString(), anyString(), any(CARMojo.class));
+                }
+            }).thenCallRealMethod();
+
+            mockedStatic.when(new MockedStatic.Verification() {
+                @Override
+                public void apply() throws Exception {
+
+                    CAppDependencyResolver.getResolvedDependentCAppFiles(any(File.class), any(File.class), anyString(),
                             anyString(), any(CARMojo.class));
                 }
             }).thenCallRealMethod();
@@ -174,16 +181,7 @@ public class CAppDependencyResolverTest {
                 @Override
                 public void apply() throws Exception {
 
-                    CAppDependencyResolver.getResolvedDependentCAppFiles(any(File.class), anyString(), anyString(),
-                            any(CARMojo.class));
-                }
-            }).thenCallRealMethod();
-
-            mockedStatic.when(new MockedStatic.Verification() {
-                @Override
-                public void apply() throws Exception {
-
-                    CAppDependencyResolver.collectDependentCAppFiles(any(File.class), any(File.class),
+                    CAppDependencyResolver.collectDependentCAppFiles(any(File.class), any(File.class), any(File.class),
                             any(ArrayList.class), any(Set.class), any(CARMojo.class));
                 }
             }).thenCallRealMethod();
@@ -484,8 +482,8 @@ public class CAppDependencyResolverTest {
 
         try (MockedStatic<CAppDependencyResolver> mockedStatic = setupCAppDependencyResolverMock(tempFolder)) {
             ArrayList<File> result =
-                    CAppDependencyResolver.getResolvedDependentCAppFiles(dependenciesDir, "carA", "1.0.0",
-                            new CAppDependencyResolverTest.MockCARMojo());
+                    CAppDependencyResolver.getResolvedDependentCAppFiles(tempFolder.getRoot(), dependenciesDir, "carA",
+                            "1.0.0", new CAppDependencyResolverTest.MockCARMojo());
 
             assertTrue(result.contains(carA));
             assertTrue(result.contains(fetchedCarB));
@@ -523,7 +521,8 @@ public class CAppDependencyResolverTest {
 
         try (MockedStatic<CAppDependencyResolver> mockedStatic = setupCAppDependencyResolverMock(tempFolder)) {
             // Start with carA
-            CAppDependencyResolver.collectDependentCAppFiles(dependenciesDir, carA, cAppFiles, visited, mojo);
+            CAppDependencyResolver.collectDependentCAppFiles(tempFolder.getRoot(), dependenciesDir, carA, cAppFiles,
+                    visited, mojo);
 
             // Should collect carB and carC (transitive)
             assertTrue(cAppFiles.contains(fetchedCarB));
@@ -555,7 +554,8 @@ public class CAppDependencyResolverTest {
         MockCARMojo mojo = new MockCARMojo();
 
         try (MockedStatic<CAppDependencyResolver> mockedStatic = setupCAppDependencyResolverMock(tempFolder)) {
-            CAppDependencyResolver.collectDependentCAppFiles(dependenciesDir, carA, cAppFiles, visited, mojo);
+            CAppDependencyResolver.collectDependentCAppFiles(tempFolder.getRoot(), dependenciesDir, carA, cAppFiles,
+                    visited, mojo);
 
             // Should not loop infinitely
             assertEquals(2, cAppFiles.size());
@@ -581,7 +581,8 @@ public class CAppDependencyResolverTest {
 
         try (MockedStatic<CAppDependencyResolver> mockedStatic = setupCAppDependencyResolverMock(tempFolder)) {
             File dependenciesDir = tempFolder.newFolder("dependencies");
-            CAppDependencyResolver.collectDependentCAppFiles(dependenciesDir, carA, cAppFiles, visited, mojo);
+            CAppDependencyResolver.collectDependentCAppFiles(tempFolder.getRoot(), dependenciesDir, carA, cAppFiles,
+                    visited, mojo);
         } catch (Exception e) {
             assertTrue(e.getMessage().contains("Error while fetching .car from Maven repo:"));
         }
@@ -608,7 +609,8 @@ public class CAppDependencyResolverTest {
 
         try (MockedStatic<CAppDependencyResolver> mockedStatic = setupCAppDependencyResolverMock(tempFolder)) {
             File dependenciesDir = tempFolder.newFolder("dependencies");
-            CAppDependencyResolver.collectDependentCAppFiles(dependenciesDir, carA, cAppFiles, visited, mojo);
+            CAppDependencyResolver.collectDependentCAppFiles(tempFolder.getRoot(), dependenciesDir, carA, cAppFiles,
+                    visited, mojo);
 
             File expectedCarB = new File(dependenciesDir, "carB-1.0.0.car");
             assertTrue(cAppFiles.contains(expectedCarB));
@@ -674,8 +676,8 @@ public class CAppDependencyResolverTest {
         try (MockedStatic<CAppDependencyResolver> mockedStatic = setupCAppDependencyResolverMock(tempFolder)) {
             File dependenciesDir = tempFolder.newFolder("dependencies");
             File result =
-                    CAppDependencyResolver.fetchCarFileFromMavenRepo(dependenciesDir, groupId, artifactId, version,
-                            new MockCARMojo());
+                    CAppDependencyResolver.fetchCarFileFromMavenRepo(tempFolder.getRoot(), dependenciesDir, groupId,
+                            artifactId, version, new MockCARMojo());
             File expectedFile = new File(dependenciesDir, carFile.getName());
 
             assertNotNull(result);
