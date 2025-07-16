@@ -19,6 +19,7 @@ package org.wso2.maven.libraries;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.maven.model.Dependency;
+import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.project.MavenProject;
 import org.apache.maven.shared.invoker.DefaultInvocationRequest;
 import org.apache.maven.shared.invoker.DefaultInvoker;
@@ -41,7 +42,6 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
-import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
@@ -58,6 +58,7 @@ import javax.xml.parsers.DocumentBuilderFactory;
 import static org.apache.commons.io.FileUtils.copyDirectory;
 import static org.apache.commons.io.FileUtils.copyFile;
 import static org.wso2.maven.MavenUtils.createPomFile;
+import static org.wso2.maven.MavenUtils.setupInvoker;
 
 /**
  * Utility class for resolving CApp (Carbon Application) dependencies in a Maven project.
@@ -79,10 +80,10 @@ public class CAppDependencyResolver {
                                            List<ArtifactDependency> metaDependencies) throws Exception {
 
         File dependenciesDir = new File(Constants.DEFAULT_TARGET_FOLDER + File.separator + Constants.DEPENDENCY);
-        executeDependencyCopy(new File(project.getBasedir(), Constants.POM_FILE), dependenciesDir);
+        executeDependencyCopy(project.getBasedir(), new File(project.getBasedir(), Constants.POM_FILE), dependenciesDir);
         boolean fatCarEnabled = CAppDependencyResolver.isFatCarEnabled(project);
         if (fatCarEnabled) {
-            ArrayList<File> cAppFiles = getResolvedDependentCAppFiles(dependenciesDir,
+            ArrayList<File> cAppFiles = getResolvedDependentCAppFiles(project.getBasedir(), dependenciesDir,
                     project.getArtifactId(), project.getVersion(), carMojo);
             for (File cappFile : cAppFiles) {
                 File extractDir =
@@ -313,15 +314,16 @@ public class CAppDependencyResolver {
      * the Maven goal.
      *
      */
-     static void executeDependencyCopy(File pomFile, File outputDir)
-            throws MavenInvocationException {
+     static void executeDependencyCopy(File projectDir, File pomFile, File outputDir)
+             throws MavenInvocationException, MojoExecutionException {
 
         Invoker invoker = new DefaultInvoker();
+        setupInvoker(invoker, projectDir.getPath());
         DefaultInvocationRequest request = new DefaultInvocationRequest();
-        request.setPomFile(pomFile);
+        request.setBaseDirectory(projectDir);
         request.setGoals(Collections.singletonList(
-                String.format("dependency:copy-dependencies -DincludeTypes=car -DoutputDirectory=%s",
-                        outputDir.getAbsolutePath())));
+                String.format("-f %s dependency:copy-dependencies -DincludeTypes=car -DoutputDirectory=%s",
+                        pomFile.getAbsolutePath(), outputDir.getAbsolutePath())));
         invoker.execute(request);
     }
 
@@ -330,11 +332,12 @@ public class CAppDependencyResolver {
      * This method scans the dependencies directory for .car files, processes them,
      * and collects all their dependencies recursively, avoiding cycles.
      *
+     * @param projectDir      The project directory
      * @param dependenciesDir The directory containing dependency .car files.
      * @param carMojo         The CARMojo instance used for logging and project context.
      * @return An ArrayList of resolved dependent CApp files.
      */
-    public static ArrayList<File> getResolvedDependentCAppFiles(File dependenciesDir,
+    public static ArrayList<File> getResolvedDependentCAppFiles(File projectDir, File dependenciesDir,
                                                                 String artifactId, String version, CARMojo carMojo)
             throws Exception {
 
@@ -360,7 +363,7 @@ public class CAppDependencyResolver {
                 String baseName = file.getName().replace(Constants.CAR_EXTENSION, StringUtils.EMPTY);
                 visited.add(baseName);  // e.g., "my-service-1.0.0"
 
-                collectDependentCAppFiles(dependenciesDir, file, cAppFiles, visited, carMojo);
+                collectDependentCAppFiles(projectDir, dependenciesDir, file, cAppFiles, visited, carMojo);
             }
         }
         return cAppFiles;
@@ -371,12 +374,14 @@ public class CAppDependencyResolver {
      * This method reads the descriptor.xml file inside the .car file, extracts
      * dependency information, and resolves each dependency recursively.
      *
+     * @param projectDir The project directory where the .car file is located.
+     * @param dependenciesDir The directory containing dependency .car files.
      * @param carFile   The .car file to process.
      * @param cAppFiles The list to collect resolved CAPP files.
      * @param visited   A set to track already processed dependencies to avoid cycles.
      * @param carMojo   The `CARMojo` instance used for logging and project context.
      */
-    public static void collectDependentCAppFiles(File dependenciesDir, File carFile,
+    public static void collectDependentCAppFiles(File projectDir, File dependenciesDir, File carFile,
                                                  ArrayList<File> cAppFiles, Set<String> visited, CARMojo carMojo)
             throws Exception {
 
@@ -412,15 +417,15 @@ public class CAppDependencyResolver {
                     File dependentCarFile = findCarFileInDependencies(dependenciesDir, artifactId, version);
                     if (dependentCarFile != null && !cAppFiles.contains(dependentCarFile)) {
                         cAppFiles.add(dependentCarFile);
-                        collectDependentCAppFiles(dependenciesDir, dependentCarFile, cAppFiles, visited,
+                        collectDependentCAppFiles(projectDir, dependenciesDir, dependentCarFile, cAppFiles, visited,
                                 carMojo);
                     } else {
                         // Try fetching from local Maven repo and copy to dependency folder
                         File copiedFile =
-                                fetchCarFileFromMavenRepo(dependenciesDir, groupId, artifactId, version, carMojo);
+                                fetchCarFileFromMavenRepo(projectDir, dependenciesDir, groupId, artifactId, version, carMojo);
                         if (copiedFile != null) {
                             cAppFiles.add(copiedFile);
-                            collectDependentCAppFiles(dependenciesDir, copiedFile, cAppFiles, visited,
+                            collectDependentCAppFiles(projectDir, dependenciesDir, copiedFile, cAppFiles, visited,
                                     carMojo);
                         } else {
                             throw new Exception("Could not find .car in maven repository for groupId: " + groupId +
@@ -456,12 +461,14 @@ public class CAppDependencyResolver {
      * Attempts to fetch a \`.car\` file for the specified groupId, artifactId, and version from the local Maven repository.
      * If found, copies it to the dependencies directory and returns the copied file.
      *
+     * @param projectDir     The project directory where the Maven project is located.
+     * @param dependenciesDir The directory where the dependency \`.car\` file should be copied.
      * @param groupId         The group ID of the dependency.
      * @param artifactId      The artifact ID of the dependency.
      * @param version         The version of the dependency.
      * @return The copied \`.car\` file if found and copied, otherwise null.
      */
-    public static File fetchCarFileFromMavenRepo(File dependenciesDir, String groupId,
+    public static File fetchCarFileFromMavenRepo(File projectDir, File dependenciesDir, String groupId,
                                                  String artifactId, String version, CARMojo carMojo) throws Exception {
 
         File tempPomFile = createPomFile(
@@ -469,7 +476,7 @@ public class CAppDependencyResolver {
                 Collections.<String>emptyList());
 
         try {
-            executeDependencyCopy(tempPomFile, dependenciesDir);
+            executeDependencyCopy(projectDir, tempPomFile, dependenciesDir);
             File fetchedCarFile = new File(dependenciesDir, artifactId + Constants.HYPHEN + version + Constants.CAR_EXTENSION);
             if (fetchedCarFile.exists()) {
                 return fetchedCarFile;
