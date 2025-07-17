@@ -50,8 +50,7 @@
 						<configuration>
 							<tasks>
 								<path id="wsdl2java.classpath">
-                                    <pathelement location="${settings.localRepository}/com/sun/activation/jakarta.activation/1.2.2/jakarta.activation-1.2.2.jar" />
-                                    <pathelement location="${settings.localRepository}/org/apache/axis2/wso2/axis2-client/1.6.1.wso2v9/axis2-client-1.6.1.wso2v9.jar" />
+									<pathelement location="${settings.localRepository}/org/apache/axis2/wso2/axis2-client/1.6.1.wso2v9/axis2-client-1.6.1.wso2v9.jar" />
 									<pathelement location="${settings.localRepository}/org/apache/axis2/wso2/axis2/1.6.1.wso2v3/axis2-1.6.1.wso2v3.jar" />
 									<pathelement location="${settings.localRepository}/wsdl4j/wso2/wsdl4j/1.6.2.wso2v2/wsdl4j-1.6.2.wso2v2.jar" />
 									<pathelement location="${settings.localRepository}/commons-logging/commons-logging/1.1.1/commons-logging-1.1.1.jar" />
@@ -103,18 +102,13 @@
 				<artifactId>maven-compiler-plugin</artifactId>
 				<version>2.3.2</version>
 				<configuration>
-					<source>11</source>
-					<target>11</target>
+					<source>1.6</source>
+					<target>1.6</target>
 				</configuration>
 			</plugin>
 		</plugins>
 	</build>
 	<dependencies>
-        <dependency>
-            <groupId>com.sun.activation</groupId>
-            <artifactId>jakarta.activation</artifactId>
-            <version>1.2.2</version>
-        </dependency>
 		<dependency>
 			<groupId>biz.aQute</groupId>
 			<artifactId>bndlib</artifactId>

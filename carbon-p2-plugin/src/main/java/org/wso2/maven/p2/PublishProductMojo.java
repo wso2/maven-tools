@@ -57,8 +57,6 @@ public class PublishProductMojo extends AbstractMojo {
 	private String executable;
 
     /**
-     * The deflater to use for the product archive.
-     *
      * @component role="org.codehaus.plexus.archiver.UnArchiver" role-hint="zip"
      */
     private UnArchiver deflater;
@@ -78,11 +76,7 @@ public class PublishProductMojo extends AbstractMojo {
     private ProductConfiguration productConfiguration;
 
 
-    /**
-     * The launcher to use for executing the P2 application.
-     *
-     * @component
-     */
+    /** @component */
     private P2ApplicationLauncher launcher;
 
     /**
