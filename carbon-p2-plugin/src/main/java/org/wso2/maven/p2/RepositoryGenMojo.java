@@ -131,53 +131,37 @@ public class RepositoryGenMojo extends AbstractMojo {
     private P2Profile p2Profile;
 
     /**
-     * The artifact repository to which the generated repository will be published.
-     *
      * @parameter default-value="${project}"
      */
     private MavenProject project;
     
     /**
-     * The artifact repository to which the generated repository will be published.
-     *
      * @parameter default-value="false"
      */
     private boolean archive;
 
     /**
-     * The artifact factory to be used for resolving artifacts.
-     *
      * @component
      */
     private org.apache.maven.artifact.factory.ArtifactFactory artifactFactory;
 
     /**
-     * The artifact resolver to be used for resolving artifacts.
-     *
      * @component
      */
     private org.apache.maven.artifact.resolver.ArtifactResolver resolver;
 
     /**
-     * The local repository where artifacts are stored.
-     *
      * @parameter default-value="${localRepository}"
      */
     private org.apache.maven.artifact.repository.ArtifactRepository localRepository;
 
     /**
-     * The remote repositories to be used for resolving artifacts.
-     *
      * @parameter default-value="${project.remoteArtifactRepositories}"
      */
     private List remoteRepositories;
 
 
-    /**
-     * The P2 application launcher to be used for the p2 repository generation.
-     *
-     * @component
-     */
+    /** @component */
     private P2ApplicationLauncher launcher;
 
     /**
