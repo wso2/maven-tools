@@ -144,12 +144,24 @@ public class MavenUtils {
                             "            <artifactId>%s</artifactId>\n" +
                             "            <version>%s</version>\n" +
                             "            <type>%s</type>\n" +
+                            "            <exclusions>\n" +
+                            "                <exclusion>\n" +
+                            "                    <groupId>*</groupId>\n" +
+                            "                    <artifactId>*</artifactId>\n" +
+                            "                </exclusion>\n" +
+                            "            </exclusions>\n" +
                             "        </dependency>\n", parts[0], parts[1], parts[2], parts[3]));
                 } else {
                     writer.write(String.format("        <dependency>\n" +
                             "            <groupId>%s</groupId>\n" +
                             "            <artifactId>%s</artifactId>\n" +
                             "            <version>%s</version>\n" +
+                            "            <exclusions>\n" +
+                            "                <exclusion>\n" +
+                            "                    <groupId>*</groupId>\n" +
+                            "                    <artifactId>*</artifactId>\n" +
+                            "                </exclusion>\n" +
+                            "            </exclusions>\n" +
                             "        </dependency>\n", parts[0], parts[1], parts[2]));
                 }
             }
