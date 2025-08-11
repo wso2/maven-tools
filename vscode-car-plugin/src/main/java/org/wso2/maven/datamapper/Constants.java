@@ -45,6 +45,7 @@ class Constants {
     static final String EXEC_MVN_PLUGIN_VERSION = "1.6.0";
     static final String EXEC_COMMAND = "exec";
     static final String SCHEMA_GENERATOR = "schemaGenerator.ts";
+    static final String PACKAGE_LOCK_JSON = "package-lock.json";
     static final String DATA_MAPPER_DIR_PATH = REGISTRY_DIR_NAME + File.separator
         + GOV_DIR_NAME + File.separator + DATA_MAPPER_DIR_NAME;
     static final String INSTALL_NODE_AND_NPM_GOAL = FRONTEND_MVN_PLUGIN_GROUP_ID + ":"

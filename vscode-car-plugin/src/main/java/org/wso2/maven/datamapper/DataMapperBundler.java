@@ -365,6 +365,7 @@ public class DataMapperBundler {
         ensureDataMapperTargetExists();
         createPomFile();
         createPackageJson();
+        createPackageLockJson();
         createConfigJson();
         createSchemaGenerator();
     }
@@ -414,6 +415,22 @@ public class DataMapperBundler {
             FileUtils.copyInputStreamToFile(inputStream, targetFile);
         } catch (IOException e) {
             throw new DataMapperException("Failed to read schemaGenerator.ts file.", e);
+        }
+    }
+
+    /**
+     * Copy package-lock.json from resources to the target directory.
+     */
+    private void createPackageLockJson() throws DataMapperException {
+
+        try {
+            InputStream inputStream = getClass().getClassLoader().getResourceAsStream(Constants.PACKAGE_LOCK_JSON);
+            String targetPath = "." + File.separator + Constants.TARGET_DIR_NAME +
+                    File.separator + Constants.PACKAGE_LOCK_JSON;
+            File targetFile = new File(targetPath);
+            FileUtils.copyInputStreamToFile(inputStream, targetFile);
+        } catch (IOException e) {
+            throw new DataMapperException("Failed to read package-lock.json file.", e);
         }
     }
 
