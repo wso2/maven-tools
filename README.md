@@ -1,5 +1,5 @@
 # WSO2 Maven Tools
-================
+
 This repository provides supplementary maven plugins for WSO2 applications.
 
 ## Key Features
