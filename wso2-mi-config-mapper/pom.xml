@@ -81,13 +81,4 @@
             <artifactId>org.wso2.ciphertool</artifactId>
         </dependency>
     </dependencies>
-    <build>
-        <plugins>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-plugin-plugin</artifactId>
-                <version>3.5</version>
-            </plugin>
-        </plugins>
-    </build>
 </project>
