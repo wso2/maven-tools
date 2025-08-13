@@ -1,5 +1,10 @@
+> [!IMPORTANT]  
+> The `master` branch contains only the plugins compatible with **Java 11**.  
+> All other plugins have been moved to the [`v5.3.x` branch](https://github.com/wso2/maven-tools/tree/v5.3.x).  
+> Please send any fixes or updates for those modules to the [`v5.3.x` branch](https://github.com/wso2/maven-tools/tree/v5.3.x).
+
 # WSO2 Maven Tools
-================
+  
 This repository provides supplementary maven plugins for WSO2 applications.
 
 ## Key Features
