@@ -18,7 +18,7 @@ This repository provides supplementary maven plugins for WSO2 applications.
 
 ## How to Contribute
 * Please report issues at [WSO2 JIRA](https://wso2.org/jira/browse/TOOLS) under Maven component.
-* Send your pull requests to [master branch](https://github.com/wso2/maven-tools/tree/master)
+* Send your pull requests to [v5.3.x branch](https://github.com/wso2/maven-tools/tree/v5.3.x)
 
 ## Contact us
 WSO2 developers can be contacted via the mailing lists:
