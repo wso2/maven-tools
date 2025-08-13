@@ -89,6 +89,7 @@
         <module>maven-dataservice-plugin</module>
         <module>wso2-mi-synapse-plugin</module>
         <module>wso2-mi-connector-plugin</module>
+        <module>wso2-mi-c2c-plugin</module>
     </modules>
     <build>
         <extensions>
