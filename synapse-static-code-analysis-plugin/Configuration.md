@@ -21,7 +21,7 @@ This document describes the configuration options available for the Synapse Stat
 <plugin>
     <groupId>org.wso2.maven</groupId>
     <artifactId>synapse-static-code-analysis-plugin</artifactId>
-    <version>1.0.0</version>
+    <version>5.4.1</version>
     <configuration>
         <outputDirectory>target/static-analysis-report</outputDirectory>
         <reportFormats>
@@ -31,7 +31,7 @@ This document describes the configuration options available for the Synapse Stat
         <failBuildOnIssues>true</failBuildOnIssues>
         <skip>false</skip>
         <includeFiles>
-            <includeFile>src/main/synapse/**/*.xml</includeFile>
+            <includeFile>src/main/wso2/**/*.xml</includeFile>
         </includeFiles>
         <excludeFiles>
             <excludeFile>src/test/**</excludeFile>
@@ -40,7 +40,7 @@ This document describes the configuration options available for the Synapse Stat
     </configuration>
     <executions>
         <execution>
-            <phase>compile</phase>
+            <phase>validate</phase>
             <goals>
                 <goal>analyze</goal>
             </goals>

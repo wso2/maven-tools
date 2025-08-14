@@ -90,9 +90,8 @@ public class SynapseValidator {
 
         List<Path> artifactFiles = new ArrayList<>();
         for (String filePath : filesToInclude) {
-            Path absolutePath = Path.of(projectPath, filePath).toAbsolutePath();
-            if (absolutePath.startsWith(Path.of(projectPath, Constant.SRC))) {
-                artifactFiles.add(absolutePath);
+            if (Path.of(filePath).startsWith(Constant.ARTIFACT_FOLDER)) {
+                artifactFiles.add(Path.of(projectPath, filePath).toAbsolutePath());
             }
         }
         if (artifactFiles.isEmpty()) {

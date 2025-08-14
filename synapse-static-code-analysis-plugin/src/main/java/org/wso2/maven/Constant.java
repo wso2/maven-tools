@@ -17,6 +17,8 @@
 
 package org.wso2.maven;
 
+import java.nio.file.Path;
+
 public class Constant {
 
     // Tool metadata
@@ -34,6 +36,7 @@ public class Constant {
     public static final String NAME = "name";
     public static final String VERSION = "version";
     public static final String URL = "url";
+    public static final Path ARTIFACT_FOLDER = Path.of(Constant.SRC, "main", "wso2mi", "artifacts");
 
     // JSON keys for issues
     public static final String TOOL = "tool";

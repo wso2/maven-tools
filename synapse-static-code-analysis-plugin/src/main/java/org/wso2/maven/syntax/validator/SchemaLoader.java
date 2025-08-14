@@ -22,7 +22,7 @@ import org.eclipse.lemminx.customservice.synapse.connectors.AbstractConnectorLoa
 import org.eclipse.lemminx.customservice.synapse.connectors.ConnectorHolder;
 import org.eclipse.lemminx.customservice.synapse.connectors.SchemaGenerate;
 import org.eclipse.lemminx.customservice.synapse.inbound.conector.InboundConnectorHolder;
-import org.eclipse.lemminx.customservice.synapse.parser.ConnectorDownloadManager;
+import org.eclipse.lemminx.customservice.synapse.parser.DependencyDownloadManager;
 import org.eclipse.lemminx.customservice.synapse.utils.Utils;
 
 import java.io.IOException;
@@ -52,7 +52,7 @@ public class SchemaLoader {
 
     private static ConnectorHolder loadConnectors(String projectPath) throws InvalidConfigurationException {
 
-        ConnectorDownloadManager.downloadConnectors(projectPath);
+        DependencyDownloadManager.downloadDependencies(projectPath);
 
         ConnectorHolder connectorHolder = ConnectorHolder.getInstance();
         AbstractConnectorLoader connectorLoader =
