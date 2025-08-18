@@ -44,28 +44,24 @@ public class HTMLReportGenerator extends AbstractGenerator {
     }
 
     @Override
-    public void generateReport(ReporterContext reporterContext) {
+    public void generateReport(ReporterContext reporterContext) throws IOException, TemplateException {
 
-        try {
-            Configuration configuration = new Configuration(Configuration.VERSION_2_3_31);
-            configuration.setClassForTemplateLoading(StaticCodeAnalyzerMojo.class, "/");
-            configuration.setDefaultEncoding(Constant.UTF_8);
+        Configuration configuration = new Configuration(Configuration.VERSION_2_3_31);
+        configuration.setClassForTemplateLoading(StaticCodeAnalyzerMojo.class, "/");
+        configuration.setDefaultEncoding(Constant.UTF_8);
 
-            Template template = configuration.getTemplate(REPORT_TEMPLATE_NAME);
+        Template template = configuration.getTemplate(REPORT_TEMPLATE_NAME);
 
-            // Prepare data model
-            Map<String, Object> dataModel = new HashMap<>();
-            dataModel.put(Constant.PROJECT_NAME, Path.of(reporterContext.getProjectPath()).getFileName());
-            dataModel.put(Constant.GENERATED_AT, DateTimeFormatter.ISO_LOCAL_DATE_TIME.format(LocalDateTime.now()));
-            dataModel.put(Constant.SYNTAX_ISSUES, reporterContext.getSyntaxErrors());
+        // Prepare data model
+        Map<String, Object> dataModel = new HashMap<>();
+        dataModel.put(Constant.PROJECT_NAME, Path.of(reporterContext.getProjectPath()).getFileName());
+        dataModel.put(Constant.GENERATED_AT, DateTimeFormatter.ISO_LOCAL_DATE_TIME.format(LocalDateTime.now()));
+        dataModel.put(Constant.SYNTAX_ISSUES, reporterContext.getSyntaxErrors());
 
-            // Write output
-            Path filePath = Path.of(reporterContext.getReportOutputDirectory(), REPORT_FILE_NAME);
-            try (Writer fileWriter = getFileWriter(filePath)) {
-                template.process(dataModel, fileWriter);
-            }
-        } catch (TemplateException | IOException e) {
-            throw new RuntimeException(e);
+        // Write output
+        Path filePath = Path.of(reporterContext.getReportOutputDirectory(), REPORT_FILE_NAME);
+        try (Writer fileWriter = getFileWriter(filePath)) {
+            template.process(dataModel, fileWriter);
         }
     }
 }

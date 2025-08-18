@@ -17,11 +17,9 @@
 
 package org.wso2.maven.reporter;
 
-import java.io.IOException;
-
 public interface Generator {
 
     String getName();
 
-    void generateReport(ReporterContext reporterContext) throws IOException;
+    void generateReport(ReporterContext reporterContext) throws Exception;
 }

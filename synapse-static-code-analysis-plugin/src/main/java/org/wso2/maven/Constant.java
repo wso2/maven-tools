@@ -24,7 +24,7 @@ public class Constant {
     // Tool metadata
     public static final String TOOL_NAME = "SynapseAnalyzer";
     public static final String TOOL_VERSION = "1.0.0";
-    public static final String TOOL_REPO_URL = "https://github.com/your-org/synapse-analyzer";
+    public static final String TOOL_REPO_URL = "https://github.com/wso2/maven-tools";
 
     // Common constants
     public static final String SRC = "src";

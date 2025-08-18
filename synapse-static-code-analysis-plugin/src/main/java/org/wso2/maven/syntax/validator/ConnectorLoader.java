@@ -73,7 +73,7 @@ public class ConnectorLoader extends AbstractConnectorLoader {
         // No need to clean old connectors as this is for the syntax validation purpose only.
     }
 
-    private Path getConnnectorDownloadPath() {
+    private Path getConnectorDownloadPath() {
 
         String projectId = new File(projectUri).getName() + "_" + Utils.getHash(projectUri);
         return Path.of(System.getProperty(Constant.USER_HOME), Constant.WSO2_MI,
@@ -85,6 +85,6 @@ public class ConnectorLoader extends AbstractConnectorLoader {
 
         connectorsZipFolderPath.add(Path.of(projectRoot, Constant.SRC, Constant.MAIN, Constant.WSO2MI,
                 Constant.RESOURCES, Constant.CONNECTORS).toString());
-        connectorsZipFolderPath.add(getConnnectorDownloadPath().toString());
+        connectorsZipFolderPath.add(getConnectorDownloadPath().toString());
     }
 }

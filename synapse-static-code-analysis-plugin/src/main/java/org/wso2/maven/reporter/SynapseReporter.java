@@ -17,6 +17,7 @@
 
 package org.wso2.maven.reporter;
 
+import freemarker.template.TemplateException;
 import org.eclipse.lsp4j.DiagnosticSeverity;
 import org.wso2.maven.VerboseLogger;
 
@@ -39,6 +40,7 @@ public class SynapseReporter implements Reporter {
     @Override
     public void reportSyntaxError(String filePath, org.eclipse.lsp4j.Diagnostic diagnostic) {
 
+        // Ignore hint diagnostics as they are not considered errors.
         if (!DiagnosticSeverity.Hint.equals(diagnostic.getSeverity())) {
             reporterContext.addSyntaxError(new SyntaxError(filePath, diagnostic));
         }
@@ -50,7 +52,7 @@ public class SynapseReporter implements Reporter {
         for (Generator generator : reportGenerators) {
             try {
                 generator.generateReport(reporterContext);
-            } catch (IOException e) {
+            } catch (Exception e) {
                 verboseLogger.error("Error generating report using " + generator.getName(), e);
             }
         }
