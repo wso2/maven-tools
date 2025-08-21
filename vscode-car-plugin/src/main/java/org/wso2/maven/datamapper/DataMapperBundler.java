@@ -24,6 +24,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.math.BigInteger;
 import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
 import java.nio.file.FileVisitResult;
@@ -34,6 +35,8 @@ import java.nio.file.SimpleFileVisitor;
 import java.nio.file.StandardCopyOption;
 import java.nio.file.StandardOpenOption;
 import java.nio.file.attribute.BasicFileAttributes;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -79,8 +82,10 @@ public class DataMapperBundler {
     public void bundleDataMapper() throws DataMapperException, MojoExecutionException {
         String oldDataMapperDirectoryPath = resourcesDirectory + File.separator + Constants.DATA_MAPPER_DIR_PATH;
         String newDataMapperDirectoryPath = resourcesDirectory + File.separator + Constants.DATA_MAPPER_DIR_NAME;
+        String dataMappersCachePath = getDataMappersCachePath().toString();
         List<Path> dataMappers = listSubDirectories(oldDataMapperDirectoryPath);
         dataMappers.addAll(listSubDirectories(newDataMapperDirectoryPath));
+        List<Path> dataMappersCache = listSubDirectories(dataMappersCachePath);
 
         if (dataMappers.isEmpty()) {
             // No data mappers to bundle
@@ -88,6 +93,12 @@ public class DataMapperBundler {
         }
     
         appendDataMapperLogs();
+        List<Path> nonCachedDataMappers = getNonCacheDataMappers(dataMappers, dataMappersCache);
+
+        if (nonCachedDataMappers.isEmpty()) {
+            mojoInstance.logInfo("All data mappers are cached, skipping bundling.");
+            return; // All data mappers are cached, no need to bundle
+        }
     
         createDataMapperArtifacts();
         setupInvoker(invoker, projectDirectory);
@@ -99,6 +110,7 @@ public class DataMapperBundler {
         generateDataMapperSchemas(dataMappers);
         removeBundlingArtifacts();
         copyDataMapperFilesToTarget();
+        copyDataMappersToCache();
     }
 
     /**
@@ -804,5 +816,111 @@ public class DataMapperBundler {
         Path filePath = file.toPath().toAbsolutePath().normalize();
 
         return filePath.startsWith(sourcePath);
+    }
+
+    public static String getHash(String input) {
+        MessageDigest md = null;
+        String hash = null;
+        try {
+            md = MessageDigest.getInstance("MD5");
+            byte[] messageDigest = md.digest(input.getBytes());
+            hash = convertToHex(messageDigest);
+        } catch (NoSuchAlgorithmException e) {
+        }
+        return hash;
+    }
+
+    private static String convertToHex(final byte[] messageDigest) {
+        BigInteger bigint = new BigInteger(1, messageDigest);
+        String hexText = bigint.toString(16);
+        while (hexText.length() < 32) {
+            hexText = "0".concat(hexText);
+        }
+        return hexText;
+    }
+
+    private String getFileChecksum(Path filePath) throws DataMapperException {
+        try {
+            MessageDigest md = MessageDigest.getInstance("MD5");
+            byte[] fileBytes = Files.readAllBytes(filePath);
+            byte[] digest = md.digest(fileBytes);
+            return convertToHex(digest);
+        } catch (IOException | NoSuchAlgorithmException e) {
+            throw new DataMapperException("Failed to calculate checksum for file: " + filePath, e);
+        }
+    }
+
+    private boolean compareTwoChecksums(Path filePath1, Path filePath2) throws DataMapperException {
+        String checksum1 = getFileChecksum(filePath1);
+        String checksum2 = getFileChecksum(filePath2);
+        return checksum1.equals(checksum2);
+    }
+
+    private List<Path> getNonCacheDataMappers(List<Path> dataMappers, List<Path> cachedDataMappers) throws DataMapperException {
+        List<Path> nonCacheDataMappers = new ArrayList<>();
+        if (cachedDataMappers.isEmpty()) {
+            return dataMappers;
+        }
+        for (Path dataMapper : dataMappers) {
+            String dataMapperName = dataMapper.getFileName().toString();
+            boolean isCached = false;
+
+            for (Path cachedDataMapper : cachedDataMappers) {
+                if (cachedDataMapper.getFileName().toString().equals(dataMapperName)) {
+                    Path tsFile = dataMapper.resolve(dataMapperName + ".ts");
+                    Path cachedTsFile = cachedDataMapper.resolve(dataMapperName + ".ts");
+                    if (Files.exists(tsFile) && Files.exists(cachedTsFile)) {
+                        if (compareTwoChecksums(tsFile, cachedTsFile)) {
+                            try {
+                                restoreDataMapperToTargetFromCache(cachedDataMapper);
+                            } catch (DataMapperException e) {
+                                mojoInstance.logError("Failed to restore data mapper from cache: " + dataMapperName);
+                            }
+                            isCached = true;
+                            break;
+                        }
+                    }
+                }
+            }
+            if (!isCached) {
+                nonCacheDataMappers.add(dataMapper);
+            }
+        }
+        return nonCacheDataMappers;
+    }
+            
+    private Path getDataMappersCachePath() {
+        String projectId = new File(sourceDirectory).getName() + "_" + getHash(sourceDirectory);
+        return Path.of(System.getProperty(Constants.USER_HOME), Constants.WSO2_MI,
+                Constants.DATA_MAPPERS, projectId);
+    }
+
+    private void restoreDataMapperToTargetFromCache(Path cachedDataMapperPath) throws DataMapperException {
+        Path targetPath = Paths.get("." + File.separator + Constants.TARGET_DIR_NAME + File.separator
+        + Constants.DATA_MAPPER_DIR_NAME + File.separator + cachedDataMapperPath.getFileName().toString());
+        try {
+            if (Files.notExists(targetPath)) {
+                Files.createDirectories(targetPath);
+            }
+            FileUtils.copyDirectory(cachedDataMapperPath.toFile(), targetPath.toFile());
+            mojoInstance.getLog().info("Data mapper : " + cachedDataMapperPath.getFileName() + " restored from cache to target directory");
+        } catch (IOException e) {
+            throw new DataMapperException("Failed to restore data mapper from cache to target directory.", e);
+        }
+    }
+
+    private void copyDataMappersToCache() throws DataMapperException {
+        Path cachePath = getDataMappersCachePath();
+        try {
+            if (Files.notExists(cachePath)) {
+                Files.createDirectories(cachePath);
+            }
+            Path targetPath = Paths.get("." + File.separator + Constants.TARGET_DIR_NAME + File.separator
+                    + Constants.DATA_MAPPER_DIR_NAME);
+            FileUtils.copyDirectory(targetPath.toFile(), cachePath.toFile());
+            mojoInstance.getLog().info("Data mappers copied to cache directory");
+        } catch (IOException e) {
+            throw new DataMapperException("Failed to copy data mappers to cache directory.", e);
+        }
     }
 }
