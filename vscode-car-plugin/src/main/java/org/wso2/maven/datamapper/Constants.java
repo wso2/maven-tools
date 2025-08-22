@@ -60,6 +60,9 @@ class Constants {
     public static final String USER_HOME = "user.home";
     public static final String WSO2_MI = ".wso2-mi";
     public static final String DATA_MAPPERS = "data_mappers";
+    public static final String DATA_MAPPERS_CACHE = "data_mappers_cache";
+    //public static final String DATA_MAPPERS_CACHE_NODE_AND_NPM = "node";
+    public static final String DATA_MAPPERS_CACHE_NODE_MODULES = "node_modules";
 
 
     private Constants() {

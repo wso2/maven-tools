@@ -99,16 +99,22 @@ public class DataMapperBundler {
             mojoInstance.logInfo("All data mappers are cached, skipping bundling.");
             return; // All data mappers are cached, no need to bundle
         }
-    
-        createDataMapperArtifacts();
-        setupInvoker(invoker, projectDirectory);
-    
-        installNodeAndNPM();
-        runNpmInstall();
-        configureNpm();
-        bundleDataMappers(dataMappers);
-        generateDataMapperSchemas(dataMappers);
-        removeBundlingArtifacts();
+        Path dataMapperPath = Path.of(System.getProperty(Constants.USER_HOME), Constants.WSO2_MI, Constants.DATA_MAPPERS_CACHE);
+        if (Files.notExists(dataMapperPath)) {
+            mojoInstance.logInfo("Could not find the resources needed for data mapper bundling. " + "Starting the resources creation process.");
+            createDataMapperArtifacts();
+            setupInvoker(invoker, projectDirectory);
+            installNodeAndNPM();
+            runNpmInstall();
+            configureNpm();
+            
+        }else{
+            mojoInstance.logInfo("Resources for data mapper bundling found. " + "Skipping the resources creation process.");
+            setupInvoker(invoker, projectDirectory);
+        }
+        bundleDataMappers(nonCachedDataMappers);
+        generateDataMapperSchemas(nonCachedDataMappers);
+        //removeBundlingArtifacts();
         copyDataMapperFilesToTarget();
         copyDataMappersToCache();
     }
@@ -154,12 +160,16 @@ public class DataMapperBundler {
      * @throws DataMapperException if the Maven invocation fails.
      */
     private void installNodeAndNPM() throws DataMapperException {
+        /* if (restoreNodeAndNpmFromCache()) {
+            return;
+        } */
         InvocationRequest request = createBaseRequest();
         mojoInstance.logInfo("Installing Node and NPM");
         request.setGoals(Collections.singletonList(Constants.INSTALL_NODE_AND_NPM_GOAL));
         setNodeAndNpmProperties(request);
     
         executeRequest(request, "Node and NPM installation failed.");
+        //copyNodeAndNpmToCache();
     }
     
     /**
@@ -167,7 +177,7 @@ public class DataMapperBundler {
      *
      * @throws DataMapperException if the Maven invocation fails.
      */
-    private void runNpmInstall() throws DataMapperException {
+     private void runNpmInstall() throws DataMapperException {
         InvocationRequest request = createBaseRequest();
         mojoInstance.logInfo("Running npm install");
         request.setGoals(Collections.singletonList(Constants.NPM_GOAL));
@@ -258,7 +268,7 @@ public class DataMapperBundler {
         mojoInstance.logInfo("Bundling data mapper: " + dataMapperName);
         createWebpackConfig(dataMapperName);
 
-        Path npmDirectory = Paths.get("." + File.separator + Constants.TARGET_DIR_NAME);
+        Path npmDirectory = Path.of(System.getProperty(Constants.USER_HOME), Constants.WSO2_MI, Constants.DATA_MAPPERS_CACHE);
 
         InvocationRequest request = createBaseRequest();
         request.setBaseDirectory(npmDirectory.toFile());
@@ -269,8 +279,13 @@ public class DataMapperBundler {
         executeRequest(request, "Failed to bundle data mapper: " + dataMapperName);
 
         mojoInstance.logInfo("Bundle completed for data mapper: " + dataMapperName);
-        Path bundledJsFilePath = Paths.get("." + File.separator
-                + Constants.TARGET_DIR_NAME + File.separator + "src" + File.separator + dataMapperName + ".dmc");
+        Path bundledJsFilePath = Path.of(
+            System.getProperty(Constants.USER_HOME),
+            Constants.WSO2_MI,
+            Constants.DATA_MAPPERS_CACHE,
+            "src",
+            dataMapperName + ".dmc"
+        );
         appendMapFunction(dataMapper.toString(), dataMapperName, bundledJsFilePath.toString());
         copyGenerateDataMapperFile(bundledJsFilePath.toString(), dataMapper);
 
@@ -288,7 +303,7 @@ public class DataMapperBundler {
     private void generateDataMapperSchema(Path dataMapper) throws DataMapperException {
         String dataMapperName = dataMapper.getFileName().toString();
         mojoInstance.logInfo("Generating schema for data mapper: " + dataMapperName);
-        Path npmDirectory = Paths.get("." + File.separator + Constants.TARGET_DIR_NAME);
+        Path npmDirectory = Path.of(System.getProperty(Constants.USER_HOME), Constants.WSO2_MI, Constants.DATA_MAPPERS_CACHE);
         InvocationRequest request = createBaseRequest();
         request.setBaseDirectory(npmDirectory.toFile());
         request.setGoals(Collections.singletonList(Constants.NPM_RUN_BUILD_GOAL
@@ -303,8 +318,8 @@ public class DataMapperBundler {
 
         String osName = System.getProperty("os.name").toLowerCase();
         String npmExecutable = osName.contains("win") ? "npm.cmd" : "npm";
-        return Paths.get(System.getProperty("user.dir"), Constants.TARGET_DIR_NAME, "node", npmExecutable)
-                .toString();
+        return Path.of(System.getProperty(Constants.USER_HOME), Constants.WSO2_MI, Constants.DATA_MAPPERS_CACHE, "node", npmExecutable)
+        .toString();
     }
     
     /**
@@ -314,10 +329,10 @@ public class DataMapperBundler {
      */
     private InvocationRequest createBaseRequest() {
         InvocationRequest request = new DefaultInvocationRequest();
-        Path baseDir = Paths.get(System.getProperty("user.dir"));
-        Path pomPath = baseDir.resolve(Paths.get("." + File.separator + Constants.TARGET_DIR_NAME
-            + File.separator + Constants.POM_FILE_NAME));
+        Path globalCacheDir = Path.of(System.getProperty(Constants.USER_HOME), Constants.WSO2_MI, Constants.DATA_MAPPERS_CACHE);
+        Path pomPath = globalCacheDir.resolve(Constants.POM_FILE_NAME);
         request.setPomFile(pomPath.toFile());
+        request.setBaseDirectory(globalCacheDir.toFile());
         request.setInputStream(new ByteArrayInputStream(new byte[0])); // Avoid interactive mode
         return request;
     }
@@ -406,7 +421,7 @@ public class DataMapperBundler {
             "    <version>1.0-SNAPSHOT</version>\n" +
             "</project>";
     
-        Path pomPath = Paths.get("." + File.separator + Constants.TARGET_DIR_NAME + File.separator + "pom.xml");
+        Path pomPath = Path.of(System.getProperty(Constants.USER_HOME), Constants.WSO2_MI, Constants.DATA_MAPPERS_CACHE, "pom.xml");
         try {
             Files.write(pomPath, pomContent.getBytes(), StandardOpenOption.CREATE);
         } catch (IOException e) {
@@ -418,11 +433,10 @@ public class DataMapperBundler {
      * Copy schemaGenerator.ts from resources to target directory.
      */
     public void createSchemaGenerator() throws DataMapperException {
-
         try {
             InputStream inputStream = getClass().getClassLoader().getResourceAsStream(Constants.SCHEMA_GENERATOR);
-            String targetPath = "." + File.separator + Constants.TARGET_DIR_NAME +
-                    File.separator + Constants.SCHEMA_GENERATOR;
+            String targetPath = Path.of(System.getProperty(Constants.USER_HOME), Constants.WSO2_MI,
+                    Constants.DATA_MAPPERS_CACHE, Constants.SCHEMA_GENERATOR).toString();
             File targetFile = new File(targetPath);
             FileUtils.copyInputStreamToFile(inputStream, targetFile);
         } catch (IOException e) {
@@ -437,8 +451,8 @@ public class DataMapperBundler {
 
         try {
             InputStream inputStream = getClass().getClassLoader().getResourceAsStream(Constants.PACKAGE_LOCK_JSON);
-            String targetPath = "." + File.separator + Constants.TARGET_DIR_NAME +
-                    File.separator + Constants.PACKAGE_LOCK_JSON;
+            String targetPath = Path.of(System.getProperty(Constants.USER_HOME), Constants.WSO2_MI,
+                    Constants.DATA_MAPPERS_CACHE, Constants.PACKAGE_LOCK_JSON).toString();
             File targetFile = new File(targetPath);
             FileUtils.copyInputStreamToFile(inputStream, targetFile);
         } catch (IOException e) {
@@ -466,10 +480,11 @@ public class DataMapperBundler {
                 "    }\n" +
                 "}";
 
-        try (FileWriter fileWriter = new FileWriter("." + File.separator + Constants.TARGET_DIR_NAME
-            + File.separator + Constants.PACKAGE_JSON_FILE_NAME)) {
+        Path packageJsonPath = Path.of(System.getProperty(Constants.USER_HOME), Constants.WSO2_MI, Constants.DATA_MAPPERS_CACHE, Constants.PACKAGE_JSON_FILE_NAME);
+        try (FileWriter fileWriter = new FileWriter(packageJsonPath.toFile())) {
             fileWriter.write(packageJsonContent);
-        } catch (IOException e) {
+        }
+        catch (IOException e) {
             throw new DataMapperException("Failed to create package.json file.", e);
         }
     }
@@ -491,13 +506,13 @@ public class DataMapperBundler {
                 "    ]\n" +
                 "}";
     
-        try (FileWriter fileWriter = new FileWriter("." + File.separator + Constants.TARGET_DIR_NAME
-            + File.separator + Constants.TS_CONFIG_FILE_NAME)) {
-            fileWriter.write(tsConfigContent);
-        } catch (IOException e) {
-            throw new DataMapperException("Failed to create tsconfig.json file.", e);
+       Path tsConfigPath = Path.of(System.getProperty(Constants.USER_HOME), Constants.WSO2_MI, Constants.DATA_MAPPERS_CACHE, Constants.TS_CONFIG_FILE_NAME);
+            try (FileWriter fileWriter = new FileWriter(tsConfigPath.toFile())) {
+                fileWriter.write(tsConfigContent);
+            } catch (IOException e) {
+                throw new DataMapperException("Failed to create tsconfig.json file.", e);
+            }
         }
-    }
 
     /**
      * Creates a TypeScript configuration file (tsconfig.json).
@@ -515,8 +530,8 @@ public class DataMapperBundler {
                 "    }\n" +
                 "}";
 
-        try (FileWriter fileWriter = new FileWriter("." + File.separator + Constants.TARGET_DIR_NAME
-                + File.separator + Constants.TS_CONFIG_FILE_NAME)) {
+        Path tsConfigPath = Path.of(System.getProperty(Constants.USER_HOME), Constants.WSO2_MI, Constants.DATA_MAPPERS_CACHE, Constants.TS_CONFIG_FILE_NAME);
+        try (FileWriter fileWriter = new FileWriter(tsConfigPath.toFile())) {
             fileWriter.write(tsConfigContent);
         } catch (IOException e) {
             throw new DataMapperException("Failed to create tsconfig.json file.", e);
@@ -555,8 +570,8 @@ public class DataMapperBundler {
                 "    mode: \"production\",\n" +
                 "};";
     
-        try (FileWriter fileWriter = new FileWriter("." + File.separator + Constants.TARGET_DIR_NAME
-            + File.separator + Constants.WEBPACK_CONFIG_FILE_NAME)) {
+        Path webpackConfigPath = Path.of(System.getProperty(Constants.USER_HOME), Constants.WSO2_MI, Constants.DATA_MAPPERS_CACHE, Constants.WEBPACK_CONFIG_FILE_NAME);
+        try (FileWriter fileWriter = new FileWriter(webpackConfigPath.toFile())) {
             fileWriter.write(webPackConfigContent);
         } catch (IOException e) {
             throw new DataMapperException("Failed to create webpack.config.js file.", e);
@@ -652,7 +667,7 @@ public class DataMapperBundler {
      * @throws DataMapperException if an error occurs while copying the TypeScript files.
      */
     private void copyTsFiles(final Path sourceDir) throws DataMapperException {
-        final Path destDir = Paths.get("." + File.separator + Constants.TARGET_DIR_NAME + File.separator + "src");
+        final Path destDir = Path.of(System.getProperty(Constants.USER_HOME), Constants.WSO2_MI, Constants.DATA_MAPPERS_CACHE, "src");
 
         try {
             Files.createDirectories(destDir);
@@ -719,7 +734,7 @@ public class DataMapperBundler {
      * @throws DataMapperException if an error occurs while creating the data-mapper artifacts directory.
      */
     private void ensureDataMapperTargetExists() throws DataMapperException {
-        Path dataMapperPath = Paths.get("." + File.separator + Constants.TARGET_DIR_NAME);
+        Path dataMapperPath = Path.of(System.getProperty(Constants.USER_HOME), Constants.WSO2_MI, Constants.DATA_MAPPERS_CACHE);
         if (!Files.exists(dataMapperPath)) {
             try {
                 Files.createDirectories(dataMapperPath);
@@ -728,13 +743,12 @@ public class DataMapperBundler {
             }
         }
     }
-
     /**
      * Removes source files from the target directory.
      * @throws DataMapperException if an error occurs while removing the source files.
      */
     private void removeSourceFiles() throws DataMapperException {
-        Path dataMapperPath = Paths.get("." + File.separator + Constants.TARGET_DIR_NAME + File.separator + "src");
+        Path dataMapperPath = Path.of(System.getProperty(Constants.USER_HOME), Constants.WSO2_MI, Constants.DATA_MAPPERS_CACHE, "src");
 
         try {
             Files.walkFileTree(dataMapperPath, new SimpleFileVisitor<Path>() {
@@ -760,8 +774,7 @@ public class DataMapperBundler {
      * @throws DataMapperException if an error occurs while removing the webpack configuration file.
      */
     private void removeWebpackConfig() throws DataMapperException {
-        Path filePath = Paths.get("." + File.separator + Constants.TARGET_DIR_NAME
-            + File.separator + Constants.WEBPACK_CONFIG_FILE_NAME);
+        Path filePath = Path.of(System.getProperty(Constants.USER_HOME), Constants.WSO2_MI, Constants.DATA_MAPPERS_CACHE, Constants.WEBPACK_CONFIG_FILE_NAME);
         try {
             Files.delete(filePath);
         } catch (IOException e) {
@@ -774,14 +787,15 @@ public class DataMapperBundler {
      */
     private void removeBundlingArtifacts() {
         mojoInstance.logInfo("Cleaning up data mapper bundling artifacts");
-        String[] pathsToDelete = {
-            "." + File.separator + Constants.TARGET_DIR_NAME
-        };
+        Path cacheDir = Path.of(System.getProperty(Constants.USER_HOME), Constants.WSO2_MI, Constants.DATA_MAPPERS_CACHE);
         String excludeRegex = ".*\\.jar";
-
-        for (String path : pathsToDelete) {
-            File file = new File(path);
-            deleteRecursively(file, excludeRegex);
+        if (Files.exists(cacheDir)) {
+            File[] files = cacheDir.toFile().listFiles();
+            if (files != null) {
+                for (File file : files) {
+                    deleteRecursively(file, excludeRegex);
+                }
+            }
         }
     }
 
@@ -872,7 +886,7 @@ public class DataMapperBundler {
                     if (Files.exists(tsFile) && Files.exists(cachedTsFile)) {
                         if (compareTwoChecksums(tsFile, cachedTsFile)) {
                             try {
-                                restoreDataMapperToTargetFromCache(cachedDataMapper);
+                                restoreDataMapperToResourcesFromCache(cachedDataMapper);
                             } catch (DataMapperException e) {
                                 mojoInstance.logError("Failed to restore data mapper from cache: " + dataMapperName);
                             }
@@ -895,15 +909,15 @@ public class DataMapperBundler {
                 Constants.DATA_MAPPERS, projectId);
     }
 
-    private void restoreDataMapperToTargetFromCache(Path cachedDataMapperPath) throws DataMapperException {
-        Path targetPath = Paths.get("." + File.separator + Constants.TARGET_DIR_NAME + File.separator
-        + Constants.DATA_MAPPER_DIR_NAME + File.separator + cachedDataMapperPath.getFileName().toString());
+    private void restoreDataMapperToResourcesFromCache(Path cachedDataMapperPath) throws DataMapperException {
+        Path targetPath = Paths.get(resourcesDirectory + File.separator + Constants.DATA_MAPPER_DIR_NAME
+                + File.separator + cachedDataMapperPath.getFileName().toString());
         try {
             if (Files.notExists(targetPath)) {
                 Files.createDirectories(targetPath);
             }
             FileUtils.copyDirectory(cachedDataMapperPath.toFile(), targetPath.toFile());
-            mojoInstance.getLog().info("Data mapper : " + cachedDataMapperPath.getFileName() + " restored from cache to target directory");
+            mojoInstance.getLog().info("Data mapper : " + cachedDataMapperPath.getFileName() + " restored from cache to resources directory");
         } catch (IOException e) {
             throw new DataMapperException("Failed to restore data mapper from cache to target directory.", e);
         }
@@ -923,4 +937,5 @@ public class DataMapperBundler {
             throw new DataMapperException("Failed to copy data mappers to cache directory.", e);
         }
     }
+
 }
