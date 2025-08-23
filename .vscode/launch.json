@@ -9,6 +9,6 @@
 		"request": "attach",
 		"hostName": "localhost",
 		"port": "8000",
-		"projectName": "org.eclipse.lemminx"
+		"projectName": "maven-tools/vscode-car-plugin",
 	}]
 }
