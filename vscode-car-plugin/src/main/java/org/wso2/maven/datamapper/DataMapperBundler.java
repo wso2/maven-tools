@@ -991,23 +991,25 @@ public class DataMapperBundler {
     }
 
     /**
-     * Copies all data mapper directories from the target directory to the project's cache directory.
-     * Ensures the cache directory exists before copying.
+     * Clears the project's data mappers cache directory and copies all data mapper directories
+     * from the target directory to the cache directory. Ensures the cache directory exists and is empty before copying.
      *
-     * @throws DataMapperException if an error occurs while copying data mappers to the cache directory.
+     * @throws DataMapperException if an error occurs while cleaning or copying data mappers to the cache directory.
      */
     private void copyDataMappersToCache() throws DataMapperException {
         Path cachePath = getDataMappersCachePath();
         try {
             if (Files.notExists(cachePath)) {
                 Files.createDirectories(cachePath);
+            } else {
+                FileUtils.cleanDirectory(cachePath.toFile());
             }
             Path targetPath = Paths.get("." + File.separator + Constants.TARGET_DIR_NAME + File.separator
                     + Constants.DATA_MAPPER_DIR_NAME);
             FileUtils.copyDirectory(targetPath.toFile(), cachePath.toFile());
-            mojoInstance.getLog().info("Data mappers copied to cache directory");
+            mojoInstance.getLog().info("Data mappers cache directory cleaned and copied from target directory");
         } catch (IOException e) {
-            throw new DataMapperException("Failed to copy data mappers to cache directory.", e);
+            throw new DataMapperException("Failed to clean or copy data mappers to cache directory.", e);
         }
     }
 
