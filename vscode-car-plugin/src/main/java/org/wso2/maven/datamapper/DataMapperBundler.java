@@ -83,9 +83,9 @@ public class DataMapperBundler {
         String oldDataMapperDirectoryPath = resourcesDirectory + File.separator + Constants.DATA_MAPPER_DIR_PATH;
         String newDataMapperDirectoryPath = resourcesDirectory + File.separator + Constants.DATA_MAPPER_DIR_NAME;
         String dataMappersCachePath = getDataMappersCachePath().toString();
-        List<Path> dataMappers = listSubDirectories(oldDataMapperDirectoryPath);
-        dataMappers.addAll(listSubDirectories(newDataMapperDirectoryPath));
-        List<Path> dataMappersCache = listSubDirectories(dataMappersCachePath);
+        List<Path> dataMappers = listSubDirectories(oldDataMapperDirectoryPath,false);
+        dataMappers.addAll(listSubDirectories(newDataMapperDirectoryPath,false));
+        List<Path> dataMappersCache = listSubDirectories(dataMappersCachePath,true);
 
         if (dataMappers.isEmpty()) {
             // No data mappers to bundle
@@ -147,8 +147,8 @@ public class DataMapperBundler {
     public void deleteGeneratedDatamapperArtifacts() throws DataMapperException {
         String olDataMapperDirectoryPath = resourcesDirectory + File.separator + Constants.DATA_MAPPER_DIR_PATH;
         String newDataMapperDirectoryPath = resourcesDirectory + File.separator + Constants.DATA_MAPPER_DIR_NAME;
-        List<Path> dataMappers = listSubDirectories(olDataMapperDirectoryPath);
-        dataMappers.addAll(listSubDirectories(newDataMapperDirectoryPath));
+        List<Path> dataMappers = listSubDirectories(olDataMapperDirectoryPath,false);
+        dataMappers.addAll(listSubDirectories(newDataMapperDirectoryPath, false));
 
         if (dataMappers.isEmpty()) {
             // No data mappers to delete
@@ -650,7 +650,7 @@ public class DataMapperBundler {
      * @return A list of paths representing subdirectories.
      * @throws DataMapperException if an error occurs while listing the subdirectories.
      */
-    private List<Path> listSubDirectories(String directory) throws DataMapperException {
+    private List<Path> listSubDirectories(String directory, boolean isCached) throws DataMapperException {
         Path dirPath = Paths.get(directory);
         List<Path> subDirectories = new ArrayList<>();
         try (DirectoryStream<Path> stream = Files.newDirectoryStream(dirPath)) {
@@ -660,7 +660,8 @@ public class DataMapperBundler {
                 }
             }
         } catch (NoSuchFileException e) {
-            mojoInstance.logInfo("datamapper directory not found");
+            String logMessage = isCached ? "data mapper cache directory not found" : "datamapper directory not found";
+            mojoInstance.logInfo(logMessage);
         } catch (IOException e) {
             throw new DataMapperException("Failed to find data mapper directories.", e);
         }
