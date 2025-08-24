@@ -114,7 +114,6 @@ public class DataMapperBundler {
 
         bundleDataMappers(nonCachedDataMappers);
         generateDataMapperSchemas(nonCachedDataMappers);
-        //removeBundlingArtifacts();
         copyDataMapperFilesToTarget();
         copyDataMappersToCache();
     }
@@ -280,6 +279,7 @@ public class DataMapperBundler {
      * @throws DataMapperException if any step in the bundling process fails.
      */
     private boolean bundleSingleDataMapper(Path dataMapper) throws DataMapperException {
+        cleanUpBundlingResources();
         copyTsFiles(dataMapper);
         String dataMapperName = dataMapper.getFileName().toString();
         mojoInstance.logInfo("Bundling data mapper: " + dataMapperName);
@@ -300,13 +300,13 @@ public class DataMapperBundler {
             System.getProperty(Constants.USER_HOME),
             Constants.WSO2_MI,
             Constants.DATA_MAPPER_BUNDLING_CACHE_DIR,
-            "src",
+            Constants.SRC_DIR,
             dataMapperName + ".dmc"
         );
         appendMapFunction(dataMapper.toString(), dataMapperName, bundledJsFilePath.toString());
         copyGenerateDataMapperFile(bundledJsFilePath.toString(), dataMapper);
 
-        removeSourceFiles();
+        cleanUpBundlingResources();
         removeWebpackConfig();
 
         return true;
@@ -757,31 +757,6 @@ public class DataMapperBundler {
             }
         }
     }
-    /**
-     * Removes source files from the cache/src directory
-     * @throws DataMapperException if an error occurs while removing the source files.
-     */
-    private void removeSourceFiles() throws DataMapperException {
-        Path dataMapperPath = getDataMapperBundlingCachePath().resolve(Constants.SRC_DIR);
-
-        try {
-            Files.walkFileTree(dataMapperPath, new SimpleFileVisitor<Path>() {
-                @Override
-                public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
-                    Files.delete(file); // Delete all files
-                    return FileVisitResult.CONTINUE;
-                }
-
-                @Override
-                public FileVisitResult postVisitDirectory(Path dir, IOException exc) throws IOException {
-                    Files.delete(dir); // Delete directory after its contents are deleted
-                    return FileVisitResult.CONTINUE;
-                }
-            });
-        } catch (IOException e) {
-            throw new DataMapperException("Error while removing data-mapper source directory.", e);
-        }
-    }
 
     /**
      * Removes the webpack configuration file.
@@ -793,49 +768,6 @@ public class DataMapperBundler {
             Files.delete(filePath);
         } catch (IOException e) {
             throw new DataMapperException("Error while removing webpack.config.js file.", e);
-        }
-    }
-
-    /**
-     * Cleans up the artifacts created during the data mapper bundling process.
-     */
-    private void removeBundlingArtifacts() {
-        mojoInstance.logInfo("Cleaning up data mapper bundling artifacts");
-        Path cacheDir = getDataMapperBundlingCachePath();
-        String excludeRegex = ".*\\.jar";
-        if (Files.exists(cacheDir)) {
-            File[] files = cacheDir.toFile().listFiles();
-            if (files != null) {
-                for (File file : files) {
-                    deleteRecursively(file, excludeRegex);
-                }
-            }
-        }
-    }
-
-    /**
-     * Recursively deletes files and directories.
-     *
-     * @param file The file or directory to delete.
-     * @param excludeRegex The regex pattern to exclude files from deletion.
-     */
-    private void deleteRecursively(File file, String excludeRegex) {
-
-        if (isInsideSourceDirectory(file)) {
-            return;
-        }
-        if (file.isDirectory()) {
-            File[] entries = file.listFiles();
-            if (entries != null) {
-                for (File entry : entries) {
-                    deleteRecursively(entry, excludeRegex);
-                }
-            }
-        }
-        if (excludeRegex == null || !file.getAbsolutePath().matches(excludeRegex)) {
-            if (!file.delete()) {
-                mojoInstance.logError("Failed to delete " + file.getPath());
-            }
         }
     }
 
@@ -1011,6 +943,28 @@ public class DataMapperBundler {
         } catch (IOException e) {
             throw new DataMapperException("Failed to clean or copy data mappers to cache directory.", e);
         }
+    }
+
+
+    /**
+     * Cleans up the resources used during the data mapper bundling process.
+     * Deletes the 'src' and 'target' directories inside the data mapper bundling cache directory.
+     */
+    public void cleanUpBundlingResources() {
+        Path srcPath = getDataMapperBundlingCachePath().resolve(Constants.SRC_DIR);
+        Path targetPath = getDataMapperBundlingCachePath().resolve(Constants.TARGET_DIR_NAME);
+
+        try {
+            if (Files.exists(srcPath)) {
+                FileUtils.deleteDirectory(srcPath.toFile());
+            }
+            if (Files.exists(targetPath)) {
+                FileUtils.deleteDirectory(targetPath.toFile());
+            }
+        } catch (IOException e) {
+            mojoInstance.logError("Failed to clean up bundling resources: " + e.getMessage());
+        }
+
     }
 
 }
