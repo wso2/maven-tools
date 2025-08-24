@@ -939,7 +939,7 @@ public class DataMapperBundler {
             Path targetPath = Paths.get("." + File.separator + Constants.TARGET_DIR_NAME + File.separator
                     + Constants.DATA_MAPPER_DIR_NAME);
             FileUtils.copyDirectory(targetPath.toFile(), cachePath.toFile());
-            mojoInstance.getLog().info("Data mappers cache directory cleaned and copied from target directory");
+            mojoInstance.getLog().info("Data mappers copied to cache directory successfully");
         } catch (IOException e) {
             throw new DataMapperException("Failed to clean or copy data mappers to cache directory.", e);
         }
