@@ -133,7 +133,8 @@ public class DataMapperBundler {
                Files.exists(globalCacheDir.resolve(Constants.POM_FILE_NAME)) &&
                Files.exists(globalCacheDir.resolve(Constants.PACKAGE_JSON_FILE_NAME)) &&
                Files.exists(globalCacheDir.resolve(Constants.PACKAGE_LOCK_JSON)) &&
-               Files.exists(globalCacheDir.resolve(Constants.SCHEMA_GENERATOR));
+               Files.exists(globalCacheDir.resolve(Constants.SCHEMA_GENERATOR)) &&
+               Files.exists(globalCacheDir.resolve(Constants.MVN_FOLDER));
     }
 
         
@@ -405,7 +406,8 @@ public class DataMapperBundler {
      */
     private void createDataMapperArtifacts() throws DataMapperException {
         mojoInstance.logInfo("Creating data mapper artifacts");
-        ensureDataMapperTargetExists();
+        ensureDataMapperBundlingCacheExists();
+        copyMavenWrapperFolder();
         createPomFile();
         createPackageJson();
         createPackageLockJson();
@@ -744,10 +746,10 @@ public class DataMapperBundler {
     }
 
     /**
-     * Ensures that the data mapper target directory exists.
+     * Ensures that the data mapper bundling cache directory exists.
      * @throws DataMapperException if an error occurs while creating the data-mapper artifacts directory.
      */
-    private void ensureDataMapperTargetExists() throws DataMapperException {
+    private void ensureDataMapperBundlingCacheExists() throws DataMapperException {
         Path dataMapperPath = getDataMapperBundlingCachePath();
         if (!Files.exists(dataMapperPath)) {
             try {
@@ -967,4 +969,24 @@ public class DataMapperBundler {
 
     }
 
+
+    /**
+     * Copies the Maven wrapper files from the source directory to the data mapper bundling cache directory.
+     * windows needs maven wrapper files inside the cache directory to run maven commands.
+     *
+     * @throws DataMapperException if an error occurs while copying the Maven wrapper files.
+     */
+    public void copyMavenWrapperFolder() throws DataMapperException {
+        try {
+            Path mavenWrapperSourcePath = Paths.get(sourceDirectory + File.separator + Constants.MVN_FOLDER);
+            Path mavenWrappercachePath = getDataMapperBundlingCachePath().resolve(Constants.MVN_FOLDER);
+            if (Files.exists(mavenWrapperSourcePath)) {
+                FileUtils.copyDirectory(mavenWrapperSourcePath.toFile(), mavenWrappercachePath.toFile());
+            }
+        
+        }
+        catch (IOException e) {
+            throw new DataMapperException("Failed to copy maven wrapper files to target directory.", e);
+        }
+    }
 }
