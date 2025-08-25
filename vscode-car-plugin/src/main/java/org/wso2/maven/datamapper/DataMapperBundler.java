@@ -133,8 +133,7 @@ public class DataMapperBundler {
                Files.exists(globalCacheDir.resolve(Constants.POM_FILE_NAME)) &&
                Files.exists(globalCacheDir.resolve(Constants.PACKAGE_JSON_FILE_NAME)) &&
                Files.exists(globalCacheDir.resolve(Constants.PACKAGE_LOCK_JSON)) &&
-               Files.exists(globalCacheDir.resolve(Constants.SCHEMA_GENERATOR)) &&
-               Files.exists(globalCacheDir.resolve(Constants.MVN_FOLDER));
+               Files.exists(globalCacheDir.resolve(Constants.SCHEMA_GENERATOR));
     }
 
         
@@ -285,12 +284,11 @@ public class DataMapperBundler {
         String dataMapperName = dataMapper.getFileName().toString();
         mojoInstance.logInfo("Bundling data mapper: " + dataMapperName);
         createWebpackConfig(dataMapperName);
-
-        Path npmDirectory = getDataMapperBundlingCachePath();
-
         InvocationRequest request = createBaseRequest();
-        request.setBaseDirectory(npmDirectory.toFile());
-        request.setGoals(Collections.singletonList(Constants.NPM_RUN_BUILD_GOAL
+        Path globalCacheDir = getDataMapperBundlingCachePath();
+        Path pomPath = globalCacheDir.resolve(Constants.POM_FILE_NAME);
+        request.setBaseDirectory(Paths.get(projectDirectory).toFile());
+        request.setGoals(Collections.singletonList(Constants.NPM_RUN_BUILD_GOAL + " -f " + pomPath
                 + " -Dexec.executable=\"" + getNpmExecutablePath() + "\""
                 + " -Dexec.args=\"" + Constants.RUN_BUILD + " " + Constants.PREPEND_NODE_CONFIG_FLAG + "\""));
 
@@ -321,10 +319,11 @@ public class DataMapperBundler {
     private void generateDataMapperSchema(Path dataMapper) throws DataMapperException {
         String dataMapperName = dataMapper.getFileName().toString();
         mojoInstance.logInfo("Generating schema for data mapper: " + dataMapperName);
-        Path npmDirectory = getDataMapperBundlingCachePath();
         InvocationRequest request = createBaseRequest();
-        request.setBaseDirectory(npmDirectory.toFile());
-        request.setGoals(Collections.singletonList(Constants.NPM_RUN_BUILD_GOAL
+        Path globalCacheDir = getDataMapperBundlingCachePath();
+        Path pomPath = globalCacheDir.resolve(Constants.POM_FILE_NAME);
+        request.setBaseDirectory(Paths.get(projectDirectory).toFile());
+        request.setGoals(Collections.singletonList(Constants.NPM_RUN_BUILD_GOAL + " -f " + pomPath
                 + " -Dexec.executable=\"" + getNpmExecutablePath() + "\""
                 + " -Dexec.args=\"" + Constants.RUN_GENERATE + " " + dataMapper + File.separator
                 + dataMapperName + ".ts" + " " + Constants.PREPEND_NODE_CONFIG_FLAG + "\""));
@@ -346,10 +345,6 @@ public class DataMapperBundler {
      */
     private InvocationRequest createBaseRequest() {
         InvocationRequest request = new DefaultInvocationRequest();
-        Path globalCacheDir = getDataMapperBundlingCachePath();
-        Path pomPath = globalCacheDir.resolve(Constants.POM_FILE_NAME);
-        request.setPomFile(pomPath.toFile());
-        request.setBaseDirectory(globalCacheDir.toFile());
         request.setInputStream(new ByteArrayInputStream(new byte[0])); // Avoid interactive mode
         return request;
     }
@@ -407,7 +402,6 @@ public class DataMapperBundler {
     private void createDataMapperArtifacts() throws DataMapperException {
         mojoInstance.logInfo("Creating data mapper artifacts");
         ensureDataMapperBundlingCacheExists();
-        copyMavenWrapperFolder();
         createPomFile();
         createPackageJson();
         createPackageLockJson();
@@ -967,26 +961,5 @@ public class DataMapperBundler {
             mojoInstance.logError("Failed to clean up bundling resources: " + e.getMessage());
         }
 
-    }
-
-
-    /**
-     * Copies the Maven wrapper files from the source directory to the data mapper bundling cache directory.
-     * windows needs maven wrapper files inside the cache directory to run maven commands.
-     *
-     * @throws DataMapperException if an error occurs while copying the Maven wrapper files.
-     */
-    public void copyMavenWrapperFolder() throws DataMapperException {
-        try {
-            Path mavenWrapperSourcePath = Paths.get(sourceDirectory + File.separator + Constants.MVN_FOLDER);
-            Path mavenWrappercachePath = getDataMapperBundlingCachePath().resolve(Constants.MVN_FOLDER);
-            if (Files.exists(mavenWrapperSourcePath)) {
-                FileUtils.copyDirectory(mavenWrapperSourcePath.toFile(), mavenWrappercachePath.toFile());
-            }
-        
-        }
-        catch (IOException e) {
-            throw new DataMapperException("Failed to copy maven wrapper files to target directory.", e);
-        }
     }
 }

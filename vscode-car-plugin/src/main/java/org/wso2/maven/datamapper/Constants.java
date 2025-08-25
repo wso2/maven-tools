@@ -64,8 +64,6 @@ class Constants {
     public static final String DATA_MAPPER_CACHE_NODE_MODULES = "node_modules";
     public static final String DATA_MAPPER_CACHE_NODE = "node";
     public static final String SRC_DIR = "src";
-    public static final String MVN_FOLDER = ".mvn";
-
 
     private Constants() {
     }
