@@ -102,14 +102,14 @@ public class DataMapperBundler {
         appendDataMapperLogs();
         setupInvoker(invoker, projectDirectory);
 
-        if (!checkNecessaryResourcesExist()) {
+        if (!isDmResourcesExist()) {
             mojoInstance.logInfo("Could not find the resources needed for data mapper bundling. " + "Starting the resources creation process.");
             createDataMapperArtifacts();
             installNodeAndNPM();
             runNpmInstall();
             configureNpm();
         }else{
-            mojoInstance.logInfo("Resources for data mapper bundling found. " + "Skipping the resources creation process.");
+            mojoInstance.logInfo("Resources for data mapper bundling found. Skipping the resources creation process.");
         }
 
         bundleDataMappers(nonCachedDataMappers);
@@ -123,7 +123,7 @@ public class DataMapperBundler {
      *
      * @return true if all necessary resources exist, false otherwise.
      */
-    public boolean checkNecessaryResourcesExist() {
+    public boolean isDmResourcesExist() {
         
         Path globalCacheDir = getDataMapperBundlingCachePath();
 
@@ -295,13 +295,7 @@ public class DataMapperBundler {
         executeRequest(request, "Failed to bundle data mapper: " + dataMapperName);
 
         mojoInstance.logInfo("Bundle completed for data mapper: " + dataMapperName);
-        Path bundledJsFilePath = Path.of(
-            System.getProperty(Constants.USER_HOME),
-            Constants.WSO2_MI,
-            Constants.DATA_MAPPER_BUNDLING_CACHE_DIR,
-            Constants.SRC_DIR,
-            dataMapperName + ".dmc"
-        );
+        Path bundledJsFilePath = getDataMapperBundlingCachePath().resolve(Constants.SRC_DIR).resolve(dataMapperName + ".dmc");
         appendMapFunction(dataMapper.toString(), dataMapperName, bundledJsFilePath.toString());
         copyGenerateDataMapperFile(bundledJsFilePath.toString(), dataMapper);
 
@@ -825,6 +819,28 @@ public class DataMapperBundler {
     }
 
     /**
+     * Checks if all .ts files in the data mapper folder are present and identical in the cached data mapper folder.
+     *
+     * @param dataMapperFolder The path to the original data mapper folder.
+     * @param cachedDataMapperFolder The path to the cached data mapper folder.
+     * @return true if all .ts files are present and identical, false otherwise.
+     * @throws DataMapperException if an error occurs while accessing the files or calculating checksums.
+     */
+    private boolean areAllTsFilesCached(Path dataMapperFolder, Path cachedDataMapperFolder) throws DataMapperException {
+        try (DirectoryStream<Path> stream = Files.newDirectoryStream(dataMapperFolder, "*.ts")) {
+            for (Path tsFile : stream) {
+                Path cachedTsFile = cachedDataMapperFolder.resolve(tsFile.getFileName());
+                if (!Files.exists(cachedTsFile) || !compareTwoChecksums(tsFile, cachedTsFile)) {
+                    return false;
+                }
+            }
+        } catch (IOException e) {
+            throw new DataMapperException("Failed to check .ts files in cache.", e);
+        }
+        return true;
+    }
+
+    /**
      * Compares the checksums of two files to determine if they are identical.
      *
      * @param filePath1 The path to the first file.
@@ -859,14 +875,10 @@ public class DataMapperBundler {
 
             for (Path cachedDataMapper : cachedDataMappers) {
                 if (cachedDataMapper.getFileName().toString().equals(dataMapperName)) {
-                    Path tsFile = dataMapper.resolve(dataMapperName + ".ts");
-                    Path cachedTsFile = cachedDataMapper.resolve(dataMapperName + ".ts");
-                    if (Files.exists(tsFile) && Files.exists(cachedTsFile)) {
-                        if (compareTwoChecksums(tsFile, cachedTsFile)) {
-                            restoreDataMapperToResourcesFromCache(cachedDataMapper);
-                            isCached = true;
-                            break;
-                        }
+                    if (areAllTsFilesCached(dataMapper, cachedDataMapper)) {
+                        restoreDataMapperToResourcesFromCache(cachedDataMapper);
+                        isCached = true;
+                        break;
                     }
                 }
             }
@@ -884,7 +896,7 @@ public class DataMapperBundler {
      */
     private Path getDataMappersCachePath() {
         String projectId = new File(sourceDirectory).getName() + "_" + getHash(sourceDirectory);
-        return Path.of(System.getProperty(Constants.USER_HOME), Constants.WSO2_MI,
+        return Path.of(System.getProperty(Constants.USER_HOME), Constants.WSO2_MI, Constants.DATA_MAPPER,
                 Constants.DATA_MAPPERS_CACHE_DIR, projectId);
     }
 
@@ -894,7 +906,7 @@ public class DataMapperBundler {
      * @return The path to the data mapper bundling cache directory.
      */
     private Path getDataMapperBundlingCachePath() {
-        return Path.of(System.getProperty(Constants.USER_HOME), Constants.WSO2_MI, Constants.DATA_MAPPER_BUNDLING_CACHE_DIR);
+        return Path.of(System.getProperty(Constants.USER_HOME), Constants.WSO2_MI, Constants.DATA_MAPPER, Constants.DATA_MAPPER_BUNDLING_CACHE_DIR);
     }
 
     /**

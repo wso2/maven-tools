@@ -59,8 +59,9 @@ class Constants {
     public static final String PREPEND_NODE_CONFIG_FLAG = "--scripts-prepend-node-path=auto";
     public static final String USER_HOME = "user.home";
     public static final String WSO2_MI = ".wso2-mi";
+    public static final String DATA_MAPPER = "data_mapper"; 
     public static final String DATA_MAPPERS_CACHE_DIR = "data_mappers";
-    public static final String DATA_MAPPER_BUNDLING_CACHE_DIR = "data_mapper_bundling_cache";
+    public static final String DATA_MAPPER_BUNDLING_CACHE_DIR = "data_mapper_bundling_resources";
     public static final String DATA_MAPPER_CACHE_NODE_MODULES = "node_modules";
     public static final String DATA_MAPPER_CACHE_NODE = "node";
     public static final String SRC_DIR = "src";
