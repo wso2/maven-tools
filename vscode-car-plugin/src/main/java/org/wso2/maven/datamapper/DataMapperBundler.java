@@ -20,6 +20,7 @@ package org.wso2.maven.datamapper;
 import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
 import java.io.File;
+import java.io.FileFilter;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
@@ -95,6 +96,7 @@ public class DataMapperBundler {
         List<Path> nonCachedDataMappers = getNonCacheDataMappers(dataMappers, dataMappersCache);
 
         if (nonCachedDataMappers.isEmpty()) {
+            copyDataMapperFilesToTarget();
             mojoInstance.logInfo("All data mappers are cached, skipping bundling.");
             return; // All data mappers are cached, no need to bundle
         }
@@ -913,7 +915,7 @@ public class DataMapperBundler {
     }
 
     /**
-     * Restores a cached data mapper to the resources directory of the project.
+     * Restores a cached data mapper files(except .ts files) to the resources directory of the project.
      * @param cachedDataMapperPath The path to the cached data mapper directory.
      * @throws DataMapperException if an error occurs while restoring the data mapper.
      */
@@ -924,7 +926,13 @@ public class DataMapperBundler {
             if (Files.notExists(dataMapperPathInsideResources)) {
                 Files.createDirectories(dataMapperPathInsideResources);
             }
-            FileUtils.copyDirectory(cachedDataMapperPath.toFile(), dataMapperPathInsideResources.toFile());
+            // Exclude .ts files
+            FileFilter excludeTsFiles = file -> !file.getName().endsWith(".ts");
+            FileUtils.copyDirectory(
+                cachedDataMapperPath.toFile(),
+                dataMapperPathInsideResources.toFile(),
+                excludeTsFiles
+            );
             mojoInstance.getLog().info("Data mapper : " + cachedDataMapperPath.getFileName() + " restored from cache to resources directory");
         } catch (IOException e) {
             throw new DataMapperException("Failed to restore data mapper from cache to resources directory.", e);
