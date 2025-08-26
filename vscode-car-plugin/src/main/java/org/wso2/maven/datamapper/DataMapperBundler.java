@@ -781,15 +781,13 @@ public class DataMapperBundler {
      * @return The MD5 hash as a hexadecimal string, or null if the algorithm is not available.
      */
     private String getHash(String input) {
-        MessageDigest md = null;
-        String hash = null;
         try {
-            md = MessageDigest.getInstance("MD5");
+            MessageDigest md = MessageDigest.getInstance("MD5");
             byte[] messageDigest = md.digest(input.getBytes());
-            hash = convertToHex(messageDigest);
+            return convertToHex(messageDigest);
         } catch (NoSuchAlgorithmException e) {
+            return null;
         }
-        return hash;
     }
 
     /**
