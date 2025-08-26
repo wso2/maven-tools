@@ -181,6 +181,7 @@ public class DataMapperBundler {
     private void installNodeAndNPM() throws DataMapperException {
         InvocationRequest request = createBaseRequest();
         mojoInstance.logInfo("Installing Node and NPM");
+        request.setBaseDirectory(getDataMapperBundlingCachePath().toFile());
         request.setGoals(Collections.singletonList(Constants.INSTALL_NODE_AND_NPM_GOAL));
         setNodeAndNpmProperties(request);
     
@@ -195,6 +196,7 @@ public class DataMapperBundler {
      private void runNpmInstall() throws DataMapperException {
         InvocationRequest request = createBaseRequest();
         mojoInstance.logInfo("Running npm install");
+        request.setBaseDirectory(getDataMapperBundlingCachePath().toFile());
         request.setGoals(Collections.singletonList(Constants.NPM_GOAL));
         setNpmInstallProperties(request);
     
@@ -210,6 +212,7 @@ public class DataMapperBundler {
 
         InvocationRequest request = createBaseRequest();
         mojoInstance.logInfo("Configuring npm");
+        request.setBaseDirectory(getDataMapperBundlingCachePath().toFile());
         request.setGoals(Collections.singletonList(Constants.NPM_GOAL));
 
         Properties properties = new Properties();
