@@ -57,7 +57,14 @@ class Constants {
     static final String NPM_RUN_BUILD_GOAL = EXEC_GOAL + "@" + BUILD_COMMAND;
     public static final String PREPEND_NODE_CONFIG = "config set scripts-prepend-node-path auto";
     public static final String PREPEND_NODE_CONFIG_FLAG = "--scripts-prepend-node-path=auto";
-
+    public static final String USER_HOME = "user.home";
+    public static final String WSO2_MI = ".wso2-mi";
+    public static final String DATA_MAPPER = "datamapper"; 
+    public static final String DATA_MAPPERS_CACHE_DIR = "datamappers";
+    public static final String DATA_MAPPER_BUNDLING_CACHE_DIR = "datamapper_bundling_resources";
+    public static final String DATA_MAPPER_CACHE_NODE_MODULES = "node_modules";
+    public static final String DATA_MAPPER_CACHE_NODE = "node";
+    public static final String SRC_DIR = "src";
 
     private Constants() {
     }

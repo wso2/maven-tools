@@ -20,6 +20,7 @@ package org.wso2.maven.datamapper;
 import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
 import java.io.File;
+import java.io.FileFilter;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
@@ -79,26 +80,59 @@ public class DataMapperBundler {
     public void bundleDataMapper() throws DataMapperException, MojoExecutionException {
         String oldDataMapperDirectoryPath = resourcesDirectory + File.separator + Constants.DATA_MAPPER_DIR_PATH;
         String newDataMapperDirectoryPath = resourcesDirectory + File.separator + Constants.DATA_MAPPER_DIR_NAME;
-        List<Path> dataMappers = listSubDirectories(oldDataMapperDirectoryPath);
-        dataMappers.addAll(listSubDirectories(newDataMapperDirectoryPath));
+        String dataMappersCachePath = getDataMappersCachePath().toString();
+        List<Path> dataMappers = listSubDirectories(oldDataMapperDirectoryPath,false);
+        dataMappers.addAll(listSubDirectories(newDataMapperDirectoryPath,false));
+        List<Path> dataMappersCache = listSubDirectories(dataMappersCachePath,true);
 
         if (dataMappers.isEmpty()) {
             // No data mappers to bundle
             return;
         }
+
+        List<Path> nonCachedDataMappers = getNonCacheDataMappers(dataMappers, dataMappersCache);
+
+        if (nonCachedDataMappers.isEmpty()) {
+            copyDataMapperFilesToTarget();
+            mojoInstance.logInfo("All data mappers are cached, skipping bundling.");
+            return; // All data mappers are cached, no need to bundle
+        }
     
         appendDataMapperLogs();
-    
-        createDataMapperArtifacts();
         setupInvoker(invoker, projectDirectory);
-    
-        installNodeAndNPM();
-        runNpmInstall();
-        configureNpm();
-        bundleDataMappers(dataMappers);
-        generateDataMapperSchemas(dataMappers);
-        removeBundlingArtifacts();
+
+        if (!isDmResourcesExist()) {
+            mojoInstance.logInfo("Could not find the resources needed for data mapper bundling. " + "Starting the resources creation process.");
+            createDataMapperArtifacts();
+            installNodeAndNPM();
+            runNpmInstall();
+            configureNpm();
+        }else{
+            mojoInstance.logInfo("Resources for data mapper bundling found. Skipping the resources creation process.");
+        }
+
+        bundleDataMappers(nonCachedDataMappers);
+        generateDataMapperSchemas(nonCachedDataMappers);
         copyDataMapperFilesToTarget();
+        copyDataMappersToCache();
+    }
+
+    /**
+     * Checks if all necessary resources for data mapper bundling exist in the global cache directory.
+     *
+     * @return true if all necessary resources exist, false otherwise.
+     */
+    public boolean isDmResourcesExist() {
+        
+        Path globalCacheDir = getDataMapperBundlingCachePath();
+
+        return Files.exists(globalCacheDir) &&
+               Files.exists(globalCacheDir.resolve(Constants.DATA_MAPPER_CACHE_NODE_MODULES)) &&
+               Files.exists(globalCacheDir.resolve(Constants.DATA_MAPPER_CACHE_NODE)) &&
+               Files.exists(globalCacheDir.resolve(Constants.POM_FILE_NAME)) &&
+               Files.exists(globalCacheDir.resolve(Constants.PACKAGE_JSON_FILE_NAME)) &&
+               Files.exists(globalCacheDir.resolve(Constants.PACKAGE_LOCK_JSON)) &&
+               Files.exists(globalCacheDir.resolve(Constants.SCHEMA_GENERATOR));
     }
 
     /**
@@ -109,8 +143,8 @@ public class DataMapperBundler {
     public void deleteGeneratedDatamapperArtifacts() throws DataMapperException {
         String olDataMapperDirectoryPath = resourcesDirectory + File.separator + Constants.DATA_MAPPER_DIR_PATH;
         String newDataMapperDirectoryPath = resourcesDirectory + File.separator + Constants.DATA_MAPPER_DIR_NAME;
-        List<Path> dataMappers = listSubDirectories(olDataMapperDirectoryPath);
-        dataMappers.addAll(listSubDirectories(newDataMapperDirectoryPath));
+        List<Path> dataMappers = listSubDirectories(olDataMapperDirectoryPath,false);
+        dataMappers.addAll(listSubDirectories(newDataMapperDirectoryPath, false));
 
         if (dataMappers.isEmpty()) {
             // No data mappers to delete
@@ -144,6 +178,7 @@ public class DataMapperBundler {
     private void installNodeAndNPM() throws DataMapperException {
         InvocationRequest request = createBaseRequest();
         mojoInstance.logInfo("Installing Node and NPM");
+        request.setBaseDirectory(getDataMapperBundlingCachePath().toFile());
         request.setGoals(Collections.singletonList(Constants.INSTALL_NODE_AND_NPM_GOAL));
         setNodeAndNpmProperties(request);
     
@@ -155,9 +190,10 @@ public class DataMapperBundler {
      *
      * @throws DataMapperException if the Maven invocation fails.
      */
-    private void runNpmInstall() throws DataMapperException {
+     private void runNpmInstall() throws DataMapperException {
         InvocationRequest request = createBaseRequest();
         mojoInstance.logInfo("Running npm install");
+        request.setBaseDirectory(getDataMapperBundlingCachePath().toFile());
         request.setGoals(Collections.singletonList(Constants.NPM_GOAL));
         setNpmInstallProperties(request);
     
@@ -173,6 +209,7 @@ public class DataMapperBundler {
 
         InvocationRequest request = createBaseRequest();
         mojoInstance.logInfo("Configuring npm");
+        request.setBaseDirectory(getDataMapperBundlingCachePath().toFile());
         request.setGoals(Collections.singletonList(Constants.NPM_GOAL));
 
         Properties properties = new Properties();
@@ -189,6 +226,7 @@ public class DataMapperBundler {
      * @throws DataMapperException if the bundling process for any data mapper fails.
      */
     private void bundleDataMappers(List<Path> dataMappers) throws DataMapperException {
+        createConfigJson();
         for (Path dataMapper : dataMappers) {
             if (!bundleSingleDataMapper(dataMapper)) {
                 return;
@@ -241,28 +279,27 @@ public class DataMapperBundler {
      * @throws DataMapperException if any step in the bundling process fails.
      */
     private boolean bundleSingleDataMapper(Path dataMapper) throws DataMapperException {
+        cleanUpBundlingResources();
         copyTsFiles(dataMapper);
         String dataMapperName = dataMapper.getFileName().toString();
         mojoInstance.logInfo("Bundling data mapper: " + dataMapperName);
         createWebpackConfig(dataMapperName);
-
-        Path npmDirectory = Paths.get("." + File.separator + Constants.TARGET_DIR_NAME);
-
         InvocationRequest request = createBaseRequest();
-        request.setBaseDirectory(npmDirectory.toFile());
-        request.setGoals(Collections.singletonList(Constants.NPM_RUN_BUILD_GOAL
+        Path globalCacheDir = getDataMapperBundlingCachePath();
+        Path pomPath = globalCacheDir.resolve(Constants.POM_FILE_NAME);
+        request.setBaseDirectory(Paths.get(projectDirectory).toFile());
+        request.setGoals(Collections.singletonList(Constants.NPM_RUN_BUILD_GOAL + " -f " + pomPath
                 + " -Dexec.executable=\"" + getNpmExecutablePath() + "\""
                 + " -Dexec.args=\"" + Constants.RUN_BUILD + " " + Constants.PREPEND_NODE_CONFIG_FLAG + "\""));
 
         executeRequest(request, "Failed to bundle data mapper: " + dataMapperName);
 
         mojoInstance.logInfo("Bundle completed for data mapper: " + dataMapperName);
-        Path bundledJsFilePath = Paths.get("." + File.separator
-                + Constants.TARGET_DIR_NAME + File.separator + "src" + File.separator + dataMapperName + ".dmc");
+        Path bundledJsFilePath = getDataMapperBundlingCachePath().resolve(Constants.SRC_DIR).resolve(dataMapperName + ".dmc");
         appendMapFunction(dataMapper.toString(), dataMapperName, bundledJsFilePath.toString());
         copyGenerateDataMapperFile(bundledJsFilePath.toString(), dataMapper);
 
-        removeSourceFiles();
+        cleanUpBundlingResources();
         removeWebpackConfig();
 
         return true;
@@ -276,10 +313,11 @@ public class DataMapperBundler {
     private void generateDataMapperSchema(Path dataMapper) throws DataMapperException {
         String dataMapperName = dataMapper.getFileName().toString();
         mojoInstance.logInfo("Generating schema for data mapper: " + dataMapperName);
-        Path npmDirectory = Paths.get("." + File.separator + Constants.TARGET_DIR_NAME);
         InvocationRequest request = createBaseRequest();
-        request.setBaseDirectory(npmDirectory.toFile());
-        request.setGoals(Collections.singletonList(Constants.NPM_RUN_BUILD_GOAL
+        Path globalCacheDir = getDataMapperBundlingCachePath();
+        Path pomPath = globalCacheDir.resolve(Constants.POM_FILE_NAME);
+        request.setBaseDirectory(Paths.get(projectDirectory).toFile());
+        request.setGoals(Collections.singletonList(Constants.NPM_RUN_BUILD_GOAL + " -f " + pomPath
                 + " -Dexec.executable=\"" + getNpmExecutablePath() + "\""
                 + " -Dexec.args=\"" + Constants.RUN_GENERATE + " " + dataMapper + File.separator
                 + dataMapperName + ".ts" + " " + Constants.PREPEND_NODE_CONFIG_FLAG + "\""));
@@ -291,8 +329,7 @@ public class DataMapperBundler {
 
         String osName = System.getProperty("os.name").toLowerCase();
         String npmExecutable = osName.contains("win") ? "npm.cmd" : "npm";
-        return Paths.get(System.getProperty("user.dir"), Constants.TARGET_DIR_NAME, "node", npmExecutable)
-                .toString();
+        return getDataMapperBundlingCachePath().resolve(Constants.DATA_MAPPER_CACHE_NODE).resolve(npmExecutable).toString();
     }
     
     /**
@@ -302,10 +339,6 @@ public class DataMapperBundler {
      */
     private InvocationRequest createBaseRequest() {
         InvocationRequest request = new DefaultInvocationRequest();
-        Path baseDir = Paths.get(System.getProperty("user.dir"));
-        Path pomPath = baseDir.resolve(Paths.get("." + File.separator + Constants.TARGET_DIR_NAME
-            + File.separator + Constants.POM_FILE_NAME));
-        request.setPomFile(pomPath.toFile());
         request.setInputStream(new ByteArrayInputStream(new byte[0])); // Avoid interactive mode
         return request;
     }
@@ -362,11 +395,10 @@ public class DataMapperBundler {
      */
     private void createDataMapperArtifacts() throws DataMapperException {
         mojoInstance.logInfo("Creating data mapper artifacts");
-        ensureDataMapperTargetExists();
+        ensureDataMapperBundlingCacheExists();
         createPomFile();
         createPackageJson();
         createPackageLockJson();
-        createConfigJson();
         createSchemaGenerator();
     }
 
@@ -394,7 +426,7 @@ public class DataMapperBundler {
             "    <version>1.0-SNAPSHOT</version>\n" +
             "</project>";
     
-        Path pomPath = Paths.get("." + File.separator + Constants.TARGET_DIR_NAME + File.separator + "pom.xml");
+        Path pomPath = getDataMapperBundlingCachePath().resolve(Constants.POM_FILE_NAME);
         try {
             Files.write(pomPath, pomContent.getBytes(), StandardOpenOption.CREATE);
         } catch (IOException e) {
@@ -406,11 +438,9 @@ public class DataMapperBundler {
      * Copy schemaGenerator.ts from resources to target directory.
      */
     public void createSchemaGenerator() throws DataMapperException {
-
         try {
             InputStream inputStream = getClass().getClassLoader().getResourceAsStream(Constants.SCHEMA_GENERATOR);
-            String targetPath = "." + File.separator + Constants.TARGET_DIR_NAME +
-                    File.separator + Constants.SCHEMA_GENERATOR;
+            String targetPath = getDataMapperBundlingCachePath().resolve(Constants.SCHEMA_GENERATOR).toString();
             File targetFile = new File(targetPath);
             FileUtils.copyInputStreamToFile(inputStream, targetFile);
         } catch (IOException e) {
@@ -425,8 +455,7 @@ public class DataMapperBundler {
 
         try {
             InputStream inputStream = getClass().getClassLoader().getResourceAsStream(Constants.PACKAGE_LOCK_JSON);
-            String targetPath = "." + File.separator + Constants.TARGET_DIR_NAME +
-                    File.separator + Constants.PACKAGE_LOCK_JSON;
+            String targetPath = getDataMapperBundlingCachePath().resolve(Constants.PACKAGE_LOCK_JSON).toString();
             File targetFile = new File(targetPath);
             FileUtils.copyInputStreamToFile(inputStream, targetFile);
         } catch (IOException e) {
@@ -454,10 +483,11 @@ public class DataMapperBundler {
                 "    }\n" +
                 "}";
 
-        try (FileWriter fileWriter = new FileWriter("." + File.separator + Constants.TARGET_DIR_NAME
-            + File.separator + Constants.PACKAGE_JSON_FILE_NAME)) {
+        Path packageJsonPath = getDataMapperBundlingCachePath().resolve(Constants.PACKAGE_JSON_FILE_NAME);
+        try (FileWriter fileWriter = new FileWriter(packageJsonPath.toFile())) {
             fileWriter.write(packageJsonContent);
-        } catch (IOException e) {
+        }
+        catch (IOException e) {
             throw new DataMapperException("Failed to create package.json file.", e);
         }
     }
@@ -479,13 +509,13 @@ public class DataMapperBundler {
                 "    ]\n" +
                 "}";
     
-        try (FileWriter fileWriter = new FileWriter("." + File.separator + Constants.TARGET_DIR_NAME
-            + File.separator + Constants.TS_CONFIG_FILE_NAME)) {
-            fileWriter.write(tsConfigContent);
-        } catch (IOException e) {
-            throw new DataMapperException("Failed to create tsconfig.json file.", e);
+        Path tsConfigPath = getDataMapperBundlingCachePath().resolve(Constants.TS_CONFIG_FILE_NAME);
+            try (FileWriter fileWriter = new FileWriter(tsConfigPath.toFile())) {
+                fileWriter.write(tsConfigContent);
+            } catch (IOException e) {
+                throw new DataMapperException("Failed to create tsconfig.json file.", e);
+            }
         }
-    }
 
     /**
      * Creates a TypeScript configuration file (tsconfig.json).
@@ -503,8 +533,8 @@ public class DataMapperBundler {
                 "    }\n" +
                 "}";
 
-        try (FileWriter fileWriter = new FileWriter("." + File.separator + Constants.TARGET_DIR_NAME
-                + File.separator + Constants.TS_CONFIG_FILE_NAME)) {
+        Path tsConfigPath = getDataMapperBundlingCachePath().resolve(Constants.TS_CONFIG_FILE_NAME);
+        try (FileWriter fileWriter = new FileWriter(tsConfigPath.toFile())) {
             fileWriter.write(tsConfigContent);
         } catch (IOException e) {
             throw new DataMapperException("Failed to create tsconfig.json file.", e);
@@ -543,8 +573,8 @@ public class DataMapperBundler {
                 "    mode: \"production\",\n" +
                 "};";
     
-        try (FileWriter fileWriter = new FileWriter("." + File.separator + Constants.TARGET_DIR_NAME
-            + File.separator + Constants.WEBPACK_CONFIG_FILE_NAME)) {
+        Path webpackConfigPath = getDataMapperBundlingCachePath().resolve(Constants.WEBPACK_CONFIG_FILE_NAME);
+        try (FileWriter fileWriter = new FileWriter(webpackConfigPath.toFile())) {
             fileWriter.write(webPackConfigContent);
         } catch (IOException e) {
             throw new DataMapperException("Failed to create webpack.config.js file.", e);
@@ -610,7 +640,7 @@ public class DataMapperBundler {
      * @return A list of paths representing subdirectories.
      * @throws DataMapperException if an error occurs while listing the subdirectories.
      */
-    private List<Path> listSubDirectories(String directory) throws DataMapperException {
+    private List<Path> listSubDirectories(String directory, boolean isCached) throws DataMapperException {
         Path dirPath = Paths.get(directory);
         List<Path> subDirectories = new ArrayList<>();
         try (DirectoryStream<Path> stream = Files.newDirectoryStream(dirPath)) {
@@ -620,7 +650,8 @@ public class DataMapperBundler {
                 }
             }
         } catch (NoSuchFileException e) {
-            mojoInstance.logInfo("datamapper directory not found");
+            String logMessage = isCached ? "data mapper cache directory not found" : "datamapper directory not found";
+            mojoInstance.logInfo(logMessage);
         } catch (IOException e) {
             throw new DataMapperException("Failed to find data mapper directories.", e);
         }
@@ -634,13 +665,13 @@ public class DataMapperBundler {
     }
 
     /**
-     * Copies TypeScript files from the source directory to the target directory.
+     * Copies TypeScript files from the source directory to the cache/src directory.
      *
      * @param sourceDir The source directory containing TypeScript files.
      * @throws DataMapperException if an error occurs while copying the TypeScript files.
      */
     private void copyTsFiles(final Path sourceDir) throws DataMapperException {
-        final Path destDir = Paths.get("." + File.separator + Constants.TARGET_DIR_NAME + File.separator + "src");
+        final Path destDir = getDataMapperBundlingCachePath().resolve(Constants.SRC_DIR);
 
         try {
             Files.createDirectories(destDir);
@@ -703,11 +734,11 @@ public class DataMapperBundler {
     }
 
     /**
-     * Ensures that the data mapper target directory exists.
+     * Ensures that the data mapper bundling cache directory exists.
      * @throws DataMapperException if an error occurs while creating the data-mapper artifacts directory.
      */
-    private void ensureDataMapperTargetExists() throws DataMapperException {
-        Path dataMapperPath = Paths.get("." + File.separator + Constants.TARGET_DIR_NAME);
+    private void ensureDataMapperBundlingCacheExists() throws DataMapperException {
+        Path dataMapperPath = getDataMapperBundlingCachePath();
         if (!Files.exists(dataMapperPath)) {
             try {
                 Files.createDirectories(dataMapperPath);
@@ -718,84 +749,15 @@ public class DataMapperBundler {
     }
 
     /**
-     * Removes source files from the target directory.
-     * @throws DataMapperException if an error occurs while removing the source files.
-     */
-    private void removeSourceFiles() throws DataMapperException {
-        Path dataMapperPath = Paths.get("." + File.separator + Constants.TARGET_DIR_NAME + File.separator + "src");
-
-        try {
-            Files.walkFileTree(dataMapperPath, new SimpleFileVisitor<Path>() {
-                @Override
-                public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
-                    Files.delete(file); // Delete all files
-                    return FileVisitResult.CONTINUE;
-                }
-
-                @Override
-                public FileVisitResult postVisitDirectory(Path dir, IOException exc) throws IOException {
-                    Files.delete(dir); // Delete directory after its contents are deleted
-                    return FileVisitResult.CONTINUE;
-                }
-            });
-        } catch (IOException e) {
-            throw new DataMapperException("Error while removing data-mapper source directory.", e);
-        }
-    }
-
-    /**
      * Removes the webpack configuration file.
      * @throws DataMapperException if an error occurs while removing the webpack configuration file.
      */
     private void removeWebpackConfig() throws DataMapperException {
-        Path filePath = Paths.get("." + File.separator + Constants.TARGET_DIR_NAME
-            + File.separator + Constants.WEBPACK_CONFIG_FILE_NAME);
+        Path filePath = getDataMapperBundlingCachePath().resolve(Constants.WEBPACK_CONFIG_FILE_NAME);
         try {
             Files.delete(filePath);
         } catch (IOException e) {
             throw new DataMapperException("Error while removing webpack.config.js file.", e);
-        }
-    }
-
-    /**
-     * Cleans up the artifacts created during the data mapper bundling process.
-     */
-    private void removeBundlingArtifacts() {
-        mojoInstance.logInfo("Cleaning up data mapper bundling artifacts");
-        String[] pathsToDelete = {
-            "." + File.separator + Constants.TARGET_DIR_NAME
-        };
-        String excludeRegex = ".*\\.jar";
-
-        for (String path : pathsToDelete) {
-            File file = new File(path);
-            deleteRecursively(file, excludeRegex);
-        }
-    }
-
-    /**
-     * Recursively deletes files and directories.
-     *
-     * @param file The file or directory to delete.
-     * @param excludeRegex The regex pattern to exclude files from deletion.
-     */
-    private void deleteRecursively(File file, String excludeRegex) {
-
-        if (isInsideSourceDirectory(file)) {
-            return;
-        }
-        if (file.isDirectory()) {
-            File[] entries = file.listFiles();
-            if (entries != null) {
-                for (File entry : entries) {
-                    deleteRecursively(entry, excludeRegex);
-                }
-            }
-        }
-        if (excludeRegex == null || !file.getAbsolutePath().matches(excludeRegex)) {
-            if (!file.delete()) {
-                mojoInstance.logError("Failed to delete " + file.getPath());
-            }
         }
     }
 
@@ -804,5 +766,166 @@ public class DataMapperBundler {
         Path filePath = file.toPath().toAbsolutePath().normalize();
 
         return filePath.startsWith(sourcePath);
+    }
+
+    /**
+     * Checks if all .ts files in the data mapper folder are present and identical in the cached data mapper folder.
+     *
+     * @param dataMapperFolder The path to the original data mapper folder.
+     * @param cachedDataMapperFolder The path to the cached data mapper folder.
+     * @return true if all .ts files are present and identical, false otherwise.
+     * @throws DataMapperException if an error occurs while accessing the files or calculating checksums.
+     */
+    private boolean checkAllTsFilesCached(Path dataMapperFolder, Path cachedDataMapperFolder) throws DataMapperException {
+        try (DirectoryStream<Path> stream = Files.newDirectoryStream(dataMapperFolder, "*.ts")) {
+            for (Path tsFile : stream) {
+                Path cachedTsFile = cachedDataMapperFolder.resolve(tsFile.getFileName());
+                if (!Files.exists(cachedTsFile) || !compareTwoChecksums(tsFile, cachedTsFile)) {
+                    return false;
+                }
+            }
+        } catch (IOException e) {
+            throw new DataMapperException("Failed to check .ts files in cache.", e);
+        }
+        return true;
+    }
+
+    /**
+     * Compares the checksums of two files to determine if they are identical.
+     *
+     * @param filePath1 The path to the first file.
+     * @param filePath2 The path to the second file.
+     * @return true if the checksums are identical, false otherwise.
+     * @throws DataMapperException if an error occurs during checksum calculation.
+     */
+    private boolean compareTwoChecksums(Path filePath1, Path filePath2) throws DataMapperException {
+        String checksum1 = Utils.getFileChecksum(filePath1);
+        String checksum2 = Utils.getFileChecksum(filePath2);
+        return checksum1.equals(checksum2);
+    }
+
+    /**
+     * Compares the provided data mappers with the cached data mappers and returns a list of data mappers
+     * that are not present in the cache or have changed (based on checksum comparison).
+     * If a cached data mapper matches, it is restored to the resources directory.
+     *
+     * @param dataMappers List of data mapper directories to check.
+     * @param cachedDataMappers List of cached data mapper directories.
+     * @return List of data mappers that are not cached or have changed.
+     * @throws DataMapperException if an error occurs during checksum comparison or restoration.
+     */
+    private List<Path> getNonCacheDataMappers(List<Path> dataMappers, List<Path> cachedDataMappers) throws DataMapperException {
+        List<Path> nonCacheDataMappers = new ArrayList<>();
+        if (cachedDataMappers.isEmpty()) {
+            return dataMappers;
+        }
+        for (Path dataMapper : dataMappers) {
+            String dataMapperName = dataMapper.getFileName().toString();
+            boolean isCached = false;
+
+            for (Path cachedDataMapper : cachedDataMappers) {
+                if (cachedDataMapper.getFileName().toString().equals(dataMapperName)) {
+                    if (checkAllTsFilesCached(dataMapper, cachedDataMapper)) {
+                        restoreDataMapperToResourcesFromCache(cachedDataMapper);
+                        isCached = true;
+                        break;
+                    }
+                }
+            }
+            if (!isCached) {
+                nonCacheDataMappers.add(dataMapper);
+            }
+        }
+        return nonCacheDataMappers;
+    }
+            
+    /**
+     * Returns the path to the user's data mappers cache directory for this project.
+     *
+     * @return The path to the data mappers cache directory.
+     */
+    private Path getDataMappersCachePath() {
+        String projectId = new File(sourceDirectory).getName() + "_" + Utils.getHash(sourceDirectory);
+        return Path.of(System.getProperty(Constants.USER_HOME), Constants.WSO2_MI, Constants.DATA_MAPPER,
+                Constants.DATA_MAPPERS_CACHE_DIR, projectId);
+    }
+
+    /**
+     * Returns the path to the global data mapper bundling cache directory.
+     *
+     * @return The path to the data mapper bundling cache directory.
+     */
+    private Path getDataMapperBundlingCachePath() {
+        return Path.of(System.getProperty(Constants.USER_HOME), Constants.WSO2_MI, Constants.DATA_MAPPER, Constants.DATA_MAPPER_BUNDLING_CACHE_DIR);
+    }
+
+    /**
+     * Restores a cached data mapper files(except .ts files) to the resources directory of the project.
+     * @param cachedDataMapperPath The path to the cached data mapper directory.
+     * @throws DataMapperException if an error occurs while restoring the data mapper.
+     */
+    private void restoreDataMapperToResourcesFromCache(Path cachedDataMapperPath) throws DataMapperException {
+        Path dataMapperPathInsideResources = Paths.get(resourcesDirectory + File.separator + Constants.DATA_MAPPER_DIR_NAME
+                + File.separator + cachedDataMapperPath.getFileName().toString());
+        try {
+            if (Files.notExists(dataMapperPathInsideResources)) {
+                Files.createDirectories(dataMapperPathInsideResources);
+            }
+            // Exclude .ts files
+            FileFilter excludeTsFiles = file -> !file.getName().endsWith(".ts");
+            FileUtils.copyDirectory(
+                cachedDataMapperPath.toFile(),
+                dataMapperPathInsideResources.toFile(),
+                excludeTsFiles
+            );
+            mojoInstance.getLog().info("Data mapper : " + cachedDataMapperPath.getFileName() + " restored from cache to resources directory");
+        } catch (IOException e) {
+            throw new DataMapperException("Failed to restore data mapper from cache to resources directory.", e);
+        }
+    }
+
+    /**
+     * Clears the project's data mappers cache directory and copies all data mapper directories
+     * from the target directory to the cache directory. Ensures the cache directory exists and is empty before copying.
+     *
+     * @throws DataMapperException if an error occurs while cleaning or copying data mappers to the cache directory.
+     */
+    private void copyDataMappersToCache() throws DataMapperException {
+        Path cachePath = getDataMappersCachePath();
+        try {
+            if (Files.notExists(cachePath)) {
+                Files.createDirectories(cachePath);
+            } else {
+                FileUtils.cleanDirectory(cachePath.toFile());
+            }
+            Path targetPath = Paths.get("." + File.separator + Constants.TARGET_DIR_NAME + File.separator
+                    + Constants.DATA_MAPPER_DIR_NAME);
+            FileUtils.copyDirectory(targetPath.toFile(), cachePath.toFile());
+            mojoInstance.getLog().info("Data mappers copied to cache directory successfully");
+        } catch (IOException e) {
+            throw new DataMapperException("Failed to clean or copy data mappers to cache directory.", e);
+        }
+    }
+
+
+    /**
+     * Cleans up the resources used during the data mapper bundling process.
+     * Deletes the 'src' and 'target' directories inside the data mapper bundling cache directory.
+     */
+    private void cleanUpBundlingResources() {
+        Path srcPath = getDataMapperBundlingCachePath().resolve(Constants.SRC_DIR);
+        Path targetPath = getDataMapperBundlingCachePath().resolve(Constants.TARGET_DIR_NAME);
+
+        try {
+            if (Files.exists(srcPath)) {
+                FileUtils.deleteDirectory(srcPath.toFile());
+            }
+            if (Files.exists(targetPath)) {
+                FileUtils.deleteDirectory(targetPath.toFile());
+            }
+        } catch (IOException e) {
+            mojoInstance.logError("Failed to clean up bundling resources: " + e.getMessage());
+        }
+
     }
 }
