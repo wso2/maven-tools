@@ -52,6 +52,7 @@ import org.apache.maven.shared.invoker.Invoker;
 import org.apache.maven.shared.invoker.MavenInvocationException;
 import org.apache.maven.shared.invoker.DefaultInvoker;
 import org.wso2.maven.CARMojo;
+import org.wso2.maven.datamapper.Utils;
 
 import static org.wso2.maven.MavenUtils.setupInvoker;
 
@@ -137,8 +138,6 @@ public class DataMapperBundler {
                Files.exists(globalCacheDir.resolve(Constants.PACKAGE_LOCK_JSON)) &&
                Files.exists(globalCacheDir.resolve(Constants.SCHEMA_GENERATOR));
     }
-
-        
 
     /**
      * Deletes the generated data mapper artifacts.
@@ -774,56 +773,6 @@ public class DataMapperBundler {
     }
 
     /**
-     * Generates an MD5 hash for the given input string.
-     *
-     * @param input The input string to hash.
-     * @return The MD5 hash as a hexadecimal string, or null if the algorithm is not available.
-     */
-    private String getHash(String input) {
-        try {
-            MessageDigest md = MessageDigest.getInstance("MD5");
-            byte[] messageDigest = md.digest(input.getBytes());
-            return convertToHex(messageDigest);
-        } catch (NoSuchAlgorithmException e) {
-            return null;
-        }
-    }
-
-    /**
-     * Converts a byte array into a hexadecimal string.
-     * Pads the result with leading zeros to ensure a length of 32 characters.
-     *
-     * @param messageDigest The byte array to convert.
-     * @return The hexadecimal string representation.
-     */
-    private String convertToHex(byte[] messageDigest) {
-        BigInteger bigint = new BigInteger(1, messageDigest);
-        String hexText = bigint.toString(16);
-        while (hexText.length() < 32) {
-            hexText = "0".concat(hexText);
-        }
-        return hexText;
-    }
-
-    /**
-     * Calculates the MD5 checksum of the specified file.
-     *
-     * @param filePath The path to the file for which the checksum is to be calculated.
-     * @return The MD5 checksum as a hexadecimal string.
-     * @throws DataMapperException if an I/O error or algorithm error occurs during checksum calculation.
-     */
-    private String getFileChecksum(Path filePath) throws DataMapperException {
-        try {
-            MessageDigest md = MessageDigest.getInstance("MD5");
-            byte[] fileBytes = Files.readAllBytes(filePath);
-            byte[] digest = md.digest(fileBytes);
-            return convertToHex(digest);
-        } catch (IOException | NoSuchAlgorithmException e) {
-            throw new DataMapperException("Failed to calculate checksum for file: " + filePath, e);
-        }
-    }
-
-    /**
      * Checks if all .ts files in the data mapper folder are present and identical in the cached data mapper folder.
      *
      * @param dataMapperFolder The path to the original data mapper folder.
@@ -831,7 +780,7 @@ public class DataMapperBundler {
      * @return true if all .ts files are present and identical, false otherwise.
      * @throws DataMapperException if an error occurs while accessing the files or calculating checksums.
      */
-    private boolean areAllTsFilesCached(Path dataMapperFolder, Path cachedDataMapperFolder) throws DataMapperException {
+    private boolean checkAllTsFilesCached(Path dataMapperFolder, Path cachedDataMapperFolder) throws DataMapperException {
         try (DirectoryStream<Path> stream = Files.newDirectoryStream(dataMapperFolder, "*.ts")) {
             for (Path tsFile : stream) {
                 Path cachedTsFile = cachedDataMapperFolder.resolve(tsFile.getFileName());
@@ -854,8 +803,8 @@ public class DataMapperBundler {
      * @throws DataMapperException if an error occurs during checksum calculation.
      */
     private boolean compareTwoChecksums(Path filePath1, Path filePath2) throws DataMapperException {
-        String checksum1 = getFileChecksum(filePath1);
-        String checksum2 = getFileChecksum(filePath2);
+        String checksum1 = Utils.getFileChecksum(filePath1);
+        String checksum2 = Utils.getFileChecksum(filePath2);
         return checksum1.equals(checksum2);
     }
 
@@ -880,7 +829,7 @@ public class DataMapperBundler {
 
             for (Path cachedDataMapper : cachedDataMappers) {
                 if (cachedDataMapper.getFileName().toString().equals(dataMapperName)) {
-                    if (areAllTsFilesCached(dataMapper, cachedDataMapper)) {
+                    if (checkAllTsFilesCached(dataMapper, cachedDataMapper)) {
                         restoreDataMapperToResourcesFromCache(cachedDataMapper);
                         isCached = true;
                         break;
@@ -900,7 +849,7 @@ public class DataMapperBundler {
      * @return The path to the data mappers cache directory.
      */
     private Path getDataMappersCachePath() {
-        String projectId = new File(sourceDirectory).getName() + "_" + getHash(sourceDirectory);
+        String projectId = new File(sourceDirectory).getName() + "_" + Utils.getHash(sourceDirectory);
         return Path.of(System.getProperty(Constants.USER_HOME), Constants.WSO2_MI, Constants.DATA_MAPPER,
                 Constants.DATA_MAPPERS_CACHE_DIR, projectId);
     }
