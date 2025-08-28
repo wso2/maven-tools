@@ -52,7 +52,7 @@ import static org.wso2.maven.MavenUtils.setupInvoker;
 public class ConnectorDependencyResolver {
 
     // connectionTypeMap and flag to check if connections are scanned
-    private static Map<String, String> connectionTypeMap;
+    private static Map<String, Map<String, String>> connectionTypeMap;
     private static boolean scannedConnections = false;
 
     /**
@@ -110,10 +110,11 @@ public class ConnectorDependencyResolver {
             }
         }
 
-        if (!dependencyFiles.isEmpty()){
+        if (!dependencyFiles.isEmpty()) {
             for (Map.Entry<QName, File> entry : dependencyFiles.entrySet()) {
                 carMojo.logInfo("Resolving dependencies for " + entry.getKey());
-                resolveMavenDependencies(entry.getValue(), libDirPath, invoker, carMojo, entry.getKey().toString(), project.getBasedir());
+                resolveMavenDependencies(entry.getValue(), libDirPath, invoker, carMojo, entry.getKey().toString(),
+                        project.getBasedir());
             }
         }
         carMojo.logInfo("All dependencies resolved and extracted successfully.");
@@ -127,6 +128,7 @@ public class ConnectorDependencyResolver {
      * @throws MavenInvocationException If an error occurs while resolving dependencies.
      */
     private static ArrayList<File> resolveConnectorZips(Invoker invoker) throws MavenInvocationException {
+
         InvocationRequest request = new DefaultInvocationRequest();
         request.setPomFile(new File(Constants.POM_FILE));
         request.setGoals(Collections.singletonList("dependency:copy-dependencies -DincludeTypes=zip"));
@@ -162,11 +164,12 @@ public class ConnectorDependencyResolver {
     /**
      * Extracts a ZIP file to the specified directory.
      *
-     * @param zipFile The ZIP file to extract.
+     * @param zipFile   The ZIP file to extract.
      * @param outputDir The directory to extract the ZIP file to.
      * @throws IOException If an error occurs while extracting the ZIP file.
      */
     private static void extractZipFile(File zipFile, String outputDir) throws IOException {
+
         byte[] buffer = new byte[1024];
         ZipInputStream zis = new ZipInputStream(new FileInputStream(zipFile));
         ZipEntry zipEntry = zis.getNextEntry();
@@ -193,10 +196,11 @@ public class ConnectorDependencyResolver {
      * Creates a new file from a ZIP entry.
      *
      * @param outputDir The output directory.
-     * @param zipEntry The ZIP entry.
+     * @param zipEntry  The ZIP entry.
      * @return The new file.
      */
     private static File newFile(String outputDir, ZipEntry zipEntry) {
+
         String fileName = zipEntry.getName();
         return new File(outputDir + File.separator + fileName);
     }
@@ -205,10 +209,10 @@ public class ConnectorDependencyResolver {
      * Resolves Maven dependencies from a descriptor.yml file.
      *
      * @param descriptorYaml The descriptor.yml file.
-     * @param libDir The directory to copy the dependencies to.
-     * @param invoker The Maven Invoker.
-     * @param carMojo The Mojo instance.
-     * @param connectorName The connector name.
+     * @param libDir         The directory to copy the dependencies to.
+     * @param invoker        The Maven Invoker.
+     * @param carMojo        The Mojo instance.
+     * @param connectorName  The connector name.
      * @throws Exception If an error occurs while resolving dependencies.
      */
     private static void resolveMavenDependencies(File descriptorYaml, String libDir, Invoker invoker, CARMojo carMojo,
@@ -246,7 +250,8 @@ public class ConnectorDependencyResolver {
                     // scan local entries folder for connections if not already scanned
                     if (!scannedConnections) {
                         carMojo.logInfo("Scanning local entries folder for connections.");
-                        connectionTypeMap = scanLocalEntriesForConnections(Constants.LOCAL_ENTRIES_FOLDER_PATH, carMojo);
+                        connectionTypeMap =
+                                scanLocalEntriesForConnections(Constants.LOCAL_ENTRIES_FOLDER_PATH, carMojo);
                         scannedConnections = true;
                     }
 
@@ -256,6 +261,16 @@ public class ConnectorDependencyResolver {
                                 + " as the connectionType: " + connectionType + " is not found in the local entries.");
                         continue;
                     }
+                    if (connectionTypeMap.get(connectionType).containsKey(Constants.GROUP_ID) &&
+                            connectionTypeMap.get(connectionType).containsKey(Constants.ARTIFACT_ID)
+                            && connectionTypeMap.get(connectionType).containsKey(Constants.VERSION)) {
+                        carMojo.logInfo(
+                                "DB Connection not using default driver, replacing dependency information with user provided driver details.");
+                        groupId = connectionTypeMap.get(connectionType).get(Constants.GROUP_ID);
+                        artifactId = connectionTypeMap.get(connectionType).get(Constants.ARTIFACT_ID);
+                        version = connectionTypeMap.get(connectionType).get(Constants.VERSION);
+
+                    }
                 }
 
                 dependencySet.add(groupId + ":" + artifactId + ":" + version);
@@ -263,11 +278,12 @@ public class ConnectorDependencyResolver {
         }
 
         List<String> dependenciesList = new ArrayList<>(dependencySet);
-        resolveAndCopyDependencies(dependenciesList, repositoriesList, libDir, invoker, carMojo, connectorName, projectDir);
+        resolveAndCopyDependencies(dependenciesList, repositoriesList, libDir, invoker, carMojo, connectorName,
+                projectDir);
     }
 
     private static void resolveAndCopyDependencies(List<String> dependencies, List<String> repositories,
-                                                  String libDir, Invoker invoker, CARMojo carMojo,
+                                                   String libDir, Invoker invoker, CARMojo carMojo,
                                                    String connectorName, File projectDir)
             throws LibraryResolverException {
 
@@ -281,7 +297,7 @@ public class ConnectorDependencyResolver {
             InvocationRequest request = new DefaultInvocationRequest();
             request.setBaseDirectory(projectDir);
             request.setGoals(Collections.singletonList(String.format("-f %s dependency:copy-dependencies " +
-                    "-DexcludeTransitive=true -DoutputDirectory=%s", tempPom.getAbsolutePath(),
+                            "-DexcludeTransitive=true -DoutputDirectory=%s", tempPom.getAbsolutePath(),
                     libDir + File.separator + connectorName)));
 
             executeRequest(request, "Failed to resolve and copy dependencies", invoker, carMojo);
@@ -296,12 +312,12 @@ public class ConnectorDependencyResolver {
     /**
      * Executes a Maven invocation request and logs any errors.
      *
-     * @param request The Maven invocation request to execute.
+     * @param request      The Maven invocation request to execute.
      * @param errorMessage The error message to log if the execution fails.
      * @throws DataMapperException if the execution encounters an exception.
      */
     private static void executeRequest(InvocationRequest request, String errorMessage,
-                                Invoker invoker, CARMojo carMojo) throws LibraryResolverException {
+                                       Invoker invoker, CARMojo carMojo) throws LibraryResolverException {
 
         try {
             InvocationResult result = invoker.execute(request);
@@ -325,9 +341,10 @@ public class ConnectorDependencyResolver {
      * @return The map of connection types.
      * @throws Exception If an error occurs while scanning the local entries folder.
      */
-    private static Map<String, String> scanLocalEntriesForConnections(String folderPath, CARMojo carMojo)
+    private static Map<String, Map<String, String>> scanLocalEntriesForConnections(String folderPath, CARMojo carMojo)
             throws Exception {
-        Map<String, String> connectionTypeMap = new HashMap<>();
+
+        Map<String, Map<String, String>> connectionTypeMap = new HashMap<>();
 
         File localEntriesFolder = new File(folderPath);
         if (!localEntriesFolder.exists()) {
@@ -357,8 +374,31 @@ public class ConnectorDependencyResolver {
                         NodeList ctNodes = element.getElementsByTagName("connectionType");
                         if (ctNodes.getLength() > 0) {
                             connectionType = ctNodes.item(0).getTextContent();
-                            connectionTypeMap.put(connectionType, connectorName);
+                            Map<String, String> details = new HashMap<>();
+                            details.put("connectorName", connectorName);
+                            // If DB, get Maven coordinates
+                            if ("db".equalsIgnoreCase(connectorName)) {
+                                carMojo.logInfo("Checking if connection has custom driver dependency.");
+                                String groupId = getFirstTagValue(root, Constants.GROUP_ID);
+                                String artifactId = getFirstTagValue(root, Constants.ARTIFACT_ID);
+                                String version = getFirstTagValue(root, Constants.VERSION);
 
+                                details.put(Constants.GROUP_ID, groupId);
+                                details.put(Constants.ARTIFACT_ID, artifactId);
+                                details.put(Constants.VERSION, version);
+
+                                // If not in map, or new version is higher → update
+                                if (!connectionTypeMap.containsKey(connectionType)
+                                        || isHigherVersion(details.get(Constants.VERSION),
+                                        connectionTypeMap.get(connectionType).get(Constants.VERSION))) {
+                                    carMojo.logInfo(
+                                            "Adding custom driver dependency for Connection type: " +
+                                                    connectionType + " GroupID: " + details.get(Constants.GROUP_ID) +
+                                                    "   ArtifactID : " + details.get(Constants.ARTIFACT_ID) +
+                                                    "  Version:  " + details.get(Constants.VERSION));
+                                    connectionTypeMap.put(connectionType, details);
+                                }
+                            }
                             break;
                         }
                     }
@@ -371,7 +411,6 @@ public class ConnectorDependencyResolver {
 
         return connectionTypeMap;
     }
-
 
     public static QName extractConnectorInfo(CARMojo carMojo, String filePath) {
 
@@ -397,6 +436,39 @@ public class ConnectorDependencyResolver {
         } catch (Exception e) {
             carMojo.logError("Error occurred while extracting connector information: " + e.getMessage());
             return null;
+        }
+    }
+
+    private static String getFirstTagValue(Element root, String tagName) {
+
+        NodeList nodes = root.getElementsByTagName(tagName);
+        return nodes.getLength() > 0 ? nodes.item(0).getTextContent().trim() : "";
+    }
+
+    private static boolean isHigherVersion(String newVersion, String currentVersion) {
+
+        if (newVersion == null || newVersion.isEmpty()) return false;
+        if (currentVersion == null || currentVersion.isEmpty()) return true;
+
+        String[] newParts = newVersion.split("\\.");
+        String[] currParts = currentVersion.split("\\.");
+        int len = Math.max(newParts.length, currParts.length);
+
+        for (int i = 0; i < len; i++) {
+            int n = i < newParts.length ? parseIntSafe(newParts[i]) : 0;
+            int c = i < currParts.length ? parseIntSafe(currParts[i]) : 0;
+            if (n > c) return true;
+            if (n < c) return false;
+        }
+        return false; // equal versions
+    }
+
+    private static int parseIntSafe(String s) {
+
+        try {
+            return Integer.parseInt(s);
+        } catch (NumberFormatException e) {
+            return 0;
         }
     }
 }
