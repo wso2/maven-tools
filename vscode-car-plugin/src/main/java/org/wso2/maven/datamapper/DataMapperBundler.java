@@ -912,7 +912,7 @@ public class DataMapperBundler {
      * Cleans up the resources used during the data mapper bundling process.
      * Deletes the 'src' and 'target' directories inside the data mapper bundling cache directory.
      */
-    public void cleanUpBundlingResources() {
+    private void cleanUpBundlingResources() {
         Path srcPath = getDataMapperBundlingCachePath().resolve(Constants.SRC_DIR);
         Path targetPath = getDataMapperBundlingCachePath().resolve(Constants.TARGET_DIR_NAME);
 
