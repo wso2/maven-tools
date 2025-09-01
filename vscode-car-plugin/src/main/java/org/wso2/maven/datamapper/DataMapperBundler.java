@@ -178,8 +178,8 @@ public class DataMapperBundler {
     private void installNodeAndNPM() throws DataMapperException {
         InvocationRequest request = createBaseRequest();
         mojoInstance.logInfo("Installing Node and NPM");
-        request.setBaseDirectory(getDataMapperBundlingCachePath().toFile());
-        request.setGoals(Collections.singletonList(Constants.INSTALL_NODE_AND_NPM_GOAL));
+        request.setBaseDirectory(Paths.get(projectDirectory).toFile());
+        request.setGoals(Collections.singletonList(Constants.INSTALL_NODE_AND_NPM_GOAL + " -DinstallDirectory=" + getDataMapperBundlingCachePath()));
         setNodeAndNpmProperties(request);
     
         executeRequest(request, "Node and NPM installation failed.");
@@ -193,7 +193,7 @@ public class DataMapperBundler {
      private void runNpmInstall() throws DataMapperException {
         InvocationRequest request = createBaseRequest();
         mojoInstance.logInfo("Running npm install");
-        request.setBaseDirectory(getDataMapperBundlingCachePath().toFile());
+        request.setBaseDirectory(Paths.get(projectDirectory).toFile());
         request.setGoals(Collections.singletonList(Constants.NPM_GOAL));
         setNpmInstallProperties(request);
     
@@ -209,11 +209,12 @@ public class DataMapperBundler {
 
         InvocationRequest request = createBaseRequest();
         mojoInstance.logInfo("Configuring npm");
-        request.setBaseDirectory(getDataMapperBundlingCachePath().toFile());
+        request.setBaseDirectory(Paths.get(projectDirectory).toFile());
         request.setGoals(Collections.singletonList(Constants.NPM_GOAL));
 
         Properties properties = new Properties();
         properties.setProperty("arguments", Constants.PREPEND_NODE_CONFIG);
+        properties.setProperty("workingDirectory", getDataMapperBundlingCachePath().toString());
         request.setProperties(properties);
         executeRequest(request, "npm configuration failed.");
     }
@@ -363,6 +364,7 @@ public class DataMapperBundler {
     private void setNpmInstallProperties(InvocationRequest request) {
         Properties properties = new Properties();
         properties.setProperty("arguments", Constants.NPM_INSTALL);
+        properties.setProperty("workingDirectory", getDataMapperBundlingCachePath().toString());
         request.setProperties(properties);
     }
     
