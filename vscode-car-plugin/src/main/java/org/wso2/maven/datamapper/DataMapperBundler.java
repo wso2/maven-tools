@@ -105,12 +105,12 @@ public class DataMapperBundler {
             mojoInstance.logInfo("Could not find the resources needed for data mapper bundling. " + "Starting the resources creation process.");
             createDataMapperArtifacts();
             installNodeAndNPM();
-            runNpmInstall();
-            configureNpm();
         }else{
             mojoInstance.logInfo("Resources for data mapper bundling found. Skipping the resources creation process.");
         }
 
+        runNpmInstall();
+        configureNpm();
         bundleDataMappers(nonCachedDataMappers);
         generateDataMapperSchemas(nonCachedDataMappers);
         copyDataMapperFilesToTarget();
