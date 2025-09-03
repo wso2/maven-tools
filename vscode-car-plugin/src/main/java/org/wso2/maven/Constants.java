@@ -141,7 +141,7 @@ public class Constants {
     public static final String USER_HOME = "user.home";
     public static final String REPOSITORY = "repository";
     public static final String M2 = ".m2";
-    public static final String LOCAL_MVN_SETTING = "MI.USE_LOCAL_MAVEN";
+    public static final String LOCAL_MVN_SETTING = "MI.useLocalMaven";
 
     private Constants() {
     }
