@@ -17,6 +17,7 @@
 
 package org.wso2.maven.libraries;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.maven.project.MavenProject;
 import org.apache.maven.shared.invoker.DefaultInvocationRequest;
 import org.apache.maven.shared.invoker.DefaultInvoker;
@@ -261,9 +262,9 @@ public class ConnectorDependencyResolver {
                                 + " as the connectionType: " + connectionType + " is not found in the local entries.");
                         continue;
                     }
-                    if (connectionTypeMap.get(connectionType).containsKey(Constants.GROUP_ID) &&
-                            connectionTypeMap.get(connectionType).containsKey(Constants.ARTIFACT_ID)
-                            && connectionTypeMap.get(connectionType).containsKey(Constants.VERSION)) {
+                    if (connectionTypeMap.get(connectionType).containsKey(Constants.GROUP_ID) && !(connectionTypeMap.get(connectionType).get(Constants.GROUP_ID).isBlank()) &&
+                            connectionTypeMap.get(connectionType).containsKey(Constants.ARTIFACT_ID) && !(connectionTypeMap.get(connectionType).get(Constants.ARTIFACT_ID).isBlank())
+                            && connectionTypeMap.get(connectionType).containsKey(Constants.VERSION) && !(connectionTypeMap.get(connectionType).get(Constants.VERSION).isBlank())) {
                         carMojo.logInfo(
                                 "DB Connection not using default driver, replacing dependency information with user provided driver details.");
                         groupId = connectionTypeMap.get(connectionType).get(Constants.GROUP_ID);
@@ -292,6 +293,7 @@ public class ConnectorDependencyResolver {
             throw new LibraryResolverException("Failed to create directory: " + targetDir.getAbsolutePath());
         }
         try {
+            carMojo.logInfo("dependecies    " + dependencies.toString());
             File tempPom = createPomFile(dependencies, repositories);
 
             InvocationRequest request = new DefaultInvocationRequest();
@@ -375,29 +377,29 @@ public class ConnectorDependencyResolver {
                         if (ctNodes.getLength() > 0) {
                             connectionType = ctNodes.item(0).getTextContent();
                             Map<String, String> details = new HashMap<>();
-                            details.put("connectorName", connectorName);
+                            details.put(Constants.CONNECTOR_NAME, connectorName);
                             // If DB, get Maven coordinates
-                            if ("db".equalsIgnoreCase(connectorName)) {
+                            if (Constants.DB_CONNECTOR_NAME.equalsIgnoreCase(connectorName)) {
                                 carMojo.logInfo("Checking if connection has custom driver dependency.");
                                 String groupId = getFirstTagValue(root, Constants.GROUP_ID);
                                 String artifactId = getFirstTagValue(root, Constants.ARTIFACT_ID);
                                 String version = getFirstTagValue(root, Constants.VERSION);
-
                                 details.put(Constants.GROUP_ID, groupId);
                                 details.put(Constants.ARTIFACT_ID, artifactId);
                                 details.put(Constants.VERSION, version);
+                                    // If not in map, or new version is higher → update
+                                    if (!connectionTypeMap.containsKey(connectionType)
+                                            || (connectionTypeMap.get(connectionType).containsKey(Constants.VERSION) && isHigherVersion(details.get(Constants.VERSION),
+                                            connectionTypeMap.get(connectionType).get(Constants.VERSION)))) {
+                                        carMojo.logInfo(
+                                                "Adding custom driver dependency for Connection type: " +
+                                                        connectionType + " GroupID: " +
+                                                        details.get(Constants.GROUP_ID) +
+                                                        " ArtifactID: " + details.get(Constants.ARTIFACT_ID) +
+                                                        " Version: " + details.get(Constants.VERSION));
+                                        connectionTypeMap.put(connectionType, details);
+                                    }
 
-                                // If not in map, or new version is higher → update
-                                if (!connectionTypeMap.containsKey(connectionType)
-                                        || isHigherVersion(details.get(Constants.VERSION),
-                                        connectionTypeMap.get(connectionType).get(Constants.VERSION))) {
-                                    carMojo.logInfo(
-                                            "Adding custom driver dependency for Connection type: " +
-                                                    connectionType + " GroupID: " + details.get(Constants.GROUP_ID) +
-                                                    "   ArtifactID : " + details.get(Constants.ARTIFACT_ID) +
-                                                    "  Version:  " + details.get(Constants.VERSION));
-                                    connectionTypeMap.put(connectionType, details);
-                                }
                             }
                             break;
                         }
