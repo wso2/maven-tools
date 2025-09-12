@@ -35,10 +35,18 @@ public class ConnectorLoader extends AbstractConnectorLoader {
     private static final String CONNECTOR_EXTRACT_FOLDER = "extracted-resources";
     private static final Logger log = Logger.getLogger(ConnectorLoader.class.getName());
 
-    public ConnectorLoader(SynapseLanguageClientAPI languageClient, ConnectorHolder connectorHolder,
-                           InboundConnectorHolder inboundConnectorHolder) {
+    private static class MockInboundConnectorHolder extends InboundConnectorHolder {
 
-        super(languageClient, connectorHolder, inboundConnectorHolder);
+        @Override
+        public Boolean saveInboundConnector(String connectorName, String uiSchema) {
+
+            return true;
+        }
+    }
+
+    public ConnectorLoader(SynapseLanguageClientAPI languageClient, ConnectorHolder connectorHolder) {
+
+        super(languageClient, connectorHolder, new MockInboundConnectorHolder());
     }
 
     @Override

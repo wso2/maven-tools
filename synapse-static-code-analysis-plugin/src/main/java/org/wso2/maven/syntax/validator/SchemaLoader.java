@@ -21,7 +21,6 @@ import org.eclipse.lemminx.customservice.synapse.InvalidConfigurationException;
 import org.eclipse.lemminx.customservice.synapse.connectors.AbstractConnectorLoader;
 import org.eclipse.lemminx.customservice.synapse.connectors.ConnectorHolder;
 import org.eclipse.lemminx.customservice.synapse.connectors.SchemaGenerate;
-import org.eclipse.lemminx.customservice.synapse.inbound.conector.InboundConnectorHolder;
 import org.eclipse.lemminx.customservice.synapse.parser.DependencyDownloadManager;
 import org.eclipse.lemminx.customservice.synapse.utils.Utils;
 
@@ -56,7 +55,7 @@ public class SchemaLoader {
 
         ConnectorHolder connectorHolder = ConnectorHolder.getInstance();
         AbstractConnectorLoader connectorLoader =
-                new ConnectorLoader(new MockSynapseLanguageClientAPI(), connectorHolder, new InboundConnectorHolder());
+                new ConnectorLoader(new MockSynapseLanguageClientAPI(), connectorHolder);
         connectorLoader.init(projectPath);
         connectorLoader.loadConnector();
         return connectorHolder;

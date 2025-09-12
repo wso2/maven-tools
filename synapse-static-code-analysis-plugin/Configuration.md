@@ -31,7 +31,7 @@ This document describes the configuration options available for the Synapse Stat
         <failBuildOnIssues>true</failBuildOnIssues>
         <skip>false</skip>
         <includeFiles>
-            <includeFile>src/main/wso2/**/*.xml</includeFile>
+            <includeFile>src/main/wso2mi/**/*.xml</includeFile>
         </includeFiles>
         <excludeFiles>
             <excludeFile>src/test/**</excludeFile>
