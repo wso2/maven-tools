@@ -118,6 +118,8 @@ public class Constants {
     public static final String INBOUND_CONNECTORS_DIR_NAME = "inbound-connectors";
     public static final String INBOUND_CONNECTORS_PREFIX = "mi-inbound-";
     public static final String CONNECTION_TYPE = "connectionType";
+    public static final String CONNECTOR_NAME = "connectorName";
+    public static final String DB_CONNECTOR_NAME = "db";
     public static final String ID = "id";
     public static final String PROJECT = "project";
     public static final String PROPERTIES = "properties";
