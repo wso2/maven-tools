@@ -135,13 +135,15 @@ public class Constants {
     public static final String CONFIG_DIR_PREFIX = "config_";
     public static final String METADATA_DIR = "metadata";
     public static final String HYPHEN = "-";
-    public static final String UNDERSCORE = "_";
+    public static final String DOUBLE_UNDERSCORE = "__";
     public static final String COLON = ":";
     public static final Character DOT_CHAR = '.';
     public static final String USER_HOME = "user.home";
     public static final String REPOSITORY = "repository";
     public static final String M2 = ".m2";
     public static final String LOCAL_MVN_SETTING = "MI.useLocalMaven";
+    public static final String DEPLOYMENT_TYPE = "deploymentType";
+    public static final String FAT_CAR_ENABLED = "fatCarEnabled";
 
     private Constants() {
     }

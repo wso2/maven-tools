@@ -51,7 +51,7 @@ public class CAppHandlerTest {
         CARMojo mojo = new CAppHandlerTest.MockCARMojo();
         CAppHandler handler = new CAppHandler("test", mojo);
 
-        OMElement result = handler.createDependencyDescriptorXml(projectName, java.util.Collections.<CAppDependency>emptyList());
+        OMElement result = handler.createDependencyDescriptorXml(projectName,"", java.util.Collections.<CAppDependency>emptyList(), false);
 
         assertNotNull(result);
         assertEquals("project", result.getLocalName());
@@ -71,7 +71,7 @@ public class CAppHandlerTest {
         List<CAppDependency> deps = Arrays.asList(new CAppDependency("group1", "artifact1", "1.0.0"),
                 new CAppDependency("group2", "artifact2", "2.0.0"));
 
-        OMElement result = handler.createDependencyDescriptorXml(projectName, deps);
+        OMElement result = handler.createDependencyDescriptorXml(projectName, "", deps, false);
 
         OMElement dependenciesElement = result.getFirstChildWithName(new javax.xml.namespace.QName("dependencies"));
         assertNotNull(dependenciesElement);
