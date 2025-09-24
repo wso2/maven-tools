@@ -55,7 +55,6 @@ import java.util.zip.ZipInputStream;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 
-import static org.apache.commons.io.FileUtils.copyDirectory;
 import static org.apache.commons.io.FileUtils.copyFile;
 import static org.wso2.maven.MavenUtils.createPomFile;
 import static org.wso2.maven.MavenUtils.setupInvoker;
@@ -85,40 +84,9 @@ public class CAppDependencyResolver {
         if (fatCarEnabled) {
             ArrayList<File> cAppFiles = getResolvedDependentCAppFiles(project.getBasedir(), dependenciesDir,
                     project.getArtifactId(), project.getVersion(), carMojo);
+            String dependencyDir = archiveDir + File.separator + Constants.DEPENDENCIES;
             for (File cappFile : cAppFiles) {
-                File extractDir =
-                        new File(cappFile.getParent(),
-                                cappFile.getName().replace(Constants.CAR_EXTENSION, StringUtils.EMPTY));
-                unzipFile(cappFile, extractDir);
-                // copy each dir in cApp to archiveDir
-                for (File file : Objects.requireNonNull(extractDir.listFiles())) {
-                    if (file.isDirectory()) {
-                        File targetDir = new File(archiveDir, file.getName());
-                        if (file.getName().startsWith(Constants.CONFIG_DIR_PREFIX)) {
-                            handleConfigPropertiesFile(file, targetDir);
-                        } else if (file.getName().equals(Constants.METADATA_DIR)) {
-                            for (File innerFile : Objects.requireNonNull(file.listFiles())) {
-                                File targetFile = new File(targetDir, innerFile.getName());
-                                if (innerFile.isDirectory()) {
-                                    copyDirectory(innerFile, targetFile);
-                                } else {
-                                    copyFile(innerFile, targetFile);
-                                }
-                            }
-                        } else {
-                            if (targetDir.exists()) {
-                                carMojo.logWarn("An artifact for: " + file.getName() +
-                                        " already exists in between dependencies or between a dependency and your project.");
-                            } else {
-                                copyDirectory(file, targetDir);
-                            }
-                        }
-                    }
-                }
-                updateArtifactDependencies(new File(extractDir, Constants.ARTIFACTS_XML_FILE), dependencies,
-                        carMojo);
-                updateArtifactDependencies(new File(extractDir, Constants.METADATA_XML_FILE), metaDependencies,
-                        carMojo);
+                copyFile(cappFile, new File(dependencyDir, cappFile.getName()));
             }
         }
     }
