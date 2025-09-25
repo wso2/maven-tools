@@ -828,7 +828,7 @@ public class DataMapperBundler {
             for (Path cachedDataMapper : cachedDataMappers) {
                 if (cachedDataMapper.getFileName().toString().equals(dataMapperName)) {
                     if (checkAllTsFilesCached(dataMapper, cachedDataMapper)) {
-                        restoreDataMapperToResourcesFromCache(cachedDataMapper);
+                        restoreDataMapperToResourcesFromCache(dataMapper, cachedDataMapper);
                         isCached = true;
                         break;
                     }
@@ -866,18 +866,16 @@ public class DataMapperBundler {
      * @param cachedDataMapperPath The path to the cached data mapper directory.
      * @throws DataMapperException if an error occurs while restoring the data mapper.
      */
-    private void restoreDataMapperToResourcesFromCache(Path cachedDataMapperPath) throws DataMapperException {
-        Path dataMapperPathInsideResources = Paths.get(resourcesDirectory + File.separator + Constants.DATA_MAPPER_DIR_NAME
-                + File.separator + cachedDataMapperPath.getFileName().toString());
+    private void restoreDataMapperToResourcesFromCache(Path dataMapper, Path cachedDataMapperPath) throws DataMapperException {
         try {
-            if (Files.notExists(dataMapperPathInsideResources)) {
-                Files.createDirectories(dataMapperPathInsideResources);
+            if (Files.notExists(dataMapper)) {
+                Files.createDirectories(dataMapper);
             }
             // Exclude .ts files
             FileFilter excludeTsFiles = file -> !file.getName().endsWith(".ts");
             FileUtils.copyDirectory(
                 cachedDataMapperPath.toFile(),
-                dataMapperPathInsideResources.toFile(),
+                dataMapper.toFile(),
                 excludeTsFiles
             );
             mojoInstance.getLog().info("Data mapper : " + cachedDataMapperPath.getFileName() + " restored from cache to resources directory");
