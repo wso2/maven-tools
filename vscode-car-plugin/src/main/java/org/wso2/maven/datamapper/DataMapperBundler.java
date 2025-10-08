@@ -39,6 +39,8 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Properties;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.maven.plugin.MojoExecutionException;
@@ -285,24 +287,67 @@ public class DataMapperBundler {
         String dataMapperName = dataMapper.getFileName().toString();
         mojoInstance.logInfo("Bundling data mapper: " + dataMapperName);
         createWebpackConfig(dataMapperName);
-        InvocationRequest request = createBaseRequest();
-        Path globalCacheDir = getDataMapperBundlingCachePath();
-        Path pomPath = globalCacheDir.resolve(Constants.POM_FILE_NAME);
-        request.setBaseDirectory(Paths.get(projectDirectory).toFile());
-        request.setGoals(Collections.singletonList(Constants.NPM_RUN_BUILD_GOAL + " -f " + pomPath
-                + " -Dexec.executable=\"" + getNpmExecutablePath() + "\""
-                + " -Dexec.args=\"" + Constants.RUN_BUILD + " " + Constants.PREPEND_NODE_CONFIG_FLAG + "\""));
+        Path cacheSrcDir = getDataMapperBundlingCachePath().resolve(Constants.SRC_DIR);
+        Path originalTsFile = cacheSrcDir.resolve(dataMapperName + ".ts");
+        if (!Files.exists(originalTsFile)) {
+            throw new DataMapperException("TypeScript file not found: " + originalTsFile);
+        }
+        Path backupOriginalFile = null;
+        try {
+            String content = Files.readString(originalTsFile);
 
-        executeRequest(request, "Failed to bundle data mapper: " + dataMapperName);
+            // Replace dmUtils.getPropertyValue(...) with DM_PROPERTIES.<SCOPE>['<key>']
+            Pattern pattern = Pattern.compile(
+                    "dmUtils\\s*\\.\\s*getPropertyValue\\s*\\(\\s*\"([^\"]+)\"\\s*,\\s*\"([^\"]+)\"\\s*\\)",
+                    Pattern.MULTILINE);
+            Matcher matcher = pattern.matcher(content);
+            StringBuffer updatedContent = new StringBuffer();
+            while (matcher.find()) {
+                String scope = matcher.group(1).trim().toUpperCase();
+                String key = matcher.group(2).trim();
+                String replacement = "DM_PROPERTIES." + scope + "['" + key + "']";
+                matcher.appendReplacement(updatedContent, Matcher.quoteReplacement(replacement));
+            }
+            matcher.appendTail(updatedContent);
 
-        mojoInstance.logInfo("Bundle completed for data mapper: " + dataMapperName);
-        Path bundledJsFilePath = getDataMapperBundlingCachePath().resolve(Constants.SRC_DIR).resolve(dataMapperName + ".dmc");
-        appendMapFunction(dataMapper.toString(), dataMapperName, bundledJsFilePath.toString());
-        copyGenerateDataMapperFile(bundledJsFilePath.toString(), dataMapper);
+            // Backup the original .ts file
+            backupOriginalFile = Files.createTempFile("dm_backup_", "_" + dataMapperName + ".ts");
+            Files.copy(originalTsFile, backupOriginalFile, StandardCopyOption.REPLACE_EXISTING);
 
-        cleanUpBundlingResources();
-        removeWebpackConfig();
+            // Write the modified version to the cached original path
+            Files.writeString(originalTsFile, updatedContent.toString(), StandardOpenOption.TRUNCATE_EXISTING);
+            mojoInstance.logInfo("Temporary modifications applied to: " + originalTsFile);
 
+            InvocationRequest request = createBaseRequest();
+            Path globalCacheDir = getDataMapperBundlingCachePath();
+            Path pomPath = globalCacheDir.resolve(Constants.POM_FILE_NAME);
+            request.setBaseDirectory(Paths.get(projectDirectory).toFile());
+            request.setGoals(Collections.singletonList(Constants.NPM_RUN_BUILD_GOAL + " -f " + pomPath
+                            + " -Dexec.executable=\"" + getNpmExecutablePath() + "\""
+                            + " -Dexec.args=\"" + Constants.RUN_BUILD + " " + Constants.PREPEND_NODE_CONFIG_FLAG + "\""));
+
+            executeRequest(request, "Failed to bundle data mapper: " + dataMapperName);
+
+            mojoInstance.logInfo("Bundle completed for data mapper: " + dataMapperName);
+            Path bundledJsFilePath = cacheSrcDir.resolve(dataMapperName + ".dmc");
+            appendMapFunction(dataMapper.toString(), dataMapperName, bundledJsFilePath.toString());
+            copyGenerateDataMapperFile(bundledJsFilePath.toString(), dataMapper);
+
+        } catch (Exception e) {
+            throw new DataMapperException("Failed to process TypeScript file: " + dataMapperName, e);
+        } finally {
+            if (backupOriginalFile != null && Files.exists(backupOriginalFile)) {
+                try {
+                    Files.copy(backupOriginalFile, originalTsFile, StandardCopyOption.REPLACE_EXISTING);
+                    Files.deleteIfExists(backupOriginalFile);
+                    mojoInstance.logInfo("Restored original file: " + originalTsFile);
+                } catch (IOException ex) {
+                    mojoInstance.logWarn("Failed to restore original TypeScript file: " + originalTsFile);
+                }
+            }
+            cleanUpBundlingResources();
+            removeWebpackConfig();
+        }
         return true;
     }
 
