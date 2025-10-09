@@ -51,7 +51,7 @@ public class CAppHandlerTest {
         CARMojo mojo = new CAppHandlerTest.MockCARMojo();
         CAppHandler handler = new CAppHandler("test", mojo);
 
-        OMElement result = handler.createDependencyDescriptorXml(projectName,"", java.util.Collections.<CAppDependency>emptyList(), false);
+        OMElement result = handler.createDependencyDescriptorXml(projectName,false, java.util.Collections.<CAppDependency>emptyList(), false);
 
         assertNotNull(result);
         assertEquals("project", result.getLocalName());
@@ -71,7 +71,7 @@ public class CAppHandlerTest {
         List<CAppDependency> deps = Arrays.asList(new CAppDependency("group1", "artifact1", "1.0.0"),
                 new CAppDependency("group2", "artifact2", "2.0.0"));
 
-        OMElement result = handler.createDependencyDescriptorXml(projectName, "", deps, false);
+        OMElement result = handler.createDependencyDescriptorXml(projectName, false, deps, false);
 
         OMElement dependenciesElement = result.getFirstChildWithName(new javax.xml.namespace.QName("dependencies"));
         assertNotNull(dependenciesElement);
@@ -90,5 +90,26 @@ public class CAppHandlerTest {
         assertEquals("2.0.0", depElem2.getAttributeValue(new javax.xml.namespace.QName("version")));
         assertEquals("car", depElem2.getAttributeValue(new javax.xml.namespace.QName("type")));
         assertEquals(2, dependenciesElement.getChildElements().hasNext() ? 2 : 0);
+    }
+
+    @Test
+    public void testCreateDependencyDescriptorXml_versionedDeployment() {
+
+        String projectName = "com.example_test_1.0.0";
+        CARMojo mojo = new CAppHandlerTest.MockCARMojo();
+        CAppHandler handler = new CAppHandler("test", mojo);
+
+        OMElement result = handler.createDependencyDescriptorXml(projectName,true, java.util.Collections.<CAppDependency>emptyList(), false);
+
+        assertNotNull(result);
+        assertEquals("project", result.getLocalName());
+        OMElement idElement = result.getFirstChildWithName(new javax.xml.namespace.QName("id"));
+        assertNotNull(idElement);
+        assertEquals(projectName, idElement.getText());
+        OMElement versionedDeploymentElement = result.getFirstChildWithName(new javax.xml.namespace.QName("versionedDeployment"));
+        assertNotNull(idElement);
+        assertEquals("true", versionedDeploymentElement.getText());
+        OMElement dependenciesElement = result.getFirstChildWithName(new javax.xml.namespace.QName("dependencies"));
+        assertNotNull(dependenciesElement);
     }
 }

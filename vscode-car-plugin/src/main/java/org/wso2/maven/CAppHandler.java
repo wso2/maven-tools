@@ -799,7 +799,7 @@ public class CAppHandler extends AbstractXMLDoc {
     public void createDependencyDescriptorFile(String archiveDirectory, MavenProject project) {
 
         String projectIdentifier = generateProjectIdentifier(project.getGroupId(), project.getArtifactId(), project.getVersion());
-        String deploymentType = project.getProperties().getProperty(Constants.DEPLOYMENT_TYPE, "");
+        boolean deploymentType = MavenUtils.isVersionedDeployment(project);
         OMElement projectElement;
         boolean fatCarEnabled = CAppDependencyResolver.isFatCarEnabled(project);
         List<CAppDependency> cAppDependencies = getTopLevelCAppDependencies(project);
@@ -831,17 +831,17 @@ public class CAppHandler extends AbstractXMLDoc {
      * Creates the dependency descriptor XML element for the given project and its CApp dependencies.
      *
      * @param projectName      the name of the project
-     * @param deploymentType   the deployment type of the project
+     * @param versionedDeployment   the deployment type of the project
      * @param cAppDependencies the list of CApp dependencies
      * @return OMElement representing the dependency descriptor XML
      */
-    OMElement createDependencyDescriptorXml(String projectName, String deploymentType,
+    OMElement createDependencyDescriptorXml(String projectName, boolean versionedDeployment,
                                             List<CAppDependency> cAppDependencies, boolean fatCarEnabled) {
 
         OMElement projectElement = getElement(Constants.PROJECT, Constants.EMPTY_STRING);
         OMElement idElement = getElement(Constants.ID, projectName);
         projectElement.addChild(idElement);
-        OMElement deploymentTypeElement = getElement(Constants.DEPLOYMENT_TYPE, deploymentType);
+        OMElement deploymentTypeElement = getElement(Constants.VERSIONED_DEPLOYMENT, versionedDeployment ? "true" : "false");
         projectElement.addChild(deploymentTypeElement);
 
         OMElement fatCarEnabledElement = getElement(Constants.FAT_CAR_ENABLED, fatCarEnabled ? "true" : "false");
