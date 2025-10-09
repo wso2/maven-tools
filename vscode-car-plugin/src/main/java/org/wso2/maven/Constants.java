@@ -142,7 +142,7 @@ public class Constants {
     public static final String REPOSITORY = "repository";
     public static final String M2 = ".m2";
     public static final String LOCAL_MVN_SETTING = "MI.useLocalMaven";
-    public static final String DEPLOYMENT_TYPE = "deploymentType";
+    public static final String VERSIONED_DEPLOYMENT = "versionedDeployment";
     public static final String FAT_CAR_ENABLED = "fatCarEnabled";
 
     private Constants() {

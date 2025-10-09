@@ -212,4 +212,10 @@ public class MavenUtils {
         }
         return false;
     }
+
+    public static boolean isVersionedDeployment(MavenProject project) {
+
+        String versionedDeployment = project.getProperties().getProperty(Constants.VERSIONED_DEPLOYMENT);
+        return Boolean.parseBoolean(versionedDeployment);
+    }
 }
