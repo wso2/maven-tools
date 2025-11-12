@@ -24,6 +24,7 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.lang.StringUtils;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugins.annotations.Mojo;
@@ -123,40 +124,39 @@ public class UnitTestCasesMojo extends AbstractMojo {
         }
 
         if (server.getServerType() != null && server.getServerType().equals(LOCAL_SERVER)) {
-            Path jsonFile = Paths.get(projectRootPath, ".vscode", "settings.json");
-            if (Files.exists(jsonFile)) {
-                readServerPath(jsonFile);
-            }
-            if (server.getServerPath() == null || server.getServerPath().isEmpty() ||
-                    server.getServerPath().trim().equals("/")) {
-                if ((server.getServerDownloadLink() == null || server.getServerDownloadLink().isEmpty()) &&
-                        (server.getServerVersion() != null && !server.getServerVersion().isEmpty())) {
-                    int serverVersion = Integer.parseInt(server.getServerVersion().replaceAll("\\.",
-                            ""));
-                    URL downloadUrl;
-                    if (serverVersion == 440) {
-                        downloadUrl = new URL(baseUrl + server.getServerVersion() +
-                                Constants.SLASH_WSO2_MI_WITH_DASH + server.getServerVersion() + Constants.UPDATED +
-                                Constants.ZIP);
-                    } else if (serverVersion <= 420) {
+            if (!isServerPathConfigured()) {
+                Path jsonFile = Paths.get(projectRootPath, ".vscode", "settings.json");
+                if (Files.exists(jsonFile)) {
+                    readServerPath(jsonFile);
+                }
+                if (!isServerPathConfigured()) {
+                    if (StringUtils.isBlank(server.getServerDownloadLink()) &&
+                            StringUtils.isNotBlank(server.getServerVersion())) {
+                        int serverVersion = Integer.parseInt(server.getServerVersion().replaceAll("\\.", ""));
+                        URL downloadUrl;
+                        if (serverVersion == 440) {
+                            downloadUrl = new URL(baseUrl + server.getServerVersion() +
+                                    Constants.SLASH_WSO2_MI_WITH_DASH + server.getServerVersion() + Constants.UPDATED +
+                                    Constants.ZIP);
+                        } else if (serverVersion <= 420) {
+                            getLog().error("Please enter -DtestServerPath=<path> parameter " +
+                                    "value to execute tests");
+                            throw new IOException("Test parameters are not found");
+                        } else {
+                            downloadUrl = new URL(baseUrl + server.getServerVersion() +
+                                    Constants.SLASH_WSO2_MI_WITH_DASH + server.getServerVersion() + Constants.ZIP);
+                        }
+                        server.setServerDownloadLink(downloadUrl.toString());
+                        server.setServerPath(Paths.get(getUserHome(), Constants.WSO2_MI, Constants.MICRO_INTEGRATOR,
+                                Constants.WSO2_MI_WITH_DASH + server.getServerVersion()).toString());
+                    } else {
                         getLog().error("Please enter -DtestServerPath=<path> parameter " +
                                 "value to execute tests");
                         throw new IOException("Test parameters are not found");
-                    } else {
-                        downloadUrl = new URL(baseUrl + server.getServerVersion() +
-                                Constants.SLASH_WSO2_MI_WITH_DASH + server.getServerVersion() + Constants.ZIP);
                     }
-                    server.setServerDownloadLink(downloadUrl.toString());
-                    setServerPath(Paths.get(getUserHome(), Constants.WSO2_MI, Constants.MICRO_INTEGRATOR,
-                            Constants.WSO2_MI_WITH_DASH + server.getServerVersion()).toString());
-                } else {
-                    getLog().error("Please enter -DtestServerPath=<path> parameter " +
-                            "value to execute tests");
-                    throw new IOException("Test parameters are not found");
                 }
-            } else {
-                setServerPath(server.getServerPath());
             }
+            setServerPath(server.getServerPath());
         }
 
         if (server.getServerType() != null && server.getServerType().equals(REMOTE_SERVER)
@@ -164,6 +164,11 @@ public class UnitTestCasesMojo extends AbstractMojo {
             getLog().error("Please enter -DtestServerHost=<host-ip> parameter value to execute tests");
             throw new IOException("Test parameters are not found");
         }
+    }
+
+
+    private boolean isServerPathConfigured() {
+        return StringUtils.isNotBlank(server.getServerPath()) && !("/").equals(server.getServerPath().trim());
     }
 
     private void readServerPath(Path filePath) {
