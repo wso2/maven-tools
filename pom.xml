@@ -85,6 +85,7 @@
         <module>wso2-mi-config-mapper</module>
         <module>wso2-mi-connector-plugin</module>
         <module>synapse-static-code-analysis-plugin</module>
+        <module>carbon-p2-plugin</module>
     </modules>
     <build>
         <pluginManagement>
