@@ -85,6 +85,7 @@ class Constants {
     static final String ZIP = ".zip";
     static final String UPDATED = "-UPDATED";
     static final String MI_4_4_0 = "4.4.0";
+    static final String MI_4_3_0 = "4.3.0";
     static final String SLASH_WSO2_MI_WITH_DASH = "/wso2mi-";
     static final String TS = ".ts";
     static final String DMC = ".dmc";
