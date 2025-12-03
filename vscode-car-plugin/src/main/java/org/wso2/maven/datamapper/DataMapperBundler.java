@@ -194,12 +194,12 @@ public class DataMapperBundler {
      */
      private void runNpmInstall() throws DataMapperException {
         InvocationRequest request = createBaseRequest();
-        mojoInstance.logInfo("Running npm install");
+        mojoInstance.logInfo("Running npm ci");
         request.setBaseDirectory(Paths.get(projectDirectory).toFile());
         request.setGoals(Collections.singletonList(Constants.NPM_GOAL));
         setNpmInstallProperties(request);
     
-        executeRequest(request, "npm install failed.");
+        executeRequest(request, "npm ci execution failed.");
     }
 
     /**
@@ -408,7 +408,7 @@ public class DataMapperBundler {
      */
     private void setNpmInstallProperties(InvocationRequest request) {
         Properties properties = new Properties();
-        properties.setProperty("arguments", Constants.NPM_INSTALL);
+        properties.setProperty("arguments", Constants.NPM_CI);
         properties.setProperty("workingDirectory", getDataMapperBundlingCachePath().toString());
         request.setProperties(properties);
     }

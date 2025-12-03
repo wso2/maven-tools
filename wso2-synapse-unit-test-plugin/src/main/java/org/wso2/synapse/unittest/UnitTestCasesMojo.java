@@ -25,6 +25,7 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang.StringUtils;
+import org.apache.maven.artifact.versioning.ComparableVersion;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugins.annotations.Mojo;
@@ -203,7 +204,7 @@ public class UnitTestCasesMojo extends AbstractMojo {
      *
      * @throws IOException if error occurred while reading test files
      */
-    private void testCaseRunner() throws IOException {
+    private void testCaseRunner() throws Exception {
         List<String> synapseTestCasePaths = getTestCasesFileNamesWithPaths(testCasesFilePath);
 
         if (synapseTestCasePaths.isEmpty()) {
@@ -221,7 +222,13 @@ public class UnitTestCasesMojo extends AbstractMojo {
             if (server.getServerType().equalsIgnoreCase(LOCAL_SERVER) && server.getServerPath() != null &&
                     (server.getServerPath().equalsIgnoreCase("/") ||
                             !Files.exists(Paths.get(server.getServerPath())))) {
-                setupLocalServer(projectRootPath);
+                try {
+                    getLog().info("Setting up a local server because no valid server path was provided.");
+                    setupLocalServer(projectRootPath);
+                } catch (Exception e) {
+                    getLog().error("Error in setting up the local server", e);
+                    throw new MojoExecutionException("Error in setting up the local server", e);
+                }
             }
             startTestingServer();
         }
@@ -794,8 +801,7 @@ public class UnitTestCasesMojo extends AbstractMojo {
         getLog().info("");
     }
 
-    private void setupLocalServer(String projectRootPath) {
-        try {
+    private void setupLocalServer(String projectRootPath) throws Exception {
             URL downloadUrl = new URL(baseUrl + server.getServerVersion() + Constants.SLASH_WSO2_MI_WITH_DASH +
                     server.getServerVersion() + Constants.ZIP);
             String userHome = getUserHome();
@@ -805,19 +811,29 @@ public class UnitTestCasesMojo extends AbstractMojo {
             Path zipFilePath = Paths.get(fullFilePath + Constants.ZIP);
 
             if (Files.notExists(fullFilePath) && Files.notExists(zipFilePath)) {
-                getLog().info("Downloading wso2mi-" + server.getServerVersion() + " server to \"" +
-                        miDownloadPath + "\" for testing unit test ...");
-                if (Files.notExists(miDownloadPath)) {
-                    Files.createDirectories(miDownloadPath);
+                if (isServerDownloadable(server.getServerVersion(), Constants.MI_4_3_0)) {
+                    getLog().info("Downloading wso2mi-" + server.getServerVersion() + " server to \"" +
+                            miDownloadPath + "\" for executing unit tests...");
+                    if (Files.notExists(miDownloadPath)) {
+                        Files.createDirectories(miDownloadPath);
+                    }
+                    downloadMiPack(downloadUrl.toString(), zipFilePath.toString());
+                } else {
+                    getLog().error("No downloadable server pack found for version: " + server.getServerVersion());
                 }
-                downloadMiPack(downloadUrl.toString(), zipFilePath.toString());
             }
-            if (Files.notExists(fullFilePath)) {
+
+            if (Files.notExists(fullFilePath) && Files.exists(zipFilePath)) {
                 unzipMiPack(zipFilePath.toString(), miDownloadPath.toString());
             }
-            FileUtils.copyDirectory(new File(Paths.get(projectRootPath, "deployment", "libs").toString()),
-                    new File(Paths.get(miDownloadPath.toString(), Constants.WSO2_MI_WITH_DASH +
-                            server.getServerVersion(), "lib").toString()));
+            if (Files.exists(fullFilePath)) {
+                FileUtils.copyDirectory(new File(Paths.get(projectRootPath, "deployment", "libs").toString()),
+                        new File(Paths.get(miDownloadPath.toString(), Constants.WSO2_MI_WITH_DASH +
+                                server.getServerVersion(), "lib").toString()));
+            } else {
+                throw new MojoExecutionException("No valid WSO2 Micro Integrator server path was found.");
+            }
+
             String scriptPath;
             if (System.getProperty(Constants.OS_TYPE).toLowerCase().contains(Constants.OS_WINDOWS)) {
                 scriptPath = Paths.get(miDownloadPath.toString(), Constants.WSO2_MI_WITH_DASH +
@@ -830,9 +846,6 @@ public class UnitTestCasesMojo extends AbstractMojo {
             File file = new File(scriptPath);
             file.setExecutable(true);
             server.setServerPath(scriptPath);
-        } catch (IOException e) {
-            getLog().error("Local server startup failed: " + e.getMessage(), e);
-        }
     }
 
     private String getUserHome() {
@@ -858,7 +871,7 @@ public class UnitTestCasesMojo extends AbstractMojo {
 
     private void downloadMiPack(String downloadFileUrl, String outputFile) {
         try {
-            Process p = new ProcessBuilder("curl", "-L", "-o", outputFile, downloadFileUrl)
+            Process p = new ProcessBuilder("curl", "-f", "-L", "-o", outputFile, downloadFileUrl)
                     .inheritIO().start();
             int exit = p.waitFor();
             if (exit == 0) {
@@ -877,6 +890,12 @@ public class UnitTestCasesMojo extends AbstractMojo {
         try (ZipInputStream zipInputStream = new ZipInputStream(Files.newInputStream(Paths.get(fullFilePath)))) {
             ZipEntry zipEntry = zipInputStream.getNextEntry();
             while (zipEntry != null) {
+                String name = zipEntry.getName();
+                if (name.startsWith("__MACOSX/") || name.contains("/._") || name.startsWith("._")) {
+                    zipEntry = zipInputStream.getNextEntry();
+                    continue;
+                }
+
                 File newFile = newFile(new File(miDownloadPath), zipEntry);
 
                 if (zipEntry.isDirectory()) {
@@ -904,5 +923,12 @@ public class UnitTestCasesMojo extends AbstractMojo {
         } catch (IOException e) {
             getLog().error("An error occurred when unzipping MI pack: ", e);
         }
+    }
+
+    private boolean isServerDownloadable(String currentVersion, String targetVersion) {
+
+        ComparableVersion current = new ComparableVersion(currentVersion);
+        ComparableVersion target = new ComparableVersion(targetVersion);
+        return current.compareTo(target) >= 0;
     }
 }
