@@ -35,7 +35,7 @@ class Constants {
     static final String FRONTEND_MVN_PLUGIN_ARTIFACT_ID = "frontend-maven-plugin";
     static final String FRONTEND_MVN_PLUGIN_VERSION = "1.12.0";
     static final String INSTALL_NODE_AND_NPM = "install-node-and-npm";
-    static final String NPM_INSTALL = "install";
+    static final String NPM_CI = "ci";
     static final String BUILD_COMMAND = "build";
     static final String RUN_BUILD = "run build";
     static final String RUN_GENERATE = "run generate";
