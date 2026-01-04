@@ -17,63 +17,72 @@
 */
 package org.wso2.maven.p2.generate.utils;
 
+import java.io.FileInputStream;
+import java.util.List;
+
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 
+import org.apache.maven.artifact.Artifact;
+import org.apache.maven.artifact.factory.ArtifactFactory;
+import org.apache.maven.artifact.repository.ArtifactRepository;
+import org.apache.maven.artifact.resolver.ArtifactNotFoundException;
+import org.apache.maven.artifact.resolver.ArtifactResolutionException;
+import org.apache.maven.artifact.resolver.ArtifactResolver;
 import org.apache.maven.plugin.MojoExecutionException;
-import org.apache.maven.plugin.logging.Log;
-import org.eclipse.aether.artifact.Artifact;
-import org.eclipse.aether.artifact.DefaultArtifact;
-import org.eclipse.aether.resolution.ArtifactRequest;
-import org.eclipse.aether.resolution.ArtifactResolutionException;
-import org.eclipse.aether.resolution.ArtifactResult;
 import org.w3c.dom.Document;
 import org.wso2.maven.p2.FeatureArtifact;
 import org.wso2.maven.p2.P2Profile;
 import org.wso2.maven.p2.generate.feature.Bundle;
 
 public class MavenUtils {
-	
-	private static Artifact performResolution(Log log, RepoSystemHolder repoRefs, Artifact artifact) throws MojoExecutionException {
-		
-//		LocalRepositoryManager lrm = repoSession.getLocalRepositoryManager();
-//		LocalArtifactRequest localReq = new LocalArtifactRequest(artifact, remoteRepositories, null);
-//		LocalArtifactResult lat = lrm.find(repoSession,localReq);
-		//if (log!=null) log.info("Locally available? "+lat.isAvailable());
-		
-		ArtifactRequest request = new ArtifactRequest();
-		request.setArtifact(artifact).setRepositories(repoRefs.getRemoteRepositories());
-		//if (log!=null) log.info("Current Artifact Request: "+request);
-		ArtifactResult result = null; 
+
+	public static Artifact getResolvedArtifact(Bundle bundle, ArtifactFactory artifactFactory, List remoteRepositories, ArtifactRepository localRepository, ArtifactResolver resolver) throws MojoExecutionException{
+		Artifact artifact = artifactFactory.createArtifact(bundle.getGroupId(),bundle.getArtifactId(),bundle.getVersion(),Artifact.SCOPE_RUNTIME,"jar");
 		try {
-			result = repoRefs.getRepoSystem().resolveArtifact( repoRefs.getRepoSession(), request );
+			resolver.resolve(artifact,remoteRepositories,localRepository);
 		} catch (ArtifactResolutionException e) {
-			if (log!=null) log.error("Resolution error: "+e.getMessage());
-			throw new MojoExecutionException("ERROR: "+e.getMessage(),e); 
+			throw new MojoExecutionException("ERROR",e); 
+		} catch (ArtifactNotFoundException e) {
+			throw new MojoExecutionException("ERROR",e); 
 		}
-		//if (log!=null) log.info("result.isResolved() = "+result.isResolved());
-		//TODO: use result.isResolved() to check the outcome of resolution
-		return result.getArtifact();
-	}
-
-	public static Artifact getResolvedArtifact(RepoSystemHolder repoRefs, Bundle bundle) throws MojoExecutionException{
-		Artifact artifact = new DefaultArtifact(bundle.getGroupId(), bundle.getArtifactId(), null /*org.apache.maven.artifact.Artifact.SCOPE_RUNTIME*/, "jar", bundle.getVersion());
-		return MavenUtils.performResolution(null, repoRefs, artifact);
+		return artifact;
 	}
 	
-	public static Artifact getResolvedArtifact(Log log, RepoSystemHolder repoRefs, FeatureArtifact featureArtifact) throws MojoExecutionException{
-		Artifact artifact = new DefaultArtifact(featureArtifact.getGroupId(), featureArtifact.getArtifactId(), null /*org.apache.maven.artifact.Artifact.SCOPE_RUNTIME*/, "zip", featureArtifact.getVersion());
-		return MavenUtils.performResolution(log, repoRefs, artifact);
+	public static Artifact getResolvedArtifact(FeatureArtifact featureArtifact, ArtifactFactory artifactFactory, List remoteRepositories, ArtifactRepository localRepository, ArtifactResolver resolver) throws MojoExecutionException{
+		Artifact artifact = artifactFactory.createArtifact(featureArtifact.getGroupId(),featureArtifact.getArtifactId(),featureArtifact.getVersion(),Artifact.SCOPE_RUNTIME,"zip");
+		try {
+			resolver.resolve(artifact,remoteRepositories,localRepository);
+		} catch (ArtifactResolutionException e) {
+			throw new MojoExecutionException("ERROR",e); 
+		} catch (ArtifactNotFoundException e) {
+			throw new MojoExecutionException("ERROR",e); 
+		}
+		return artifact;
 	}
 	
-	public static Artifact getResolvedArtifact(Log log, RepoSystemHolder repoRefs, P2Profile p2Profile) throws MojoExecutionException{
-		Artifact artifact = new DefaultArtifact(p2Profile.getGroupId(), p2Profile.getArtifactId(), null /*org.apache.maven.artifact.Artifact.SCOPE_RUNTIME*/, "zip", p2Profile.getVersion());
-		return MavenUtils.performResolution(log, repoRefs, artifact);
+	public static Artifact getResolvedArtifact(P2Profile p2Profile, ArtifactFactory artifactFactory, List remoteRepositories, ArtifactRepository localRepository, ArtifactResolver resolver) throws MojoExecutionException{
+		Artifact artifact = artifactFactory.createArtifact(p2Profile.getGroupId(),p2Profile.getArtifactId(),p2Profile.getVersion(),Artifact.SCOPE_RUNTIME,"zip");
+		try {
+			resolver.resolve(artifact,remoteRepositories,localRepository);
+		} catch (ArtifactResolutionException e) {
+			throw new MojoExecutionException("ERROR",e); 
+		} catch (ArtifactNotFoundException e) {
+			throw new MojoExecutionException("ERROR",e); 
+		}
+		return artifact;
 	}
 
-    public static Artifact getResolvedArtifact(Log log, RepoSystemHolder repoRefs, Artifact artifact) throws MojoExecutionException{
-    	return MavenUtils.performResolution(log, repoRefs, artifact);
+    public static Artifact getResolvedArtifact(Artifact artifact, List remoteRepositories, ArtifactRepository localRepository, ArtifactResolver resolver) throws MojoExecutionException{
+		try {
+			resolver.resolve(artifact,remoteRepositories,localRepository);
+		} catch (ArtifactResolutionException e) {
+			throw new MojoExecutionException("ERROR",e);
+		} catch (ArtifactNotFoundException e) {
+			throw new MojoExecutionException("ERROR",e);
+		}
+		return artifact;
 	}
     
     public static Document getManifestDocument() throws MojoExecutionException {

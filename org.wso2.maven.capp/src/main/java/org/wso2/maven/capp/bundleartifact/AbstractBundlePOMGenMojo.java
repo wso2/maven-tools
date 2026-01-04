@@ -7,9 +7,13 @@ import java.util.List;
 
 import javax.xml.stream.FactoryConfigurationError;
 
+import org.apache.maven.artifact.factory.ArtifactFactory;
+import org.apache.maven.artifact.repository.ArtifactRepository;
+import org.apache.maven.artifact.resolver.ArtifactResolver;
 import org.apache.maven.model.Dependency;
 import org.apache.maven.model.Plugin;
 import org.apache.maven.plugin.MojoExecutionException;
+import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.project.MavenProject;
 import org.apache.maven.project.MavenProjectHelper;
 import org.codehaus.plexus.util.xml.Xpp3Dom;
@@ -43,10 +47,10 @@ public abstract class AbstractBundlePOMGenMojo extends AbstractPOMGenMojo {
 
 	public String typeList;
 
-//	public void execute() throws MojoExecutionException, MojoFailureException {
-//		CAppMavenUtils.setMavenMetadata(getArtifactFactory(), getResolver(), getLocalRepository(), getRemoteRepositories());
-//		super.execute();
-//	}
+	public void execute() throws MojoExecutionException, MojoFailureException {
+		CAppMavenUtils.setMavenMetadata(getArtifactFactory(), getResolver(), getLocalRepository(), getRemoteRepositories());
+		super.execute();
+	}
 	
 	protected void addPlugins(MavenProject artifactMavenProject,Artifact artifact) {
 //		addMavenBundlePlugin(artifactMavenProject, artifact);
@@ -70,6 +74,19 @@ public abstract class AbstractBundlePOMGenMojo extends AbstractPOMGenMojo {
 			activatorClassNode.setValue(bundleActivatorClass);
 		}
 		
+		//Embed dependencies
+//		Xpp3Dom embedDependencyNode = CAppMavenUtils.createConfigurationNode(instructionNode, "Embed-Dependency");
+//		String embedDependencyString=null;
+//		List<LibraryArtifact> libraries = getBundlesDataInfo(null, artifact).getLibraries();
+//		for (LibraryArtifact libraryArtifact : libraries) {
+//			if (embedDependencyString==null){
+//				embedDependencyString="";
+//			}else{
+//				embedDependencyString+=",";
+//			}
+//			embedDependencyString+=libraryArtifact.getArtifactId()+";scope=compile|runtime;inline=false;";
+//		}
+//		embedDependencyNode.setValue(embedDependencyString);
 		Xpp3Dom exportPackageNode = CAppMavenUtils.createConfigurationNode(instructionNode, "Export-Package");
 		exportPackageNode.setValue(getBundlesDataInfo(null, artifact).getAllPackagesString());
 		Xpp3Dom dynamicImportNode = CAppMavenUtils.createConfigurationNode(instructionNode, "DynamicImport-Package");
@@ -93,6 +110,19 @@ public abstract class AbstractBundlePOMGenMojo extends AbstractPOMGenMojo {
 			activatorClassNode.setValue(bundleActivatorClass);
 		}
 		
+		//Embed dependencies
+//		Xpp3Dom embedDependencyNode = CAppMavenUtils.createConfigurationNode(instructionNode, "Embed-Dependency");
+//		String embedDependencyString=null;
+//		List<LibraryArtifact> libraries = getBundlesDataInfo(null, artifact).getLibraries();
+//		for (LibraryArtifact libraryArtifact : libraries) {
+//			if (embedDependencyString==null){
+//				embedDependencyString="";
+//			}else{
+//				embedDependencyString+=",";
+//			}
+//			embedDependencyString+=libraryArtifact.getArtifactId()+";scope=compile|runtime;inline=false;";
+//		}
+//		embedDependencyNode.setValue(embedDependencyString);
 		Xpp3Dom exportPackageNode = CAppMavenUtils.createConfigurationNode(instructionNode, "Export-Package");
 		exportPackageNode.setValue(getBundlesDataInfo(null, artifact).getAllPackagesString());
 		Xpp3Dom dynamicImportNode = CAppMavenUtils.createConfigurationNode(instructionNode, "DynamicImport-Package");
@@ -180,12 +210,12 @@ public abstract class AbstractBundlePOMGenMojo extends AbstractPOMGenMojo {
 	protected abstract String getBundleActivatorClass(Artifact artifact); 
 	protected abstract List<String> getProjectMapStrings();
 
-//	public abstract ArtifactFactory getArtifactFactory();
-//
-//	public abstract ArtifactResolver getResolver();
-//
-//	public abstract ArtifactRepository getLocalRepository();
-//
-//	public abstract List<?> getRemoteRepositories();
+	public abstract ArtifactFactory getArtifactFactory();
+
+	public abstract ArtifactResolver getResolver();
+
+	public abstract ArtifactRepository getLocalRepository();
+
+	public abstract List<?> getRemoteRepositories();
 
 }

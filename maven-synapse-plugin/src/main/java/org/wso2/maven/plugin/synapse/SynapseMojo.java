@@ -20,10 +20,11 @@ package org.wso2.maven.plugin.synapse;
 import java.io.File;
 import java.io.IOException;
 
+import javax.inject.Inject;
+
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
-import org.apache.maven.plugins.annotations.Component;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.project.MavenProject;
@@ -38,36 +39,36 @@ import org.codehaus.plexus.util.FileUtils;
 public class SynapseMojo extends AbstractMojo {
 
 	@Parameter(defaultValue = "${project}")
-    private MavenProject project;
+    public MavenProject project;
 
     /**
      * Maven ProjectHelper.
      */
-	@Component
-    private MavenProjectHelper projectHelper;
+    @Inject
+    public MavenProjectHelper projectHelper;
 
     /**
      * The path of the existing artifact
      */
-    @Parameter(property="package-file.artifact", required = true)
+    @Parameter(property = "package-file.artifact", required = true)
     private File artifact;
 
     /**
      * The resulting extension of the file
      */
-    @Parameter(property="package-file.extension")
+    @Parameter(property = "package-file.extension")
     private String extension;
 
     /**
      * The resulting extension of the file
      */
-    @Parameter(property="package-file.fileName")
+    @Parameter(property = "package-file.fileName")
     private String fileName;
 
     /**
      * If the file should be archived
      */
-    @Parameter(property="package-file.enableArchive", defaultValue = "false")
+    @Parameter(property = "package-file.enableArchive", defaultValue = "false")
     private boolean enableArchive;
 
     public void execute() throws MojoExecutionException, MojoFailureException {

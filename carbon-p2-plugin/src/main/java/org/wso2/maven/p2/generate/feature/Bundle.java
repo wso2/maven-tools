@@ -21,16 +21,17 @@ import java.io.IOException;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Properties;
+import java.util.jar.Attributes;
 import java.util.jar.JarFile;
 import java.util.jar.Manifest;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.apache.maven.artifact.Artifact;
 import org.apache.maven.model.Dependency;
+import org.apache.maven.model.DependencyManagement;
 import org.apache.maven.plugin.MojoExecutionException;
-import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.project.MavenProject;
-import org.eclipse.aether.artifact.Artifact;
 import org.wso2.maven.p2.generate.utils.P2Utils;
 
 
@@ -38,20 +39,27 @@ public class Bundle{
 
     /**
      * Group Id of the Bundle
+     *
+     * @parameter
+     * @required
+     * @description description
      */
-	@Parameter(required = true)
 	private String groupId;
 	
 	/**
      * Artifact Id of the Bundle
+     *
+     * @parameter
+     * @required
+     * @description description
      */
-	@Parameter(required = true)
 	private String artifactId;
 	
     /**
      * Version of the Bundle
+     *
+     * @parameter default-value=""
      */
-	@Parameter(defaultValue = "")
 	private String version;
 
 	private Artifact artifact;

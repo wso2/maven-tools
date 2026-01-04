@@ -20,10 +20,11 @@ package org.wso2.maven.api;
 import java.io.File;
 import java.io.IOException;
 
+import javax.inject.Inject;
+
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
-import org.apache.maven.plugins.annotations.Component;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.project.MavenProject;
@@ -33,7 +34,7 @@ import org.codehaus.plexus.util.FileUtils;
 /**
  * Prepare an artifact to be installed in the local Maven repository
  */
-@Mojo(name = "package-api")
+@Mojo(name="package-api")
 public class RESTAPIMojo extends AbstractMojo {
 
 	@Parameter(defaultValue = "${project}")
@@ -42,7 +43,7 @@ public class RESTAPIMojo extends AbstractMojo {
     /**
      * Maven ProjectHelper.
      */
-	@Component
+	@Inject
     private MavenProjectHelper projectHelper;
 
     /**

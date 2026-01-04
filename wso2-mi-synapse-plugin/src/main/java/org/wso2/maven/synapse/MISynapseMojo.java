@@ -16,17 +16,18 @@
  */
 package org.wso2.maven.synapse;
 
+import java.io.File;
+import java.io.IOException;
+
+import javax.inject.Inject;
+
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
-import org.apache.maven.plugins.annotations.Component;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.project.MavenProject;
 import org.apache.maven.project.MavenProjectHelper;
 import org.codehaus.plexus.util.FileUtils;
-
-import java.io.File;
-import java.io.IOException;
 
 /**
  * Prepare an artifact to be installed in the local Maven repository.
@@ -40,7 +41,7 @@ public class MISynapseMojo extends AbstractMojo {
     /**
      * Maven ProjectHelper.
      */
-	@Component
+	@Inject
     private MavenProjectHelper projectHelper;
 
     /**
@@ -56,7 +57,7 @@ public class MISynapseMojo extends AbstractMojo {
     private String extension;
 
     /**
-     * The resulting name of the file
+     * The resulting extension of the file
      */
 	@Parameter(property = "deploy-file.fileName")
     private String fileName;

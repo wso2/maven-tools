@@ -18,7 +18,7 @@ public class FileManagementUtil {
 	private static final int BUFFER = 2048;
 
 
-	public static void copyDirectory(File srcPath, File dstPath, List<String> filesToBeCopied) throws IOException{
+	public static void copyDirectory(File srcPath, File dstPath, List filesToBeCopied) throws IOException{
 		if (srcPath.isDirectory()){
 			if (!dstPath.exists()){
 				dstPath.mkdir();
@@ -39,8 +39,8 @@ public class FileManagementUtil {
 		}
 	}
 	
-	public static List<String> getAllFilesPresentInFolder(File srcPath){
-		List<String> fileList=new ArrayList<String>();
+	public static List getAllFilesPresentInFolder(File srcPath){
+		List fileList=new ArrayList();
 		if (srcPath.isDirectory()){
 			String files[] = srcPath.list();
 			for(int i = 0; i < files.length; i++){
@@ -327,7 +327,7 @@ public class FileManagementUtil {
      *         <code>extension</code>
      */
     public static File[] getMatchingFiles(String sourceDir, String fileNamePrefix, String extension) {
-        List<File> fileList = new ArrayList<File>();
+        List fileList = new ArrayList();
         File libDir = new File(sourceDir);
         String libDirPath = libDir.getAbsolutePath();
         String[] items = libDir.list();

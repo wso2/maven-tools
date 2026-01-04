@@ -28,40 +28,60 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
 import org.apache.maven.plugin.AbstractMojo;
+import org.apache.maven.plugin.MojoExecutionException;
+import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.plugins.annotations.LifecyclePhase;
 import org.apache.maven.plugins.annotations.Mojo;
-import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.project.MavenProject;
 import org.apache.commons.lang.StringUtils;
-import org.wso2.maven.Model.ArchiveException;
-import org.wso2.maven.Model.ArtifactDependency;
+import org.wso2.maven.datamapper.DataMapperBundler;
+import org.wso2.maven.datamapper.DataMapperException;
+import org.wso2.maven.libraries.CAppDependencyResolver;
+import org.wso2.maven.libraries.ConnectorDependencyResolver;
+import org.wso2.maven.model.ArchiveException;
+import org.wso2.maven.model.ArtifactDependency;
 
 /**
  * Goal which touches a timestamp file.
  */
-@Mojo(name="car", defaultPhase = LifecyclePhase.PACKAGE)
+@Mojo(name = "car", defaultPhase = LifecyclePhase.PACKAGE)
 public class CARMojo extends AbstractMojo {
 
     /**
      * The Maven Project Object
+     *
+     * @parameter expression="${project}"
+     * @required
      */
-	@Parameter(property = "project", required = true)
     MavenProject project;
 
     /**
      * The location of the archive file
+     *
+     * @parameter expression="${archiveLocation}"
      */
-	@Parameter(property = "archiveLocation")
     String archiveLocation;
 
     /**
      * The name of the archive file
+     *
+     * @parameter expression="${archiveName}"
      */
-	@Parameter(property = "archiveName")
     String archiveName;
+
+    /**
+     * The source directory
+     *
+     * @parameter expression="${sourceDirectory}"
+     */
+    private String sourceDirectory;
 
     public void logError(String message) {
         getLog().error(message);
+    }
+
+    public void logWarn(String message) {
+        getLog().warn(message);
     }
 
     public void logInfo(String message) {
@@ -72,13 +92,44 @@ public class CARMojo extends AbstractMojo {
         return archiveName == null ? project.getArtifactId() + "_" + project.getVersion() : archiveName;
     }
 
-    public void execute() {
-        appendLogs();
+    public void execute() throws MojoExecutionException, MojoFailureException {
+
         String basedir = project.getBasedir().toString();
         archiveLocation = StringUtils.isEmpty(archiveLocation) ? basedir + File.separator +
                 Constants.DEFAULT_TARGET_FOLDER : archiveLocation;
-        String artifactFolderPath = basedir + File.separator + Constants.ARTIFACTS_FOLDER_PATH;
-        String resourcesFolderPath = basedir + File.separator + Constants.RESOURCES_FOLDER_PATH;
+        if (StringUtils.isEmpty(sourceDirectory)) {
+            sourceDirectory = basedir;
+        }
+        String artifactFolderPath = sourceDirectory + File.separator + Constants.ARTIFACTS_FOLDER_PATH;
+        String resourcesFolderPath = sourceDirectory + File.separator + Constants.RESOURCES_FOLDER_PATH;
+        DataMapperBundler bundler = null;
+        try {
+            try {
+                bundler = new DataMapperBundler(this, basedir, sourceDirectory, resourcesFolderPath);
+                bundler.bundleDataMapper();
+            } catch (DataMapperException e) {
+                getLog().error("Error during data mapper bundling: " + e.getMessage(), e);
+                throw new MojoExecutionException("Data Mapper bundling failed.", e);
+            }
+
+            processCARCreation(basedir, artifactFolderPath, resourcesFolderPath);
+        } finally {
+            if (bundler != null) {
+                try {
+                    bundler.deleteGeneratedDatamapperArtifacts();
+                } catch (DataMapperException e) {
+                    getLog().error("Error during data mapper cleanup: " + e.getMessage(), e);
+                }
+            }
+        }
+    }
+
+    /**
+     * Handles the creation of the Composite Application Archive (CAR).
+     */
+    private void processCARCreation(String basedir, String artifactFolderPath, String resourcesFolderPath)
+            throws MojoExecutionException {
+        appendLogs();
 
         File artifactFolder = new File(artifactFolderPath);
         File resourcesFolder = new File(resourcesFolderPath);
@@ -93,11 +144,16 @@ public class CARMojo extends AbstractMojo {
         List<ArtifactDependency> metaDependencies = new ArrayList<>();
         if (createdArchiveDirectory || targetFolder.exists()) {
             String projectVersion = project.getVersion().replace("-SNAPSHOT", "");
-            cAppHandler.processArtifacts(artifactFolder, tempTargetDir, dependencies, projectVersion);
+            cAppHandler.processArtifacts(artifactFolder, tempTargetDir, dependencies, metaDependencies, projectVersion);
+            cAppHandler.processAPIDefinitions(resourcesFolder, tempTargetDir, metaDependencies, projectVersion);
             cAppHandler.processResourcesFolder(resourcesFolder, tempTargetDir, dependencies,
-                    metaDependencies, projectVersion);
+                    metaDependencies, projectVersion, project);
             cAppHandler.processClassMediators(dependencies, project);
+            resolveConnectorDependencies();
+            cAppHandler.processConnectorLibDependencies(dependencies, project);
+            resolveCAppDependencies(tempTargetDir, dependencies, metaDependencies);
             cAppHandler.createDependencyArtifactsXmlFile(tempTargetDir, dependencies, metaDependencies, project);
+            cAppHandler.createDependencyDescriptorFile(tempTargetDir, project);
             File fileToZip = new File(tempTargetDir);
             String fileExtension = ".car";
             try {
@@ -274,5 +330,29 @@ public class CARMojo extends AbstractMojo {
         }
         //call delete to delete files and empty directory
         file.delete();
+    }
+
+    private void resolveConnectorDependencies() throws MojoExecutionException {
+        try {
+            ConnectorDependencyResolver.resolveDependencies(this, project);
+        } catch (Exception e) {
+            getLog().error("Error occurred while resolving connector dependencies.", e);
+            throw new MojoExecutionException("Connector dependency resolution failed.", e);
+        }
+    }
+
+    private void resolveCAppDependencies(String tempTargetDir, List<ArtifactDependency> dependencies,
+                                         List<ArtifactDependency> metaDependencies) throws MojoExecutionException {
+        try {
+            CAppDependencyResolver.resolveDependencies(this, project, tempTargetDir, dependencies, metaDependencies);
+        } catch (Exception e) {
+            getLog().error("Error occurred while resolving CApp dependencies.", e);
+            throw new MojoExecutionException("CApp dependency resolution failed.", e);
+        }
+    }
+
+    public MavenProject getProject() {
+
+        return project;
     }
 }

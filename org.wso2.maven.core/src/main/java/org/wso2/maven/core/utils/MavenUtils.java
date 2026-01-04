@@ -22,6 +22,12 @@ import java.io.FileWriter;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.maven.artifact.Artifact;
+import org.apache.maven.artifact.factory.ArtifactFactory;
+import org.apache.maven.artifact.repository.ArtifactRepository;
+import org.apache.maven.artifact.resolver.ArtifactNotFoundException;
+import org.apache.maven.artifact.resolver.ArtifactResolutionException;
+import org.apache.maven.artifact.resolver.ArtifactResolver;
 import org.apache.maven.model.Dependency;
 import org.apache.maven.model.Model;
 import org.apache.maven.model.Plugin;
@@ -30,14 +36,6 @@ import org.apache.maven.model.io.xpp3.MavenXpp3Writer;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.project.MavenProject;
 import org.codehaus.plexus.util.xml.Xpp3Dom;
-import org.eclipse.aether.RepositorySystem;
-import org.eclipse.aether.RepositorySystemSession;
-import org.eclipse.aether.artifact.Artifact;
-import org.eclipse.aether.artifact.DefaultArtifact;
-import org.eclipse.aether.repository.RemoteRepository;
-import org.eclipse.aether.resolution.ArtifactRequest;
-import org.eclipse.aether.resolution.ArtifactResolutionException;
-import org.eclipse.aether.resolution.ArtifactResult;
 import org.wso2.developerstudio.eclipse.utils.file.FileUtils;
 
 public class MavenUtils {
@@ -200,23 +198,29 @@ public class MavenUtils {
 		return FileUtils.getRelativePath(mavenModuleLocation, mavenLocation);
 	}
 	
-		
-	private static RepositorySystem repoSystem; 
 	
-	private static RepositorySystemSession repoSession; 
+    private static ArtifactFactory artifactFactory;
 
-    private static List<RemoteRepository> remoteRepositories;
+    private static ArtifactResolver resolver;
 
-	public static Artifact getResolvedArtifact(Dependency dependency, String scope, String artifactSystemPath) throws MojoExecutionException {
+    private static ArtifactRepository localRepository;
+
+    private static List<?> remoteRepositories;
+
+	public static Artifact getResolvedArtifact(Dependency dependency, ArtifactFactory artifactFactory,
+			List<?> remoteRepositories, ArtifactRepository localRepository, ArtifactResolver resolver, String scope,
+			String artifactSystemPath) throws MojoExecutionException {
 		String groupId = dependency.getGroupId();
 		String artifactId = dependency.getArtifactId();
 		String version = dependency.getVersion();
 		String type = dependency.getType();
 
 		if (null != artifactSystemPath) {
-			return getResolvedArtifact(groupId, artifactId, version, type, scope, new File(artifactSystemPath));
+			return getResolvedArtifact(groupId, artifactId, version, type, scope, new File(artifactSystemPath),
+					artifactFactory, remoteRepositories, localRepository, resolver);
 		} else {
-			return getResolvedArtifact(groupId, artifactId, version, type, scope, null);
+			return getResolvedArtifact(groupId, artifactId, version, type, scope, null, artifactFactory,
+					remoteRepositories, localRepository, resolver);
 		}
 	}
 
@@ -235,8 +239,11 @@ public class MavenUtils {
 	 * @return resolved artifact
 	 * @throws MojoExecutionException
 	 */
-	public static Artifact getResolvedArtifact(String groupId, String artifactId, String version, String type, String scope) throws MojoExecutionException {
-		return getResolvedArtifact(groupId, artifactId, version, type, scope, null);
+	public static Artifact getResolvedArtifact(String groupId, String artifactId, String version, String type,
+			String scope, ArtifactFactory artifactFactory, List<?> remoteRepositories,
+			ArtifactRepository localRepository, ArtifactResolver resolver) throws MojoExecutionException {
+		return getResolvedArtifact(groupId, artifactId, version, type, scope, null, artifactFactory,
+				remoteRepositories, localRepository, resolver);
 	}
 
 	/**
@@ -248,60 +255,116 @@ public class MavenUtils {
 	 * @param type
 	 * @param scope
 	 * @param file
+	 * @param artifactFactory
+	 * @param remoteRepositories
+	 * @param localRepository
+	 * @param resolver
 	 * @return resolved artifact
 	 * @throws MojoExecutionException
 	 */
-	public static Artifact getResolvedArtifact(String groupId, String artifactId, String version, String type, String scope, File file) throws MojoExecutionException {
-		
-		Artifact artifact = new DefaultArtifact(groupId, artifactId, scope, type, version);
+	public static Artifact getResolvedArtifact(String groupId, String artifactId, String version, String type,
+			String scope, File file, ArtifactFactory artifactFactory, List<?> remoteRepositories,
+			ArtifactRepository localRepository, ArtifactResolver resolver) throws MojoExecutionException {
+		Artifact artifact = artifactFactory.createArtifact(groupId, artifactId, version, scope, type);
 
 		if (null != file) {
 			artifact.setFile(file);
 		}
 
-		return MavenUtils.performResolution(artifact);
+		try {
+			resolver.resolve(artifact, remoteRepositories, localRepository);
+		} catch (ArtifactResolutionException | ArtifactNotFoundException e) {
+			throw new MojoExecutionException("Failed to resolve dependency in system path or specified repositories.",
+					e);
+		}
+		return artifact;
+	}
+
+	public static Artifact getResolvedArtifact(String groupId, String artifactId, String version,
+			String type, String scope) throws MojoExecutionException {
+		Artifact artifact = MavenUtils.artifactFactory.createArtifact(groupId,artifactId,version,scope,type);
+		try {
+			MavenUtils.resolver.resolve(artifact,MavenUtils.remoteRepositories,MavenUtils.localRepository);
+		} catch (ArtifactResolutionException e) {
+			throw new MojoExecutionException("ERROR",e); 
+		} catch (ArtifactNotFoundException e) {
+			throw new MojoExecutionException("ERROR",e); 
+		}
+		return artifact;
 	}
 
 	/**
 	 * Resolve maven POM of the given artifact
 	 * 
 	 * @param dependency
+	 * @param artifactFactory
+	 * @param remoteRepositories
+	 * @param localRepository
+	 * @param resolver
 	 * @return resolved POM artifact
 	 * @throws MojoExecutionException
 	 */
-	public static Artifact getResolvedArtifactPom(Dependency dependency)
+	public static Artifact getResolvedArtifactPom(Dependency dependency, ArtifactFactory artifactFactory,
+			List<?> remoteRepositories, ArtifactRepository localRepository, ArtifactResolver resolver)
 			throws MojoExecutionException {
-		Artifact artifact = new DefaultArtifact(dependency.getGroupId(), dependency.getArtifactId(), dependency.getScope(), dependency.getType(), dependency.getVersion());
-		boolean isSystemScopeWithPath = dependency.getScope().equalsIgnoreCase("system") && (dependency.getSystemPath()!= null);
-		if (isSystemScopeWithPath) {
+		Artifact artifact = artifactFactory.createProjectArtifact(dependency.getGroupId(), dependency.getArtifactId(),
+				dependency.getVersion());
+		if (null != dependency.getScope()) {
+			artifact.setScope(dependency.getScope());
+		}
+		if (null != dependency.getSystemPath()) {
 			artifact.setFile(new File(dependency.getSystemPath()));
 		}
-		
-		return MavenUtils.performResolution(artifact);
-	}
-	
-	public static void setRemoteRepositories(List<RemoteRepository> remoteRepositories) {
-		MavenUtils.remoteRepositories = remoteRepositories;
-	}
-	
-	private static Artifact performResolution(Artifact artifact) throws MojoExecutionException {
-		ArtifactRequest request = new ArtifactRequest();
-		request.setArtifact(artifact).setRepositories(MavenUtils.remoteRepositories);
-		ArtifactResult result = null; 
+
 		try {
-			result = MavenUtils.repoSystem.resolveArtifact( MavenUtils.repoSession, request );
-		} catch (ArtifactResolutionException e) {
-			throw new MojoExecutionException("ERROR",e); 
+			resolver.resolve(artifact, remoteRepositories, localRepository);
+		} catch (ArtifactResolutionException | ArtifactNotFoundException e) {
+			throw new MojoExecutionException("Failed to resolve artifacts in specified repositories.", e);
 		}
-		//TODO: use result.isResolved() to check the outcome of resolution
-		return result.getArtifact();
+		return artifact;
 	}
 	
-	public static void setRepoSystem(RepositorySystem repoSystem) {
-		MavenUtils.repoSystem = repoSystem;
+	public static void main(String[] args) {
+		
 	}
 
-	public static void setRepoSession(RepositorySystemSession repoSession) {
-		MavenUtils.repoSession = repoSession;
+	public static void setArtifactFactory(ArtifactFactory artifactFactory) {
+		MavenUtils.artifactFactory = artifactFactory;
+	}
+
+	public static ArtifactFactory getArtifactFactory() {
+		return artifactFactory;
+	}
+
+	public static void setResolver(ArtifactResolver resolver) {
+		MavenUtils.resolver = resolver;
+	}
+
+	public static ArtifactResolver getResolver() {
+		return resolver;
+	}
+
+	public static void setLocalRepository(ArtifactRepository localRepository) {
+		MavenUtils.localRepository = localRepository;
+	}
+
+	public static ArtifactRepository getLocalRepository() {
+		return localRepository;
+	}
+
+	public static void setRemoteRepositories(List<?> remoteRepositories) {
+		MavenUtils.remoteRepositories = remoteRepositories;
+	}
+
+	public static List<?> getRemoteRepositories() {
+		return remoteRepositories;
+	}
+	
+	
+	public static void setMavenMetadata(ArtifactFactory artifactFactory, ArtifactResolver resolver, ArtifactRepository localRepository, List<?> remoteRepositories) {
+		MavenUtils.artifactFactory = artifactFactory;
+		MavenUtils.resolver = resolver;
+		MavenUtils.localRepository = localRepository;
+		MavenUtils.remoteRepositories = remoteRepositories;
 	}
 }

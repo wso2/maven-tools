@@ -16,7 +16,7 @@
 * under the License.
 */
 
-package org.wso2.maven.Model;
+package org.wso2.maven.model;
 
 /**
  * Class that represents the artifact in WSO2 ESB project.
@@ -28,6 +28,7 @@ public class Artifact {
     private String serverRole;
     private String type;
     private String file;
+    private String connector;
 
     /**
      * @return the name
@@ -97,5 +98,21 @@ public class Artifact {
      */
     public void setFile(String file) {
         this.file = file;
+    }
+
+    /**
+     * @return the connector
+     */
+    public String getConnector() {
+
+        return connector;
+    }
+
+    /**
+     * @param connector of the artifact
+     */
+    public void setConnector(String connector) {
+
+        this.connector = connector;
     }
 }

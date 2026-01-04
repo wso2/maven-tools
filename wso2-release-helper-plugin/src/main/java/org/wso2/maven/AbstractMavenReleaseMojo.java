@@ -15,33 +15,6 @@
 */
 package org.wso2.maven;
 
-import static org.twdata.maven.mojoexecutor.MojoExecutor.artifactId;
-import static org.twdata.maven.mojoexecutor.MojoExecutor.configuration;
-import static org.twdata.maven.mojoexecutor.MojoExecutor.element;
-import static org.twdata.maven.mojoexecutor.MojoExecutor.executeMojo;
-import static org.twdata.maven.mojoexecutor.MojoExecutor.executionEnvironment;
-import static org.twdata.maven.mojoexecutor.MojoExecutor.goal;
-import static org.twdata.maven.mojoexecutor.MojoExecutor.groupId;
-import static org.twdata.maven.mojoexecutor.MojoExecutor.name;
-import static org.twdata.maven.mojoexecutor.MojoExecutor.plugin;
-import static org.twdata.maven.mojoexecutor.MojoExecutor.version;
-
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.FileReader;
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.Collection;
-import java.util.Iterator;
-import java.util.Properties;
-
-import javax.xml.namespace.QName;
-import javax.xml.stream.XMLInputFactory;
-import javax.xml.stream.XMLOutputFactory;
-import javax.xml.stream.XMLStreamReader;
-import javax.xml.stream.XMLStreamWriter;
-
 import org.apache.axiom.om.OMAttribute;
 import org.apache.axiom.om.OMElement;
 import org.apache.axiom.om.impl.builder.StAXOMBuilder;
@@ -57,11 +30,20 @@ import org.apache.maven.plugin.BuildPluginManager;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.plugin.logging.Log;
-import org.apache.maven.plugins.annotations.Component;
-import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.project.MavenProject;
 import org.codehaus.plexus.util.xml.pull.XmlPullParserException;
-import org.twdata.maven.mojoexecutor.MojoExecutor.Element;
+
+import javax.xml.namespace.QName;
+import javax.xml.stream.XMLInputFactory;
+import javax.xml.stream.XMLOutputFactory;
+import javax.xml.stream.XMLStreamReader;
+import javax.xml.stream.XMLStreamWriter;
+import java.io.*;
+import java.util.Collection;
+import java.util.Iterator;
+import java.util.Properties;
+
+import static org.twdata.maven.mojoexecutor.MojoExecutor.*;
 
 /**
  * Abstract Mojo for wso2 maven release plugin.
@@ -108,20 +90,26 @@ public abstract class AbstractMavenReleaseMojo extends AbstractMojo {
 
 	/**
      * The project currently being build.
+     *
+     * @parameter expression="${project}"
+     * @required
      */
-    @Parameter(property="project", required = true)
     protected MavenProject mavenProject;
 
     /**
-     * The current Maven session.
+     * The current Mjava.lang.Stringaven session.
+     *
+     * @parameter expression="${session}"
+     * @required
      */
-    @Parameter(property="session", required = true)
     protected MavenSession mavenSession;
 
     /**
      * The Maven BuildPluginManager component.
+     *
+     * @component
+     * @required
      */
-    @Component
     protected BuildPluginManager pluginManager;
 
     /**

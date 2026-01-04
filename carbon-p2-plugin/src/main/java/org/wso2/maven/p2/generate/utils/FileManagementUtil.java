@@ -19,9 +19,11 @@ package org.wso2.maven.p2.generate.utils;
 
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
+import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -58,7 +60,7 @@ public class FileManagementUtil {
         }
     }
 
-    public static void copyDirectory(File srcPath, File dstPath, List<String> filesToBeCopied) throws IOException{
+    public static void copyDirectory(File srcPath, File dstPath, List filesToBeCopied) throws IOException{
         if (srcPath.isDirectory()){
             if (!dstPath.exists()){
                 dstPath.mkdir();
@@ -79,8 +81,8 @@ public class FileManagementUtil {
         }
     }
 
-    public static List<String> getAllFilesPresentInFolder(File srcPath){
-        List<String> fileList=new ArrayList<>();
+    public static List getAllFilesPresentInFolder(File srcPath){
+        List fileList=new ArrayList();
         if (srcPath.isDirectory()){
             String files[] = srcPath.list();
             for(int i = 0; i < files.length; i++){
@@ -367,7 +369,7 @@ public class FileManagementUtil {
      *         <code>extension</code>
      */
     public static File[] getMatchingFiles(String sourceDir, String fileNamePrefix, String extension) {
-        List<File> fileList = new ArrayList<>();
+        List fileList = new ArrayList();
         File libDir = new File(sourceDir);
         String libDirPath = libDir.getAbsolutePath();
         String[] items = libDir.list();

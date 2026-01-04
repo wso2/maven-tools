@@ -18,21 +18,30 @@
 
 package org.wso2.synapse.unittest;
 
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
+import org.apache.commons.io.FileUtils;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
 import org.wso2.synapse.unittest.summarytable.ConsoleDataTable;
 
+import java.io.FileOutputStream;
+import java.io.FileWriter;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.InetSocketAddress;
 import java.net.Socket;
+import java.net.URL;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.AbstractMap;
@@ -41,14 +50,22 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.TimeUnit;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipInputStream;
 
 @Mojo(name = "synapse-unit-test")
 public class UnitTestCasesMojo extends AbstractMojo {
 
     @Parameter(property = "testCasesFilePath")
     private String testCasesFilePath;
+
+    @Parameter(property = "testCaseName")
+    private String synapseTestCaseName;
 
     @Parameter(property = "server")
     private SynapseServer server;
@@ -58,13 +75,18 @@ public class UnitTestCasesMojo extends AbstractMojo {
 
     private static final String LOCAL_SERVER = "local";
     private static final String REMOTE_SERVER = "remote";
+    private static final String WIN_LAUNCHER  = "micro-integrator.bat";
+    private static final String UNIX_LAUNCHER = "micro-integrator.sh";
+    private final String baseUrl = "https://mi-distribution.wso2.com/";
 
     private Date timeStarted;
     private String serverHost;
     private String serverPort;
     private boolean isUnitTestAgentStartTheServer = false;
 
-    private DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+    private final DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+
+    private boolean overallTestFailure = false;
 
     /**
      * Execution method of Mojo class.
@@ -78,6 +100,7 @@ public class UnitTestCasesMojo extends AbstractMojo {
                 appendTestLogs();
                 testCaseRunner();
             } catch (Exception e) {
+                stopTestingServer();
                 throw new MojoExecutionException("Exception occurred while running test cases: " + e.getMessage());
             } finally {
                 if (isUnitTestAgentStartTheServer) {
@@ -92,29 +115,82 @@ public class UnitTestCasesMojo extends AbstractMojo {
      *
      * @throws IOException if error occurred while reading test files
      */
-    private void checkTestParameters() throws IOException {
-        boolean isParameterNotFound = false;
+    private void checkTestParameters(String projectRootPath) throws IOException {
 
         if (server.getServerType() == null) {
-            isParameterNotFound = true;
             getLog().error("Please enter -DtestServerType=<local/remote> parameter value to execute tests");
+            throw new IOException("Test parameters are not found");
         }
 
-        if (server.getServerType() != null && server.getServerType().equals(LOCAL_SERVER)
-                && server.getServerPath() == null) {
-            isParameterNotFound = true;
-            getLog().error("Please enter -DtestServerPath=<path> parameter value to execute tests");
+        if (server.getServerType() != null && server.getServerType().equals(LOCAL_SERVER)) {
+            Path jsonFile = Paths.get(projectRootPath, ".vscode", "settings.json");
+            if (Files.exists(jsonFile)) {
+                readServerPath(jsonFile);
+            }
+            if (server.getServerPath() == null || server.getServerPath().isEmpty() ||
+                    server.getServerPath().trim().equals("/")) {
+                if ((server.getServerDownloadLink() == null || server.getServerDownloadLink().isEmpty()) &&
+                        (server.getServerVersion() != null && !server.getServerVersion().isEmpty())) {
+                    int serverVersion = Integer.parseInt(server.getServerVersion().replaceAll("\\.",
+                            ""));
+                    URL downloadUrl;
+                    if (serverVersion == 440) {
+                        downloadUrl = new URL(baseUrl + server.getServerVersion() +
+                                Constants.SLASH_WSO2_MI_WITH_DASH + server.getServerVersion() + Constants.UPDATED +
+                                Constants.ZIP);
+                    } else if (serverVersion <= 420) {
+                        getLog().error("Please enter -DtestServerPath=<path> parameter " +
+                                "value to execute tests");
+                        throw new IOException("Test parameters are not found");
+                    } else {
+                        downloadUrl = new URL(baseUrl + server.getServerVersion() +
+                                Constants.SLASH_WSO2_MI_WITH_DASH + server.getServerVersion() + Constants.ZIP);
+                    }
+                    server.setServerDownloadLink(downloadUrl.toString());
+                    setServerPath(Paths.get(getUserHome(), Constants.WSO2_MI, Constants.MICRO_INTEGRATOR,
+                            Constants.WSO2_MI_WITH_DASH + server.getServerVersion()).toString());
+                } else {
+                    getLog().error("Please enter -DtestServerPath=<path> parameter " +
+                            "value to execute tests");
+                    throw new IOException("Test parameters are not found");
+                }
+            } else {
+                setServerPath(server.getServerPath());
+            }
         }
 
         if (server.getServerType() != null && server.getServerType().equals(REMOTE_SERVER)
                 && server.getServerHost() == null) {
-            isParameterNotFound = true;
             getLog().error("Please enter -DtestServerHost=<host-ip> parameter value to execute tests");
-        }
-
-        if (isParameterNotFound) {
             throw new IOException("Test parameters are not found");
         }
+    }
+
+    private void readServerPath(Path filePath) {
+        Pattern extractor = Pattern.compile(
+                "\"(" + Pattern.quote("MI.SERVER_PATH") + ")\"\\s*:\\s*\"([^\"]+)\"");
+        try (BufferedReader br = Files.newBufferedReader(filePath)) {
+            Optional<String> filename = br.lines()
+                    .map(String::trim)
+                    .map(extractor::matcher)
+                    .filter(Matcher::find)
+                    .map(m -> m.group(2))
+                    .findFirst();
+
+            filename.ifPresent(s -> server.setServerPath(s));
+        } catch (IOException e) {
+            // Skip if settings.json is missing or unreadable;
+            // the serverPath can still be configured via pom.xml
+        }
+    }
+
+    private void setServerPath(String basePath) {
+        if (!(basePath.endsWith(".bat") || basePath.endsWith(".sh"))) {
+            basePath = Paths.get(basePath, "bin",
+                            System.getProperty("os.name").toLowerCase().contains("windows") ? WIN_LAUNCHER :
+                                    UNIX_LAUNCHER).toString();
+        }
+        server.setServerPath(basePath);
     }
 
     /**
@@ -125,12 +201,23 @@ public class UnitTestCasesMojo extends AbstractMojo {
     private void testCaseRunner() throws IOException {
         List<String> synapseTestCasePaths = getTestCasesFileNamesWithPaths(testCasesFilePath);
 
+        if (synapseTestCasePaths.isEmpty()) {
+            getLog().info("Project does not include any unit tests.");
+            return;
+        }
+
         getLog().info("Detect " + synapseTestCasePaths.size() + " Synapse test case files to execute");
         getLog().info("");
 
         //start the synapse engine with enable the unit test agent
         if (synapseTestCasePaths.size() > 0) {
-            checkTestParameters();
+            String projectRootPath = synapseTestCasePaths.get(0).split("src")[0];
+            checkTestParameters(projectRootPath);
+            if (server.getServerType().equalsIgnoreCase(LOCAL_SERVER) && server.getServerPath() != null &&
+                    (server.getServerPath().equalsIgnoreCase("/") ||
+                            !Files.exists(Paths.get(server.getServerPath())))) {
+                setupLocalServer(projectRootPath);
+            }
             startTestingServer();
         }
 
@@ -138,7 +225,7 @@ public class UnitTestCasesMojo extends AbstractMojo {
         for (String synapseTestCaseFile : synapseTestCasePaths) {
 
             String responseFromUnitTestFramework = UnitTestClient.executeTests
-                    (synapseTestCaseFile, serverHost, serverPort);
+                    (synapseTestCaseFile, serverHost, serverPort, synapseTestCaseName);
 
             if (responseFromUnitTestFramework != null
                     && !responseFromUnitTestFramework.equals(Constants.NO_TEST_CASES)) {
@@ -153,7 +240,15 @@ public class UnitTestCasesMojo extends AbstractMojo {
         }
 
         getLog().info("");
-        generateUnitTestReport(testSummaryData);
+        if (!testSummaryData.isEmpty()) {
+            Date timeStop = new Date();
+            long duration = timeStop.getTime() - timeStarted.getTime();
+            generateUnitTestReport(testSummaryData, duration);
+            writeUnitTestReportToFile(testSummaryData, duration);
+        }
+        if (overallTestFailure) {
+            throw new IOException("Overall unit test failed");
+        }
     }
 
     /**
@@ -169,17 +264,18 @@ public class UnitTestCasesMojo extends AbstractMojo {
             fileNamesWithPaths.add(testFileFolder);
 
         } else if (testFileFolder.endsWith(Constants.TEST_FOLDER_EXTENSION)) {
-        	String testFolderPath = testFileFolder.split("\\$")[0];
+            String testFolderPath = testFileFolder.split("\\$")[0];
+            if (!(new File(testFolderPath).exists())) {
+                return fileNamesWithPaths;
+            }
             File folder = new File(testFolderPath);
             File[] listOfFiles = folder.listFiles();
-            
-            if (listOfFiles!=null) {
-	            for (File file : listOfFiles) {
-	                String filename = file.getName();
-	                if (filename.endsWith(Constants.XML_EXTENSION)) {
-	                    fileNamesWithPaths.add(testFolderPath + filename);
-	                }
-	            }
+
+            for (File file : listOfFiles) {
+                String filename = file.getName();
+                if (filename.endsWith(Constants.XML_EXTENSION)) {
+                    fileNamesWithPaths.add(testFolderPath + filename);
+                }
             }
         }
 
@@ -201,20 +297,13 @@ public class UnitTestCasesMojo extends AbstractMojo {
      *
      * @param summaryData summary data of the unit test received from synapse server
      */
-    private void generateUnitTestReport(Map<String, String> summaryData) throws IOException {
-        if (summaryData.isEmpty()) {
-            return;
-        }
-
+    private void generateUnitTestReport(Map<String, String> summaryData, long duration) throws IOException {
         getLog().info("------------------------------------------------------------------------");
         getLog().info("U N I T - T E S T  R E P O R T");
         getLog().info("------------------------------------------------------------------------");
 
         getLog().info("Start Time: " + dateFormat.format(timeStarted));
 
-
-        Date timeStop = new Date();
-        long duration = timeStop.getTime() - timeStarted.getTime();
         getLog().info("Test Run Duration: " + TimeUnit.MILLISECONDS.toSeconds(duration) + " seconds");
         getLog().info("Test Summary: ");
         getLog().info("");
@@ -251,7 +340,37 @@ public class UnitTestCasesMojo extends AbstractMojo {
 
         //check overall result of the unit test
         if (testFailedSuccessList.contains(true)) {
-            throw new IOException("Overall unit test failed");
+            overallTestFailure = true;
+        }
+    }
+
+    /**
+     * Write the unit test report to the file.
+     *
+     * @param summaryData summary data of the unit test received from synapse server.
+     */
+    private void writeUnitTestReportToFile(Map<String, String> summaryData, long duration) {
+        File targetFolder = new File(Paths.get("target").toUri());
+        if (!targetFolder.exists()) {
+            targetFolder.mkdir();
+        }
+        File reportFile = new File(Paths.get("target", Constants.REPORT_FILE_NAME).toUri());
+        if (reportFile.exists()) {
+            reportFile.delete();
+        }
+        JsonObject finalSummary = new JsonObject();
+        for (Map.Entry<String, String> summary : summaryData.entrySet()) {
+            String testFileName = summary.getKey();
+            JsonObject summaryJson = new JsonParser().parse(summary.getValue()).getAsJsonObject();
+            finalSummary.add(testFileName, summaryJson);
+        }
+        finalSummary.addProperty("Time elapsed (ms)", duration);
+        Gson gson = new GsonBuilder().setPrettyPrinting().create();
+        String prettyJson = gson.toJson(finalSummary);
+        try (FileWriter myWriter = new FileWriter(reportFile)) {
+            myWriter.write(prettyJson);
+        } catch (IOException e) {
+            getLog().error("Error in writing the unit test report to the file", e);
         }
     }
 
@@ -668,5 +787,117 @@ public class UnitTestCasesMojo extends AbstractMojo {
             getLog().info(line);
         }
         getLog().info("");
+    }
+
+    private void setupLocalServer(String projectRootPath) {
+        try {
+            URL downloadUrl = new URL(baseUrl + server.getServerVersion() + Constants.SLASH_WSO2_MI_WITH_DASH +
+                    server.getServerVersion() + Constants.ZIP);
+            String userHome = getUserHome();
+            Path miDownloadPath = Paths.get(userHome, Constants.WSO2_MI, Constants.MICRO_INTEGRATOR);
+            Path fullFilePath = Paths.get(miDownloadPath.toString(), Constants.WSO2_MI_WITH_DASH +
+                    server.getServerVersion());
+            Path zipFilePath = Paths.get(fullFilePath + Constants.ZIP);
+
+            if (Files.notExists(fullFilePath) && Files.notExists(zipFilePath)) {
+                getLog().info("Downloading wso2mi-" + server.getServerVersion() + " server to \"" +
+                        miDownloadPath + "\" for testing unit test ...");
+                if (Files.notExists(miDownloadPath)) {
+                    Files.createDirectories(miDownloadPath);
+                }
+                downloadMiPack(downloadUrl.toString(), zipFilePath.toString());
+            }
+            if (Files.notExists(fullFilePath)) {
+                unzipMiPack(zipFilePath.toString(), miDownloadPath.toString());
+            }
+            FileUtils.copyDirectory(new File(Paths.get(projectRootPath, "deployment", "libs").toString()),
+                    new File(Paths.get(miDownloadPath.toString(), Constants.WSO2_MI_WITH_DASH +
+                            server.getServerVersion(), "lib").toString()));
+            String scriptPath;
+            if (System.getProperty(Constants.OS_TYPE).toLowerCase().contains(Constants.OS_WINDOWS)) {
+                scriptPath = Paths.get(miDownloadPath.toString(), Constants.WSO2_MI_WITH_DASH +
+                        server.getServerVersion(), "bin", "micro-integrator.bat").toString();
+            } else {
+                scriptPath = Paths.get(miDownloadPath.toString(), Constants.WSO2_MI_WITH_DASH +
+                        server.getServerVersion(), "bin", "micro-integrator.sh").toString();
+
+            }
+            File file = new File(scriptPath);
+            file.setExecutable(true);
+            server.setServerPath(scriptPath);
+        } catch (IOException e) {
+            getLog().error("Local server startup failed: " + e.getMessage(), e);
+        }
+    }
+
+    private String getUserHome() {
+        if (System.getProperty(Constants.OS_TYPE).toLowerCase().contains(Constants.OS_WINDOWS)) {
+            return System.getenv(Constants.USER_PROFILE);
+        } else {
+            return System.getenv(Constants.HOME);
+        }
+    }
+
+    private File newFile(File destinationDir, ZipEntry zipEntry) throws IOException {
+        File destFile = new File(destinationDir, zipEntry.getName());
+
+        String destDirPath = destinationDir.getCanonicalPath();
+        String destFilePath = destFile.getCanonicalPath();
+
+        if (!destFilePath.startsWith(destDirPath + File.separator)) {
+            getLog().error("Entry is outside of the target dir: " + zipEntry.getName());
+        }
+
+        return destFile;
+    }
+
+    private void downloadMiPack(String downloadFileUrl, String outputFile) {
+        try {
+            Process p = new ProcessBuilder("curl", "-L", "-o", outputFile, downloadFileUrl)
+                    .inheritIO().start();
+            int exit = p.waitFor();
+            if (exit == 0) {
+                getLog().info("MI pack downloaded successfully to " + outputFile);
+            } else {
+                String errorMsg = new BufferedReader(new InputStreamReader(p.getErrorStream()))
+                        .lines().collect(Collectors.joining(System.lineSeparator()));
+                getLog().error("Unsuccessful download. Error: " + errorMsg);
+            }
+        } catch (IOException | InterruptedException e) {
+            getLog().error("An error occurred when downloading MI pack: " + e.getMessage());
+        }
+    }
+
+    private void unzipMiPack(String fullFilePath, String miDownloadPath)  {
+        try (ZipInputStream zipInputStream = new ZipInputStream(Files.newInputStream(Paths.get(fullFilePath)))) {
+            ZipEntry zipEntry = zipInputStream.getNextEntry();
+            while (zipEntry != null) {
+                File newFile = newFile(new File(miDownloadPath), zipEntry);
+
+                if (zipEntry.isDirectory()) {
+                    if (!newFile.isDirectory() && !newFile.mkdirs()) {
+                        getLog().error("Failed to create directory for unzipping pack: " + newFile);
+                    }
+                } else {
+                    // Fix for Windows-created archives
+                    File parent = newFile.getParentFile();
+                    if (!parent.isDirectory() && !parent.mkdirs()) {
+                        getLog().error("Failed to create directory for unzipping pack: " + parent);
+                    }
+
+                    // Write file content
+                    try (FileOutputStream fos = new FileOutputStream(newFile)) {
+                        int len;
+                        byte[] buffer = new byte[1024];
+                        while ((len = zipInputStream.read(buffer)) > 0) {
+                            fos.write(buffer, 0, len);
+                        }
+                    }
+                }
+                zipEntry = zipInputStream.getNextEntry();
+            }
+        } catch (IOException e) {
+            getLog().error("An error occurred when unzipping MI pack: ", e);
+        }
     }
 }

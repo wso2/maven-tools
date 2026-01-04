@@ -20,7 +20,6 @@ import java.util.Properties;
 import java.util.regex.Pattern;
 
 import org.apache.maven.plugin.MojoExecutionException;
-import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.project.MavenProject;
 import org.wso2.maven.p2.generate.feature.Bundle;
 
@@ -28,17 +27,25 @@ public class CatFeature {
     
     /**
      * Id of the feature
+     *
+     * @parameter
+     * @required
+     * @description description
      */
-	@Parameter(required = true)
     private String id;
 
     /**
      * version of the feature
+     *
+     * @parameter
+     * @required
+     * @description description
      */
-	@Parameter(required = true)
     private String version;
     
-	@Parameter(defaultValue = "${project}")
+    /**
+     * @parameter default-value="${project}"
+     */
     private MavenProject project;
     
     private boolean versionReplaced = false;

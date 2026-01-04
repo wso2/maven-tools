@@ -30,8 +30,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.jar.JarFile;
 import java.util.regex.Pattern;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import javax.xml.transform.OutputKeys;
 import javax.xml.transform.Transformer;
@@ -39,19 +37,23 @@ import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
 
+import org.apache.maven.artifact.factory.ArtifactFactory;
+import org.apache.maven.artifact.repository.ArtifactRepository;
+import org.apache.maven.artifact.resolver.ArtifactResolver;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.project.MavenProject;
-import org.eclipse.aether.RepositorySystem;
-import org.eclipse.aether.RepositorySystemSession;
-import org.eclipse.aether.repository.RemoteRepository;
+import org.codehaus.plexus.util.FileUtils;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
+import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
 import org.wso2.maven.p2.CatFeature;
 import org.wso2.maven.p2.Category;
 import org.wso2.maven.p2.EquinoxLauncher;
 import org.wso2.maven.p2.FeatureArtifact;
 import org.wso2.maven.p2.P2Profile;
 import org.wso2.maven.p2.generate.feature.Bundle;
+import org.wso2.maven.p2.generate.feature.IncludedFeature;
 
 public class P2Utils {
 	private static String[] matchList=new String[]{"perfect","equivalent","compatible","greaterOrEqual","patch", "optional"};
@@ -84,13 +86,11 @@ public class P2Utils {
             throw new MojoExecutionException("Unable to setup p2 launcher location", e);
         }
     }
-	
-	//TODO: Where is this static method called from?
-    public static ArrayList<Bundle> getProcessedP2LanucherFiles(ArrayList<Bundle> processedP2LauncherFiles, EquinoxLauncher equinoxLauncher, MavenProject project,RepositorySystem repoSystem, RepositorySystemSession repoSession, List<RemoteRepository> remoteRepositories) throws MojoExecutionException {
+
+    public static ArrayList getProcessedP2LanucherFiles(ArrayList processedP2LauncherFiles, EquinoxLauncher equinoxLauncher, MavenProject project, ArtifactFactory artifactFactory, List remoteRepositories, ArtifactRepository localRepository, ArtifactResolver resolver) throws MojoExecutionException {
         if (processedP2LauncherFiles != null)
             return processedP2LauncherFiles;
-        processedP2LauncherFiles = new ArrayList<Bundle>();
-        RepoSystemHolder repoRefs = new RepoSystemHolder(repoSystem, repoSession, remoteRepositories);
+        processedP2LauncherFiles = new ArrayList();
         Iterator iter = equinoxLauncher.getLauncherFiles().iterator();
         while (iter.hasNext()) {
             Object obj = iter.next();
@@ -108,7 +108,7 @@ public class P2Utils {
                 if (b.getVersion() == null)
                     throw e;
             }
-            b.setArtifact(MavenUtils.getResolvedArtifact(repoRefs, b));
+            b.setArtifact(MavenUtils.getResolvedArtifact(b, artifactFactory, remoteRepositories, localRepository, resolver));
             processedP2LauncherFiles.add(b);
         }
         return processedP2LauncherFiles;
@@ -161,11 +161,10 @@ public class P2Utils {
         }
 
         for (File file : listFiles) {
-            try (JarFile jarFile = new JarFile(file)){
-	            String symbolicName = jarFile.getManifest().getMainAttributes().getValue(Bundle.BUNDLE_SYMBOLIC_NAME);
-	            if (symbolicName != null && symbolicName.equals("org.eclipse.equinox.launcher")) {
-	                return file.getAbsolutePath();
-	            }
+            JarFile jarFile = new JarFile(file);
+            String symbolicName = jarFile.getManifest().getMainAttributes().getValue(Bundle.BUNDLE_SYMBOLIC_NAME);
+            if (symbolicName != null && symbolicName.equals("org.eclipse.equinox.launcher")) {
+                return file.getAbsolutePath();
             }
         }
         //launcher jar is not found. 
@@ -196,9 +195,9 @@ public class P2Utils {
     	return matchStr.equalsIgnoreCase("patch");
     }
     
-    public static void createCategoryFile(MavenProject project, ArrayList categories, File categoryFile) throws MojoExecutionException {
+    public static void createCategoryFile(MavenProject project, ArrayList categories, File categoryFile, ArtifactFactory artifactFactory, List remoteRepositories, ArtifactRepository localRepository, ArtifactResolver resolver)throws Exception {
     	
-    	Map<String, List<CatFeature>> featureCategories=new HashMap<>();
+    	Map featureCategories=new HashMap();
     	
     	Document doc = MavenUtils.getManifestDocument();
     	Element rootElement = doc.getDocumentElement();
@@ -218,21 +217,15 @@ public class P2Utils {
 				Element descriptionElement = doc.createElement("description");
 				descriptionElement.setTextContent(cat.getDescription());
 				categoryDef.appendChild(descriptionElement);
-				ArrayList<CatFeature> processedFeatures = cat.getProcessedFeatures(project);
+				ArrayList<CatFeature> processedFeatures = cat.getProcessedFeatures(project, artifactFactory, remoteRepositories, localRepository, resolver);
 				for (CatFeature feature : processedFeatures) {
-					List<CatFeature> list = null;
 					if (!featureCategories.containsKey(feature.getId()+feature.getVersion())){
-						//No value for "feature.getId()+feature.getVersion()",
-						//Add the value as a List containing only the current CatFeature
-						list = new ArrayList<>();
-						list.add(feature);
+						ArrayList list = new ArrayList();
 						featureCategories.put((feature.getId()+feature.getVersion()), list);
-					} else {
-						//Value found for "feature.getId()+feature.getVersion()",
-						//Add the current CatFeature to the existing CatFeatures
-						list = featureCategories.get(feature.getId()+feature.getVersion());
 						list.add(feature);
 					}
+					ArrayList list = (ArrayList)featureCategories.get(feature.getId()+feature.getVersion());
+					list.add(cat.getId());
 				}
 			}
 		}

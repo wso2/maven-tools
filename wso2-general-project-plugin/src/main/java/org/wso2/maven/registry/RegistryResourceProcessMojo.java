@@ -28,10 +28,11 @@ import java.util.Properties;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import javax.inject.Inject;
+
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
-import org.apache.maven.plugins.annotations.Component;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.project.MavenProject;
@@ -55,31 +56,33 @@ public class RegistryResourceProcessMojo extends AbstractMojo {
     /**
      * Maven ProjectHelper.
      */
-	@Component
+	@Inject
     private MavenProjectHelper projectHelper;
 
     /**
      * The path of the location to output the pom
+     *
+     * @parameter expression="${project}/build-artifacts"
      */
-	@Parameter(defaultValue = "${project}/build-artifacts")
     private File outputLocation;
 
     /**
      * The resulting extension of the file
      */
-	@Parameter
+    @Parameter
     private File artifactLocation;
 
     /**
      * POM location for the module project
+     *
+     * @parameter expression="${project.build.directory}/pom.xml"
      */
-	@Parameter(defaultValue = "${project.build.directory}/pom.xml")
     private File moduleProject;
 
     /**
      * Group id to use for the generated pom
      */
-	@Parameter
+    @Parameter
     private String groupId;
 
     private static final String ARTIFACT_TYPE = "registry/resource";

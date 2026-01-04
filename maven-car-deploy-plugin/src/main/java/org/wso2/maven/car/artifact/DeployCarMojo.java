@@ -24,21 +24,25 @@ import static org.wso2.maven.car.artifact.util.Constants.MI_SERVER;
 import java.io.File;
 import java.util.List;
 
+import javax.inject.Inject;
+
+import org.apache.maven.artifact.factory.ArtifactFactory;
+import org.apache.maven.artifact.repository.ArtifactRepository;
+import org.apache.maven.artifact.resolver.ArtifactResolver;
 import org.apache.maven.model.Plugin;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
-import org.apache.maven.plugins.annotations.Component;
 import org.apache.maven.plugins.annotations.LifecyclePhase;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.project.MavenProject;
 import org.apache.maven.project.MavenProjectHelper;
 import org.codehaus.plexus.util.xml.Xpp3Dom;
-import org.eclipse.aether.repository.RemoteRepository;
 
 /**
  * Deploy the generated CAR file to a Remote Server
+ * @description Deploy CAR Artifact
  */
 @Mojo(name = "deploy-car", defaultPhase = LifecyclePhase.DEPLOY)
 public class DeployCarMojo extends AbstractMojo {
@@ -52,9 +56,9 @@ public class DeployCarMojo extends AbstractMojo {
     private String trustStorePath;
 
     /**
-     * Location Trust Store folder
+     * Trust Store password
      */
-    @Parameter(property = "trustStorePath", defaultValue = "${basedir}/src/main/resources/security/wso2carbon.jks", required = true)
+    @Parameter(property = "trustStorePassword", defaultValue = "wso2carbon", required = true)
     private String trustStorePassword;
 
     /**
@@ -66,17 +70,17 @@ public class DeployCarMojo extends AbstractMojo {
     /**
      * Server URL
      */
-    @Parameter(property = "serverUrl", defaultValue = "https://localhost:9443")
+    @Parameter(property = "serverUrl", defaultValue = "https://localhost:9443", required = true)
     private String serverUrl;
 
     /**
-     * Server URL
+     * Admin User Name
      */
-    @Parameter(property = "username", defaultValue = "admin", required = true)
+    @Parameter(property = "userName", defaultValue = "admin", required = true)
     private String userName;
 
     /**
-     * Server URL
+     * Admin User Password
      */
     @Parameter(property = "password", defaultValue = "admin", required = true)
     private String password;
@@ -105,11 +109,20 @@ public class DeployCarMojo extends AbstractMojo {
     /**
      * Maven ProjectHelper.
      */
-    @Component
+    @Inject
     private MavenProjectHelper projectHelper;
 
+    @Inject
+    private ArtifactFactory artifactFactory;
+
+    @Inject
+    private ArtifactResolver resolver;
+
+    @Parameter(defaultValue = "${localRepository}")
+    private ArtifactRepository localRepository;
+
     @Parameter(defaultValue = "${project.remoteArtifactRepositories}")
-    private List<RemoteRepository> remoteRepositories;
+    private List<?> remoteRepositories;
 
     @Parameter(property = "operation", defaultValue = "deploy")
     private String operation;
@@ -192,7 +205,7 @@ public class DeployCarMojo extends AbstractMojo {
 
         for (Plugin plugin : buildPlugins) {
             String artifactId = plugin.getArtifactId();
-            if (artifactId.equals("car-maven-plugin")) {
+            if (artifactId.equals("maven-car-plugin")) {
                 Xpp3Dom configurationNode = (Xpp3Dom) plugin.getConfiguration();
                 Xpp3Dom finalNameNode = configurationNode.getChild("finalName");
                 if (finalNameNode != null) {

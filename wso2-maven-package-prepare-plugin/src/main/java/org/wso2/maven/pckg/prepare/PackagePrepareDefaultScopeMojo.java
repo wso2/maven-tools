@@ -17,15 +17,16 @@
 package org.wso2.maven.pckg.prepare;
 
 import java.io.File;
-import java.util.List;
 import java.util.ArrayList;
+import java.util.List;
+
+import javax.inject.Inject;
 
 import org.apache.maven.model.Dependency;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.plugin.logging.Log;
-import org.apache.maven.plugins.annotations.Component;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.project.MavenProject;
@@ -38,7 +39,6 @@ import org.wso2.maven.core.utils.MavenUtils;
  * This Maven Mojo is used to change all dependencies to default scope.
  * 
  * @since 1.0.0
- * 
  */
 @Mojo(name="default-scope", requiresProject = true, aggregator = true)
 public class PackagePrepareDefaultScopeMojo extends AbstractMojo {
@@ -61,7 +61,7 @@ public class PackagePrepareDefaultScopeMojo extends AbstractMojo {
 	/**
 	 * Prompter component for user input
 	 */
-	@Component
+	@Inject
 	private Prompter prompter;
 
 	private List<MavenProject> cappMavenProjects;

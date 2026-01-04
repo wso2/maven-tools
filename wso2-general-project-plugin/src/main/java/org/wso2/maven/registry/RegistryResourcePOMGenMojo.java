@@ -16,10 +16,19 @@
 
 package org.wso2.maven.registry;
 
+import java.io.File;
+import java.io.IOException;
+import java.sql.Time;
+import java.util.ArrayList;
+import java.util.Hashtable;
+import java.util.List;
+import java.util.Map;
+
+import javax.inject.Inject;
+
 import org.apache.maven.model.Plugin;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
-import org.apache.maven.plugins.annotations.Component;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.project.MavenProject;
@@ -28,21 +37,13 @@ import org.codehaus.plexus.util.xml.Xpp3Dom;
 import org.wso2.developerstudio.eclipse.utils.file.FileUtils;
 import org.wso2.maven.capp.model.Artifact;
 import org.wso2.maven.capp.mojo.AbstractPOMGenMojo;
-import org.wso2.maven.capp.utils.WSO2MavenPluginConstants;
+import org.wso2.maven.capp.utils.WSO2MavenPluginConstantants;
 import org.wso2.maven.core.utils.MavenConstants;
 import org.wso2.maven.core.utils.MavenUtils;
 import org.wso2.maven.registry.beans.RegistryCollection;
 import org.wso2.maven.registry.beans.RegistryElement;
 import org.wso2.maven.registry.beans.RegistryItem;
 import org.wso2.maven.registry.utils.GeneralProjectMavenUtils;
-
-import java.io.File;
-import java.io.IOException;
-import java.sql.Time;
-import java.util.ArrayList;
-import java.util.Hashtable;
-import java.util.List;
-import java.util.Map;
 
 /**
  * This is the Maven Mojo used for generating a pom for a sequence artifact from the old CApp project structure
@@ -56,31 +57,33 @@ public class RegistryResourcePOMGenMojo extends AbstractPOMGenMojo {
     /**
      * Maven ProjectHelper.
      */
-	@Component
+	@Inject
     private MavenProjectHelper projectHelper;
 
     /**
      * The path of the location to output the pom
+     *
+     * @parameter expression="${project.build.directory}/artifacts"
      */
-	@Parameter(defaultValue = "${project.build.directory}/artifacts")
     private File outputLocation;
 
     /**
      * The resulting extension of the file
      */
-	@Parameter
+    @Parameter
     private File artifactLocation;
 
     /**
      * POM location for the module project
+     *
+     * @parameter expression="${project.build.directory}/pom.xml"
      */
-	@Parameter(defaultValue = "${project.build.directory}/pom.xml")
     private File moduleProject;
 
     /**
      * Group id to use for the generated pom
      */
-	@Parameter
+    @Parameter
     private String groupId;
 
     private static final String ARTIFACT_TYPE = "registry/resource";
@@ -267,7 +270,7 @@ public class RegistryResourcePOMGenMojo extends AbstractPOMGenMojo {
 
     protected void addPlugins(MavenProject artifactMavenProject, Artifact artifact) {
         Plugin plugin = MavenUtils.createPluginEntry(artifactMavenProject, MavenConstants.WSO2_MAVEN_GROUPID, "wso2-general-project-plugin",
-                                                     WSO2MavenPluginConstants.MAVEN_REGISTRY_PLUGIN_VERSION, true);
+                                                     WSO2MavenPluginConstantants.MAVEN_REGISTRY_PLUGIN_VERSION, true);
         Xpp3Dom configuration = (Xpp3Dom) plugin.getConfiguration();
         //add configuration
         Xpp3Dom aritfact = MavenUtils.createConfigurationNode(configuration, "artifact");

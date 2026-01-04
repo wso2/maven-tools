@@ -20,8 +20,9 @@ package org.wso2.maven.plugin.synapse;
 import java.io.File;
 import java.io.IOException;
 
+import javax.inject.Inject;
+
 import org.apache.maven.model.Plugin;
-import org.apache.maven.plugins.annotations.Component;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.project.MavenProject;
@@ -31,7 +32,7 @@ import org.codehaus.plexus.util.xml.Xpp3Dom;
 import org.wso2.maven.capp.model.Artifact;
 import org.wso2.maven.capp.mojo.AbstractPOMGenMojo;
 import org.wso2.maven.capp.utils.CAppMavenUtils;
-import org.wso2.maven.capp.utils.WSO2MavenPluginConstants;
+import org.wso2.maven.capp.utils.WSO2MavenPluginConstantants;
 
 /**
  * This is the Maven Mojo used for generating a pom for a sequence artifact
@@ -40,43 +41,45 @@ import org.wso2.maven.capp.utils.WSO2MavenPluginConstants;
 @Mojo(name="pom-gen")
 public class SynapsePOMGenMojo extends AbstractPOMGenMojo {
 
-	@Parameter(defaultValue = "${project}")
+    @Parameter(defaultValue = "${project}")
     public MavenProject project;
 
     /**
      * Maven ProjectHelper.
      */
-	@Component
+    @Inject
     public MavenProjectHelper projectHelper;
 
     /**
      * The path of the location to output the pom
+     *
+     * @parameter expression="${project.build.directory}/artifacts"
      */
-	@Parameter(defaultValue = "${project.build.directory}/artifacts")
     public File outputLocation;
 
     /**
      * The resulting extension of the file
      */
-	@Parameter
+    @Parameter
     public File artifactLocation;
 
     /**
      * POM location for the module project
+     *
+     * @parameter expression="${project.build.directory}/pom.xml"
      */
-	@Parameter(defaultValue = "${project.build.directory}/pom.xml")
     public File moduleProject;
 
     /**
      * Group id to use for the generated pom
      */
-	@Parameter
+    @Parameter
     public String groupId;
 
     /**
      * Comma separated list of "artifact_type=extension" to be used when creating dependencies for other capp artifacts
      */
-	@Parameter
+    @Parameter
     public String typeList;
 
     private static final String ARTIFACT_TYPE = "synapse/configuration";
@@ -90,7 +93,7 @@ public class SynapsePOMGenMojo extends AbstractPOMGenMojo {
     protected void addPlugins(MavenProject artifactMavenProject, Artifact artifact) {
 
         Plugin plugin = CAppMavenUtils.createPluginEntry(artifactMavenProject, "org.wso2.maven", "maven-synapse-plugin",
-                WSO2MavenPluginConstants.MAVEN_SYNAPSE_PLUGIN_VERSION, true);
+                WSO2MavenPluginConstantants.MAVEN_SYNAPSE_PLUGIN_VERSION, true);
         Xpp3Dom configuration = (Xpp3Dom) plugin.getConfiguration();
         //add configuration
         Xpp3Dom aritfact = CAppMavenUtils.createConfigurationNode(configuration, "artifact");

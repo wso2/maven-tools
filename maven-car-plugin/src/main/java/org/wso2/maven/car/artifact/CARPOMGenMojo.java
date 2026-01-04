@@ -1,12 +1,12 @@
 /*
  * Copyright (c) 2010, WSO2 Inc. (http://www.wso2.org) All Rights Reserved.
- *
+ * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- *
+ * 
  * http://www.apache.org/licenses/LICENSE-2.0
- *
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -20,9 +20,10 @@ import java.io.File;
 import java.io.IOException;
 import java.util.List;
 
+import javax.inject.Inject;
+
 import org.apache.maven.model.Plugin;
 import org.apache.maven.plugin.MojoExecutionException;
-import org.apache.maven.plugins.annotations.Component;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.project.MavenProject;
@@ -32,11 +33,11 @@ import org.wso2.maven.capp.model.Artifact;
 import org.wso2.maven.capp.model.ArtifactDependency;
 import org.wso2.maven.capp.mojo.AbstractPOMGenMojo;
 import org.wso2.maven.capp.utils.CAppMavenUtils;
-import org.wso2.maven.capp.utils.WSO2MavenPluginConstants;
+import org.wso2.maven.capp.utils.WSO2MavenPluginConstantants;
 
 
 /**
- * This is the Maven Mojo used for generating a pom for a sequence artifact
+ * This is the Maven Mojo used for generating a pom for a sequence artifact 
  * from the old CApp project structure
  */
 @Mojo(name="pom-gen")
@@ -48,13 +49,14 @@ public class CARPOMGenMojo extends AbstractPOMGenMojo {
 	/**
 	 * Maven ProjectHelper.
 	 */
-	@Component
+	@Inject
 	public MavenProjectHelper projectHelper;
 
 	/**
 	 * The path of the location to output the pom
+	 * 
+	 * @parameter expression="${project.build.directory}/artifacts"
 	 */
-	@Parameter(defaultValue = "${project.build.directory}/artifacts")
 	public File outputLocation;
 
 	/**
@@ -62,19 +64,20 @@ public class CARPOMGenMojo extends AbstractPOMGenMojo {
 	 */
 	@Parameter
 	public File artifactLocation;
-
+	
 	/**
 	 * POM location for the module project
+	 * 
+	 * @parameter expression="${project.build.directory}/pom.xml"
 	 */
-	@Parameter(defaultValue = "${project.build.directory}/pom.xml")
 	public File moduleProject;
-
+	
 	/**
 	 * Group id to use for the generated pom
 	 */
 	@Parameter
 	public String groupId;
-
+	
 	/**
 	 * finalName to use for the generated capp project if the user wants to override the default name
 	 */
@@ -92,14 +95,14 @@ public class CARPOMGenMojo extends AbstractPOMGenMojo {
 	 */
 	@Parameter(property = "project.build.directory")
 	public String archiveLocation;
-
+	
 	private static final String ARTIFACT_TYPE="carbon/application";
-
-
+	
+	
 	protected void copyResources(MavenProject project, File projectLocation, Artifact artifact)throws IOException {
 	}
 	protected void addPlugins(MavenProject artifactMavenProject, Artifact artifact) {
-		Plugin plugin = CAppMavenUtils.createPluginEntry(artifactMavenProject,"org.wso2.maven","car-maven-plugin",WSO2MavenPluginConstants.MAVEN_CAR_PLUGIN_VERSION,true);
+		Plugin plugin = CAppMavenUtils.createPluginEntry(artifactMavenProject,"org.wso2.maven","maven-car-plugin",WSO2MavenPluginConstantants.MAVEN_CAR_PLUGIN_VERSION,true);
 		Xpp3Dom configuration = (Xpp3Dom)plugin.getConfiguration();
 		//add configuration
 		Xpp3Dom aritfact = CAppMavenUtils.createConfigurationNode(configuration,"archiveLocation");

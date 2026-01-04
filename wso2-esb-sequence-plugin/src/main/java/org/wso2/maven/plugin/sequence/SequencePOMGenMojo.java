@@ -22,10 +22,11 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
+import javax.inject.Inject;
+
 import org.apache.maven.model.Plugin;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
-import org.apache.maven.plugins.annotations.Component;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.project.MavenProject;
@@ -36,7 +37,7 @@ import org.wso2.developerstudio.eclipse.utils.data.ITemporaryFileTag;
 import org.wso2.maven.capp.model.Artifact;
 import org.wso2.maven.capp.mojo.AbstractPOMGenMojo;
 import org.wso2.maven.capp.utils.CAppMavenUtils;
-import org.wso2.maven.capp.utils.WSO2MavenPluginConstants;
+import org.wso2.maven.capp.utils.WSO2MavenPluginConstantants;
 import org.wso2.maven.core.utils.MavenConstants;
 import org.wso2.maven.esb.ESBArtifact;
 import org.wso2.maven.esb.utils.ESBMavenUtils;
@@ -45,46 +46,48 @@ import org.wso2.maven.esb.utils.ESBMavenUtils;
  * This is the Maven Mojo used for generating a pom for a sequence artifact
  * from the old CApp project structure
  */
-@Mojo(name = "pom-gen")
+@Mojo(name="pom-gen")
 public class SequencePOMGenMojo extends AbstractPOMGenMojo {
 
 	@Parameter(defaultValue = "${project}")
-    public MavenProject project;
+    private MavenProject project;
 
     /**
      * Maven ProjectHelper.
      */
-	@Component
-    public MavenProjectHelper projectHelper;
+	@Inject
+    private MavenProjectHelper projectHelper;
 
     /**
      * The path of the location to output the pom
+     *
+     * @parameter expression="${project.build.directory}/artifacts"
      */
-	@Parameter(defaultValue = "${project.build.directory}/artifacts")
     public File outputLocation;
 
     /**
      * The resulting extension of the file
      */
-	@Parameter
+    @Parameter
     public File artifactLocation;
 
     /**
      * POM location for the module project
+     *
+     * @parameter expression="${project.build.directory}/pom.xml"
      */
-	@Parameter(defaultValue = "${project.build.directory}/pom.xml")
     public File moduleProject;
 
     /**
      * Group id to use for the generated pom
      */
-	@Parameter
+    @Parameter
     public String groupId;
 
     /**
      * Comma separated list of "artifact_type=extension" to be used when creating dependencies for other capp artifacts
      */
-	@Parameter
+    @Parameter
     public String typeList;
 
     private static final String ARTIFACT_TYPE = "synapse/sequence";
@@ -132,7 +135,7 @@ public class SequencePOMGenMojo extends AbstractPOMGenMojo {
 
         Plugin plugin = CAppMavenUtils
                 .createPluginEntry(artifactMavenProject, MavenConstants.WSO2_MAVEN_GROUPID, "wso2-esb-sequence-plugin",
-                        WSO2MavenPluginConstants.WSO2_ESB_SEQUENCE_VERSION, true);
+                        WSO2MavenPluginConstantants.WSO2_ESB_SEQUENCE_VERSION, true);
         Xpp3Dom configuration = (Xpp3Dom) plugin.getConfiguration();
         //add configuration
         Xpp3Dom aritfact = CAppMavenUtils.createConfigurationNode(configuration, "artifact");

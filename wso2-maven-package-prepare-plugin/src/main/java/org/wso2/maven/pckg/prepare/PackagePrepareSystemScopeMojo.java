@@ -24,6 +24,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
+import javax.inject.Inject;
 import javax.xml.stream.FactoryConfigurationError;
 
 import org.apache.commons.lang.StringUtils;
@@ -33,7 +34,6 @@ import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.plugin.logging.Log;
-import org.apache.maven.plugins.annotations.Component;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.project.MavenProject;
@@ -46,8 +46,8 @@ import org.wso2.maven.pckg.prepare.util.PackagePrepareUtils;
 
 /**
  * This Maven Mojo is used to change all dependencies to system scope.
+ *
  * @since 1.0.0
- * 
  */
 @Mojo(name="system-scope", requiresProject = true, aggregator = true)
 public class PackagePrepareSystemScopeMojo extends AbstractMojo {
@@ -70,7 +70,7 @@ public class PackagePrepareSystemScopeMojo extends AbstractMojo {
 	/**
 	 * Prompter component for user input
 	 */
-	@Component
+	@Inject
 	private Prompter prompter;
 
 	private List<MavenProject> cappMavenProjects;

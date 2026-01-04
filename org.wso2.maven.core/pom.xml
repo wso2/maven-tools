@@ -13,16 +13,19 @@
 	<parent>
 		<groupId>org.wso2.maven</groupId>
 		<artifactId>maven-common-tools</artifactId>
-		<version>5.2.52-SNAPSHOT</version>
+		<version>5.3.8-SNAPSHOT</version>
 		<relativePath>../pom.xml</relativePath>
   	</parent>
+	<groupId>org.wso2.maven</groupId>
 	<modelVersion>4.0.0</modelVersion>
 	<artifactId>org.wso2.maven.core</artifactId>
+	<version>5.3.8-SNAPSHOT</version>
 	<packaging>jar</packaging>
 
 	<name>WSO2 Maven Core</name>
 
 	<description>Library to work with Maven</description>
+
 	<build>
 		<extensions>
 			<extension>
@@ -51,16 +54,18 @@
 		</dependency>
 		<dependency>
 			<groupId>org.apache.maven</groupId>
+			<artifactId>maven-project</artifactId>
+			<version>${org.apache.maven.project.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.maven</groupId>
 			<artifactId>maven-model</artifactId>
 			<version>${org.apache.maven.model.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>org.apache.maven</groupId>
 			<artifactId>maven-plugin-api</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>org.apache.maven</groupId>
-			<artifactId>maven-core</artifactId>
+			<version>3.9.12</version>
 		</dependency>
 		<dependency>
 			<groupId>org.apache.maven</groupId>

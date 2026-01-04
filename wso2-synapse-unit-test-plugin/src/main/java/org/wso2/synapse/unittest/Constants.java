@@ -76,4 +76,24 @@ class Constants {
     static final String OS_TYPE = "os.name";
     static final String OS_WINDOWS = "win";
     static final String NEW_LINE_SEPARATOR = "\n";
+    static final String REPORT_FILE_NAME = "unit-test-report.json";
+    static final String USER_PROFILE = "USERPROFILE";
+    static final String HOME = "HOME";
+    static final String WSO2_MI = ".wso2-mi";
+    static final String MICRO_INTEGRATOR = "micro-integrator";
+    static final String WSO2_MI_WITH_DASH = "wso2mi-";
+    static final String ZIP = ".zip";
+    static final String UPDATED = "-UPDATED";
+    static final String MI_4_4_0 = "4.4.0";
+    static final String SLASH_WSO2_MI_WITH_DASH = "/wso2mi-";
+    static final String TS = ".ts";
+    static final String DMC = ".dmc";
+    static final String INPUT_SCHEMA = "_inputSchema.json";
+    static final String OUTPUT_SCHEMA = "_outputSchema.json";
+    static final String DATA_MAPPER = "datamapper";
+    static final String REGISTRY_PATH = "registry-path";
+    static final String MEDIA_TYPE = "media-type";
+    static final String FILE_NAME = "file-name";
+    static final String DEPENDENCY = "dependency";
+    static final String TARGET = "target";
 }

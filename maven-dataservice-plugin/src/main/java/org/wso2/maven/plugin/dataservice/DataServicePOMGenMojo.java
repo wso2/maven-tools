@@ -22,10 +22,11 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
+import javax.inject.Inject;
+
 import org.apache.maven.model.Plugin;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
-import org.apache.maven.plugins.annotations.Component;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.project.MavenProject;
@@ -35,7 +36,7 @@ import org.codehaus.plexus.util.xml.Xpp3Dom;
 import org.wso2.maven.capp.model.Artifact;
 import org.wso2.maven.capp.mojo.AbstractPOMGenMojo;
 import org.wso2.maven.capp.utils.CAppMavenUtils;
-import org.wso2.maven.capp.utils.WSO2MavenPluginConstants;
+import org.wso2.maven.capp.utils.WSO2MavenPluginConstantants;
 import org.wso2.maven.core.utils.MavenConstants;
 import org.wso2.maven.plugin.dataservice.utils.DSSMavenUtils;
 
@@ -52,13 +53,14 @@ public class DataServicePOMGenMojo extends AbstractPOMGenMojo {
     /**
      * Maven ProjectHelper.
      */
-    @Component
+	@Inject
     public MavenProjectHelper projectHelper;
 
     /**
      * The path of the location to output the pom
+     *
+     * @parameter expression="${project.build.directory}/artifacts"
      */
-    @Parameter(defaultValue = "${project.build.directory}/artifacts")
     public File outputLocation;
 
     /**
@@ -69,8 +71,9 @@ public class DataServicePOMGenMojo extends AbstractPOMGenMojo {
 
     /**
      * POM location for the module project
+     *
+     * @parameter expression="${project.build.directory}/pom.xml"
      */
-    @Parameter(defaultValue = "${project.build.directory}/pom.xml")
     public File moduleProject;
 
     /**
@@ -128,7 +131,7 @@ public class DataServicePOMGenMojo extends AbstractPOMGenMojo {
 
         Plugin plugin = CAppMavenUtils.createPluginEntry(artifactMavenProject,
                 MavenConstants.WSO2_MAVEN_GROUPID, "maven-dataservice-plugin",
-                WSO2MavenPluginConstants.MAVEN_DATA_SERVICE_PLUGIN_VERSION,
+                WSO2MavenPluginConstantants.MAVEN_DATA_SERVICE_PLUGIN_VERSION,
                 true);
         Xpp3Dom configuration = (Xpp3Dom) plugin.getConfiguration();
         // add configuration

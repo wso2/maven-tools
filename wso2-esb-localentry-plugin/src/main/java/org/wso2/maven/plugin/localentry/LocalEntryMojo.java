@@ -20,10 +20,11 @@ package org.wso2.maven.plugin.localentry;
 import java.io.File;
 import java.io.IOException;
 
+import javax.inject.Inject;
+
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
-import org.apache.maven.plugins.annotations.Component;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.project.MavenProject;
@@ -34,7 +35,7 @@ import org.codehaus.plexus.util.FileUtils;
  * This is the Maven Mojo used for localentry resources to be copied to the output
  * directory in the resource-process phase.
  */
-@Mojo(name="package-localentry")
+@Mojo(name = "package-localentry")
 public class LocalEntryMojo extends AbstractMojo {
 
 	@Parameter(defaultValue = "${project}")
@@ -43,31 +44,31 @@ public class LocalEntryMojo extends AbstractMojo {
     /**
      * Maven ProjectHelper.
      */
-	@Component
+	@Inject
     private MavenProjectHelper projectHelper;
 
     /**
      * The path of the existing artifact
      */
-	@Parameter(property = "package-file.artifact", required = true)
+	@Parameter(property = "deploy-file.artifact", required = true)
     private File artifact;
 
     /**
      * The resulting extension of the file
      */
-	@Parameter(property = "package-file.extension")
+	@Parameter(property = "deploy-file.extension")
     private String extension;
 
     /**
      * The resulting extension of the file
      */
-	@Parameter(property = "package-file.fileName")
+	@Parameter(property = "deploy-file.fileName")
     private String fileName;
 
     /**
      * If the file should be archived
      */
-	@Parameter(property = "package-file.enableArchive", defaultValue = "false")
+	@Parameter(property = "deploy-file.enableArchive", defaultValue = "false")
     private boolean enableArchive;
 
     public void execute() throws MojoExecutionException, MojoFailureException {

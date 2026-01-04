@@ -20,45 +20,54 @@ package org.wso2.maven.inboundendpoint;
 import java.io.File;
 import java.io.IOException;
 
+import javax.inject.Inject;
+
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.project.MavenProject;
+import org.apache.maven.project.MavenProjectHelper;
 import org.codehaus.plexus.util.FileUtils;
 
 /**
  * Prepare an artifact to be installed in the local Maven repository
  */
-@Mojo(name="package-inbound-endpoint")
+@Mojo(name = "package-inbound-endpoint")
 public class InboundEndpointMojo extends AbstractMojo {
 
 	@Parameter(defaultValue = "${project}")
     private MavenProject project;
 
     /**
+     * Maven ProjectHelper.
+     */
+	@Inject
+    private MavenProjectHelper projectHelper;
+
+    /**
      * The path of the existing artifact
      */
-	@Parameter(property="deploy-file.artifact", required = true)
+	@Parameter(property = "deploy-file.artifact", required = true)
     private File artifact;
 
     /**
      * The resulting extension of the file
      */
-	@Parameter(property="deploy-file.extension")
+	@Parameter(property = "deploy-file.extension")
     private String extension;
 
     /**
      * The resulting extension of the file
      */
-	@Parameter(property="deploy-file.fileName")
+	@Parameter(property = "deploy-file.fileName")
     private String fileName;
 
     /**
      * If the file should be archived
      */
-	@Parameter(property="deploy-file.enableArchive", defaultValue = "false")
+	@Parameter(property = "deploy-file.enableArchive", defaultValue = "false")
     private boolean enableArchive;
 
     private File destFolder;

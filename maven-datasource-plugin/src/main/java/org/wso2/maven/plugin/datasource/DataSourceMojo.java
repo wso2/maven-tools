@@ -19,10 +19,11 @@ package org.wso2.maven.plugin.datasource;
 import java.io.File;
 import java.io.IOException;
 
+import javax.inject.Inject;
+
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
-import org.apache.maven.plugins.annotations.Component;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.project.MavenProject;
@@ -42,7 +43,7 @@ public class DataSourceMojo extends AbstractMojo {
     /**
      * Maven ProjectHelper.
      */
-	@Component
+	@Inject
     private MavenProjectHelper projectHelper;
 
     /**
@@ -58,7 +59,7 @@ public class DataSourceMojo extends AbstractMojo {
     private String extension;
 
     /**
-     * The resulting name of the file
+     * The resulting extension of the file
      */
 	@Parameter(property = "package-file.fileName")
     private String fileName;

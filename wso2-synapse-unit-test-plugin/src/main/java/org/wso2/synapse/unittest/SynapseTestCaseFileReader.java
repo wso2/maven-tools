@@ -24,6 +24,7 @@ import org.apache.commons.io.FileUtils;
 import org.apache.maven.plugin.logging.Log;
 import org.apache.maven.plugin.logging.SystemStreamLog;
 import org.codehaus.plexus.util.Base64;
+import org.codehaus.plexus.util.StringUtils;
 
 import javax.xml.namespace.QName;
 import javax.xml.stream.XMLStreamException;
@@ -56,9 +57,10 @@ class SynapseTestCaseFileReader {
      * If not read artifact from given file and append data into the artifact data
      *
      * @param synapseTestCaseFilePath synapse test case file path
+     * @param synapseTestCaseName synapse test case name
      * @return SynapseTestCase data which is ready to send to the server
      */
-    static String processArtifactData(String synapseTestCaseFilePath) {
+    static String processArtifactData(String synapseTestCaseFilePath, String synapseTestCaseName) {
 
         try {
             String synapseTestCaseFileAsString = FileUtils.readFileToString(new File(synapseTestCaseFilePath));
@@ -70,8 +72,32 @@ class SynapseTestCaseFileReader {
 
             QName qualifiedTestCases = new QName("", Constants.TEST_CASES_TAG, "");
             OMElement testCasesNode = importedXMLFile.getFirstChildWithName(qualifiedTestCases);
-            Iterator<?> testCaseIterator = testCasesNode.getChildElements();
-            if (!testCaseIterator.hasNext()) {
+            if (testCasesNode != null) {
+                Iterator<OMElement> testCaseIterator = testCasesNode.getChildElements();
+                if (!testCaseIterator.hasNext()) {
+                    return Constants.NO_TEST_CASES;
+                } else {
+                    if (StringUtils.isNotBlank(synapseTestCaseName)) {
+                        int numberOfTestCases = 0;
+                        List<OMElement> testCasesToRemove = new ArrayList<>();
+                        while (testCaseIterator.hasNext()) {
+                            numberOfTestCases++;
+                            OMElement testCase = testCaseIterator.next();
+                            String testCaseName = testCase.getAttributeValue(new QName("name"));
+                            if (!synapseTestCaseName.equals(testCaseName)) {
+                                testCasesToRemove.add(testCase);
+                            }
+                        }
+                        if (numberOfTestCases == testCasesToRemove.size()) {
+                            return Constants.NO_TEST_CASES;
+                        } else {
+                            for (OMElement testCase : testCasesToRemove) {
+                                testCase.detach();
+                            }
+                        }
+                    }
+                }
+            } else {
                 return Constants.NO_TEST_CASES;
             }
 
@@ -128,7 +154,10 @@ class SynapseTestCaseFileReader {
                 testArtifactFile = new File(RELATIVE_PREVIOUS + File.separator +
                         RELATIVE_PREVIOUS + File.separator +  testArtifactFilePath);
                 if (!testArtifactFile.exists()) {
-                    testArtifactFileAsString = FileUtils.readFileToString(new File(testArtifactFilePath.substring(1)));
+                    if (testArtifactFilePath.startsWith(File.separator)) {
+                        testArtifactFilePath = testArtifactFilePath.substring(1);
+                    }
+                    testArtifactFileAsString = FileUtils.readFileToString(new File(testArtifactFilePath));
                 } else {
                     testArtifactFileAsString = FileUtils.readFileToString(testArtifactFile);
                 }
@@ -176,7 +205,7 @@ class SynapseTestCaseFileReader {
                     supportiveArtifactFile = new File(RELATIVE_PREVIOUS + File.separator + 
                                     RELATIVE_PREVIOUS + File.separator +  artifactFilePath);
                     if (!supportiveArtifactFile.exists()) {
-                        supportiveArtifactFileAsString = FileUtils.readFileToString(new File(artifactFilePath.substring(1)));
+                        supportiveArtifactFileAsString = FileUtils.readFileToString(new File(artifactFilePath));
                     } else {
                         supportiveArtifactFileAsString = FileUtils.readFileToString(supportiveArtifactFile);
                     }
@@ -208,6 +237,7 @@ class SynapseTestCaseFileReader {
         QName qualifiedRegistryResources = new QName("", Constants.REGISTRY_RESOURCES, "");
         OMElement registryResourcesNode = artifactsNode.getFirstChildWithName(qualifiedRegistryResources);
 
+        List<OMElement> datamapperDataNodeList = new ArrayList<>();
         Iterator resourceIterator = Collections.emptyIterator();
         if (registryResourcesNode != null) {
             resourceIterator = registryResourcesNode.getChildElements();
@@ -221,19 +251,11 @@ class SynapseTestCaseFileReader {
 
             String registryResourceFileAsString;
             if (!registryResourcesFileNode.getText().isEmpty()) {
-                String registryFilePath = registryResourcesFileNode.getText();
-                File registryResourceFile = new File(RELATIVE_PREVIOUS + File.separator +  registryFilePath);
-                if (!registryResourceFile.exists()) {
-                    registryResourceFile = new File(RELATIVE_PREVIOUS + File.separator +
-                            RELATIVE_PREVIOUS + File.separator +  registryFilePath);
-                    if (!registryResourceFile.exists()) {
-                        registryResourceFileAsString = FileUtils.readFileToString(new File(registryFilePath.substring(1)));
-                    } else {
-                        registryResourceFileAsString = FileUtils.readFileToString(registryResourceFile);
-                    }
-                } else {
-                    registryResourceFileAsString = FileUtils.readFileToString(registryResourceFile);
+                if (registryResourcesFileNode.getText().endsWith(".ts") &&
+                        registryResourcesFileNode.getText().contains(Constants.DATA_MAPPER)) {
+                    processDataMapperResourcesData(datamapperDataNodeList, resource);
                 }
+                registryResourceFileAsString = getResourceFileAsString(registryResourcesFileNode);
             } else {
                 throw new IOException("Registry resource does not contain configuration file path");
             }
@@ -244,6 +266,87 @@ class SynapseTestCaseFileReader {
                 throw new IOException("Registry resource does not contain any configuration data");
             }
         }
+        // add datamapper data to the registry resources
+        for (OMElement child : datamapperDataNodeList) {
+            registryResourcesNode.addChild(child);
+        }
+    }
+
+    /**
+     * Add entries for Datamapper resources
+     *
+     * @param datamapperDataNodeList list of datamapper data nodes
+     * @param registryResourcesNode  registry resources node
+     *
+     */
+    private static void processDataMapperResourcesData(List<OMElement> datamapperDataNodeList,
+                                                       OMElement registryResourcesNode)
+            throws IOException, XMLStreamException {
+
+        OMElement dataMapperFileNodeName = registryResourcesNode.getFirstChildWithName(new QName("",
+                Constants.FILE_NAME, ""));
+        String registryPath = registryResourcesNode.getFirstChildWithName(new QName("",
+                Constants.REGISTRY_PATH, "")).getText();
+        String mediaType = registryResourcesNode.getFirstChildWithName(new QName("",
+                Constants.MEDIA_TYPE, "")).getText();
+        if (dataMapperFileNodeName.getText().isEmpty()) {
+            return;
+        }
+        String dataMapperName = dataMapperFileNodeName.getText().replace(Constants.TS, "");
+        createDataMapperResourceEntry(dataMapperName, dataMapperName + Constants.DMC, mediaType,
+                datamapperDataNodeList, registryPath);
+        createDataMapperResourceEntry(dataMapperName, dataMapperName + Constants.INPUT_SCHEMA, mediaType,
+                datamapperDataNodeList, registryPath);
+        createDataMapperResourceEntry(dataMapperName, dataMapperName + Constants.OUTPUT_SCHEMA, mediaType,
+                datamapperDataNodeList, registryPath);
+    }
+
+    /**
+     * Create data mapper resource entry which resides in the target directory
+     *
+     * @param dataMapperName data mapper name
+     * @param resourceName   resource name
+     * @param dataMapperNodes list of data mapper nodes
+     *
+     */
+    private static void createDataMapperResourceEntry(String dataMapperName, String resourceName, String mediaType,
+                                                      List<OMElement> dataMapperNodes, String registryPath)
+            throws IOException, XMLStreamException {
+
+        OMElement dmNode = AXIOMUtil.stringToOM("<registry-resource></registry-resource>");
+        dmNode.addChild(AXIOMUtil.stringToOM("<file-name>" + resourceName + "</file-name>"));
+        OMElement dmcArtifactNode = AXIOMUtil.stringToOM(
+                "<artifact>target/datamapper/" + dataMapperName + "/" + resourceName + "</artifact>");
+        String resourceAsString = getResourceFileAsString(dmcArtifactNode);
+        dmcArtifactNode.setText(resourceAsString);
+        dmNode.addChild(dmcArtifactNode);
+        dmNode.addChild(AXIOMUtil.stringToOM("<registry-path>" + registryPath + "</registry-path>"));
+        dmNode.addChild(AXIOMUtil.stringToOM("<media-type>" + mediaType + "</media-type>"));
+        dataMapperNodes.add(dmNode);
+    }
+
+    /**
+     * Get the resource file as a string
+     *
+     * @param registryResourcesFileNode registry resources file node
+     * @return resource file as a string
+     */
+    private static String getResourceFileAsString(OMElement registryResourcesFileNode) throws IOException {
+        String registryResourceFileAsString;
+        String registryFilePath = registryResourcesFileNode.getText();
+        File registryResourceFile = new File(RELATIVE_PREVIOUS + File.separator +  registryFilePath);
+        if (!registryResourceFile.exists()) {
+            registryResourceFile = new File(RELATIVE_PREVIOUS + File.separator +
+                    RELATIVE_PREVIOUS + File.separator +  registryFilePath);
+            if (!registryResourceFile.exists()) {
+                registryResourceFileAsString = FileUtils.readFileToString(new File(registryFilePath));
+            } else {
+                registryResourceFileAsString = FileUtils.readFileToString(registryResourceFile);
+            }
+        } else {
+            registryResourceFileAsString = FileUtils.readFileToString(registryResourceFile);
+        }
+        return registryResourceFileAsString;
     }
 
     /**
@@ -266,15 +369,20 @@ class SynapseTestCaseFileReader {
 
             String encodedConnectorFile;
             if (!resource.getText().isEmpty()) {
+                if (!resource.getText().endsWith(Constants.ZIP)) {
+                    String connectorZipPath = Paths.get(Constants.TARGET, Constants.DEPENDENCY,
+                            resource.getText() + Constants.ZIP).toString();
+                    resource.setText(connectorZipPath);
+                }
                 String registryFilePath;
                 File connectorResourceFile = new File(RELATIVE_PREVIOUS + File.separator + resource.getText());
                 if (!connectorResourceFile.exists()) {
                     connectorResourceFile = new File(RELATIVE_PREVIOUS + File.separator +
                             RELATIVE_PREVIOUS + File.separator +  resource.getText());
                     if (!connectorResourceFile.exists()) {
-                        registryFilePath = resource.getText().substring(1);
+                        registryFilePath = resource.getText();
                     } else {
-                        registryFilePath = RELATIVE_PREVIOUS + File.separator + resource.getText();
+                        registryFilePath = RELATIVE_PREVIOUS + File.separator + RELATIVE_PREVIOUS + File.separator + resource.getText();
                     }
                 } else {
                     registryFilePath = RELATIVE_PREVIOUS + File.separator + resource.getText();
@@ -319,7 +427,7 @@ class SynapseTestCaseFileReader {
                     mockServiceFile = new File(RELATIVE_PREVIOUS + File.separator +
                             RELATIVE_PREVIOUS + File.separator +  mockServiceFilePath);
                     if (!mockServiceFile.exists()) {
-                        mockServiceFileDataAsString = FileUtils.readFileToString(new File(mockServiceFilePath.substring(1)));
+                        mockServiceFileDataAsString = FileUtils.readFileToString(new File(mockServiceFilePath));
                     } else {
                         mockServiceFileDataAsString = FileUtils.readFileToString(mockServiceFile);
                     }

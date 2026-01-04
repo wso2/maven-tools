@@ -17,19 +17,23 @@
 */
 package org.wso2.maven.p2.generate.feature;
 
-import org.apache.maven.plugins.annotations.Parameter;
-
 public class Feature {
 
     /**
      * Feature Id of the Feature
+     *
+     * @parameter
+     * @required
+     * @description description
      */
-	@Parameter(required = true)
 	public String featureId;
 	
     /**
      * Version of the Feature
+     *
+     * @parameter
+     * @required
+     * @description description
      */
-	@Parameter(required = true)
 	public String version;
 }
