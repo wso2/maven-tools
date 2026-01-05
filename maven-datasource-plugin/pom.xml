@@ -254,8 +254,7 @@
         <org.apache.felix.org.osgi.service.obr.version>1.0.1</org.apache.felix.org.osgi.service.obr.version>
         <org.apache.ws.commons.axiom.wso2.axiom.version>1.2.11.wso2v4</org.apache.ws.commons.axiom.wso2.axiom.version>
         <org.apache.axis2.wso2.axis2.version>1.6.1.wso2v3</org.apache.axis2.wso2.axis2.version>
-        <org.apache.geronimo.specs.wso2.geronimo.stax.api_1.0_spec.version>
-            1.0.1.wso2v1</org.apache.geronimo.specs.wso2.geronimo.stax.api_1.0_spec.version>
+        <org.apache.geronimo.specs.wso2.geronimo.stax.api_1.0_spec.version>1.0.1.wso2v1</org.apache.geronimo.specs.wso2.geronimo.stax.api_1.0_spec.version>
         <org.apache.neethi.wso2.neethi.version>2.0.4.wso2v3</org.apache.neethi.wso2.neethi.version>
         <org.apache.ws.commons.schema.wso2.xmlschema.version>1.4.7.wso2v1</org.apache.ws.commons.schema.wso2.xmlschema.version>
         <org.apache.httpcomponents.httpcore.version>4.1</org.apache.httpcomponents.httpcore.version>

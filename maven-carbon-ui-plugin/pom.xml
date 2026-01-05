@@ -15,18 +15,18 @@ License. -->
     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
     xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 
-    <parent>
-        <groupId>org.wso2.maven</groupId>
-        <artifactId>maven-common-tools</artifactId>
-        <version>5.3.8-SNAPSHOT</version>
-        <relativePath>../pom.xml</relativePath>
-    </parent>
+   	<parent>
+		<groupId>org.wso2.maven</groupId>
+		<artifactId>maven-common-tools</artifactId>
+		<version>5.3.8-SNAPSHOT</version>
+		<relativePath>../pom.xml</relativePath>
+  	</parent>
 
-    <modelVersion>4.0.0</modelVersion>
-    <groupId>org.wso2.maven</groupId>
-    <artifactId>maven-carbon-ui-plugin</artifactId>
-    <version>5.3.8-SNAPSHOT</version>
-    <packaging>maven-plugin</packaging>
+	<modelVersion>4.0.0</modelVersion>
+	<groupId>org.wso2.maven</groupId>
+	<artifactId>maven-carbon-ui-plugin</artifactId>
+	<version>5.3.8-SNAPSHOT</version>
+	<packaging>maven-plugin</packaging>
 
     <name>Maven Carbon UI Plugin</name>
     <description>Maven plugin which creates and builds Carbon UI artifacts</description>

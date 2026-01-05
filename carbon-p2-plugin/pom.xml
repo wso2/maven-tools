@@ -17,10 +17,10 @@ License. -->
     xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 
     <parent>
-        <groupId>org.wso2.maven</groupId>
-        <artifactId>maven-common-tools</artifactId>
-        <version>5.3.8-SNAPSHOT</version>
-        <relativePath>../pom.xml</relativePath>
+		<groupId>org.wso2.maven</groupId>
+		<artifactId>maven-common-tools</artifactId>
+		<version>5.3.8-SNAPSHOT</version>
+		<relativePath>../pom.xml</relativePath>
     </parent>
 
     <modelVersion>4.0.0</modelVersion>
