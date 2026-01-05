@@ -56,9 +56,8 @@ public class DataSourcePOMGenMojo extends AbstractPOMGenMojo {
 
     /**
      * The path of the location to output the pom
-     *
-     * @parameter expression="${project.build.directory}/artifacts"
      */
+	@Parameter(defaultValue = "${project.build.directory}/artifacts")
     public File outputLocation;
 
     /**
@@ -69,9 +68,8 @@ public class DataSourcePOMGenMojo extends AbstractPOMGenMojo {
 
     /**
      * POM location for the module project
-     *
-     * @parameter expression="${project.build.directory}/pom.xml"
      */
+    @Parameter(defaultValue = "${project.build.directory}/pom.xml")
     public File moduleProject;
 
     /**

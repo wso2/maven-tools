@@ -50,9 +50,8 @@ public class RepositoryGenMojo extends AbstractMojo {
 
 //    /**
 //     * URL of the Metadata Repository
-//     *
-//     * @parameter
 //     */
+//    @Parameter	
 //    private URL repository;
 
     /**

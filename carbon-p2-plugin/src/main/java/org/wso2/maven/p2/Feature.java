@@ -16,27 +16,21 @@
 package org.wso2.maven.p2;
 
 import org.apache.maven.plugin.MojoExecutionException;
+import org.apache.maven.plugins.annotations.Parameter;
 import org.wso2.maven.p2.generate.feature.Bundle;
-import org.wso2.maven.p2.generate.feature.ImportFeature;
 
 public class Feature {
     
     /**
      * Id of the feature
-     *
-     * @parameter
-     * @required
-     * @description description
      */
+	@Parameter(required = true)
     private String id;
 
     /**
      * version of the feature
-     *
-     * @parameter
-     * @required
-     * @description description
      */
+	@Parameter(required = true)
     private String version;
 
     public Feature(){

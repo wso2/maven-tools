@@ -30,9 +30,11 @@ import org.apache.maven.plugin.BuildPluginManager;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.plugin.logging.Log;
+import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.project.MavenProject;
 import org.codehaus.plexus.util.xml.pull.XmlPullParserException;
 
+import javax.inject.Inject;
 import javax.xml.namespace.QName;
 import javax.xml.stream.XMLInputFactory;
 import javax.xml.stream.XMLOutputFactory;
@@ -90,26 +92,20 @@ public abstract class AbstractMavenReleaseMojo extends AbstractMojo {
 
 	/**
      * The project currently being build.
-     *
-     * @parameter expression="${project}"
-     * @required
      */
+    @Parameter(property="project", required = true)
     protected MavenProject mavenProject;
 
     /**
      * The current Mjava.lang.Stringaven session.
-     *
-     * @parameter expression="${session}"
-     * @required
      */
+    @Parameter(property="session", required = true)
     protected MavenSession mavenSession;
 
     /**
      * The Maven BuildPluginManager component.
-     *
-     * @component
-     * @required
      */
+    @Inject
     protected BuildPluginManager pluginManager;
 
     /**

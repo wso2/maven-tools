@@ -60,9 +60,8 @@ public class EndpointPOMGenMojo extends AbstractPOMGenMojo {
 
     /**
      * The path of the location to output the pom
-     *
-     * @parameter expression="${project.build.directory}/artifacts"
      */
+	@Parameter(defaultValue = "${project.build.directory}/artifacts")
     private File outputLocation;
 
     /**
@@ -73,16 +72,14 @@ public class EndpointPOMGenMojo extends AbstractPOMGenMojo {
 
     /**
      * POM location for the module project
-     *
-     * @parameter expression="${project.build.directory}/pom.xml"
      */
+    @Parameter(defaultValue = "${project.build.directory}/pom.xml")
     private File moduleProject;
 
     /**
      * POM location for the module project
-     *
-     * @parameter default-value="${basedir}/pom.xml"
      */
+    @Parameter(defaultValue = "${basedir}/pom.xml")
     private File pomLocation;
 
     /**

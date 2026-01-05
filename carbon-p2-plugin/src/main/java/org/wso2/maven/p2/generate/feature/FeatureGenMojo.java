@@ -184,10 +184,10 @@ public class FeatureGenMojo extends AbstractMojo {
     @Parameter
     private AdviceFile adviceFile;
 
-//    /**
-//     * define category
-//     * @parameter [alias="carbonCategories"]
-//     */
+    //    /**
+    //     * define category
+    //     */
+    //    @Parameter(alias = "carbonCategories")
     //    private String category;
     //
     @Inject

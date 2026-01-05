@@ -104,7 +104,7 @@ public class PublishProductMojo extends AbstractMojo {
 
         launcher.addArguments(
                 "-metadataRepository", metadataRepository.toString(),
-                "-artifactRepository", metadataRepository.toString(),
+                "-artifactRepository", artifactRepository.toString(),
                 "-productFile", productConfigurationFile.getCanonicalPath(),
                 "-executables", executable.toString(),
                 "-publishArtifacts",

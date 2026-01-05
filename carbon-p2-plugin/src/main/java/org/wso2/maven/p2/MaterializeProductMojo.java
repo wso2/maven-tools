@@ -158,7 +158,7 @@ public class MaterializeProductMojo extends AbstractMojo {
 
         launcher.addArguments(
                 "-metadataRepository", metadataRepository.toExternalForm(),
-                "-artifactRepository", metadataRepository.toExternalForm(),
+                "-artifactRepository", artifactRepository.toExternalForm(),
                 "-installIU",productConfiguration.getId(),
                 "-profileProperties", "org.eclipse.update.install.features=true",
                 "-profile",profile.toString(),

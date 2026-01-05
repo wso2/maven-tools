@@ -32,6 +32,7 @@ import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.plugins.annotations.LifecyclePhase;
 import org.apache.maven.plugins.annotations.Mojo;
+import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.project.MavenProject;
 import org.apache.commons.lang.StringUtils;
 import org.wso2.maven.datamapper.DataMapperBundler;
@@ -49,31 +50,26 @@ public class CARMojo extends AbstractMojo {
 
     /**
      * The Maven Project Object
-     *
-     * @parameter expression="${project}"
-     * @required
      */
+	@Parameter(property = "project", required = true)
     MavenProject project;
 
     /**
      * The location of the archive file
-     *
-     * @parameter expression="${archiveLocation}"
      */
+	@Parameter(property = "archiveLocation")
     String archiveLocation;
 
     /**
      * The name of the archive file
-     *
-     * @parameter expression="${archiveName}"
      */
+	@Parameter(property = "archiveName")
     String archiveName;
 
     /**
      * The source directory
-     *
-     * @parameter expression="${sourceDirectory}"
      */
+	@Parameter(property = "sourceDirectory")
     private String sourceDirectory;
 
     public void logError(String message) {

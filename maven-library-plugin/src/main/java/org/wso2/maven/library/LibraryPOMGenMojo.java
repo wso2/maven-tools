@@ -33,9 +33,8 @@ public class LibraryPOMGenMojo extends AbstractBundlePOMGenMojo {
 
 	/**
 	 * The path of the location to output the pom
-	 * TODO: find an equivalent annotation
-	 * @parameter expression="${project.build.directory}/artifacts"
 	 */
+	@Parameter(defaultValue = "${project.build.directory}/artifacts")
 	public File outputLocation;
 
 	/**
@@ -46,9 +45,8 @@ public class LibraryPOMGenMojo extends AbstractBundlePOMGenMojo {
 	
 	/**
 	 * POM location for the module project
-	 * TODO: find an equivalent annotation 
-	 * @parameter expression="${project.build.directory}/pom.xml"
 	 */
+	@Parameter(defaultValue = "${project.build.directory}/pom.xml")
 	public File moduleProject;
 	
 	/**

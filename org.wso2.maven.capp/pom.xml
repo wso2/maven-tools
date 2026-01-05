@@ -40,22 +40,36 @@
 			</extension>
 		</extensions>
 		<plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <configuration>
+                    <source>21</source>
+                    <target>21</target>
+                    <compilerArgs>
+                        <arg>--add-exports</arg>
+                        <arg>java.base/sun.security.action=ALL-UNNAMED</arg>
+                    </compilerArgs>
+                </configuration>
+            </plugin>
 			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-compiler-plugin</artifactId>
-				<configuration>
-					<source>21</source>
-					<target>21</target>
-          <compilerArgs>
-            <arg>--add-exports</arg>
-						<arg>java.base/sun.security.action=ALL-UNNAMED</arg>
-          </compilerArgs>
-        </configuration>
-			</plugin>
+                <groupId>org.eclipse.sisu</groupId>
+                <artifactId>sisu-maven-plugin</artifactId>
+            </plugin>
 		</plugins>
 	</build>
 	<dependencies>
 		<dependency>
+            <groupId>javax.inject</groupId>
+            <artifactId>javax.inject</artifactId>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.maven.plugin-tools</groupId>
+            <artifactId>maven-plugin-tools-annotations</artifactId>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
 			<groupId>org.apache.ws.commons.axiom.wso2</groupId>
 			<artifactId>axiom</artifactId>
 			<version>${org.apache.ws.commons.axiom.wso2.axiom.version}</version>
@@ -67,12 +81,10 @@
 		<dependency>
 			<groupId>org.apache.maven</groupId>
 			<artifactId>maven-project</artifactId>
-			<version>${org.apache.maven.project.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>org.apache.maven</groupId>
 			<artifactId>maven-model</artifactId>
-			<version>${org.apache.maven.model.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>org.apache.maven</groupId>
@@ -82,7 +94,6 @@
 		<dependency>
 			<groupId>org.apache.maven</groupId>
 			<artifactId>maven-artifact</artifactId>
-			<version>${org.apache.maven.artifact.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>org.apache.maven</groupId>
