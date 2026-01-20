@@ -100,7 +100,8 @@ class Constants {
     
     // Coverage related constants
     static final String MEDIATOR_COVERAGE = "mediatorCoverage";
-    static final String COVERAGE_ARTIFACTS = "artifacts";
+    static final String PRIMARY_ARTIFACT = "primaryArtifact";
+    static final String SUPPORTING_ARTIFACTS = "supportingArtifacts";
     static final String ARTIFACT_TYPE = "artifactType";
     static final String ARTIFACT_NAME = "artifactName";
     static final String EXECUTED_MEDIATORS = "executedMediators";
