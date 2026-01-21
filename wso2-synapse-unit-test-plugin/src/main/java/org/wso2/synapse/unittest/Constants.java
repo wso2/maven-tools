@@ -107,6 +107,6 @@ class Constants {
     static final String EXECUTED_MEDIATORS = "executedMediators";
     static final String TOTAL_MEDIATORS = "totalMediators";
     static final String COVERAGE_PERCENTAGE = "coveragePercentage";
-    static final String REFERENCED_SEQUENCES = "referencedSequences";
+    static final String REFERENCED_ARTIFACTS = "referencedArtifacts";
     static final String MEDIATOR_DETAILS = "mediatorDetails";
 }
