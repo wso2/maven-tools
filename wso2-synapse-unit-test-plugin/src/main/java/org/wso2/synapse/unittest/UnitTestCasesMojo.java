@@ -628,44 +628,40 @@ public class UnitTestCasesMojo extends AbstractMojo {
             }
 
             JsonObject coverageData = jsonSummary.getAsJsonObject(Constants.MEDIATOR_COVERAGE);
+            JsonObject primaryArtifact = coverageData.getAsJsonObject(Constants.PRIMARY_ARTIFACT);
             
-            if (coverageData.has(Constants.PRIMARY_ARTIFACT) && 
-                !coverageData.get(Constants.PRIMARY_ARTIFACT).isJsonNull()) {
+            getLog().info("");
+            getLog().info("***** Unit Test Line Coverage Summary *****");
+            getLog().info("");
+            
+            printPrimaryArtifactCoverage(primaryArtifact);
+            
+            if (coverageData.has(Constants.SUPPORTING_ARTIFACTS) && 
+                !coverageData.get(Constants.SUPPORTING_ARTIFACTS).isJsonNull()) {
+                JsonArray supportingArtifacts = coverageData.getAsJsonArray(Constants.SUPPORTING_ARTIFACTS);
                 
-                getLog().info("");
-                getLog().info("***** Unit Test Coverage Summary *****");
-                getLog().info("");
-                
-                JsonObject primaryArtifact = coverageData.getAsJsonObject(Constants.PRIMARY_ARTIFACT);
-                printPrimaryArtifactCoverage(primaryArtifact);
-                
-                if (coverageData.has(Constants.SUPPORTING_ARTIFACTS) && 
-                    !coverageData.get(Constants.SUPPORTING_ARTIFACTS).isJsonNull()) {
-                    JsonArray supportingArtifacts = coverageData.getAsJsonArray(Constants.SUPPORTING_ARTIFACTS);
+                if (supportingArtifacts.size() > 0) {
+                    getLog().info("");
+                    getLog().info("  Supportive Artifact Coverage:");
+                    getLog().info("");
                     
-                    if (supportingArtifacts.size() > 0) {
-                        getLog().info("");
-                        getLog().info("  Referenced Artifact Coverage:");
-                        getLog().info("");
-                        
-                        for (int i = 0; i < supportingArtifacts.size(); i++) {
-                            try {
-                                JsonObject artifact = supportingArtifacts.get(i).getAsJsonObject();
-                                printSupportingArtifactCoverage(artifact);
-                            } catch (Exception e) {
-                                if (getLog().isDebugEnabled()) {
-                                    getLog().debug("Error processing supporting artifact at index " + i + ": " + e.getMessage());
-                                }
+                    for (int i = 0; i < supportingArtifacts.size(); i++) {
+                        try {
+                            JsonObject artifact = supportingArtifacts.get(i).getAsJsonObject();
+                            printSupportingArtifactCoverage(artifact);
+                        } catch (Exception e) {
+                            if (getLog().isDebugEnabled()) {
+                                getLog().debug("Error processing supporting artifact at index " + i + ": " + e.getMessage());
                             }
                         }
                     }
                 }
-                
-                getLog().info("");
-                getLog().info(">> For detailed coverage report, see: target" + System.getProperty(Constants.FILE_SEPARATOR) + 
-                        Constants.REPORT_FILE_NAME);
-                getLog().info("");
             }
+            
+            getLog().info("");
+            getLog().info(">> For detailed line coverage report, see: target" + System.getProperty(Constants.FILE_SEPARATOR) + 
+                    Constants.REPORT_FILE_NAME);
+            getLog().info("");
         } catch (Exception e) {
             if (getLog().isDebugEnabled()) {
                 getLog().debug("Error generating coverage report: " + e.getMessage());
@@ -696,8 +692,8 @@ public class UnitTestCasesMojo extends AbstractMojo {
      * @param artifact artifact json object
      */
     private void printPrimaryArtifactCoverage(JsonObject artifact) {
-        if (artifact == null || !artifact.has(Constants.ARTIFACT_TYPE) || 
-            !artifact.has(Constants.ARTIFACT_NAME) || !artifact.has(Constants.COVERAGE_PERCENTAGE)) {
+        if (artifact == null || !artifact.has(Constants.ARTIFACT_NAME) || 
+            !artifact.has(Constants.COVERAGE_PERCENTAGE)) {
             return;
         }
         
