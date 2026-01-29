@@ -17,6 +17,7 @@ package org.wso2.maven.p2;
 
 
 import java.util.Properties;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.apache.maven.plugin.MojoExecutionException;
@@ -79,7 +80,10 @@ public class CatFeature {
 		}
 		Properties properties = project.getProperties();
 		for(Object key:properties.keySet()){
-			version=version.replaceAll(Pattern.quote("${"+key+"}"), properties.get(key).toString());
+			version=version.replaceAll(
+					Pattern.quote("${" + key + "}"),
+					Matcher.quoteReplacement(properties.get(key).toString())
+			);
 		}
 		versionReplaced = true;
 	}

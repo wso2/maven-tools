@@ -127,6 +127,9 @@ public class P2Constants {
     public static final String PROFILE_KEY = "eclipse.p2.profile";
 
     public static String getDefaultVersion(String groupId, String artifactId){
+    	if (groupId == null || artifactId == null) {
+    		return null;
+    	}
         for(String osgiFile:OSGI_FILES_DEFAULT_VERSION){
             String[] split = osgiFile.split(":");
             if (split[0].equalsIgnoreCase(groupId) && split[1].equalsIgnoreCase(artifactId))

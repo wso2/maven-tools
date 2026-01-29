@@ -23,15 +23,14 @@ import org.wso2.maven.p2.generate.feature.Bundle;
 public class BundleArtifact extends Bundle {
 	protected static BundleArtifact getBundleArtifact(String bundleArtifactDefinition, BundleArtifact bundleArtifact) throws MojoExecutionException{
 		String[] split = bundleArtifactDefinition.split(":");
-		if (split.length>1){
-			bundleArtifact.setGroupId(split[0]);
-			bundleArtifact.setArtifactId(split[1]);
-			if (split.length==3) bundleArtifact.setVersion(split[2]);
+		if (split.length == 2 || split.length == 3){
+			bundleArtifact.setGroupId(split[0].trim());
+			bundleArtifact.setArtifactId(split[1].trim());
+			if (split.length == 3) {
+				bundleArtifact.setVersion(split[2].trim());
+			}
 			return bundleArtifact;
 		}
-		throw new MojoExecutionException("Insufficient artifact information provided to determine the feature: "+bundleArtifactDefinition) ; 
-	}
-	public static BundleArtifact getBundleArtifact(String bundleArtifactDefinition) throws MojoExecutionException{
-		return getBundleArtifact(bundleArtifactDefinition, new BundleArtifact());
+		throw new MojoExecutionException("Invalid bundle artifact definition (expected groupId:artifactId[:version]): "+bundleArtifactDefinition) ; 
 	}
 }

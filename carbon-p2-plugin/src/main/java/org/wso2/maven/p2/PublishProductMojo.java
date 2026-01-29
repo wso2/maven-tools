@@ -95,6 +95,10 @@ public class PublishProductMojo extends AbstractMojo {
 	}
 
 	private void publishProduct()  throws Exception{
+		
+		if (metadataRepository == null || artifactRepository == null || productConfigurationFile == null) {
+			throw new MojoExecutionException("metadataRepository, artifactRepository, and productConfigurationFile are required.");
+		}
 
         productConfiguration = ProductConfiguration.read( productConfigurationFile );
         P2ApplicationLauncher launcher = this.launcher;
@@ -104,7 +108,7 @@ public class PublishProductMojo extends AbstractMojo {
 
         launcher.addArguments(
                 "-metadataRepository", metadataRepository.toString(),
-                "-artifactRepository", metadataRepository.toString(),
+                "-artifactRepository", artifactRepository.toString(),
                 "-productFile", productConfigurationFile.getCanonicalPath(),
                 "-executables", executable.toString(),
                 "-publishArtifacts",

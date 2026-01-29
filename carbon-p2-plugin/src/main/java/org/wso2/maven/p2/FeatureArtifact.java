@@ -83,14 +83,17 @@ public class FeatureArtifact {
 		return artifact;
 	}
 	protected static FeatureArtifact getFeatureArtifact(String featureArtifactDefinition, FeatureArtifact featureArtifact) throws MojoExecutionException{
+		if (featureArtifactDefinition == null || featureArtifactDefinition.trim().isEmpty()) {
+			throw new MojoExecutionException("Feature artifact definition must be non-empty");
+		}
 		String[] split = featureArtifactDefinition.split(":");
-		if (split.length>1){
+		if (split.length > 1 && split.length <= 3){
 			featureArtifact.setGroupId(split[0]);
 			featureArtifact.setArtifactId(split[1]);
 			if (split.length==3) featureArtifact.setVersion(split[2]);
 			return featureArtifact;
 		}
-		throw new MojoExecutionException("Insufficient artifact information provided to determine the feature: "+featureArtifactDefinition) ; 
+		throw new MojoExecutionException("Invalid artifact information provided to determine the feature: "+featureArtifactDefinition) ; 
 	}
 	public static FeatureArtifact getFeatureArtifact(String featureArtifactDefinition) throws MojoExecutionException{
 		return getFeatureArtifact(featureArtifactDefinition, new FeatureArtifact());
@@ -106,7 +109,7 @@ public class FeatureArtifact {
 				
 			}
 		}
-		if (version==null) {
+		if (version==null && project.getDependencyManagement() != null) {
 			List dependencies = project.getDependencyManagement().getDependencies();
 			for (Iterator iterator = dependencies.iterator(); iterator.hasNext();) {
 				Dependency dependancy = (Dependency) iterator.next();
@@ -120,8 +123,10 @@ public class FeatureArtifact {
 			throw new MojoExecutionException("Could not find the version for "+getGroupId()+":"+getArtifactId());
 		}
 		Properties properties = project.getProperties();
-		for(Object key:properties.keySet()){
-			version=version.replaceAll(Pattern.quote("${"+key+"}"), properties.get(key).toString());
+		for (Object key : properties.keySet()) {
+			String placeholder = "${" + key + "}";
+			version = version.replaceAll(Pattern.quote(placeholder),
+					java.util.regex.Matcher.quoteReplacement(properties.get(key).toString()));
 		}
 	}
 	

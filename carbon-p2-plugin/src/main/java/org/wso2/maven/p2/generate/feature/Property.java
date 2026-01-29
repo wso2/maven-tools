@@ -52,15 +52,17 @@ public class Property {
 		return key;
 	}
 	
-	public static Property getProperty(String advicePropertyDefinition) throws MojoExecutionException{
-		if (advicePropertyDefinition.trim().equalsIgnoreCase("")) throw new MojoExecutionException("Invalid advice property definition.");
-		String[] propertyDefs = advicePropertyDefinition.split(":");
+	public static Property getProperty(String advicePropertyDefinition) throws MojoExecutionException {
+		if (advicePropertyDefinition == null || advicePropertyDefinition.trim().isEmpty()) {
+			throw new MojoExecutionException("Invalid advice property definition.");
+		}
+		String[] propertyDefs = advicePropertyDefinition.split(":", 2);
+		if (propertyDefs.length != 2 || propertyDefs[0].isBlank() || propertyDefs[1].isBlank()) {
+			throw new MojoExecutionException("Invalid advice property definition: " + advicePropertyDefinition);
+		}
 		Property property = new Property();
-		if (propertyDefs.length>1){
-			property.setKey(propertyDefs[0]);
-			property.setValue(propertyDefs[1]);
-		}else
-			throw new MojoExecutionException("Invalid advice property definition: "+advicePropertyDefinition);
+		property.setKey(propertyDefs[0]);
+		property.setValue(propertyDefs[1]);
 		return property;
 	}
 }

@@ -235,7 +235,7 @@ public class RepositoryGenMojo extends AbstractMojo {
         launcher.addArguments("-source", sourceDir.getAbsolutePath(), //
                 "-metadataRepository", metadataRepository.toString(), //
                 "-metadataRepositoryName", getRepositoryName(), //
-                "-artifactRepository", metadataRepository.toString(), //
+                "-artifactRepository", artifactRepository.toString(), //
                 "-artifactRepositoryName", getRepositoryName(), //
                 "-publishArtifacts",
                 "-publishArtifactRepository",
@@ -340,8 +340,10 @@ public class RepositoryGenMojo extends AbstractMojo {
         sourceDir = new File(tempDir, "featureExtract");
         sourceDir.mkdirs();
         
+        //The logic behind the next two lines is undocumented 
 		metadataRepository=(artifactRepository==null? metadataRepository:artifactRepository);
 		artifactRepository=(metadataRepository==null? artifactRepository:metadataRepository);
+		
 		if (metadataRepository == null) {
 			File repo = new File(targetDir, getProject().getArtifactId() + "_" + getProject().getVersion());
 			metadataRepository = repo.toURL();

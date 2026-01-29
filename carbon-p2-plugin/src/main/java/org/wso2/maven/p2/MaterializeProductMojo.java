@@ -95,6 +95,12 @@ public class MaterializeProductMojo extends AbstractMojo {
             if (profile == null){
                 profile = P2Constants.DEFAULT_PROFILE_ID;
             }
+            if (metadataRepository == null || artifactRepository == null || targetPath == null || productConfigurationFile == null) {
+            	throw new MojoExecutionException("metadataRepository, artifactRepository, targetPath, and productConfigurationFile are required");
+            }
+            if (!productConfigurationFile.isFile()) {
+            	throw new MojoExecutionException("productConfigurationFile does not exist: " + productConfigurationFile);
+            }
             deployRepository();
             //updating profile's config.ini p2.data.area property using relative path
             File profileConfigIni = FileManagementUtil.getProfileConfigIniFile(targetPath.getPath(), profile);
@@ -158,7 +164,7 @@ public class MaterializeProductMojo extends AbstractMojo {
 
         launcher.addArguments(
                 "-metadataRepository", metadataRepository.toExternalForm(),
-                "-artifactRepository", metadataRepository.toExternalForm(),
+                "-artifactRepository", artifactRepository.toExternalForm(),
                 "-installIU",productConfiguration.getId(),
                 "-profileProperties", "org.eclipse.update.install.features=true",
                 "-profile",profile.toString(),
