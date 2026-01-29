@@ -25,7 +25,9 @@ public class ImportBundle extends Bundle{
 
 	
 	/**
-     * Version Compatibility of the Bundle
+     * Flag to exclude this bundle from processing
+     *
+     * @parameter default-value="false"
      */
 	@Parameter(defaultValue = "false")
 	private boolean exclude;

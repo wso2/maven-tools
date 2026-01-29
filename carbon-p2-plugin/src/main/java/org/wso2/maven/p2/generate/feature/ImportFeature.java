@@ -71,7 +71,10 @@ public class ImportFeature{
     }
 
     protected static ImportFeature getFeature(String featureDefinition) throws MojoExecutionException{
-		String[] split = featureDefinition.split(":");
+    	if (featureDefinition == null || featureDefinition.trim().isEmpty()) {
+    		throw new MojoExecutionException("Feature definition must be non-empty");
+    	}
+    	String[] split = featureDefinition.split(":");
 		ImportFeature feature=new ImportFeature();
 		if (split.length>0){
 			feature.setFeatureId(split[0]);

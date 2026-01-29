@@ -54,6 +54,9 @@ public class Feature {
     }
     
 	protected static Feature getFeature(String bundleDefinition) throws MojoExecutionException{
+		if (bundleDefinition == null || bundleDefinition.trim().isEmpty()) {
+			throw new MojoExecutionException("Feature definition must be non-empty");
+		}
 		String[] split = bundleDefinition.split(":");
 		if (split.length>1){
 			Feature feature=new Feature();

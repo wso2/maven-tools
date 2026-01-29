@@ -20,6 +20,7 @@ package org.wso2.maven.p2;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Properties;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.apache.maven.artifact.Artifact;
@@ -73,18 +74,21 @@ public class P2Profile {
 	}
 	
 	protected static P2Profile getP2Profile(String p2ProfileDefinition, P2Profile p2Profile) throws MojoExecutionException{
+		if (p2ProfileDefinition == null || p2ProfileDefinition.trim().isEmpty()) {
+			throw new MojoExecutionException("Profile definition is required (groupId:artifactId[:version]).");
+		}
 		String[] split = p2ProfileDefinition.split(":");
-		if (split.length>1){
-			p2Profile.setGroupId(split[0]);
-			p2Profile.setArtifactId(split[1]);
-			if (split.length==3) p2Profile.setVersion(split[2]);
+		if (split.length == 2 || split.length == 3){
+			p2Profile.setGroupId(split[0].trim());
+			p2Profile.setArtifactId(split[1].trim());
+			if (split.length == 3) p2Profile.setVersion(split[2].trim());
 			return p2Profile;
 		}
-		throw new MojoExecutionException("Insufficient artifact information provided to determine the profile: "+p2ProfileDefinition) ; 
+		throw new MojoExecutionException("Invalid profile definition (expected groupId:artifactId[:version]): "+p2ProfileDefinition) ; 
 	}
 	
 	public void resolveVersion(MavenProject project) throws MojoExecutionException{
-		if (version==null){
+		if (version==null || version.isEmpty()){
 			List dependencies = project.getDependencies();
 			for (Iterator iterator = dependencies.iterator(); iterator.hasNext();) {
 				Dependency dependancy = (Dependency) iterator.next();
@@ -94,7 +98,7 @@ public class P2Profile {
 				
 			}
 		}
-		if (version==null) {
+		if (version==null || version.isEmpty()) {
 			List dependencies = project.getDependencyManagement().getDependencies();
 			for (Iterator iterator = dependencies.iterator(); iterator.hasNext();) {
 				Dependency dependancy = (Dependency) iterator.next();
@@ -109,7 +113,8 @@ public class P2Profile {
 		}
 		Properties properties = project.getProperties();
 		for(Object key:properties.keySet()){
-			version=version.replaceAll(Pattern.quote("${"+key+"}"), properties.get(key).toString());
+			String value = properties.get(key).toString();
+			version=version.replaceAll(Pattern.quote("${"+key+"}"), Matcher.quoteReplacement(value));
 		}
 	}
 

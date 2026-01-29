@@ -19,11 +19,9 @@ package org.wso2.maven.p2.generate.utils;
 
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
-import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
-import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -50,13 +48,17 @@ public class FileManagementUtil {
 
     public static void changeConfigIniProperty(File configIniFile, String propKey, String value) {
         Properties prop = new Properties();
-
-        try {
-            prop.load(new FileInputStream(configIniFile));
+        
+        try (FileInputStream fis = new FileInputStream(configIniFile)) {
+        	prop.load(fis);
+        } catch (IOException ex) {
+        	throw new RuntimeException("Failed to load config.ini: " + configIniFile, ex);
+        }
+        try (FileOutputStream fos = new FileOutputStream(configIniFile)) {
             prop.setProperty(propKey, value);
             prop.store(new FileOutputStream(configIniFile), null);
-        } catch (Exception ex) {
-            ex.printStackTrace();
+        } catch (IOException ex) {
+        	throw new RuntimeException("Failed to store config.ini: " + configIniFile, ex);
         }
     }
 
@@ -166,7 +168,8 @@ public class FileManagementUtil {
                 addToZip("", srcFolder+"/"+fileListe[i], zip);
                 i++;
             }
-        }catch (Exception ex) {
+        }catch (IOException ex) {
+        	throw new RuntimeException("Failed to add folder contents to zip: " + srcFolder, ex);
         }
     }
 
@@ -192,31 +195,19 @@ public class FileManagementUtil {
     }
 
     public static void copyFile(String src, String dest) {
-        InputStream is = null;
-        FileOutputStream fos = null;
-
-        try
+        
+        try (InputStream is = new FileInputStream(src);FileOutputStream fos = new FileOutputStream(dest))
         {
-            is = new FileInputStream(src);
-            fos = new FileOutputStream(dest);
             int c = 0;
             byte[] array = new byte[1024];
             while ((c = is.read(array)) >= 0){
                 fos.write(array, 0, c);
             }
         }
-        catch (Exception e)	{
-            e.printStackTrace();
+        catch (IOException e)	{
+        	throw new RuntimeException("Failed to copy file from " + src + " to " + dest, e);
         }
-        finally	{
-            try	{
-                fos.close();
-                is.close();
-            }
-            catch (Exception e)	{
-                e.printStackTrace();
-            }
-        }
+        
     }
 
     public static File createFileAndParentDirectories(String fileName) throws Exception {
@@ -317,17 +308,15 @@ public class FileManagementUtil {
         if (dst.getParentFile()!=null && !dst.getParentFile().exists()){
             dst.getParentFile().mkdirs();
         }
-        InputStream in = new FileInputStream(src);
-        OutputStream out = new FileOutputStream(dst);
-
-        // Transfer bytes from in to out
-        byte[] buf = new byte[1024];
-        int len;
-        while ((len = in.read(buf)) > 0) {
-            out.write(buf, 0, len);
+        try (InputStream in = new FileInputStream(src);
+             OutputStream out = new FileOutputStream(dst)){
+	        // Transfer bytes from in to out
+	        byte[] buf = new byte[1024];
+	        int len;
+	        while ((len = in.read(buf)) > 0) {
+	            out.write(buf, 0, len);
+	        }
         }
-        in.close();
-        out.close();
     }
 
     public static String addAnotherNodeToPath(String currentPath, String newNode) {
@@ -412,38 +401,27 @@ public class FileManagementUtil {
         }
     }
 
-    public static void unzip(File archiveFile,File destination) throws Exception{
-        try {
-            BufferedOutputStream dest = null;
-            FileInputStream fis = new FileInputStream(archiveFile);
-            ZipInputStream zis = new
-                    ZipInputStream(new BufferedInputStream(fis));
-            ZipEntry entry;
-            File base=destination;
+	public static void unzip(File archiveFile, File destination) throws Exception {
+		try (FileInputStream fis = new FileInputStream(archiveFile);
+				ZipInputStream zis = new ZipInputStream(new BufferedInputStream(fis))) {
+			ZipEntry entry;
 
-            while((entry = zis.getNextEntry()) != null) {
-                int count;
-                byte data[] = new byte[BUFFER];
-                File file = new File(base,entry.getName());
-                if (entry.getName().endsWith("/")){
-                    file.mkdirs();
-                    continue;
-                }
-                if (file.getParentFile()!=null && !file.getParentFile().exists())
-                    file.getParentFile().mkdirs();
-                FileOutputStream fos = new FileOutputStream(file);
-                dest = new BufferedOutputStream(fos, BUFFER);
-                while ((count = zis.read(data, 0, BUFFER))
-                        != -1) {
-                    dest.write(data, 0, count);
-                }
-                dest.flush();
-                dest.close();
-            }
-            zis.close();
-            fis.close();
-        } catch(Exception e) {
-            throw e;
-        }
-    }
+			while ((entry = zis.getNextEntry()) != null) {
+				int count;
+				byte data[] = new byte[BUFFER];
+				File file = new File(destination, entry.getName());
+				if (entry.getName().endsWith("/")) {
+					file.mkdirs();
+					continue;
+				}
+				if (file.getParentFile() != null && !file.getParentFile().exists())
+					file.getParentFile().mkdirs();
+				try (BufferedOutputStream dest = new BufferedOutputStream(new FileOutputStream(file), BUFFER)) {
+					while ((count = zis.read(data, 0, BUFFER)) != -1) {
+						dest.write(data, 0, count);
+					}
+				}
+			}
+		}
+	}
 }

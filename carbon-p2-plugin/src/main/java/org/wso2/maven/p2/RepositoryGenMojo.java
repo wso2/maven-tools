@@ -234,7 +234,7 @@ public class RepositoryGenMojo extends AbstractMojo {
         launcher.addArguments("-source", sourceDir.getAbsolutePath(), //
                 "-metadataRepository", metadataRepository.toString(), //
                 "-metadataRepositoryName", getRepositoryName(), //
-                "-artifactRepository", metadataRepository.toString(), //
+                "-artifactRepository", artifactRepository.toString(), //
                 "-artifactRepositoryName", getRepositoryName(), //
                 "-publishArtifacts",
                 "-publishArtifactRepository",
@@ -316,11 +316,11 @@ public class RepositoryGenMojo extends AbstractMojo {
         Iterator iter = bundleArtifacts.iterator();
         while (iter.hasNext()) {
             Object obj = iter.next();
-            BundleArtifact f;
+            BundleArtifact f = new BundleArtifact();
             if (obj instanceof BundleArtifact) {
                 f = (BundleArtifact) obj;
             } else if (obj instanceof String) {
-                f = BundleArtifact.getBundleArtifact(obj.toString());
+                f = BundleArtifact.getBundleArtifact(obj.toString(), f);
             } else
                 f = (BundleArtifact) obj;
             f.resolveVersion(getProject());
@@ -339,8 +339,10 @@ public class RepositoryGenMojo extends AbstractMojo {
         sourceDir = new File(tempDir, "featureExtract");
         sourceDir.mkdirs();
         
+        //The logic behind the next two lines is undocumented 
 		metadataRepository=(artifactRepository==null? metadataRepository:artifactRepository);
 		artifactRepository=(metadataRepository==null? artifactRepository:metadataRepository);
+		
 		if (metadataRepository == null) {
 			File repo = new File(targetDir, getProject().getArtifactId() + "_" + getProject().getVersion());
 			metadataRepository = repo.toURL();

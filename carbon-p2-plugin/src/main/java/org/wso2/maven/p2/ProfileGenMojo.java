@@ -146,6 +146,9 @@ public class ProfileGenMojo extends AbstractMojo {
             if (profile == null){
                 profile = P2Constants.DEFAULT_PROFILE_ID;
             }
+            if (metadataRepository == null || artifactRepository == null) {
+            	throw new MojoExecutionException("metadataRepository and artifactRepository are required");
+            }
             createAndSetupPaths();
             rewriteEclipseIni();
 //          	verifySetupP2RepositoryURL();
@@ -180,7 +183,7 @@ public class ProfileGenMojo extends AbstractMojo {
             installUIs = installUIs + f.getId().trim() + "/" + f.getVersion().trim() + ",";
         }
 
-        if (installUIs.length() == 0) {
+        if (installUIs.length() > 0) {
             installUIs = installUIs.substring(0, installUIs.length() - 1);
         }
         return installUIs;
@@ -283,6 +286,10 @@ public class ProfileGenMojo extends AbstractMojo {
                     return name.endsWith(".profile");
                 }
             });
+            
+            if (profileFileList == null || profileFileList.length == 0) {
+            	return;
+            }
 
             Arrays.sort(profileFileList);
 
@@ -323,7 +330,9 @@ public class ProfileGenMojo extends AbstractMojo {
             this.getLog().debug("Error while writing to file " + file.getName());
             e.printStackTrace();
         } finally {
-            pw.close();
+        	if (pw != null) {
+        		pw.close();
+        	}
         }
     }
 
