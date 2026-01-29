@@ -17,7 +17,6 @@
 */
 package org.wso2.maven.p2.generate.utils;
 
-import java.io.FileInputStream;
 import java.util.List;
 
 import javax.xml.parsers.DocumentBuilder;
@@ -43,9 +42,9 @@ public class MavenUtils {
 		try {
 			resolver.resolve(artifact,remoteRepositories,localRepository);
 		} catch (ArtifactResolutionException e) {
-			throw new MojoExecutionException("ERROR",e); 
+			throw new MojoExecutionException("Failed to resolve artifact: " + bundle.getGroupId() + ":" + bundle.getArtifactId() + ":" + bundle.getVersion(), e); 
 		} catch (ArtifactNotFoundException e) {
-			throw new MojoExecutionException("ERROR",e); 
+			throw new MojoExecutionException("Artifact not found: " + bundle.getGroupId() + ":" + bundle.getArtifactId() + ":" + bundle.getVersion(), e);
 		}
 		return artifact;
 	}
@@ -55,9 +54,9 @@ public class MavenUtils {
 		try {
 			resolver.resolve(artifact,remoteRepositories,localRepository);
 		} catch (ArtifactResolutionException e) {
-			throw new MojoExecutionException("ERROR",e); 
+			throw new MojoExecutionException("Failed to resolve artifact: " + featureArtifact.getGroupId() + ":" + featureArtifact.getArtifactId() + ":" + featureArtifact.getVersion(), e); 
 		} catch (ArtifactNotFoundException e) {
-			throw new MojoExecutionException("ERROR",e); 
+			throw new MojoExecutionException("Artifact not found: " + featureArtifact.getGroupId() + ":" + featureArtifact.getArtifactId() + ":" + featureArtifact.getVersion(), e);
 		}
 		return artifact;
 	}
@@ -67,9 +66,9 @@ public class MavenUtils {
 		try {
 			resolver.resolve(artifact,remoteRepositories,localRepository);
 		} catch (ArtifactResolutionException e) {
-			throw new MojoExecutionException("ERROR",e); 
+			throw new MojoExecutionException("Failed to resolve artifact: " + artifact.getGroupId() + ":" + artifact.getArtifactId() + ":" + artifact.getVersion(), e);
 		} catch (ArtifactNotFoundException e) {
-			throw new MojoExecutionException("ERROR",e); 
+			throw new MojoExecutionException("Artifact not found: " + artifact.getGroupId() + ":" + artifact.getArtifactId() + ":" + artifact.getVersion(), e);
 		}
 		return artifact;
 	}

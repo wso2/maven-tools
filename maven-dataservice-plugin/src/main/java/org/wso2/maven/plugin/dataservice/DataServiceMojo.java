@@ -17,63 +17,58 @@
 
 package org.wso2.maven.plugin.dataservice;
 
+import java.io.File;
+import java.io.IOException;
+
+import javax.inject.Inject;
+
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
+import org.apache.maven.plugins.annotations.Mojo;
+import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.project.MavenProject;
 import org.apache.maven.project.MavenProjectHelper;
 import org.codehaus.plexus.util.FileUtils;
 
-import java.io.File;
-import java.io.IOException;
-
 /**
  * This is the Maven Mojo used for dataservice resources to be copied to the output directory in the resource-process
  * phase.
- *
- * @goal package-dataservice
  */
+@Mojo(name="package-dataservice")
 public class DataServiceMojo extends AbstractMojo {
 
-    /**
-     * @parameter default-value="${project}"
-     */
+	@Parameter(defaultValue = "${project}")
     private MavenProject project;
 
     /**
      * Maven ProjectHelper.
-     *
-     * @component
      */
+	@Inject
     private MavenProjectHelper projectHelper;
 
     /**
      * The path of the existing artifact
-     *
-     * @parameter expression="${package-file.artifact}"
-     * @required
      */
+	@Parameter(property = "package-file.artifact", required = true)
     private File artifact;
 
     /**
      * The resulting extension of the file
-     *
-     * @parameter expression="${package-file.extension}
      */
+	@Parameter(property = "package-file.extension")
     private String extension;
 
     /**
      * The resulting extension of the file
-     *
-     * @parameter expression="${package-file.fileName}
      */
+	@Parameter(property = "package-file.fileName")
     private String fileName;
 
     /**
      * If the file should be archived
-     *
-     * @parameter expression="${package-file.enableArchive}" default-value=false
      */
+	@Parameter(property = "package-file.enableArchive", defaultValue = "false")
     private boolean enableArchive;
 
     public void execute() throws MojoExecutionException, MojoFailureException {

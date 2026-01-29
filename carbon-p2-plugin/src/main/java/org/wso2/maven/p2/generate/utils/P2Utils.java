@@ -21,7 +21,6 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
-import java.io.FilenameFilter;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -31,6 +30,7 @@ import java.util.Map;
 import java.util.jar.JarFile;
 import java.util.regex.Pattern;
 
+import javax.xml.XMLConstants;
 import javax.xml.transform.OutputKeys;
 import javax.xml.transform.Transformer;
 import javax.xml.transform.TransformerFactory;
@@ -42,18 +42,13 @@ import org.apache.maven.artifact.repository.ArtifactRepository;
 import org.apache.maven.artifact.resolver.ArtifactResolver;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.project.MavenProject;
-import org.codehaus.plexus.util.FileUtils;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
-import org.w3c.dom.Node;
-import org.w3c.dom.NodeList;
 import org.wso2.maven.p2.CatFeature;
 import org.wso2.maven.p2.Category;
 import org.wso2.maven.p2.EquinoxLauncher;
-import org.wso2.maven.p2.FeatureArtifact;
 import org.wso2.maven.p2.P2Profile;
 import org.wso2.maven.p2.generate.feature.Bundle;
-import org.wso2.maven.p2.generate.feature.IncludedFeature;
 
 public class P2Utils {
 	private static String[] matchList=new String[]{"perfect","equivalent","compatible","greaterOrEqual","patch", "optional"};
@@ -62,6 +57,9 @@ public class P2Utils {
         try {
             FileManagementUtil.unzip(p2Profile.getArtifact().getFile(), p2LauncherDir);
             String[] plugins = p2LauncherPluginDir.list();
+            if (plugins == null) {
+            	throw new MojoExecutionException("Unable to list launcher plugins in " + p2LauncherPluginDir);
+            }
             boolean found = false;
             for (String plugin : plugins) {
                 if (equinoxLauncher.getLauncherJar().equals(plugin))
@@ -70,14 +68,21 @@ public class P2Utils {
 
             if (!found) {
                 File[] listFiles = p2LauncherPluginDir.listFiles();
+                if (listFiles == null) {
+                	throw new MojoExecutionException("Unable to list launcher plugins in " + p2LauncherPluginDir);
+                }
                 for (File file : listFiles) {
-                    JarFile jarFile = new JarFile(file);
-                    String symbolicName = jarFile.getManifest().getMainAttributes().getValue(Bundle.BUNDLE_SYMBOLIC_NAME);
-                    if (symbolicName != null && symbolicName.equals(equinoxLauncher.getLauncherJar())) {
-                        equinoxLauncher.setLauncherJar(file.getName());
-                        found = true;
-                        break;
-                    }
+                	if (!file.isFile()) {
+                		continue;
+                	}
+                	try (JarFile jarFile = new JarFile(file)) {
+	                    String symbolicName = jarFile.getManifest().getMainAttributes().getValue(Bundle.BUNDLE_SYMBOLIC_NAME);
+	                    if (symbolicName != null && symbolicName.equals(equinoxLauncher.getLauncherJar())) {
+	                        equinoxLauncher.setLauncherJar(file.getName());
+	                        found = true;
+	                        break;
+	                    }
+                	}
                 }
                 if (!found)
                     throw new MojoExecutionException("Lanucher jar was not found: " + equinoxLauncher.getLauncherJar());
@@ -95,12 +100,15 @@ public class P2Utils {
         while (iter.hasNext()) {
             Object obj = iter.next();
             Bundle b;
-            if (obj instanceof FeatureArtifact) {
+            
+            if (obj instanceof Bundle) {
                 b = (Bundle) obj;
             } else if (obj instanceof String) {
                 b = Bundle.getBundle(obj.toString());
-            } else
-                b = (Bundle) obj;
+            } else {
+            	throw new MojoExecutionException("Unknown launcher file definition: " + obj);
+            }
+                
             try {
                 b.resolveVersion(project);
             } catch (MojoExecutionException e) {
@@ -116,12 +124,11 @@ public class P2Utils {
 
     public static File[] getEquinoxLogFiles(File equinoxLaunchLocation) {
         File configurationFolder = new File(equinoxLaunchLocation, "configuration");
-        FilenameFilter filter = new FilenameFilter() {
-            public boolean accept(File dir, String name) {
-                return (dir.isFile() && name.endsWith(".log"));
-            }
-        };
-        return configurationFolder.listFiles(filter);
+        if (!configurationFolder.isDirectory()) {
+        	return new File[0];
+        }
+        return configurationFolder.listFiles((dir, name) ->
+        	name.endsWith(".log") && new File(dir, name).isFile());
     }
 
     public static int getLastIndexOfProperties(File p2InfFile) throws IOException {
@@ -132,13 +139,27 @@ public class P2Utils {
                 in = new BufferedReader(new FileReader(p2InfFile));
                 String line;
                 while ((line = in.readLine()) != null) {
-                    String[] split = line.split("=");
-                    String[] split2 = split[0].split(Pattern.quote("."));
-                    if (split2[0].equalsIgnoreCase("properties")) {
-                        int index = Integer.parseInt(split2[1]);
-                        if (index > min)
-                            min = index;
-                    }
+                	if (line.trim().isEmpty()) {
+                		continue;
+                	}
+                	String[] split = line.split("=", 2);
+                	if (split.length < 2) {
+                		continue;
+                	}
+                	String[] split2 = split[0].split(Pattern.quote("."));
+                	if (split2.length < 2) {
+                		continue;
+                	}
+                	if (split2[0].equalsIgnoreCase("properties")) {
+                		try {
+                			int index = Integer.parseInt(split2[1]);
+                			if (index > min) {
+                				min = index;
+                			}
+                		} catch (NumberFormatException ignored) {
+                			// skip malformed line
+                		}
+                	}
                 }
             } catch (FileNotFoundException e) {
                 throw e;
@@ -161,11 +182,15 @@ public class P2Utils {
         }
 
         for (File file : listFiles) {
-            JarFile jarFile = new JarFile(file);
-            String symbolicName = jarFile.getManifest().getMainAttributes().getValue(Bundle.BUNDLE_SYMBOLIC_NAME);
-            if (symbolicName != null && symbolicName.equals("org.eclipse.equinox.launcher")) {
-                return file.getAbsolutePath();
-            }
+        	if (!file.isFile()) {
+        		continue;
+        	}
+        	try (JarFile jarFile = new JarFile(file)) {
+	            String symbolicName = jarFile.getManifest().getMainAttributes().getValue(Bundle.BUNDLE_SYMBOLIC_NAME);
+	            if (symbolicName != null && symbolicName.equals("org.eclipse.equinox.launcher")) {
+	                return file.getAbsolutePath();
+	            }
+        	}
         }
         //launcher jar is not found. 
         throw new Exception("Please specify a valid location of a P2 Agent Distribution");
@@ -251,6 +276,10 @@ public class P2Utils {
     	
         try {
             TransformerFactory transformerFactory = TransformerFactory.newInstance();
+            //TransformerFactory should disallow external access to avoid XXE/SSRF vectors.
+            transformerFactory.setFeature(XMLConstants.FEATURE_SECURE_PROCESSING, true);
+            transformerFactory.setAttribute(XMLConstants.ACCESS_EXTERNAL_DTD, "");
+            transformerFactory.setAttribute(XMLConstants.ACCESS_EXTERNAL_STYLESHEET, "");
             Transformer transformer;
             transformer = transformerFactory.newTransformer();
             DOMSource source = new DOMSource(doc);

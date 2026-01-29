@@ -15,137 +15,120 @@
  */
 package org.wso2.maven.p2;
 
-import java.io.*;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileWriter;
+import java.io.FilenameFilter;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.PrintWriter;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
-import java.util.List;
+
+import javax.inject.Inject;
 
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
+import org.apache.maven.plugins.annotations.LifecyclePhase;
+import org.apache.maven.plugins.annotations.Mojo;
+import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.project.MavenProject;
 import org.apache.maven.project.MavenProjectHelper;
 import org.codehaus.plexus.util.FileUtils;
 import org.eclipse.sisu.equinox.launching.internal.P2ApplicationLauncher;
 import org.wso2.maven.p2.generate.utils.FileManagementUtil;
-import org.wso2.maven.p2.generate.utils.MavenUtils;
 import org.wso2.maven.p2.generate.utils.P2Constants;
-import org.wso2.maven.p2.generate.utils.P2Utils;
 
 /**
  * Write environment information for the current build to file.
- *
- * @goal p2-profile-gen
- * @phase package
  */
+@Mojo(name = "p2-profile-gen", defaultPhase = LifecyclePhase.PACKAGE)
 public class ProfileGenMojo extends AbstractMojo {
 
 
     /**
      * Destination to which the features should be installed
-     *
-     * @parameter
-     * @required
      */
+	@Parameter(required = true)
     private String destination;
 
     /**
      * target profile
-     *
-     * @parameter
-     * @required
      */
+	@Parameter(required = true)
     private String profile;
-
-
 
     /**
      * URL of the Metadata Repository
-     *
-     * @parameter
      */
+	@Parameter
     private URL metadataRepository;
 
     /**
      * URL of the Artifact Repository
-     *
-     * @parameter
      */
+    @Parameter
     private URL artifactRepository;
 
     /**
      * List of features
-     *
-     * @parameter
-     * @required
      */
+    @Parameter
     private ArrayList features;
 
     /**
      * Flag to indicate whether to delete old profile files
      *
-     * @parameter default-value="true"
      */
+    @Parameter(defaultValue = "true")
     private boolean deleteOldProfileFiles = true;
 
     /**
      * Location of the p2 repository
-     *
-     * @parameter
      */
+    @Parameter
     private P2Repository p2Repository;
 
-    /**
-     * @parameter default-value="${project}"
-     */
+    @Parameter(defaultValue = "${project}")
     private MavenProject project;
 
-    /**
-     * @component
-     */
+    @Inject
     private org.apache.maven.artifact.factory.ArtifactFactory artifactFactory;
 
-    /**
-     * @component
-     */
+    @Inject
     private org.apache.maven.artifact.resolver.ArtifactResolver resolver;
 
-    /**
-     * @parameter default-value="${localRepository}"
-     */
+    @Parameter(defaultValue = "${localRepository}")
     private org.apache.maven.artifact.repository.ArtifactRepository localRepository;
 
-    /**
-     * @parameter default-value="${project.remoteArtifactRepositories}"
-     */
+    @Parameter(defaultValue = "${project.remoteArtifactRepositories}")
     private java.util.List remoteRepositories;
 
     /**
      * Equinox p2 configuration path
-     *
-     * @parameter
      */
+    @Parameter
     private P2Profile p2Profile;
 
     /**
      * Maven ProjectHelper.
-     *
-     * @component
      */
+    @Inject
     private MavenProjectHelper projectHelper;
 
-    /** @component */
+    @Inject
     private P2ApplicationLauncher launcher;
 
     /**
      * Kill the forked test process after a certain number of seconds. If set to 0, wait forever for
      * the process, never timing out.
-     *
-     * @parameter expression="${p2.timeout}"
      */
+    @Parameter(property = "p2.timeout")
     private int forkedProcessTimeoutInSeconds;
 
 
@@ -162,6 +145,9 @@ public class ProfileGenMojo extends AbstractMojo {
         try {
             if (profile == null){
                 profile = P2Constants.DEFAULT_PROFILE_ID;
+            }
+            if (metadataRepository == null || artifactRepository == null) {
+            	throw new MojoExecutionException("metadataRepository and artifactRepository are required");
             }
             createAndSetupPaths();
             rewriteEclipseIni();
@@ -197,7 +183,7 @@ public class ProfileGenMojo extends AbstractMojo {
             installUIs = installUIs + f.getId().trim() + "/" + f.getVersion().trim() + ",";
         }
 
-        if (installUIs.length() == 0) {
+        if (installUIs.length() > 0) {
             installUIs = installUIs.substring(0, installUIs.length() - 1);
         }
         return installUIs;
@@ -300,6 +286,10 @@ public class ProfileGenMojo extends AbstractMojo {
                     return name.endsWith(".profile");
                 }
             });
+            
+            if (profileFileList == null || profileFileList.length == 0) {
+            	return;
+            }
 
             Arrays.sort(profileFileList);
 
@@ -340,7 +330,9 @@ public class ProfileGenMojo extends AbstractMojo {
             this.getLog().debug("Error while writing to file " + file.getName());
             e.printStackTrace();
         } finally {
-            pw.close();
+        	if (pw != null) {
+        		pw.close();
+        	}
         }
     }
 

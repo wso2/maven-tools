@@ -38,10 +38,12 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
-                <version>2.3.2</version>
+            </plugin>
+            <plugin>
+                <artifactId>maven-plugin-plugin</artifactId>
                 <configuration>
-                    <source>7</source>
-                    <target>7</target>
+                    <goalPrefix>wso2-mi-connector</goalPrefix>
+                    <skipErrorNoDescriptorsFound>true</skipErrorNoDescriptorsFound>
                 </configuration>
             </plugin>
         </plugins>
@@ -66,11 +68,11 @@
             <groupId>commons-io</groupId>
             <artifactId>commons-io</artifactId>
         </dependency>
-        <dependency>
-            <groupId>org.apache.ws.commons.axiom</groupId>
-            <artifactId>axiom-impl</artifactId>
-            <version>${org.apache.ws.commons.axiom.version}</version>
-        </dependency>
+<!--        <dependency>-->
+<!--            <groupId>org.apache.ws.commons.axiom</groupId>-->
+<!--            <artifactId>axiom-impl</artifactId>-->
+<!--            <version>${org.apache.ws.commons.axiom.version}</version>-->
+<!--        </dependency>-->
         <dependency>
             <groupId>org.wso2.maven</groupId>
             <artifactId>org.wso2.maven.utils</artifactId>

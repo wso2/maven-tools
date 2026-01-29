@@ -21,7 +21,6 @@ import java.io.IOException;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Properties;
-import java.util.jar.Attributes;
 import java.util.jar.JarFile;
 import java.util.jar.Manifest;
 import java.util.regex.Matcher;
@@ -29,8 +28,8 @@ import java.util.regex.Pattern;
 
 import org.apache.maven.artifact.Artifact;
 import org.apache.maven.model.Dependency;
-import org.apache.maven.model.DependencyManagement;
 import org.apache.maven.plugin.MojoExecutionException;
+import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.project.MavenProject;
 import org.wso2.maven.p2.generate.utils.P2Utils;
 
@@ -39,25 +38,20 @@ public class Bundle{
 
     /**
      * Group Id of the Bundle
-     *
-     * @parameter
-     * @required
      */
+	@Parameter(required = true)
 	private String groupId;
 	
 	/**
      * Artifact Id of the Bundle
-     *
-     * @parameter
-     * @required
      */
+	@Parameter(required = true)
 	private String artifactId;
 	
     /**
      * Version of the Bundle
-     *
-     * @parameter default-value=""
      */
+	@Parameter(defaultValue = "")
 	private String version;
 
 	private Artifact artifact;
@@ -100,6 +94,9 @@ public class Bundle{
 	}
 	
 	protected static Bundle getBundle(String bundleDefinition, Bundle bundle) throws MojoExecutionException{
+		if (bundleDefinition == null || bundleDefinition.trim().isEmpty()) {
+			throw new MojoExecutionException("Bundle definition must be non-empty");
+		}
 		String[] split = bundleDefinition.split(":");
 		if (split.length>1){
 			bundle.setGroupId(split[0]);
@@ -158,7 +155,9 @@ public class Bundle{
 		}
 		Properties properties = project.getProperties();
 		for(Object key:properties.keySet()){
-			version=version.replaceAll(Pattern.quote("${"+key+"}"), properties.get(key).toString());
+			String placeholder = "${" + key + "}";
+			version = version.replaceAll(Pattern.quote(placeholder),
+					java.util.regex.Matcher.quoteReplacement(properties.get(key).toString()));
 		}
 	}
 
@@ -186,6 +185,9 @@ public class Bundle{
     private static final Pattern ONLY_NUMBERS = Pattern.compile( "[0-9]+" );
 	public static String getOSGIVersion( String version )
     {
+		if (version == null) {
+			throw new IllegalArgumentException("version must not be null");
+		}
         String osgiVersion;
 
         // Matcher m = P_VERSION.matcher(version);
@@ -338,9 +340,11 @@ public class Bundle{
 	}
 	
 	public void resolveOSGIInfo() throws MojoExecutionException{
-		try {
-			JarFile jarFile = new JarFile(getArtifact().getFile());
+		try (JarFile jarFile = new JarFile(getArtifact().getFile())) {
 			Manifest manifest = jarFile.getManifest();
+			if (manifest == null) {
+				throw new MojoExecutionException("Manifest cannot be found in the bundle: " + getArtifact().getFile());
+			}
 			if (getBundleSymbolicName()==null){
 				String value = manifest.getMainAttributes().getValue(BUNDLE_SYMBOLIC_NAME);
                 if (value == null) {
@@ -353,7 +357,6 @@ public class Bundle{
 			if (getBundleVersion()==null){
 				 setBundleVersion(manifest.getMainAttributes().getValue(BUNDLE_VERSION));
 			}	
-			jarFile.close();
 			if (getBundleSymbolicName()==null || getBundleVersion()==null)
 				throw new MojoExecutionException("Artifact doesn't contain OSGI info: "+getGroupId()+":"+getArtifactId()+":"+getVersion());
 		} catch (IOException e) {

@@ -24,6 +24,7 @@ import java.io.InputStream;
 import java.util.List;
 import java.util.Properties;
 
+import javax.inject.Inject;
 import javax.xml.stream.FactoryConfigurationError;
 
 import org.apache.maven.model.Model;
@@ -33,6 +34,8 @@ import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.plugin.logging.Log;
+import org.apache.maven.plugins.annotations.Mojo;
+import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.project.MavenProject;
 import org.apache.maven.scm.ScmException;
 import org.apache.maven.scm.ScmFile;
@@ -57,19 +60,19 @@ import org.wso2.maven.registry.RegistryArtifact;
 /**
  * This is the Maven Mojo used for do pre prepare tasks such as update version
  * of artifacts in Artifact.xml etc.
- * 
- * @goal pre-prepare
  * @deprecated
  */
+@Mojo(name="pre-prepare")
+@Deprecated
 public class MavenReleasePrePrepareMojo extends AbstractMojo {
 
 	private static final String PROJECT_NATURES = "projectnatures";
 	private static final String MAVEN_ECLIPSE_PLUGIN = "maven-eclipse-plugin";
 	private static final String POM_XML = "pom.xml";
-	private static final String ORG_WSO2_DEVELOPER_STUDIO_ECLIPSE_GENERAL_PROJECT_NATURE =
-	                                                                                      "org.wso2.developerstudio.eclipse.general.project.nature";
-	private static final String ORG_WSO2_DEVELOPER_STUDIO_ECLIPSE_ESB_PROJECT_NATURE =
-	                                                                                  "org.wso2.developerstudio.eclipse.esb.project.nature";
+//	private static final String ORG_WSO2_DEVELOPER_STUDIO_ECLIPSE_GENERAL_PROJECT_NATURE =
+//	                                                                                      "org.wso2.developerstudio.eclipse.general.project.nature";
+//	private static final String ORG_WSO2_DEVELOPER_STUDIO_ECLIPSE_ESB_PROJECT_NATURE =
+//	                                                                                  "org.wso2.developerstudio.eclipse.esb.project.nature";
 	private static final String PROJECT = "project.";
 	private static final String ARTIFACT_XML_REGEX = "**/artifact.xml";
 	private static final String DEVELOPMENT = "dev";
@@ -99,19 +102,13 @@ public class MavenReleasePrePrepareMojo extends AbstractMojo {
 
 	private final Log log = getLog();
 
-	/**
-	 * @parameter default-value="${project}"
-	 */
+	@Parameter(defaultValue = "${project}")
 	private MavenProject project;
 	
-	/** 
-	 * @component role-hint="mojo" 
-	 */
+	@Inject
     private SecDispatcher secDispatcher;
 
-	/**
-	 * @parameter expression="${dryRun}" default-value="false"
-	 */
+	@Parameter(property = "dryRun", defaultValue = "false")
 	private boolean dryRun;
 
 	/**
@@ -119,6 +116,7 @@ public class MavenReleasePrePrepareMojo extends AbstractMojo {
 	 */
 	private String scmProvider;
 
+	@Deprecated
 	public void execute() throws MojoExecutionException, MojoFailureException {
 
 		if (dryRun) {

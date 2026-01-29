@@ -17,11 +17,25 @@
 */
 package org.wso2.maven.p2.generate.feature;
 
-import java.io.*;
-import java.util.*;
-import java.util.prefs.Preferences;
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Properties;
 
-
+import javax.inject.Inject;
+import javax.xml.XMLConstants;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
@@ -40,6 +54,9 @@ import org.apache.maven.model.Resource;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
+import org.apache.maven.plugins.annotations.LifecyclePhase;
+import org.apache.maven.plugins.annotations.Mojo;
+import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.project.MavenProject;
 import org.apache.maven.project.MavenProjectHelper;
 import org.codehaus.plexus.util.DirectoryScanner;
@@ -49,178 +66,157 @@ import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import org.wso2.maven.p2.generate.utils.FileManagementUtil;
-import org.wso2.maven.p2.generate.utils.P2Utils;
 import org.wso2.maven.p2.generate.utils.MavenUtils;
+import org.wso2.maven.p2.generate.utils.P2Utils;
 import org.wso2.maven.p2.generate.utils.PropertyReplacer;
 
 /**
  * Write environment information for the current build to file.
  *
- * @goal p2-feature-gen
- * @phase package
  */
+@Mojo(name = "p2-feature-gen", defaultPhase = LifecyclePhase.PACKAGE)
 public class FeatureGenMojo extends AbstractMojo {
 
-    /**
-     * feature id
-     *
-     * @parameter
-     * @required
-     */
-    private String id;
+	/**
+	 * feature id
+	 */
+	@Parameter(required = true)
+	private String id;
 
     /**
      * version
      *
-     * @parameter default-value="${project.version}"
      */
+	@Parameter(defaultValue = "${project.version}")
     private String version;
 
     /**
      * label of the feature
      *
-     * @parameter default-value="${project.name}"
      */
+	@Parameter(defaultValue = "${project.name}")
     private String label;
 
     /**
      * description of the feature
      *
-     * @parameter default-value="${project.description}"
      */
+	@Parameter(defaultValue = "${project.description}")
     private String description;
 
     /**
      * provider name
      *
-     * @parameter default-value="%providerName"
      */
+	@Parameter(defaultValue = "%providerName")
     private String providerName;
 
     /**
      * copyrite
      *
-     * @parameter default-value="%copyright"
      */
+	@Parameter(defaultValue = "%copyright")
     private String copyright;
 
     /**
      * licence url
-     *
-     * @parameter default-value="%licenseURL"
      */
+    @Parameter(defaultValue = "%licenseURL")
     private String licenceUrl;
 
     /**
      * licence
      *
-     * @parameter default-value="%license"
      */
+    @Parameter(defaultValue = "%license")
     private String licence;
 
     /**
      * path to manifest file
-     *
-     * @parameter
      */
+    @Parameter
     private File manifest;
 
     /**
      * path to properties file
      *
-     * @parameter
      */
+    @Parameter
     private File propertiesFile;
 
     /**
      * list of properties
      * precedance over propertiesFile
      *
-     * @parameter
      */
+    @Parameter
     private Properties properties;
 
     /**
      * Collection of bundles
      *
-     * @parameter
      */
+    @Parameter
     private ArrayList bundles;
 
     /**
      * Collection of import bundles
      *
-     * @parameter
      */
+    @Parameter
     private ArrayList importBundles;
 
     /**
      * Collection of required Features
      *
-     * @parameter
      */
+    @Parameter
     private ArrayList importFeatures;
 
     /**
      * Collection of required Features
-     *
-     * @parameter
      */
+    @Parameter
     private ArrayList includedFeatures;
 
     /**
      * define advice file content
      *
-     * @parameter
      */
+    @Parameter
     private AdviceFile adviceFile;
 
-//    /**
-//     * define category
-//     * @parameter [alias="carbonCategories"]
-//     */
+    //    /**
+    //     * define category
+    //     */
+    //    @Parameter(alias = "carbonCategories")
     //    private String category;
     //
-    /**
-     * @component
-     */
+    @Inject
     private org.apache.maven.artifact.factory.ArtifactFactory artifactFactory;
 
-    /**
-     * @component
-     */
+    @Inject
     private org.apache.maven.artifact.resolver.ArtifactResolver resolver;
 
-    /**
-     * @parameter default-value="${localRepository}"
-     */
+    @Parameter(defaultValue = "${localRepository}")
     private org.apache.maven.artifact.repository.ArtifactRepository localRepository;
 
-    /**
-     * @parameter default-value="${project.remoteArtifactRepositories}"
-     */
+    @Parameter(defaultValue = "${project.remoteArtifactRepositories}")
     private java.util.List remoteRepositories;
 
-    /**
-     * @parameter default-value="${project.distributionManagementArtifactRepository}"
-     */
+    @Parameter(defaultValue = "${project.distributionManagementArtifactRepository}")
     private ArtifactRepository deploymentRepository;
 
-    /**
-     * @component
-     */
+    @Inject
     private ArtifactMetadataSource artifactMetadataSource;
 
-    /**
-     * @parameter default-value="${project}"
-     */
+    @Parameter(defaultValue = "${project}")
     private MavenProject project;
 
     /**
      * Maven ProjectHelper.
-     *
-     * @component
      */
+    @Inject
     private MavenProjectHelper projectHelper;
 
     private ArrayList<Bundle> processedBundles;
@@ -351,30 +347,35 @@ public class FeatureGenMojo extends AbstractMojo {
         return processedImportfeatures;
     }
 
-    private ArrayList<IncludedFeature> getIncludedFeatures() throws MojoExecutionException {
-        if (processedIncludedFeatures != null)
-            return processedIncludedFeatures;
+	private ArrayList<IncludedFeature> getIncludedFeatures() throws MojoExecutionException {
+		if (processedIncludedFeatures != null)
+			return processedIncludedFeatures;
 
-        if (includedFeatures == null || includedFeatures.size() == 0)
-            return null;
+		if (includedFeatures == null || includedFeatures.size() == 0)
+			return null;
 
-        processedIncludedFeatures = new ArrayList<IncludedFeature>(includedFeatures.size());
-        for (Object obj : includedFeatures) {
-            if (obj instanceof String) {
-                IncludedFeature includedFeature = IncludedFeature.getIncludedFeature((String) obj);
-                if (includedFeature != null) {
-                    includedFeature.setFeatureVersion(project.getVersion());
-                    Artifact artifact = artifactFactory.createArtifact(includedFeature.getGroupId(),
-                            includedFeature.getArtifactId(), includedFeature.getArtifactVersion(),
-                            Artifact.SCOPE_RUNTIME, "zip");
-                    includedFeature.setArtifact(MavenUtils.getResolvedArtifact(artifact,
-                            remoteRepositories, localRepository, resolver));
-                    processedIncludedFeatures.add(includedFeature);
-                }
-            }
-        }
-        return processedIncludedFeatures;
-    }
+		processedIncludedFeatures = new ArrayList<IncludedFeature>(includedFeatures.size());
+		for (Object obj : includedFeatures) {
+			IncludedFeature includedFeature;
+			if (obj instanceof IncludedFeature) {
+				includedFeature = (IncludedFeature) obj;
+			} else if (obj instanceof String) {
+				includedFeature = IncludedFeature.getIncludedFeature((String) obj);
+			} else {
+				throw new MojoExecutionException("Unknown included feature definition: " + obj);
+			}
+			if (includedFeature != null) {
+				includedFeature.setFeatureVersion(project.getVersion());
+				Artifact artifact = artifactFactory.createArtifact(includedFeature.getGroupId(),
+						includedFeature.getArtifactId(), includedFeature.getArtifactVersion(), Artifact.SCOPE_RUNTIME,
+						"zip");
+				includedFeature.setArtifact(
+						MavenUtils.getResolvedArtifact(artifact, remoteRepositories, localRepository, resolver));
+				processedIncludedFeatures.add(includedFeature);
+			}
+		}
+		return processedIncludedFeatures;
+	}
 
     private Artifact getResolvedArtifact(Bundle bundle) throws MojoExecutionException {
         Artifact artifact = artifactFactory.createArtifact(bundle.getGroupId(), bundle.getArtifactId(), bundle.getVersion(), Artifact.SCOPE_RUNTIME, "jar");
@@ -409,14 +410,21 @@ public class FeatureGenMojo extends AbstractMojo {
         DocumentBuilderFactory documentBuilderFactory = DocumentBuilderFactory.newInstance();
         DocumentBuilder documentBuilder;
         try {
+        	//Default DocumentBuilderFactory settings allow XXE, avoid it
+        	documentBuilderFactory.setFeature(XMLConstants.FEATURE_SECURE_PROCESSING, true);
+            documentBuilderFactory.setFeature("http://apache.org/xml/features/disallow-doctype-decl", true);
+            documentBuilderFactory.setFeature("http://xml.org/sax/features/external-general-entities", false);
+            documentBuilderFactory.setFeature("http://xml.org/sax/features/external-parameter-entities", false);
+            documentBuilderFactory.setXIncludeAware(false);
+            documentBuilderFactory.setExpandEntityReferences(false);
             documentBuilder = documentBuilderFactory.newDocumentBuilder();
         } catch (ParserConfigurationException e1) {
             throw new MojoExecutionException("Unable to load feature manifest", e1);
         }
         Document document;
         if (getManifest() != null && getManifest().exists()) {
-            try {
-                document = documentBuilder.parse(new FileInputStream(getManifest()));
+        	try (InputStream in = new FileInputStream(getManifest())) {
+        		document = documentBuilder.parse(in);
             } catch (Exception e) {
                 throw new MojoExecutionException("Unable to load feature manifest", e);
             }
@@ -542,6 +550,10 @@ public class FeatureGenMojo extends AbstractMojo {
 
         try {
             TransformerFactory transformerFactory = TransformerFactory.newInstance();
+            //TransformerFactory should disallow external access to avoid XXE/SSRF vectors.
+            transformerFactory.setFeature(XMLConstants.FEATURE_SECURE_PROCESSING, true);
+            transformerFactory.setAttribute(XMLConstants.ACCESS_EXTERNAL_DTD, "");
+            transformerFactory.setAttribute(XMLConstants.ACCESS_EXTERNAL_STYLESHEET, "");
             Transformer transformer;
             transformer = transformerFactory.newTransformer();
             DOMSource source = new DOMSource(document);
@@ -558,16 +570,18 @@ public class FeatureGenMojo extends AbstractMojo {
         HashMap<String, Bundle> missingPlugins = new HashMap<String, Bundle>();
         ArrayList<Bundle> processedBundlesList = getProcessedBundlesList();
         if (processedBundlesList == null) return null;
-        for (Iterator<Bundle> iterator = processedBundlesList.iterator(); iterator
-                .hasNext();) {
+        for (Iterator<Bundle> iterator = processedBundlesList.iterator(); iterator.hasNext();) {
             Bundle bundle = iterator.next();
-            missingPlugins.put(bundle.getArtifactId(), bundle);
+            String pluginId = bundle.getBundleSymbolicName() != null
+            		? bundle.getBundleSymbolicName()
+            		: bundle.getArtifactId();
+            missingPlugins.put(pluginId, bundle);
         }
         NodeList existingPlugins = document.getDocumentElement().getElementsByTagName("plugin");
         for (int i = 0; i < existingPlugins.getLength(); i++) {
             Node node = existingPlugins.item(i);
             Node namedItem = node.getAttributes().getNamedItem("id");
-            if (namedItem != null && namedItem.getTextContent() != null && missingPlugins.containsKey(namedItem.getTextContent())) {
+            if (namedItem != null && namedItem.getTextContent() != null) {
                 missingPlugins.remove(namedItem.getTextContent());
             }
         }
@@ -579,9 +593,9 @@ public class FeatureGenMojo extends AbstractMojo {
         Properties props = getProperties();
         if (props == null) return;
         if (!props.isEmpty())
-            try {
+            try (FileOutputStream out = new FileOutputStream(FILE_FEATURE_PROPERTIES)){
                 getLog().info("Generating feature properties");
-                props.store(new FileOutputStream(FILE_FEATURE_PROPERTIES), "Properties of " + id);
+                props.store(out, "Properties of " + id);
             } catch (Exception e) {
                 throw new MojoExecutionException("Unable to create the feature properties", e);
             }
@@ -676,7 +690,10 @@ public class FeatureGenMojo extends AbstractMojo {
         if (processedImportBundlesList == null) return null;
         for (Iterator<ImportBundle> iterator = processedImportBundlesList.iterator(); iterator.hasNext();) {
             ImportBundle bundle = iterator.next();
-            missingImportPlugins.put(bundle.getArtifactId(), bundle);
+            String pluginId = bundle.getBundleSymbolicName() != null
+            		? bundle.getBundleSymbolicName()
+            		: bundle.getArtifactId();
+            missingImportPlugins.put(pluginId, bundle);
         }
         NodeList requireNodeList = document.getDocumentElement().getElementsByTagName("require");
         if (requireNodeList == null || requireNodeList.getLength() == 0)
@@ -689,7 +706,7 @@ public class FeatureGenMojo extends AbstractMojo {
             for (int i = 0; i < importNodes.getLength(); i++) {
                 Node node = importNodes.item(i);
                 Node namedItem = node.getAttributes().getNamedItem("plugin");
-                if (namedItem != null && namedItem.getTextContent() != null && missingImportPlugins.containsKey(namedItem.getTextContent())) {
+                if (namedItem != null && namedItem.getTextContent() != null) {
                     missingImportPlugins.remove(namedItem.getTextContent());
                 }
             }
@@ -789,8 +806,8 @@ public class FeatureGenMojo extends AbstractMojo {
             isPropertiesLoadedFromFile = true;
             if (getPropertiesFile() != null && getPropertiesFile().exists()) {
                 Properties props = new Properties();
-                try {
-                    props.load(new FileInputStream(getPropertiesFile()));
+                try (FileInputStream in = new FileInputStream(getPropertiesFile())){
+                    props.load(in);
                 } catch (Exception e) {
                     throw new MojoExecutionException("Unable to load the given properties file", e);
                 }

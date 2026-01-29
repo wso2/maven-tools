@@ -21,9 +21,13 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
+import javax.inject.Inject;
+
 import org.apache.maven.model.Plugin;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
+import org.apache.maven.plugins.annotations.Mojo;
+import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.project.MavenProject;
 import org.apache.maven.project.MavenProjectHelper;
 import org.codehaus.plexus.util.FileUtils;
@@ -31,63 +35,54 @@ import org.codehaus.plexus.util.xml.Xpp3Dom;
 import org.wso2.maven.capp.model.Artifact;
 import org.wso2.maven.capp.mojo.AbstractPOMGenMojo;
 import org.wso2.maven.capp.utils.CAppMavenUtils;
-import org.wso2.maven.plugin.datasource.utils.WSO2MavenDSSPluginConstantants;
 import org.wso2.maven.plugin.datasource.utils.DSSMavenUtils;
+import org.wso2.maven.plugin.datasource.utils.WSO2MavenDSSPluginConstantants;
 
 /**
  * This is the Maven Mojo used for generating a pom for a datasource artifact
  * from the old CApp project structure
- *
- * @goal pom-gen
  */
+@Mojo(name="pom-gen")
 public class DataSourcePOMGenMojo extends AbstractPOMGenMojo {
 
-    /**
-     * @parameter default-value="${project}"
-     */
+	@Parameter(defaultValue = "${project}")
     public MavenProject project;
 
     /**
      * Maven ProjectHelper.
-     *
-     * @component
      */
+	@Inject
     public MavenProjectHelper projectHelper;
 
     /**
      * The path of the location to output the pom
-     *
-     * @parameter expression="${project.build.directory}/artifacts"
      */
+	@Parameter(defaultValue = "${project.build.directory}/artifacts")
     public File outputLocation;
 
     /**
      * The resulting extension of the file
-     *
-     * @parameter
      */
+    @Parameter
     public File artifactLocation;
 
     /**
      * POM location for the module project
-     *
-     * @parameter expression="${project.build.directory}/pom.xml"
      */
+    @Parameter(defaultValue = "${project.build.directory}/pom.xml")
     public File moduleProject;
 
     /**
      * Group id to use for the generated pom
-     *
-     * @parameter
      */
+    @Parameter
     public String groupId;
 
     /**
      * Comma separated list of "artifact_type=extension" to be used when
      * creating dependencies for other capp artifacts
-     *
-     * @parameter
      */
+    @Parameter
     public String typeList;
 
     private static final String ARTIFACT_TYPE = "datasource/datasource";

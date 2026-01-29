@@ -18,20 +18,21 @@
 
 package org.wso2.maven;
 
-import org.apache.maven.plugin.AbstractMojo;
-
-import org.apache.maven.plugin.MojoExecutionException;
-import org.w3c.dom.*;
+import java.io.File;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 
-import java.io.File;
+import org.apache.maven.plugin.AbstractMojo;
+import org.apache.maven.plugin.MojoExecutionException;
+import org.apache.maven.plugins.annotations.LifecyclePhase;
+import org.apache.maven.plugins.annotations.Mojo;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
 
-/**
- * @goal generate
- * @phase compile
- */
+@Mojo(name = "generate", defaultPhase = LifecyclePhase.COMPILE)
 public class ConnectorMojo extends AbstractMojo {
 
     private String connectorName;

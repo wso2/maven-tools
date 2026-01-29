@@ -15,16 +15,16 @@
  */
 package org.wso2.maven.p2;
 
-import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
+
+import javax.inject.Inject;
 
 import org.apache.maven.artifact.factory.ArtifactFactory;
 import org.apache.maven.artifact.repository.ArtifactRepository;
@@ -33,8 +33,10 @@ import org.apache.maven.model.Resource;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
+import org.apache.maven.plugins.annotations.LifecyclePhase;
+import org.apache.maven.plugins.annotations.Mojo;
+import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.project.MavenProject;
-import org.codehaus.plexus.util.FileUtils;
 import org.eclipse.sisu.equinox.launching.internal.P2ApplicationLauncher;
 import org.wso2.maven.p2.generate.utils.FileManagementUtil;
 import org.wso2.maven.p2.generate.utils.MavenUtils;
@@ -42,60 +44,50 @@ import org.wso2.maven.p2.generate.utils.P2Utils;
 
 /**
  * Write environment information for the current build to file.
- *
- * @goal p2-repo-gen
- * @phase package
  */
+@Mojo(name = "p2-repo-gen", defaultPhase = LifecyclePhase.PACKAGE)
 public class RepositoryGenMojo extends AbstractMojo {
 
 //    /**
 //     * URL of the Metadata Repository
-//     *
-//     * @parameter
 //     */
+//    @Parameter	
 //    private URL repository;
 
     /**
      * Name of the repository
-     *
-     * @parameter
      */
+	@Parameter
     private String name;
 
     /**
      * URL of the Metadata Repository
-     *
-     * @parameter
      */
+	@Parameter
     private URL metadataRepository;
 
     /**
      * URL of the Artifact Repository
-     *
-     * @parameter
      */
+	@Parameter
     private URL artifactRepository;
 
     /**
      * Source folder
-     *
-     * @parameter
-     * @required
      */
+	@Parameter(required = true)
     private ArrayList featureArtifacts;
 
     /**
      * Source folder
-     *
-     * @parameter
      */
+	@Parameter
     private ArrayList bundleArtifacts;
     
     /**
-     * Source folder
-     *
-     * @parameter
+     * Categories
      */
+	@Parameter
     private ArrayList categories;
 
     /**
@@ -103,73 +95,55 @@ public class RepositoryGenMojo extends AbstractMojo {
      * the actual bytes underlying the artifact will not be copied, but the repository index will be created.
      * When this option is not specified, it is recommended to set the artifactRepository to be in the same location
      * as the source (-source)
-     *
-     * @parameter
      */
+	@Parameter
     private boolean publishArtifacts;
 
     /**
      * Type of Artifact (War,Jar,etc)
-     *
-     * @parameter
      */
+	@Parameter
     private boolean publishArtifactRepository;
 
     /**
      * Equinox Launcher
-     *
-     * @parameter
      */
+	@Parameter
     private EquinoxLauncher equinoxLauncher;
 
 
     /**
      * Equinox p2 configuration path
-     *
-     * @parameter
      */
+	@Parameter
     private P2Profile p2Profile;
 
-    /**
-     * @parameter default-value="${project}"
-     */
+	@Parameter(defaultValue = "${project}")
     private MavenProject project;
     
-    /**
-     * @parameter default-value="false"
-     */
+	@Parameter(defaultValue = "false")
     private boolean archive;
 
-    /**
-     * @component
-     */
+	@Inject
     private org.apache.maven.artifact.factory.ArtifactFactory artifactFactory;
 
-    /**
-     * @component
-     */
+	@Inject
     private org.apache.maven.artifact.resolver.ArtifactResolver resolver;
 
-    /**
-     * @parameter default-value="${localRepository}"
-     */
+    @Parameter(defaultValue = "${localRepository}")
     private org.apache.maven.artifact.repository.ArtifactRepository localRepository;
 
-    /**
-     * @parameter default-value="${project.remoteArtifactRepositories}"
-     */
+    @Parameter(defaultValue = "${project.remoteArtifactRepositories}")
     private List remoteRepositories;
 
-
-    /** @component */
+    @Inject
     private P2ApplicationLauncher launcher;
 
     /**
      * Kill the forked test process after a certain number of seconds. If set to 0, wait forever for
      * the process, never timing out.
-     *
-     * @parameter expression="${p2.timeout}"
      */
+    @Parameter(property = "p2.timeout")
     private int forkedProcessTimeoutInSeconds;
 
     private ArrayList processedFeatureArtifacts;
@@ -260,7 +234,7 @@ public class RepositoryGenMojo extends AbstractMojo {
         launcher.addArguments("-source", sourceDir.getAbsolutePath(), //
                 "-metadataRepository", metadataRepository.toString(), //
                 "-metadataRepositoryName", getRepositoryName(), //
-                "-artifactRepository", metadataRepository.toString(), //
+                "-artifactRepository", artifactRepository.toString(), //
                 "-artifactRepositoryName", getRepositoryName(), //
                 "-publishArtifacts",
                 "-publishArtifactRepository",
@@ -342,11 +316,11 @@ public class RepositoryGenMojo extends AbstractMojo {
         Iterator iter = bundleArtifacts.iterator();
         while (iter.hasNext()) {
             Object obj = iter.next();
-            BundleArtifact f;
+            BundleArtifact f = new BundleArtifact();
             if (obj instanceof BundleArtifact) {
                 f = (BundleArtifact) obj;
             } else if (obj instanceof String) {
-                f = BundleArtifact.getBundleArtifact(obj.toString());
+                f = BundleArtifact.getBundleArtifact(obj.toString(), f);
             } else
                 f = (BundleArtifact) obj;
             f.resolveVersion(getProject());
@@ -365,8 +339,10 @@ public class RepositoryGenMojo extends AbstractMojo {
         sourceDir = new File(tempDir, "featureExtract");
         sourceDir.mkdirs();
         
+        //The logic behind the next two lines is undocumented 
 		metadataRepository=(artifactRepository==null? metadataRepository:artifactRepository);
 		artifactRepository=(metadataRepository==null? artifactRepository:metadataRepository);
+		
 		if (metadataRepository == null) {
 			File repo = new File(targetDir, getProject().getArtifactId() + "_" + getProject().getVersion());
 			metadataRepository = repo.toURL();

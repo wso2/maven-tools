@@ -18,47 +18,46 @@
 package org.wso2.maven.p2;
 
 
-import org.apache.maven.plugin.AbstractMojo;
-import org.apache.maven.plugin.MojoExecutionException;
-import org.apache.maven.plugin.MojoFailureException;
-import org.apache.maven.project.MavenProject;
-import org.codehaus.plexus.archiver.ArchiverException;
-import org.codehaus.plexus.archiver.UnArchiver;
-import org.eclipse.tycho.model.ProductConfiguration;
-import org.eclipse.sisu.equinox.launching.internal.P2ApplicationLauncher;
-
 import java.io.File;
 import java.net.URL;
 
-/**
- * @goal publish-product
- */
+import javax.inject.Inject;
+
+import org.apache.maven.plugin.AbstractMojo;
+import org.apache.maven.plugin.MojoExecutionException;
+import org.apache.maven.plugin.MojoFailureException;
+import org.apache.maven.plugins.annotations.Mojo;
+import org.apache.maven.plugins.annotations.Parameter;
+import org.apache.maven.project.MavenProject;
+import org.codehaus.plexus.archiver.UnArchiver;
+import org.eclipse.sisu.equinox.launching.internal.P2ApplicationLauncher;
+import org.eclipse.tycho.model.ProductConfiguration;
+
+@Mojo(name = "publish-product")
 public class PublishProductMojo extends AbstractMojo {
 	/**
-	 * @parameter expression="${project}"
-	 * @required
+	 * Maven Project
 	 */
+	@Parameter(property = "project", required = true)
 	protected MavenProject project;
 	/**
 	 * Metadata repository name
-	 *     @parameter
 	 */
+	@Parameter
 	private URL metadataRepository;
 	/**
 	 * Artifact repository name
-	 *      @parameter
 	 */
+	@Parameter
 	private URL artifactRepository;
 
     /**
 	 * executable
-	 *      @parameter
 	 */
+	@Parameter
 	private String executable;
 
-    /**
-     * @component role="org.codehaus.plexus.archiver.UnArchiver" role-hint="zip"
-     */
+	@Inject
     private UnArchiver deflater;
 
 
@@ -66,25 +65,22 @@ public class PublishProductMojo extends AbstractMojo {
 	 * The product configuration, a .product file. This file manages all aspects
 	 * of a product definition from its constituent plug-ins to configuration
 	 * files to branding.
-	 *
-	 * @parameter expression="${productConfiguration}"
 	 */
+	@Parameter(property="productConfiguration")
 	private File productConfigurationFile;
 	/**
      * Parsed product configuration file
      */
     private ProductConfiguration productConfiguration;
 
-
-    /** @component */
+    @Inject
     private P2ApplicationLauncher launcher;
 
     /**
      * Kill the forked test process after a certain number of seconds. If set to 0, wait forever for
      * the process, never timing out.
-     *
-     * @parameter expression="${p2.timeout}"
      */
+    @Parameter(property = "p2.timeout")
     private int forkedProcessTimeoutInSeconds;
 
 
@@ -99,6 +95,10 @@ public class PublishProductMojo extends AbstractMojo {
 	}
 
 	private void publishProduct()  throws Exception{
+		
+		if (metadataRepository == null || artifactRepository == null || productConfigurationFile == null) {
+			throw new MojoExecutionException("metadataRepository, artifactRepository, and productConfigurationFile are required.");
+		}
 
         productConfiguration = ProductConfiguration.read( productConfigurationFile );
         P2ApplicationLauncher launcher = this.launcher;
@@ -108,7 +108,7 @@ public class PublishProductMojo extends AbstractMojo {
 
         launcher.addArguments(
                 "-metadataRepository", metadataRepository.toString(),
-                "-artifactRepository", metadataRepository.toString(),
+                "-artifactRepository", artifactRepository.toString(),
                 "-productFile", productConfigurationFile.getCanonicalPath(),
                 "-executables", executable.toString(),
                 "-publishArtifacts",

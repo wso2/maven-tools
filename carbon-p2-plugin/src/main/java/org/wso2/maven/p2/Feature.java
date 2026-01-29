@@ -16,25 +16,21 @@
 package org.wso2.maven.p2;
 
 import org.apache.maven.plugin.MojoExecutionException;
+import org.apache.maven.plugins.annotations.Parameter;
 import org.wso2.maven.p2.generate.feature.Bundle;
-import org.wso2.maven.p2.generate.feature.ImportFeature;
 
 public class Feature {
     
     /**
      * Id of the feature
-     *
-     * @parameter
-     * @required
      */
+	@Parameter(required = true)
     private String id;
 
     /**
      * version of the feature
-     *
-     * @parameter
-     * @required
      */
+	@Parameter(required = true)
     private String version;
 
     public Feature(){
@@ -58,6 +54,9 @@ public class Feature {
     }
     
 	protected static Feature getFeature(String bundleDefinition) throws MojoExecutionException{
+		if (bundleDefinition == null || bundleDefinition.trim().isEmpty()) {
+			throw new MojoExecutionException("Feature definition must be non-empty");
+		}
 		String[] split = bundleDefinition.split(":");
 		if (split.length>1){
 			Feature feature=new Feature();

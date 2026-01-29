@@ -17,9 +17,18 @@
 
 package org.wso2.maven.api;
 
+import java.io.File;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+
+import javax.inject.Inject;
+
 import org.apache.maven.model.Plugin;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
+import org.apache.maven.plugins.annotations.Mojo;
+import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.project.MavenProject;
 import org.apache.maven.project.MavenProjectHelper;
 import org.codehaus.plexus.util.FileUtils;
@@ -33,64 +42,50 @@ import org.wso2.maven.core.utils.MavenConstants;
 import org.wso2.maven.esb.ESBArtifact;
 import org.wso2.maven.esb.utils.ESBMavenUtils;
 
-import java.io.File;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
-
 /**
  * This is the Maven Mojo used for generating a pom for a sequence artifact
  * from the old CApp project structure
- *
- * @goal pom-gen
  */
+@Mojo(name="pom-gen")
 public class RESTAPIPOMGenMojo extends AbstractPOMGenMojo {
 
-    /**
-     * @parameter default-value="${project}"
-     */
+	@Parameter(defaultValue = "${project}")
     private MavenProject project;
 
     /**
      * Maven ProjectHelper.
-     *
-     * @component
      */
+	@Inject
     private MavenProjectHelper projectHelper;
 
     /**
      * The path of the location to output the pom
-     *
-     * @parameter expression="${project.build.directory}/artifacts"
      */
+	@Parameter(defaultValue = "${project.build.directory}/artifacts")
     private File outputLocation;
 
     /**
      * The resulting extension of the file
-     *
-     * @parameter
      */
+    @Parameter
     private File artifactLocation;
 
     /**
      * POM location for the module project
-     *
-     * @parameter expression="${project.build.directory}/pom.xml"
      */
+    @Parameter(defaultValue = "${project.build.directory}/pom.xml")
     private File moduleProject;
 
     /**
      * Group id to use for the generated pom
-     *
-     * @parameter
      */
+    @Parameter
     private String groupId;
 
     /**
      * Comma separated list of "artifact_type=extension" to be used when creating dependencies for other capp artifacts
-     *
-     * @parameter
      */
+    @Parameter
     public String typeList;
 
     private MavenProject mavenModuleProject;

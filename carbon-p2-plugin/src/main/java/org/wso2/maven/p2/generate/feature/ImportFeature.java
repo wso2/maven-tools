@@ -17,48 +17,29 @@
 */
 package org.wso2.maven.p2.generate.feature;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.Enumeration;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Properties;
-import java.util.regex.Pattern;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipFile;
-
-import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
-
 import org.apache.maven.artifact.Artifact;
-import org.apache.maven.model.Dependency;
 import org.apache.maven.plugin.MojoExecutionException;
-import org.apache.maven.project.MavenProject;
-import org.w3c.dom.Document;
+import org.apache.maven.plugins.annotations.Parameter;
 import org.wso2.maven.p2.generate.utils.P2Utils;
 
 public class ImportFeature{
 
 	/**
      * Feature Id of the feature
-     *
-     * @parameter
      */
-
+    @Parameter
 	private String featureId;
 
 	/**
      * Version of the feature
-     *
-     * @parameter default-value=""
      */
+    @Parameter(defaultValue = "")
 	private String featureVersion;
 	
     /**
      * Version Compatibility of the Feature
-     *
-     * @parameter
      */
+	@Parameter
 	private String compatibility;
 
 	private Artifact artifact;
@@ -90,7 +71,10 @@ public class ImportFeature{
     }
 
     protected static ImportFeature getFeature(String featureDefinition) throws MojoExecutionException{
-		String[] split = featureDefinition.split(":");
+    	if (featureDefinition == null || featureDefinition.trim().isEmpty()) {
+    		throw new MojoExecutionException("Feature definition must be non-empty");
+    	}
+    	String[] split = featureDefinition.split(":");
 		ImportFeature feature=new ImportFeature();
 		if (split.length>0){
 			feature.setFeatureId(split[0]);

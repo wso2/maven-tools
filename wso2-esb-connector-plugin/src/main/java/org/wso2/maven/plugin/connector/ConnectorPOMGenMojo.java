@@ -17,9 +17,18 @@
 
 package org.wso2.maven.plugin.connector;
 
+import java.io.File;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+
+import javax.inject.Inject;
+
 import org.apache.maven.model.Plugin;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
+import org.apache.maven.plugins.annotations.Mojo;
+import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.project.MavenProject;
 import org.apache.maven.project.MavenProjectHelper;
 import org.codehaus.plexus.util.FileUtils;
@@ -33,63 +42,49 @@ import org.wso2.maven.core.utils.MavenConstants;
 import org.wso2.maven.esb.ESBArtifact;
 import org.wso2.maven.esb.utils.ESBMavenUtils;
 
-import java.io.File;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
-
 /**
  * This is the Maven Mojo used for generating a pom for a connector artifact
- *
- * @goal pom-gen
  */
+@Mojo(name="pom-gen")
 public class ConnectorPOMGenMojo extends AbstractPOMGenMojo {
 
-    /**
-     * @parameter default-value="${project}"
-     */
+	@Parameter(defaultValue = "${project}")
     public MavenProject project;
 
     /**
      * Maven ProjectHelper.
-     *
-     * @component
      */
+	@Inject
     public MavenProjectHelper projectHelper;
 
     /**
      * The path of the location to output the pom
-     *
-     * @parameter expression="${project.build.directory}/artifacts"
      */
+	@Parameter(defaultValue = "${project.build.directory}/artifacts")
     public File outputLocation;
 
     /**
      * The resulting extension of the file
-     *
-     * @parameter
      */
+    @Parameter
     public File artifactLocation;
 
     /**
      * POM location for the module project
-     *
-     * @parameter expression="${project.build.directory}/pom.xml"
      */
+    @Parameter(defaultValue = "${project.build.directory}/pom.xml")
     public File moduleProject;
 
     /**
      * Group id to use for the generated pom
-     *
-     * @parameter
      */
+    @Parameter
     public String groupId;
 
     /**
      * Comma separated list of "artifact_type=extension" to be used when creating dependencies for other capp artifacts
-     *
-     * @parameter
      */
+    @Parameter
     public String typeList;
 
     private static final String ARTIFACT_TYPE = "synapse/lib";

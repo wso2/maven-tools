@@ -10,6 +10,8 @@ import java.util.regex.MatchResult;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import javax.inject.Inject;
+
 import org.apache.maven.artifact.Artifact;
 import org.apache.maven.artifact.factory.ArtifactFactory;
 import org.apache.maven.artifact.repository.ArtifactRepository;
@@ -17,6 +19,9 @@ import org.apache.maven.artifact.resolver.ArtifactResolver;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
+import org.apache.maven.plugins.annotations.LifecyclePhase;
+import org.apache.maven.plugins.annotations.Mojo;
+import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.project.MavenProject;
 import org.apache.maven.project.MavenProjectHelper;
 import org.wso2.developerstudio.eclipse.utils.archive.ArchiveManipulator;
@@ -32,66 +37,48 @@ import org.wso2.maven.stratos.model.TopologyFactory;
 /**
  * Create a bpel artifact from Maven project
  *
- * @goal regen-car
- * @phase package
  * @description rebuild car artifact with filtering
  */
+@Mojo(name="regen-car", defaultPhase = LifecyclePhase.PACKAGE)
 public class CARMojo2 extends AbstractMojo {
 
     /**
      * CAR artifact
-     *
-     * @required
-     * @parameter
      */
+	@Parameter(required = true)
     private CARMavenArtifact car;
     
     /**
      * Topology artifact
-     *
-     * @required
-     * @parameter
      */
+	@Parameter(required = true)
     private CARMavenArtifact topology;
-    
 
     /**
      * CAR artifact
-     *
-     * @parameter
      */
+	@Parameter
     private Boolean failOnMissingParameters;
     
-	/**
-	 * @parameter default-value="${project}"
-	 */
+	@Parameter(defaultValue = "${project}")
 	private MavenProject project;
 
 	/**
 	 * Maven ProjectHelper.
-	 * 
-	 * @component
 	 */
+	@Inject
 	private MavenProjectHelper projectHelper;
 
-    /**
-     * @component
-     */
+	@Inject
     private ArtifactFactory artifactFactory;
 
-    /**
-     * @component
-     */
+	@Inject
     private ArtifactResolver resolver;
 
-    /**
-     * @parameter default-value="${localRepository}"
-     */
+    @Parameter(defaultValue = "${localRepository}")
     private ArtifactRepository localRepository;
 
-    /**
-     * @parameter default-value="${project.remoteArtifactRepositories}"
-     */
+    @Parameter(defaultValue = "${project.remoteArtifactRepositories}")
     private List<?> remoteRepositories;
     
 

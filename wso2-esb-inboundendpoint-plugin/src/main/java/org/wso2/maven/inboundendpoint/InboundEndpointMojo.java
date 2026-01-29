@@ -17,54 +17,57 @@
 
 package org.wso2.maven.inboundendpoint;
 
-import org.apache.maven.plugin.AbstractMojo;
-import org.apache.maven.plugin.MojoExecutionException;
-import org.apache.maven.plugin.MojoFailureException;
-import org.apache.maven.project.MavenProject;
-import org.codehaus.plexus.util.FileUtils;
-
 import java.io.File;
 import java.io.IOException;
 
+import javax.inject.Inject;
+
+import org.apache.maven.plugin.AbstractMojo;
+import org.apache.maven.plugin.MojoExecutionException;
+import org.apache.maven.plugin.MojoFailureException;
+import org.apache.maven.plugins.annotations.Mojo;
+import org.apache.maven.plugins.annotations.Parameter;
+import org.apache.maven.project.MavenProject;
+import org.apache.maven.project.MavenProjectHelper;
+import org.codehaus.plexus.util.FileUtils;
+
 /**
  * Prepare an artifact to be installed in the local Maven repository
- *
- * @goal package-inbound-endpoint
  */
+@Mojo(name = "package-inbound-endpoint")
 public class InboundEndpointMojo extends AbstractMojo {
 
-    /**
-     * @parameter default-value="${project}"
-     */
+	@Parameter(defaultValue = "${project}")
     private MavenProject project;
 
     /**
-     * The path of the existing artifact
-     *
-     * @parameter expression="${deploy-file.artifact}"
-     * @required
+     * Maven ProjectHelper.
      */
+	@Inject
+    private MavenProjectHelper projectHelper;
+
+    /**
+     * The path of the existing artifact
+     */
+	@Parameter(property = "deploy-file.artifact", required = true)
     private File artifact;
 
     /**
      * The resulting extension of the file
-     *
-     * @parameter expression="${deploy-file.extension}
      */
+	@Parameter(property = "deploy-file.extension")
     private String extension;
 
     /**
      * The resulting extension of the file
-     *
-     * @parameter expression="${deploy-file.fileName}
      */
+	@Parameter(property = "deploy-file.fileName")
     private String fileName;
 
     /**
      * If the file should be archived
-     *
-     * @parameter expression="${deploy-file.enableArchive}" default-value=false
      */
+	@Parameter(property = "deploy-file.enableArchive", defaultValue = "false")
     private boolean enableArchive;
 
     private File destFolder;

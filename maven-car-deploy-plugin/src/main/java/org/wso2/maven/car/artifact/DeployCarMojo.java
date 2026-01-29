@@ -16,6 +16,16 @@
 
 package org.wso2.maven.car.artifact;
 
+import static org.wso2.maven.car.artifact.util.Constants.CONFIG_OPERATION_DEPLOY;
+import static org.wso2.maven.car.artifact.util.Constants.CONFIG_OPERATION_UNDEPLOY;
+import static org.wso2.maven.car.artifact.util.Constants.EI_SERVER;
+import static org.wso2.maven.car.artifact.util.Constants.MI_SERVER;
+
+import java.io.File;
+import java.util.List;
+
+import javax.inject.Inject;
+
 import org.apache.maven.artifact.factory.ArtifactFactory;
 import org.apache.maven.artifact.repository.ArtifactRepository;
 import org.apache.maven.artifact.resolver.ArtifactResolver;
@@ -23,152 +33,113 @@ import org.apache.maven.model.Plugin;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
+import org.apache.maven.plugins.annotations.LifecyclePhase;
+import org.apache.maven.plugins.annotations.Mojo;
+import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.project.MavenProject;
 import org.apache.maven.project.MavenProjectHelper;
 import org.codehaus.plexus.util.xml.Xpp3Dom;
 
-import java.io.File;
-import java.util.List;
-
-import static org.wso2.maven.car.artifact.util.Constants.CONFIG_OPERATION_DEPLOY;
-import static org.wso2.maven.car.artifact.util.Constants.CONFIG_OPERATION_UNDEPLOY;
-import static org.wso2.maven.car.artifact.util.Constants.EI_SERVER;
-import static org.wso2.maven.car.artifact.util.Constants.MI_SERVER;
-
 /**
  * Deploy the generated CAR file to a Remote Server
- *
- * @goal deploy-car
- * @phase deploy
  * @description Deploy CAR Artifact
  */
+@Mojo(name = "deploy-car", defaultPhase = LifecyclePhase.DEPLOY)
 public class DeployCarMojo extends AbstractMojo {
 
     private static final String EXTENSION_CAR = ".car";
 
     /**
      * Location Trust Store folder
-     *
-     * @required
-     * @parameter expression="${trustStorePath}" default-value="${basedir}/src/main/resources/security/wso2carbon.jks"
      */
+    @Parameter(property = "trustStorePath", defaultValue = "${basedir}/src/main/resources/security/wso2carbon.jks", required = true)
     private String trustStorePath;
 
     /**
-     * Location Trust Store folder
-     *
-     * @required
-     * @parameter expression="${trustStorePassword}" default-value="wso2carbon"
+     * Trust Store password
      */
+    @Parameter(property = "trustStorePassword", defaultValue = "wso2carbon", required = true)
     private String trustStorePassword;
 
     /**
      * Type of Trust Store
-     *
-     * @required
-     * @parameter expression="${trustStoreType}" default-value="JKS"
      */
+    @Parameter(property = "trustStoreType", defaultValue = "JKS", required = true)
     private String trustStoreType;
 
     /**
      * Server URL
-     *
-     * @required
-     * @parameter expression="${serverUrl}" default-value="https://localhost:9443"
      */
+    @Parameter(property = "serverUrl", defaultValue = "https://localhost:9443", required = true)
     private String serverUrl;
 
     /**
-     * Server URL
-     *
-     * @required
-     * @parameter expression="${userName}" default-value="admin"
+     * Admin User Name
      */
+    @Parameter(property = "userName", defaultValue = "admin", required = true)
     private String userName;
 
     /**
-     * Server URL
-     *
-     * @required
-     * @parameter expression="${password}" default-value="admin"
+     * Admin User Password
      */
+    @Parameter(property = "password", defaultValue = "admin", required = true)
     private String password;
 
     /**
      * Location target folder
-     *
-     * @parameter expression="${project.build.directory}"
      */
+    @Parameter(property = "project.build.directory")
     private File target;
 
     /**
      * Location archiveLocation folder
-     *
-     * @parameter
      */
+    @Parameter
     private File archiveLocation;
 
     /**
      * finalName to use for the generated capp project if the user wants to override the default name
-     *
-     * @parameter
      */
+    @Parameter
     public String finalName;
 
-    /**
-     * @parameter default-value="${project}"
-     */
+    @Parameter(defaultValue = "${project}")
     private MavenProject project;
 
     /**
      * Maven ProjectHelper.
-     *
-     * @component
      */
+    @Inject
     private MavenProjectHelper projectHelper;
 
-    /**
-     * @component
-     */
+    @Inject
     private ArtifactFactory artifactFactory;
 
-    /**
-     * @component
-     */
+    @Inject
     private ArtifactResolver resolver;
 
-    /**
-     * @parameter default-value="${localRepository}"
-     */
+    @Parameter(defaultValue = "${localRepository}")
     private ArtifactRepository localRepository;
 
-    /**
-     * @parameter default-value="${project.remoteArtifactRepositories}"
-     */
+    @Parameter(defaultValue = "${project.remoteArtifactRepositories}")
     private List<?> remoteRepositories;
 
-    /**
-     * @parameter expression="${operation}" default-value="deploy"
-     */
+    @Parameter(property = "operation", defaultValue = "deploy")
     private String operation;
 
-    /**
-     * @parameter expression="${serverType}" default-value="mi"
-     */
+    @Parameter(property = "serverType", defaultValue = "mi")
     private String serverType;
 
     /**
      * Maven ProjectHelper.
-     *
-     * @parameter
      */
+    @Parameter
     private List<CarbonServer> carbonServers;
 
     /**
      * Set this to 'false' to enable C-App artifact deploy
-     *
-     * @parameter expression="${maven.car.deploy.skip}" default-value="true"
      */
+    @Parameter(property = "maven.car.deploy.skip", defaultValue = "true")
     private boolean skip;
 
     private CAppHandler cAppHandler;

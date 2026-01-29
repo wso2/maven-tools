@@ -16,37 +16,33 @@
 package org.wso2.maven.p2.generate.feature;
 
 import org.apache.maven.artifact.Artifact;
+import org.apache.maven.plugins.annotations.Parameter;
+import org.codehaus.plexus.util.StringUtils;
 
 public class IncludedFeature {
 
     /**
      * Group Id of the Bundle
-     *
-     * @parameter
-     * @required
      */
+	@Parameter(required = true)
 	private String groupId;
 
 	/**
      * Artifact Id of the Bundle
-     *
-     * @parameter
-     * @required
      */
+	@Parameter(required = true)
 	private String artifactId;
 
     /**
      * Version of the Bundle
-     *
-     * @parameter default-value=""
      */
+	@Parameter(defaultValue = "")
 	private String artifactVersion;
 
    /**
      * Optionality of the included feature
-     *
-     * @parameter default-value=""
      */
+	@Parameter(defaultValue = "")
     private String optionality;
 
     private boolean optional = false;
@@ -104,17 +100,20 @@ public class IncludedFeature {
     public static IncludedFeature getIncludedFeature(String definition){
         IncludedFeature feature;
         String segment;
+        if (StringUtils.isEmpty(definition)) {
+        	throw new IllegalArgumentException("Included feature definition is required (groupId:artifactId[:version|optional][:optional]).");
+        }
         String[] segments = definition.split(":");
 
-        if(segments.length >= 2){
+        if(segments.length == 2 || segments.length == 3 || segments.length == 4){
             feature = new IncludedFeature();
-            feature.groupId = segments[0];
-            feature.artifactId = segments[1];
+            feature.groupId = segments[0].trim();
+            feature.artifactId = segments[1].trim();
             if(segments[1].endsWith(".feature")){
                 feature.featureID = segments[1].substring(0, segments[1].lastIndexOf(".feature"));
             }
         } else {
-            return null;
+        	throw new IllegalArgumentException("Invalid included feature definition: " + definition);
         }        
 
         if(segments.length >= 3) {
@@ -137,9 +136,9 @@ public class IncludedFeature {
     }
 
     public void setFeatureVersion(String version) {
-        if(artifactVersion == null || artifactVersion.equals("")) {
+        if(StringUtils.isEmpty(artifactVersion)) {
             artifactVersion = version;
-            featureVersion = Bundle.getOSGIVersion(version);
         }
+        featureVersion = Bundle.getOSGIVersion(version);
     }
 }

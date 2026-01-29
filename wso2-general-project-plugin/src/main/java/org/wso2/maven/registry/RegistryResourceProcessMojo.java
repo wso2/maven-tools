@@ -17,18 +17,6 @@
 
 package org.wso2.maven.registry;
 
-import org.apache.maven.plugin.AbstractMojo;
-import org.apache.maven.plugin.MojoExecutionException;
-import org.apache.maven.plugin.MojoFailureException;
-import org.apache.maven.project.MavenProject;
-import org.apache.maven.project.MavenProjectHelper;
-import org.wso2.developerstudio.eclipse.utils.file.FileUtils;
-import org.wso2.maven.capp.model.Artifact;
-import org.wso2.maven.registry.beans.RegistryCollection;
-import org.wso2.maven.registry.beans.RegistryElement;
-import org.wso2.maven.registry.beans.RegistryItem;
-import org.wso2.maven.registry.utils.GeneralProjectMavenUtils;
-
 import java.io.File;
 import java.io.IOException;
 import java.sql.Time;
@@ -40,51 +28,59 @@ import java.util.Properties;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import javax.inject.Inject;
+
+import org.apache.maven.plugin.AbstractMojo;
+import org.apache.maven.plugin.MojoExecutionException;
+import org.apache.maven.plugin.MojoFailureException;
+import org.apache.maven.plugins.annotations.Mojo;
+import org.apache.maven.plugins.annotations.Parameter;
+import org.apache.maven.project.MavenProject;
+import org.apache.maven.project.MavenProjectHelper;
+import org.wso2.developerstudio.eclipse.utils.file.FileUtils;
+import org.wso2.maven.capp.model.Artifact;
+import org.wso2.maven.registry.beans.RegistryCollection;
+import org.wso2.maven.registry.beans.RegistryElement;
+import org.wso2.maven.registry.beans.RegistryItem;
+import org.wso2.maven.registry.utils.GeneralProjectMavenUtils;
+
 /**
  * This is the Maven Mojo used for copying the registry resources to the output directory in the resource-process phase.
- *
- * @goal copy-registry-dependencies
  */
+@Mojo(name = "copy-registry-dependencies")
 public class RegistryResourceProcessMojo extends AbstractMojo {
 
-    /**
-     * @parameter default-value="${project}"
-     */
+	@Parameter(defaultValue = "${project}")
     private MavenProject project;
 
     /**
      * Maven ProjectHelper.
-     *
-     * @component
      */
+	@Inject
     private MavenProjectHelper projectHelper;
 
     /**
      * The path of the location to output the pom
-     *
-     * @parameter expression="${project}/build-artifacts"
      */
+	@Parameter(defaultValue = "${project.build.directory}/artifacts")
     private File outputLocation;
 
     /**
      * The resulting extension of the file
-     *
-     * @parameter
      */
+    @Parameter
     private File artifactLocation;
 
     /**
      * POM location for the module project
-     *
-     * @parameter expression="${project.build.directory}/pom.xml"
      */
+    @Parameter(defaultValue = "${project.build.directory}/pom.xml")
     private File moduleProject;
 
     /**
      * Group id to use for the generated pom
-     *
-     * @parameter
      */
+    @Parameter
     private String groupId;
 
     private static final String ARTIFACT_TYPE = "registry/resource";
