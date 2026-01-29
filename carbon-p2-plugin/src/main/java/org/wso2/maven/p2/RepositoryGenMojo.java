@@ -317,11 +317,11 @@ public class RepositoryGenMojo extends AbstractMojo {
         Iterator iter = bundleArtifacts.iterator();
         while (iter.hasNext()) {
             Object obj = iter.next();
-            BundleArtifact f;
+            BundleArtifact f = new BundleArtifact();
             if (obj instanceof BundleArtifact) {
                 f = (BundleArtifact) obj;
             } else if (obj instanceof String) {
-                f = BundleArtifact.getBundleArtifact(obj.toString());
+                f = BundleArtifact.getBundleArtifact(obj.toString(), f);
             } else
                 f = (BundleArtifact) obj;
             f.resolveVersion(getProject());
