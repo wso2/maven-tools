@@ -97,4 +97,13 @@ class Constants {
     static final String FILE_NAME = "file-name";
     static final String DEPENDENCY = "dependency";
     static final String TARGET = "target";
+    
+    // Coverage related constants
+    static final String MEDIATOR_COVERAGE = "mediatorCoverage";
+    static final String PRIMARY_ARTIFACT = "primaryArtifact";
+    static final String SUPPORTING_ARTIFACTS = "supportingArtifacts";
+    static final String ARTIFACT_TYPE = "artifactType";
+    static final String ARTIFACT_NAME = "artifactName";
+    static final String COVERAGE_PERCENTAGE = "coveragePercentage";
+
 }

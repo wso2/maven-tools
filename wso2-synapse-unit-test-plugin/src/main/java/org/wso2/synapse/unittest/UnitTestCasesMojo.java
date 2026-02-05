@@ -344,12 +344,12 @@ public class UnitTestCasesMojo extends AbstractMojo {
             String[] summaryHeadersList = {"  TEST CASE  ", "  DEPLOYMENT  ", "  MEDIATION  ", "  ASSERTION  "};
             List<List<String>> testSummaryDataList = getTestCaseWiseSummary(summaryJson);
             printDetailedTable(testSummaryDataList, 4, summaryHeadersList);
-
+            //generate coverage report if exists
+            generateCoverageReport(summaryJson);
             //generate test failure table if exists
             boolean isOverallTestFailed = generateTestFailureTable(summaryJson);
             testFailedSuccessList.add(isOverallTestFailed);
         }
-
         //check overall result of the unit test
         if (testFailedSuccessList.contains(true)) {
             overallTestFailure = true;
@@ -614,6 +614,111 @@ public class UnitTestCasesMojo extends AbstractMojo {
         }
 
         return allTestSummary;
+    }
+
+    /**
+     * Generate coverage report from the test summary.
+     *
+     * @param jsonSummary test summary as a json
+     */
+    private void generateCoverageReport(JsonObject jsonSummary) {
+        try {
+            if (!hasCoverageData(jsonSummary)) {
+                return;
+            }
+
+            JsonObject coverageData = jsonSummary.getAsJsonObject(Constants.MEDIATOR_COVERAGE);
+            JsonObject primaryArtifact = coverageData.getAsJsonObject(Constants.PRIMARY_ARTIFACT);
+            
+            getLog().info("");
+            getLog().info("***** Unit Test Line Coverage Summary *****");
+            getLog().info("");
+            
+            printPrimaryArtifactCoverage(primaryArtifact);
+            
+            if (coverageData.has(Constants.SUPPORTING_ARTIFACTS) && 
+                !coverageData.get(Constants.SUPPORTING_ARTIFACTS).isJsonNull()) {
+                JsonArray supportingArtifacts = coverageData.getAsJsonArray(Constants.SUPPORTING_ARTIFACTS);
+                
+                if (supportingArtifacts.size() > 0) {
+                    getLog().info("");
+                    getLog().info("  Supportive Artifact Coverage:");
+                    getLog().info("");
+                    
+                    for (int i = 0; i < supportingArtifacts.size(); i++) {
+                        try {
+                            JsonObject artifact = supportingArtifacts.get(i).getAsJsonObject();
+                            printSupportingArtifactCoverage(artifact);
+                        } catch (Exception e) {
+                            if (getLog().isDebugEnabled()) {
+                                getLog().debug("Error processing supporting artifact at index " + i + ": " + e.getMessage());
+                            }
+                        }
+                    }
+                }
+            }
+            
+            getLog().info("");
+            getLog().info(">> For detailed line coverage report, see: target" + System.getProperty(Constants.FILE_SEPARATOR) + 
+                    Constants.REPORT_FILE_NAME);
+            getLog().info("");
+        } catch (Exception e) {
+            if (getLog().isDebugEnabled()) {
+                getLog().debug("Error generating coverage report: " + e.getMessage());
+            }
+        }
+    }
+
+    /**
+     * Check if coverage data is available in the test summary.
+     *
+     * @param jsonSummary test summary as a json
+     * @return true if coverage data exists, false otherwise
+     */
+    private boolean hasCoverageData(JsonObject jsonSummary) {
+        if (jsonSummary == null || !jsonSummary.has(Constants.MEDIATOR_COVERAGE) || 
+            jsonSummary.get(Constants.MEDIATOR_COVERAGE).isJsonNull()) {
+            return false;
+        }
+        
+        JsonObject coverageData = jsonSummary.getAsJsonObject(Constants.MEDIATOR_COVERAGE);
+        return coverageData.has(Constants.PRIMARY_ARTIFACT) && 
+               !coverageData.get(Constants.PRIMARY_ARTIFACT).isJsonNull();
+    }
+
+    /**
+     * Print primary artifact coverage information.
+     *
+     * @param artifact test coverage details of the artifact as a json
+     */
+    private void printPrimaryArtifactCoverage(JsonObject artifact) {
+        if (artifact == null || !artifact.has(Constants.ARTIFACT_NAME) || 
+            !artifact.has(Constants.COVERAGE_PERCENTAGE)) {
+            return;
+        }
+        
+        String artifactName = artifact.get(Constants.ARTIFACT_NAME).getAsString();
+        String coveragePercentage = artifact.get(Constants.COVERAGE_PERCENTAGE).getAsString();
+
+        getLog().info("  Test Suite Coverage for " + artifactName + " : " + coveragePercentage + "%");
+    }
+
+    /**
+     * Print supporting artifact coverage information.
+     *
+     * @param artifact test coverage details of the artifact as a json
+     */
+    private void printSupportingArtifactCoverage(JsonObject artifact) {
+        if (artifact == null || !artifact.has(Constants.ARTIFACT_TYPE) || 
+            !artifact.has(Constants.ARTIFACT_NAME) || !artifact.has(Constants.COVERAGE_PERCENTAGE)) {
+            return;
+        }
+        
+        String artifactType = artifact.get(Constants.ARTIFACT_TYPE).getAsString();
+        String artifactName = artifact.get(Constants.ARTIFACT_NAME).getAsString();
+        String coveragePercentage = artifact.get(Constants.COVERAGE_PERCENTAGE).getAsString();
+
+        getLog().info("    • " + artifactName + " (" + artifactType + ") - " + coveragePercentage + "%");
     }
 
     /**
