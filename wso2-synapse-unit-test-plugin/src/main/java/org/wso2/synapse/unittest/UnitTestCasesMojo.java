@@ -706,7 +706,7 @@ public class UnitTestCasesMojo extends AbstractMojo {
     /**
      * Print supporting artifact coverage information.
      *
-     * @param artifact artifact json object
+     * @param artifact test coverage details of the artifact as a json
      */
     private void printSupportingArtifactCoverage(JsonObject artifact) {
         if (artifact == null || !artifact.has(Constants.ARTIFACT_TYPE) || 
