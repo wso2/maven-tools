@@ -689,7 +689,7 @@ public class UnitTestCasesMojo extends AbstractMojo {
     /**
      * Print primary artifact coverage information.
      *
-     * @param artifact artifact json object
+     * @param artifact test coverage details of the artifact as a json
      */
     private void printPrimaryArtifactCoverage(JsonObject artifact) {
         if (artifact == null || !artifact.has(Constants.ARTIFACT_NAME) || 
