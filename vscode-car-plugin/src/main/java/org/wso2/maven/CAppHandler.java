@@ -36,6 +36,10 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.project.MavenProject;
 import org.wso2.maven.libraries.CAppDependencyResolver;
+import org.wso2.maven.libraries.ConnectorConfig;
+import org.wso2.maven.libraries.ConnectorConfigReader;
+import org.wso2.maven.libraries.ConnectorDependencyConfig;
+import org.wso2.maven.libraries.ConnectorDependencyResolver;
 import org.wso2.maven.model.Artifact;
 import org.wso2.maven.model.ArtifactDependency;
 import org.wso2.maven.model.ArtifactDetails;
@@ -205,9 +209,10 @@ public class CAppHandler extends AbstractXMLDoc {
             mojoInstance.logInfo("Could not find resources folder in " + resourcesFolder.getAbsolutePath());
             return;
         }
-        processConnectors(resourcesFolder, archiveDirectory, dependencies, Constants.CONNECTORS_DIR_NAME);
+        ConnectorConfig connectorConfig = ConnectorConfigReader.read(project.getBasedir().getAbsolutePath());
+        processConnectors(resourcesFolder, archiveDirectory, dependencies, Constants.CONNECTORS_DIR_NAME, connectorConfig);
         if (MavenUtils.isConnectorPackingSupported(project)) {
-            processConnectors(resourcesFolder, archiveDirectory, dependencies, Constants.INBOUND_CONNECTORS_DIR_NAME);
+            processConnectors(resourcesFolder, archiveDirectory, dependencies, Constants.INBOUND_CONNECTORS_DIR_NAME, connectorConfig);
         }
         processRegistryResources(resourcesFolder, archiveDirectory, dependencies);
         processRegistryResources(new File(resourcesFolder, Constants.REGISTRY_DIR_NAME), archiveDirectory, dependencies);
@@ -222,8 +227,15 @@ public class CAppHandler extends AbstractXMLDoc {
      * @param archiveDirectory path to archive directory
      * @param dependencies     list of dependencies to be added to artifacts.xml file
      */
-    void processConnectors(File resourcesFolder, String archiveDirectory, List<ArtifactDependency> dependencies, String dirName) {
+    void processConnectors(File resourcesFolder, String archiveDirectory, List<ArtifactDependency> dependencies,
+                           String dirName, ConnectorConfig connectorConfig) {
         mojoInstance.logInfo("Processing connectors in " + resourcesFolder.getAbsolutePath());
+
+        if (connectorConfig != null && Boolean.TRUE.equals(connectorConfig.getOmitAllConnectors())) {
+            mojoInstance.logInfo("connector-config.json: omitAllConnectors=true — skipping all connector packing.");
+            return;
+        }
+
         File connectorFolder = new File(resourcesFolder, dirName);
         if (!connectorFolder.exists()) {
             return;
@@ -239,11 +251,37 @@ public class CAppHandler extends AbstractXMLDoc {
                 String name = fileName.substring(0, lastIndex);
                 // remove .zip at the end
                 String version = fileName.substring(lastIndex + 1, fileName.length() - 4);
+
+                // Check per-connector omit flag
+                if (isConnectorOmitted(connectorConfig, name)) {
+                    mojoInstance.logInfo("connector-config.json: omit=true for connector " + name + " — skipping.");
+                    continue;
+                }
+
                 dependencies.add(new ArtifactDependency(name, version, Constants.SERVER_ROLE_EI, true));
                 writeArtifactAndFile(connector, archiveDirectory, name, Constants.CONNECTOR_TYPE,
                         Constants.SERVER_ROLE_EI, version, fileName, name + "_" + version);
             }
         }
+    }
+
+    /**
+     * Returns true if the given connector (by artifactId name) has omit=true in connector-config.json.
+     * Matches by exact key or by suffix (e.g. "mi-connector-file" matches "file").
+     */
+    private boolean isConnectorOmitted(ConnectorConfig connectorConfig, String connectorName) {
+        if (connectorConfig == null || connectorConfig.getConnectors() == null) {
+            return false;
+        }
+        for (Map.Entry<String, ConnectorDependencyConfig> entry : connectorConfig.getConnectors().entrySet()) {
+            String key = entry.getKey();
+            if (key.equals(connectorName) || key.endsWith("-" + connectorName)
+                    || connectorName.equals(key) || connectorName.endsWith("-" + key)) {
+                ConnectorDependencyConfig cfg = entry.getValue();
+                return cfg != null && Boolean.TRUE.equals(cfg.getOmit());
+            }
+        }
+        return false;
     }
 
     void processPropertyFile(File resourcesFolder, String archiveDirectory, String version,
@@ -959,6 +997,10 @@ public class CAppHandler extends AbstractXMLDoc {
      */
     void processConnectorLibDependencies(List<ArtifactDependency> dependencies, MavenProject project) {
 
+        ConnectorConfig connectorConfig = ConnectorConfigReader.read(project.getBasedir().getAbsolutePath());
+        boolean omitAllConnectors = connectorConfig != null
+                && Boolean.TRUE.equals(connectorConfig.getOmitAllConnectors());
+
         // process connector dependencies
         File connectorDepFolder = new File(Paths.get(project.getBasedir().toString(),
                 Constants.DEFAULT_TARGET_FOLDER, Constants.DEPENDENCY).toString());
@@ -977,6 +1019,12 @@ public class CAppHandler extends AbstractXMLDoc {
                         // remove .zip at the end
                         String version = fileName.substring(lastIndex + 1,
                                 fileName.length() - Constants.ZIP_EXTENSION.length());
+
+                        if (omitAllConnectors || isConnectorOmitted(connectorConfig, name)) {
+                            mojoInstance.logInfo("connector-config.json: skipping connector ZIP: " + fileName);
+                            continue;
+                        }
+
                         dependencies.add(new ArtifactDependency(name, version, Constants.SERVER_ROLE_EI, true));
                         writeArtifactAndFile(dependencyFile, project.getBasedir().toString() + File.separator +
                                 Constants.TEMP_TARGET_DIR_NAME, name, Constants.CONNECTOR_TYPE,

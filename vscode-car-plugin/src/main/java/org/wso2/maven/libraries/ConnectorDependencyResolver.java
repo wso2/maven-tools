@@ -37,6 +37,8 @@ import org.yaml.snakeyaml.Yaml;
 import java.io.*;
 import java.nio.file.Files;
 import java.util.*;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
@@ -55,6 +57,9 @@ public class ConnectorDependencyResolver {
     // connectionTypeMap and flag to check if connections are scanned
     private static Map<String, Map<String, String>> connectionTypeMap;
     private static boolean scannedConnections = false;
+
+    /** Regex to extract the Maven artifactId from a versioned ZIP filename, e.g. "mi-connector-file-4.0.36". */
+    private static final Pattern ARTIFACT_ID_PATTERN = Pattern.compile("^(.+)-(\\d+(?:\\.\\d+)+)$");
 
     /**
      * Resolves dependencies for connectors.
@@ -90,12 +95,36 @@ public class ConnectorDependencyResolver {
             resolveConnectorZipsFromResources(connectorZips, directoryName);
         }
 
+        // Load connector-config.json once for this build
+        ConnectorConfig connectorConfig = ConnectorConfigReader.read(project.getBasedir().getAbsolutePath());
+        if (connectorConfig != null && connectorConfig.getConnectors() != null) {
+            carMojo.logInfo("connector-config.json loaded. Overrides defined for: "
+                    + connectorConfig.getConnectors().keySet());
+        }
+
+        // Root-level: skip all connector dependency resolution
+        if (connectorConfig != null && Boolean.TRUE.equals(connectorConfig.getOmitAllDrivers())) {
+            carMojo.logInfo("connector-config.json: omitAllDrivers=true — skipping all connector driver resolution.");
+            return;
+        }
+
+        // Extract all connector ZIP files; track QName → (descriptorFile, artifactId)
         Map<QName, File> dependencyFiles = new HashMap<>();
-        // Extract all connector ZIP files
+        Map<QName, String> connectorArtifactIds = new HashMap<>();
+
         for (File zipFile : connectorZips) {
             String targetExtractDir = extractedDir + File.separator + zipFile.getName().replace(".zip", "");
             if (new File(targetExtractDir).exists()) {
                 carMojo.logInfo("Connector already extracted: " + zipFile.getName());
+                // Still track the artifactId so overrides work on cached extractions
+                QName cachedQName = extractConnectorInfo(carMojo, targetExtractDir);
+                if (cachedQName != null) {
+                    connectorArtifactIds.put(cachedQName, extractArtifactIdFromZipName(zipFile.getName()));
+                    File descriptorYaml = new File(targetExtractDir + File.separator + Constants.DESCRIPTOR_YAML);
+                    if (descriptorYaml.exists()) {
+                        dependencyFiles.put(cachedQName, descriptorYaml);
+                    }
+                }
                 continue;
             }
             extractZipFile(zipFile, targetExtractDir);
@@ -104,6 +133,9 @@ public class ConnectorDependencyResolver {
                 carMojo.logError("Failed to extract connector information from " + zipFile.getName());
                 continue;
             }
+            String artifactId = extractArtifactIdFromZipName(zipFile.getName());
+            connectorArtifactIds.put(qualifiedConnectorName, artifactId);
+
             File descriptorYaml = new File(targetExtractDir + File.separator + Constants.DESCRIPTOR_YAML);
             if (descriptorYaml.exists()) {
                 carMojo.getLog().info("Found descriptor file: " + descriptorYaml.getPath());
@@ -114,8 +146,10 @@ public class ConnectorDependencyResolver {
         if (!dependencyFiles.isEmpty()) {
             for (Map.Entry<QName, File> entry : dependencyFiles.entrySet()) {
                 carMojo.logInfo("Resolving dependencies for " + entry.getKey());
-                resolveMavenDependencies(entry.getValue(), libDirPath, invoker, carMojo, entry.getKey().toString(),
-                        project.getBasedir());
+                String connectorArtifactId = connectorArtifactIds.getOrDefault(
+                        entry.getKey(), entry.getKey().getLocalPart());
+                resolveMavenDependencies(entry.getValue(), libDirPath, invoker, carMojo,
+                        entry.getKey().toString(), connectorArtifactId, project.getBasedir(), connectorConfig);
             }
         }
         carMojo.logInfo("All dependencies resolved and extracted successfully.");
@@ -207,20 +241,35 @@ public class ConnectorDependencyResolver {
     }
 
     /**
-     * Resolves Maven dependencies from a descriptor.yml file.
+     * Resolves Maven dependencies from a descriptor.yml file, applying any overrides from
+     * {@code connector-config.json}.
      *
-     * @param descriptorYaml The descriptor.yml file.
-     * @param libDir         The directory to copy the dependencies to.
-     * @param invoker        The Maven Invoker.
-     * @param carMojo        The Mojo instance.
-     * @param connectorName  The connector name.
+     * @param descriptorYaml      The descriptor.yml file.
+     * @param libDir              The directory to copy the dependencies to.
+     * @param invoker             The Maven Invoker.
+     * @param carMojo             The Mojo instance.
+     * @param connectorQName      The connector QName string (used as the lib subdirectory name).
+     * @param connectorArtifactId The connector Maven artifactId (used to look up overrides).
+     * @param projectDir          The project base directory.
+     * @param overrideConfig      Parsed connector-config.json (may be null).
      * @throws Exception If an error occurs while resolving dependencies.
      */
     private static void resolveMavenDependencies(File descriptorYaml, String libDir, Invoker invoker, CARMojo carMojo,
-                                                 String connectorName, File projectDir) throws Exception {
+                                                 String connectorQName, String connectorArtifactId,
+                                                 File projectDir, ConnectorConfig overrideConfig) throws Exception {
 
         if (!descriptorYaml.exists()) {
             return;
+        }
+
+        // Per-connector: check if this connector's drivers should be omitted
+        if (overrideConfig != null && overrideConfig.getConnectors() != null) {
+            ConnectorDependencyConfig connectorCfg = overrideConfig.getConnectors().get(connectorArtifactId);
+            if (connectorCfg != null && Boolean.TRUE.equals(connectorCfg.getOmitAllDrivers())) {
+                carMojo.logInfo("connector-config.json: omitAllDrivers=true for connector "
+                        + connectorArtifactId + " — skipping driver resolution.");
+                return;
+            }
         }
 
         Yaml yaml = new Yaml();
@@ -235,7 +284,7 @@ public class ConnectorDependencyResolver {
             }
         }
 
-        // Extract dependencies
+        // Extract dependencies, applying overrides from connector-config.json
         List<Map<String, String>> dependencies = (List<Map<String, String>>) yamlData.get(Constants.DEPENDENCIES);
         Set<String> dependencySet = new HashSet<>();
         if (dependencies != null) {
@@ -243,11 +292,34 @@ public class ConnectorDependencyResolver {
                 String groupId = dependency.get(Constants.GROUP_ID);
                 String artifactId = dependency.get(Constants.ARTIFACT_ID);
                 String version = dependency.get(Constants.VERSION);
+                String connectionType = dependency.get(Constants.CONNECTION_TYPE);
 
-                // check if connectionType is provided
-                if (dependency.containsKey(Constants.CONNECTION_TYPE)) {
-                    String connectionType = dependency.get(Constants.CONNECTION_TYPE);
+                // Check connector-config.json for an override for this dependency
+                DependencyOverride override = ConnectorConfigReader.findOverride(
+                        overrideConfig, connectorArtifactId, connectionType, groupId, artifactId);
 
+                if (override != null) {
+                    if (Boolean.TRUE.equals(override.getOmit())) {
+                        carMojo.logInfo("Omitting dependency per connector-config.json: "
+                                + groupId + ":" + artifactId + ":" + version
+                                + " (connector: " + connectorArtifactId + ")");
+                        continue;
+                    }
+                    // Apply coordinate overrides; bypass the connectionType gating below since
+                    // the user has explicitly declared this dependency in connector-config.json.
+                    if (!StringUtils.isBlank(override.getGroupId())) {
+                        groupId = override.getGroupId();
+                    }
+                    if (!StringUtils.isBlank(override.getArtifactId())) {
+                        artifactId = override.getArtifactId();
+                    }
+                    if (!StringUtils.isBlank(override.getVersion())) {
+                        version = override.getVersion();
+                    }
+                    carMojo.logInfo("Applying connector-config.json override for connector "
+                            + connectorArtifactId + ": " + groupId + ":" + artifactId + ":" + version);
+                } else if (connectionType != null) {
+                    // No explicit override — apply the existing connectionType-based gating logic.
                     // scan local entries folder for connections if not already scanned
                     if (!scannedConnections) {
                         carMojo.logInfo("Scanning local entries folder for connections.");
@@ -259,18 +331,23 @@ public class ConnectorDependencyResolver {
                     // skip the dependency if connectionType is not used
                     if (connectionTypeMap == null || !connectionTypeMap.containsKey(connectionType)) {
                         carMojo.logInfo("Skipping dependency: " + groupId + ":" + artifactId + ":" + version
-                                + " as the connectionType: " + connectionType + " is not found in the local entries.");
+                                + " as the connectionType: " + connectionType
+                                + " is not found in the local entries.");
                         continue;
                     }
-                    if (connectionTypeMap.get(connectionType).containsKey(Constants.GROUP_ID) && !(connectionTypeMap.get(connectionType).get(Constants.GROUP_ID).isBlank()) &&
-                            connectionTypeMap.get(connectionType).containsKey(Constants.ARTIFACT_ID) && !(connectionTypeMap.get(connectionType).get(Constants.ARTIFACT_ID).isBlank())
-                            && connectionTypeMap.get(connectionType).containsKey(Constants.VERSION) && !(connectionTypeMap.get(connectionType).get(Constants.VERSION).isBlank())) {
+                    Map<String, String> connectionDetails = connectionTypeMap.get(connectionType);
+                    if (connectionDetails.containsKey(Constants.GROUP_ID)
+                            && !StringUtils.isBlank(connectionDetails.get(Constants.GROUP_ID))
+                            && connectionDetails.containsKey(Constants.ARTIFACT_ID)
+                            && !StringUtils.isBlank(connectionDetails.get(Constants.ARTIFACT_ID))
+                            && connectionDetails.containsKey(Constants.VERSION)
+                            && !StringUtils.isBlank(connectionDetails.get(Constants.VERSION))) {
                         carMojo.logInfo(
-                                "DB Connection not using default driver, replacing dependency information with user provided driver details.");
-                        groupId = connectionTypeMap.get(connectionType).get(Constants.GROUP_ID);
-                        artifactId = connectionTypeMap.get(connectionType).get(Constants.ARTIFACT_ID);
-                        version = connectionTypeMap.get(connectionType).get(Constants.VERSION);
-
+                                "DB Connection not using default driver, replacing dependency information"
+                                        + " with user provided driver details.");
+                        groupId = connectionDetails.get(Constants.GROUP_ID);
+                        artifactId = connectionDetails.get(Constants.ARTIFACT_ID);
+                        version = connectionDetails.get(Constants.VERSION);
                     }
                 }
 
@@ -279,7 +356,7 @@ public class ConnectorDependencyResolver {
         }
 
         List<String> dependenciesList = new ArrayList<>(dependencySet);
-        resolveAndCopyDependencies(dependenciesList, repositoriesList, libDir, invoker, carMojo, connectorName,
+        resolveAndCopyDependencies(dependenciesList, repositoriesList, libDir, invoker, carMojo, connectorQName,
                 projectDir);
     }
 
@@ -439,6 +516,27 @@ public class ConnectorDependencyResolver {
             carMojo.logError("Error occurred while extracting connector information: " + e.getMessage());
             return null;
         }
+    }
+
+    /**
+     * Extracts the Maven artifactId from a connector ZIP filename by stripping the version suffix.
+     * <p>
+     * Example: {@code "mi-connector-file-4.0.36.zip"} → {@code "mi-connector-file"}.
+     * Falls back to the name-without-extension if the pattern does not match.
+     *
+     * @param zipFileName the ZIP filename (with or without the .zip extension)
+     * @return the artifactId portion of the filename
+     */
+    static String extractArtifactIdFromZipName(String zipFileName) {
+
+        String name = zipFileName.endsWith(Constants.ZIP_EXTENSION)
+                ? zipFileName.substring(0, zipFileName.length() - Constants.ZIP_EXTENSION.length())
+                : zipFileName;
+        Matcher matcher = ARTIFACT_ID_PATTERN.matcher(name);
+        if (matcher.matches()) {
+            return matcher.group(1);
+        }
+        return name;
     }
 
     private static String getFirstTagValue(Element root, String tagName) {
