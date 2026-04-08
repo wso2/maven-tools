@@ -35,6 +35,8 @@ import org.apache.commons.lang.StringUtils;
 import org.wso2.maven.datamapper.DataMapperBundler;
 import org.wso2.maven.datamapper.DataMapperException;
 import org.wso2.maven.libraries.CAppDependencyResolver;
+import org.wso2.maven.libraries.ConnectorConfig;
+import org.wso2.maven.libraries.ConnectorConfigReader;
 import org.wso2.maven.libraries.ConnectorDependencyResolver;
 import org.wso2.maven.model.ArchiveException;
 import org.wso2.maven.model.ArtifactDependency;
@@ -146,11 +148,12 @@ public class CARMojo extends AbstractMojo {
             String projectVersion = project.getVersion().replace("-SNAPSHOT", "");
             cAppHandler.processArtifacts(artifactFolder, tempTargetDir, dependencies, metaDependencies, projectVersion);
             cAppHandler.processAPIDefinitions(resourcesFolder, tempTargetDir, metaDependencies, projectVersion);
+            ConnectorConfig connectorConfig = ConnectorConfigReader.read(project.getBasedir().getAbsolutePath());
             cAppHandler.processResourcesFolder(resourcesFolder, tempTargetDir, dependencies,
-                    metaDependencies, projectVersion, project);
+                    metaDependencies, projectVersion, project, connectorConfig);
             cAppHandler.processClassMediators(dependencies, project);
             resolveConnectorDependencies();
-            cAppHandler.processConnectorLibDependencies(dependencies, project);
+            cAppHandler.processConnectorLibDependencies(dependencies, project, connectorConfig);
             resolveCAppDependencies(tempTargetDir, dependencies, metaDependencies);
             cAppHandler.createDependencyArtifactsXmlFile(tempTargetDir, dependencies, metaDependencies, project);
             cAppHandler.createDependencyDescriptorFile(tempTargetDir, project);

@@ -37,9 +37,7 @@ import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.project.MavenProject;
 import org.wso2.maven.libraries.CAppDependencyResolver;
 import org.wso2.maven.libraries.ConnectorConfig;
-import org.wso2.maven.libraries.ConnectorConfigReader;
 import org.wso2.maven.libraries.ConnectorDependencyConfig;
-import org.wso2.maven.libraries.ConnectorDependencyResolver;
 import org.wso2.maven.model.Artifact;
 import org.wso2.maven.model.ArtifactDependency;
 import org.wso2.maven.model.ArtifactDetails;
@@ -199,17 +197,21 @@ public class CAppHandler extends AbstractXMLDoc {
     /**
      * Method to process resources folder and create corresponding files in the archive directory.
      *
-     * @param resourcesFolder  path to resources folder
-     * @param archiveDirectory path to archive directory
-     * @param dependencies     list of dependencies to be added to artifacts.xml file
+     * @param resourcesFolder    path to resources folder
+     * @param archiveDirectory   path to archive directory
+     * @param dependencies       list of dependencies to be added to artifacts.xml file
+     * @param metadataDependencies list of metadata dependencies
+     * @param version            project version
+     * @param project            Maven project
+     * @param connectorConfig    parsed connector-config.json (may be null)
      */
     void processResourcesFolder(File resourcesFolder, String archiveDirectory, List<ArtifactDependency> dependencies,
-                                List<ArtifactDependency> metadataDependencies, String version, MavenProject project) {
+                                List<ArtifactDependency> metadataDependencies, String version, MavenProject project,
+                                ConnectorConfig connectorConfig) {
         if (!resourcesFolder.exists()) {
             mojoInstance.logInfo("Could not find resources folder in " + resourcesFolder.getAbsolutePath());
             return;
         }
-        ConnectorConfig connectorConfig = ConnectorConfigReader.read(project.getBasedir().getAbsolutePath());
         processConnectors(resourcesFolder, archiveDirectory, dependencies, Constants.CONNECTORS_DIR_NAME, connectorConfig);
         if (MavenUtils.isConnectorPackingSupported(project)) {
             processConnectors(resourcesFolder, archiveDirectory, dependencies, Constants.INBOUND_CONNECTORS_DIR_NAME, connectorConfig);
@@ -266,22 +268,24 @@ public class CAppHandler extends AbstractXMLDoc {
     }
 
     /**
-     * Returns true if the given connector (by artifactId name) has omit=true in connector-config.json.
-     * Matches by exact key or by suffix (e.g. "mi-connector-file" matches "file").
+     * Returns {@code true} if the given connector is marked with {@code "omit": true} in
+     * {@code connector-config.json}.
+     *
+     * <p>The {@code connectorName} argument is the connector ZIP filename with its version suffix
+     * stripped, which equals the connector's Maven artifactId
+     * (e.g. {@code "mi-connector-file"} for {@code mi-connector-file-1.0.0.zip}).
+     * Config keys must be the full Maven artifactId.
+     *
+     * @param connectorConfig parsed {@code connector-config.json} (may be {@code null})
+     * @param connectorName   the connector's full Maven artifactId (e.g. {@code "mi-connector-file"})
+     * @return {@code true} if a matching connector entry has {@code omit: true}; {@code false} otherwise
      */
     private boolean isConnectorOmitted(ConnectorConfig connectorConfig, String connectorName) {
         if (connectorConfig == null || connectorConfig.getConnectors() == null) {
             return false;
         }
-        for (Map.Entry<String, ConnectorDependencyConfig> entry : connectorConfig.getConnectors().entrySet()) {
-            String key = entry.getKey();
-            if (key.equals(connectorName) || key.endsWith("-" + connectorName)
-                    || connectorName.equals(key) || connectorName.endsWith("-" + key)) {
-                ConnectorDependencyConfig cfg = entry.getValue();
-                return cfg != null && Boolean.TRUE.equals(cfg.getOmit());
-            }
-        }
-        return false;
+        ConnectorDependencyConfig cfg = connectorConfig.getConnectors().get(connectorName);
+        return cfg != null && Boolean.TRUE.equals(cfg.getOmit());
     }
 
     void processPropertyFile(File resourcesFolder, String archiveDirectory, String version,
@@ -992,12 +996,13 @@ public class CAppHandler extends AbstractXMLDoc {
     /**
      * Method to process lib dependencies which are inside deployment/lib/ folder in the project and add to dependencies
      *
-     * @param dependencies list of dependencies to be added to artifacts.xml file
-     * @param project      VSCode maven project
+     * @param dependencies    list of dependencies to be added to artifacts.xml file
+     * @param project         VSCode maven project
+     * @param connectorConfig parsed connector-config.json (may be null)
      */
-    void processConnectorLibDependencies(List<ArtifactDependency> dependencies, MavenProject project) {
+    void processConnectorLibDependencies(List<ArtifactDependency> dependencies, MavenProject project,
+                                         ConnectorConfig connectorConfig) {
 
-        ConnectorConfig connectorConfig = ConnectorConfigReader.read(project.getBasedir().getAbsolutePath());
         boolean omitAllConnectors = connectorConfig != null
                 && Boolean.TRUE.equals(connectorConfig.getOmitAllConnectors());
 

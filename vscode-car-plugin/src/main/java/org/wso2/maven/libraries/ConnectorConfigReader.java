@@ -30,7 +30,7 @@ import java.util.logging.Logger;
 /**
  * Reads and queries {@code connector-config.json} from the project source tree.
  * <p>
- * Expected location: {@code src/main/wso2mi/connector-config.json} relative to the project base directory.
+ * Expected location: {@code src/main/wso2mi/resources/connectors/connector-config.json} relative to the project base directory.
  */
 public class ConnectorConfigReader {
 

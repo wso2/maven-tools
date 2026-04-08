@@ -20,7 +20,7 @@ package org.wso2.maven.libraries;
 import java.util.Map;
 
 /**
- * Root model for {@code src/main/wso2mi/connector-config.json}.
+ * Root model for {@code src/main/wso2mi/resources/connectors/connector-config.json}.
  * The {@code connectors} map is keyed by the connector Maven artifactId.
  */
 public class ConnectorConfig {

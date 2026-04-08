@@ -273,7 +273,13 @@ public class ConnectorDependencyResolver {
         }
 
         Yaml yaml = new Yaml();
-        Map<String, Object> yamlData = yaml.load(Files.newInputStream(descriptorYaml.toPath()));
+        Map<String, Object> yamlData;
+        try (InputStream is = Files.newInputStream(descriptorYaml.toPath())) {
+            yamlData = yaml.load(is);
+        } catch (IOException e) {
+            carMojo.logError("Failed to read descriptor.yml for connector " + connectorArtifactId + ": " + e.getMessage());
+            return;
+        }
 
         // Extract repositories
         List<Map<String, String>> repositories = (List<Map<String, String>>) yamlData.get(Constants.REPOSITORIES);
