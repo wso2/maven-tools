@@ -38,6 +38,7 @@ import org.apache.maven.project.MavenProject;
 import org.wso2.maven.libraries.CAppDependencyResolver;
 import org.wso2.maven.libraries.ConnectorConfig;
 import org.wso2.maven.libraries.ConnectorDependencyConfig;
+import org.wso2.maven.libraries.ConnectorDependencyResolver;
 import org.wso2.maven.model.Artifact;
 import org.wso2.maven.model.ArtifactDependency;
 import org.wso2.maven.model.ArtifactDetails;
@@ -233,7 +234,7 @@ public class CAppHandler extends AbstractXMLDoc {
                            String dirName, ConnectorConfig connectorConfig) {
         mojoInstance.logInfo("Processing connectors in " + resourcesFolder.getAbsolutePath());
 
-        if (connectorConfig != null && Boolean.TRUE.equals(connectorConfig.getOmitAllConnectors())) {
+        if (connectorConfig != null && connectorConfig.isOmitAllConnectors()) {
             mojoInstance.logInfo("connector-config.json: omitAllConnectors=true — skipping all connector packing.");
             return;
         }
@@ -249,10 +250,13 @@ public class CAppHandler extends AbstractXMLDoc {
         for (File connector : connectorFiles) {
             if (connector.isFile() && connector.getName().endsWith(".zip")) {
                 String fileName = connector.getName();
-                int lastIndex = fileName.lastIndexOf('-');
-                String name = fileName.substring(0, lastIndex);
-                // remove .zip at the end
-                String version = fileName.substring(lastIndex + 1, fileName.length() - 4);
+                String name = ConnectorDependencyResolver.extractArtifactIdFromZipName(fileName);
+                String version = fileName.substring(name.length() + 1,
+                        fileName.length() - Constants.ZIP_EXTENSION.length());
+                if (version.isEmpty()) {
+                    mojoInstance.logWarn("Skipping connector ZIP with non-standard name (no version): " + fileName);
+                    continue;
+                }
 
                 // Check per-connector omit flag
                 if (isConnectorOmitted(connectorConfig, name)) {
@@ -285,7 +289,7 @@ public class CAppHandler extends AbstractXMLDoc {
             return false;
         }
         ConnectorDependencyConfig cfg = connectorConfig.getConnectors().get(connectorName);
-        return cfg != null && Boolean.TRUE.equals(cfg.getOmit());
+        return cfg != null && cfg.isOmit();
     }
 
     void processPropertyFile(File resourcesFolder, String archiveDirectory, String version,
@@ -1004,7 +1008,7 @@ public class CAppHandler extends AbstractXMLDoc {
                                          ConnectorConfig connectorConfig) {
 
         boolean omitAllConnectors = connectorConfig != null
-                && Boolean.TRUE.equals(connectorConfig.getOmitAllConnectors());
+                && connectorConfig.isOmitAllConnectors();
 
         // process connector dependencies
         File connectorDepFolder = new File(Paths.get(project.getBasedir().toString(),
@@ -1019,11 +1023,13 @@ public class CAppHandler extends AbstractXMLDoc {
                             continue;
                         }
                         String fileName = dependencyFile.getName();
-                        int lastIndex = fileName.lastIndexOf('-');
-                        String name = fileName.substring(0, lastIndex);
-                        // remove .zip at the end
-                        String version = fileName.substring(lastIndex + 1,
+                        String name = ConnectorDependencyResolver.extractArtifactIdFromZipName(fileName);
+                        String version = fileName.substring(name.length() + 1,
                                 fileName.length() - Constants.ZIP_EXTENSION.length());
+                        if (version.isEmpty()) {
+                            mojoInstance.logWarn("Skipping connector ZIP with non-standard name (no version): " + fileName);
+                            continue;
+                        }
 
                         if (omitAllConnectors || isConnectorOmitted(connectorConfig, name)) {
                             mojoInstance.logInfo("connector-config.json: skipping connector ZIP: " + fileName);
@@ -1046,6 +1052,14 @@ public class CAppHandler extends AbstractXMLDoc {
         }
 
         // Process library dependencies of connectors
+        boolean omitAllDrivers = connectorConfig != null
+                && connectorConfig.isOmitAllDrivers();
+        if (omitAllConnectors || omitAllDrivers) {
+            mojoInstance.logInfo("connector-config.json: skipping driver JAR packaging ("
+                    + (omitAllConnectors ? "omitAllConnectors" : "omitAllDrivers") + "=true).");
+            return;
+        }
+
         File libFolder = new File(project.getBasedir(), Constants.DEFAULT_TARGET_FOLDER + File.separator + Constants.LIBS);
 
         if (!libFolder.exists()) {
@@ -1063,6 +1077,23 @@ public class CAppHandler extends AbstractXMLDoc {
             }
 
             String connectorName = connectorDir.getName();
+
+            // Skip JARs for connectors that are omitted from the CAR or have their drivers omitted
+            if (connectorConfig != null && connectorConfig.getConnectors() != null) {
+                ConnectorDependencyConfig connectorCfg = connectorConfig.getConnectors().get(connectorName);
+                if (connectorCfg != null) {
+                    if (connectorCfg.isOmit()) {
+                        mojoInstance.logInfo("connector-config.json: omit=true for connector "
+                                + connectorName + " — skipping driver JAR packaging.");
+                        continue;
+                    }
+                    if (connectorCfg.isOmitAllDrivers()) {
+                        mojoInstance.logInfo("connector-config.json: omitAllDrivers=true for connector "
+                                + connectorName + " — skipping driver JAR packaging.");
+                        continue;
+                    }
+                }
+            }
             File[] libFiles = connectorDir.listFiles(new FilenameFilter() {
                 @Override
                 public boolean accept(File dir, String name) {

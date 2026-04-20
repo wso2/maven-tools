@@ -103,8 +103,12 @@ public class ConnectorDependencyResolver {
         }
 
         // Root-level: skip all connector dependency resolution
-        if (connectorConfig != null && Boolean.TRUE.equals(connectorConfig.getOmitAllDrivers())) {
+        if (connectorConfig != null && connectorConfig.isOmitAllDrivers()) {
             carMojo.logInfo("connector-config.json: omitAllDrivers=true — skipping all connector driver resolution.");
+            return;
+        }
+        if (connectorConfig != null && connectorConfig.isOmitAllConnectors()) {
+            carMojo.logInfo("connector-config.json: omitAllConnectors=true — skipping all connector driver resolution.");
             return;
         }
 
@@ -145,9 +149,21 @@ public class ConnectorDependencyResolver {
 
         if (!dependencyFiles.isEmpty()) {
             for (Map.Entry<QName, File> entry : dependencyFiles.entrySet()) {
-                carMojo.logInfo("Resolving dependencies for " + entry.getKey());
                 String connectorArtifactId = connectorArtifactIds.getOrDefault(
                         entry.getKey(), entry.getKey().getLocalPart());
+
+                // Skip driver resolution for connectors that are themselves omitted from the CAR
+                if (connectorConfig != null && connectorConfig.getConnectors() != null) {
+                    ConnectorDependencyConfig connectorCfg =
+                            connectorConfig.getConnectors().get(connectorArtifactId);
+                    if (connectorCfg != null && connectorCfg.isOmit()) {
+                        carMojo.logInfo("connector-config.json: omit=true for connector "
+                                + connectorArtifactId + " — skipping driver resolution.");
+                        continue;
+                    }
+                }
+
+                carMojo.logInfo("Resolving dependencies for " + entry.getKey());
                 resolveMavenDependencies(entry.getValue(), libDirPath, invoker, carMojo,
                         entry.getKey().toString(), connectorArtifactId, project.getBasedir(), connectorConfig);
             }
@@ -265,7 +281,7 @@ public class ConnectorDependencyResolver {
         // Per-connector: check if this connector's drivers should be omitted
         if (overrideConfig != null && overrideConfig.getConnectors() != null) {
             ConnectorDependencyConfig connectorCfg = overrideConfig.getConnectors().get(connectorArtifactId);
-            if (connectorCfg != null && Boolean.TRUE.equals(connectorCfg.getOmitAllDrivers())) {
+            if (connectorCfg != null && connectorCfg.isOmitAllDrivers()) {
                 carMojo.logInfo("connector-config.json: omitAllDrivers=true for connector "
                         + connectorArtifactId + " — skipping driver resolution.");
                 return;
@@ -305,7 +321,7 @@ public class ConnectorDependencyResolver {
                         overrideConfig, connectorArtifactId, connectionType, groupId, artifactId);
 
                 if (override != null) {
-                    if (Boolean.TRUE.equals(override.getOmit())) {
+                    if (override.isOmit()) {
                         carMojo.logInfo("Omitting dependency per connector-config.json: "
                                 + groupId + ":" + artifactId + ":" + version
                                 + " (connector: " + connectorArtifactId + ")");
@@ -533,7 +549,7 @@ public class ConnectorDependencyResolver {
      * @param zipFileName the ZIP filename (with or without the .zip extension)
      * @return the artifactId portion of the filename
      */
-    static String extractArtifactIdFromZipName(String zipFileName) {
+    public static String extractArtifactIdFromZipName(String zipFileName) {
 
         String name = zipFileName.endsWith(Constants.ZIP_EXTENSION)
                 ? zipFileName.substring(0, zipFileName.length() - Constants.ZIP_EXTENSION.length())
