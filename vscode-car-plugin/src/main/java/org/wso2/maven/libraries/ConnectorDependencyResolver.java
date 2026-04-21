@@ -54,8 +54,8 @@ import static org.wso2.maven.MavenUtils.setupInvoker;
  */
 public class ConnectorDependencyResolver {
 
-    // connectionTypeMap and flag to check if connections are scanned
-    private static Map<String, Map<String, String>> connectionTypeMap;
+    // active connectionTypes and flag to check if connections are scanned
+    private static Set<String> activeConnectionTypes;
     private static boolean scannedConnections = false;
 
     /** Regex to extract the Maven artifactId from a versioned ZIP filename, e.g. "mi-connector-file-4.0.36". */
@@ -327,6 +327,24 @@ public class ConnectorDependencyResolver {
                                 + " (connector: " + connectorArtifactId + ")");
                         continue;
                     }
+                    // Local JAR override — copy directly, skip Maven resolution entirely
+                    if (!StringUtils.isBlank(override.getLocalPath())) {
+                        File localJar = new File(override.getLocalPath());
+                        if (localJar.exists() && localJar.isFile()) {
+                            File targetDir = new File(libDir + File.separator + connectorQName);
+                            targetDir.mkdirs();
+                            File dest = new File(targetDir, localJar.getName());
+                            Files.copy(localJar.toPath(), dest.toPath(),
+                                    java.nio.file.StandardCopyOption.REPLACE_EXISTING);
+                            carMojo.logInfo("Copied local driver JAR per connector-config.json: "
+                                    + localJar.getAbsolutePath() + " → " + dest.getAbsolutePath());
+                        } else {
+                            carMojo.logError("connector-config.json localPath JAR not found: "
+                                    + override.getLocalPath() + " — skipping dependency "
+                                    + groupId + ":" + artifactId);
+                        }
+                        continue;
+                    }
                     // Apply coordinate overrides; bypass the connectionType gating below since
                     // the user has explicitly declared this dependency in connector-config.json.
                     if (!StringUtils.isBlank(override.getGroupId())) {
@@ -341,35 +359,19 @@ public class ConnectorDependencyResolver {
                     carMojo.logInfo("Applying connector-config.json override for connector "
                             + connectorArtifactId + ": " + groupId + ":" + artifactId + ":" + version);
                 } else if (connectionType != null) {
-                    // No explicit override — apply the existing connectionType-based gating logic.
-                    // scan local entries folder for connections if not already scanned
+                    // No explicit override — filter by whether the connectionType is active in local entries.
                     if (!scannedConnections) {
                         carMojo.logInfo("Scanning local entries folder for connections.");
-                        connectionTypeMap =
+                        activeConnectionTypes =
                                 scanLocalEntriesForConnections(Constants.LOCAL_ENTRIES_FOLDER_PATH, carMojo);
                         scannedConnections = true;
                     }
 
-                    // skip the dependency if connectionType is not used
-                    if (connectionTypeMap == null || !connectionTypeMap.containsKey(connectionType)) {
+                    if (activeConnectionTypes == null || !activeConnectionTypes.contains(connectionType)) {
                         carMojo.logInfo("Skipping dependency: " + groupId + ":" + artifactId + ":" + version
                                 + " as the connectionType: " + connectionType
                                 + " is not found in the local entries.");
                         continue;
-                    }
-                    Map<String, String> connectionDetails = connectionTypeMap.get(connectionType);
-                    if (connectionDetails.containsKey(Constants.GROUP_ID)
-                            && !StringUtils.isBlank(connectionDetails.get(Constants.GROUP_ID))
-                            && connectionDetails.containsKey(Constants.ARTIFACT_ID)
-                            && !StringUtils.isBlank(connectionDetails.get(Constants.ARTIFACT_ID))
-                            && connectionDetails.containsKey(Constants.VERSION)
-                            && !StringUtils.isBlank(connectionDetails.get(Constants.VERSION))) {
-                        carMojo.logInfo(
-                                "DB Connection not using default driver, replacing dependency information"
-                                        + " with user provided driver details.");
-                        groupId = connectionDetails.get(Constants.GROUP_ID);
-                        artifactId = connectionDetails.get(Constants.ARTIFACT_ID);
-                        version = connectionDetails.get(Constants.VERSION);
                     }
                 }
 
@@ -435,82 +437,57 @@ public class ConnectorDependencyResolver {
     }
 
     /**
-     * Scans the local entries folder for connections and returns a map of
-     * connection types.
+     * Scans the local entries folder and returns the set of connectionType values that are
+     * actively used (i.e. have a matching {@code *.init} element with a {@code connectionType} child).
      *
-     * @param carMojo The Mojo instance.
-     * @return The map of connection types.
-     * @throws Exception If an error occurs while scanning the local entries folder.
+     * @param folderPath path to the local-entries artifact folder
+     * @param carMojo    the Mojo instance (for logging)
+     * @return set of active connectionType strings (case-sensitive, as written in the XML)
      */
-    private static Map<String, Map<String, String>> scanLocalEntriesForConnections(String folderPath, CARMojo carMojo)
+    private static Set<String> scanLocalEntriesForConnections(String folderPath, CARMojo carMojo)
             throws Exception {
 
-        Map<String, Map<String, String>> connectionTypeMap = new HashMap<>();
+        Set<String> active = new HashSet<>();
 
         File localEntriesFolder = new File(folderPath);
         if (!localEntriesFolder.exists()) {
-            return connectionTypeMap;
+            return active;
         }
 
         File[] localEntries = localEntriesFolder.listFiles();
         if (localEntries == null) {
-            return connectionTypeMap;
+            return active;
         }
 
         for (File localEntry : localEntries) {
-            if (localEntry.isFile() && localEntry.getName().endsWith(".xml")) {
-                DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
-                factory.setNamespaceAware(true);
-                DocumentBuilder builder = factory.newDocumentBuilder();
-                Document doc = builder.parse(localEntry);
-                Element root = doc.getDocumentElement();
+            if (!localEntry.isFile() || !localEntry.getName().endsWith(".xml")) {
+                continue;
+            }
+            DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+            factory.setNamespaceAware(true);
+            DocumentBuilder builder = factory.newDocumentBuilder();
+            Document doc = builder.parse(localEntry);
+            Element root = doc.getDocumentElement();
 
-                String connectorName = "", connectionType = "";
-                NodeList initNodes = root.getElementsByTagName("*");
-                for (int i = 0; i < initNodes.getLength(); i++) {
-                    Element element = (Element) initNodes.item(i);
-                    String nodeName = element.getNodeName();
-                    if (nodeName.endsWith(".init")) {
-                        connectorName = nodeName.substring(0, nodeName.indexOf(".init"));
-                        NodeList ctNodes = element.getElementsByTagName("connectionType");
-                        if (ctNodes.getLength() > 0) {
-                            connectionType = ctNodes.item(0).getTextContent();
-                            Map<String, String> details = new HashMap<>();
-                            details.put(Constants.CONNECTOR_NAME, connectorName);
-                            // If DB, get Maven coordinates
-                            if (Constants.DB_CONNECTOR_NAME.equalsIgnoreCase(connectorName)) {
-                                carMojo.logInfo("Checking if connection has custom driver dependency.");
-                                String groupId = getFirstTagValue(root, Constants.GROUP_ID);
-                                String artifactId = getFirstTagValue(root, Constants.ARTIFACT_ID);
-                                String version = getFirstTagValue(root, Constants.VERSION);
-                                details.put(Constants.GROUP_ID, groupId);
-                                details.put(Constants.ARTIFACT_ID, artifactId);
-                                details.put(Constants.VERSION, version);
-                                    // If not in map, or new version is higher → update
-                                    if (!connectionTypeMap.containsKey(connectionType)
-                                            || (connectionTypeMap.get(connectionType).containsKey(Constants.VERSION) && isHigherVersion(details.get(Constants.VERSION),
-                                            connectionTypeMap.get(connectionType).get(Constants.VERSION)))) {
-                                        carMojo.logInfo(
-                                                "Adding custom driver dependency for Connection type: " +
-                                                        connectionType + " GroupID: " +
-                                                        details.get(Constants.GROUP_ID) +
-                                                        " ArtifactID: " + details.get(Constants.ARTIFACT_ID) +
-                                                        " Version: " + details.get(Constants.VERSION));
-                                        connectionTypeMap.put(connectionType, details);
-                                    }
-
-                            }
-                            break;
+            NodeList initNodes = root.getElementsByTagName("*");
+            for (int i = 0; i < initNodes.getLength(); i++) {
+                Element element = (Element) initNodes.item(i);
+                if (element.getNodeName().endsWith(".init")) {
+                    NodeList ctNodes = element.getElementsByTagName("connectionType");
+                    if (ctNodes.getLength() > 0) {
+                        String connectionType = ctNodes.item(0).getTextContent().trim();
+                        if (!connectionType.isEmpty()) {
+                            active.add(connectionType);
+                            carMojo.getLog().info("Found active connectionType: " + connectionType
+                                    + " in " + localEntry.getName());
                         }
                     }
+                    break;
                 }
-
-                carMojo.getLog().info("Found local entry file: " + localEntry.getPath() + " with connectionType: "
-                        + connectionType + " and connectorName: " + connectorName);
             }
         }
 
-        return connectionTypeMap;
+        return active;
     }
 
     public static QName extractConnectorInfo(CARMojo carMojo, String filePath) {
@@ -561,36 +538,4 @@ public class ConnectorDependencyResolver {
         return name;
     }
 
-    private static String getFirstTagValue(Element root, String tagName) {
-
-        NodeList nodes = root.getElementsByTagName(tagName);
-        return nodes.getLength() > 0 ? nodes.item(0).getTextContent().trim() : "";
-    }
-
-    private static boolean isHigherVersion(String newVersion, String currentVersion) {
-
-        if (newVersion == null || newVersion.isEmpty()) return false;
-        if (currentVersion == null || currentVersion.isEmpty()) return true;
-
-        String[] newParts = newVersion.split("\\.");
-        String[] currParts = currentVersion.split("\\.");
-        int len = Math.max(newParts.length, currParts.length);
-
-        for (int i = 0; i < len; i++) {
-            int n = i < newParts.length ? parseIntSafe(newParts[i]) : 0;
-            int c = i < currParts.length ? parseIntSafe(currParts[i]) : 0;
-            if (n > c) return true;
-            if (n < c) return false;
-        }
-        return false; // equal versions
-    }
-
-    private static int parseIntSafe(String s) {
-
-        try {
-            return Integer.parseInt(s);
-        } catch (NumberFormatException e) {
-            return 0;
-        }
-    }
 }

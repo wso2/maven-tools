@@ -45,6 +45,12 @@ public class DependencyOverride {
      */
     private boolean omit;
 
+    /**
+     * Absolute path to a local JAR file. When set, Maven resolution is skipped and this JAR
+     * is copied directly into the CAR lib directory.
+     */
+    private String localPath;
+
     public String getConnectionType() {
         return connectionType;
     }
@@ -63,5 +69,9 @@ public class DependencyOverride {
 
     public boolean isOmit() {
         return omit;
+    }
+
+    public String getLocalPath() {
+        return localPath;
     }
 }
