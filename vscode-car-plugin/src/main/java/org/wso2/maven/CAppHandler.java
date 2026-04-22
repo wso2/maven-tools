@@ -250,13 +250,13 @@ public class CAppHandler extends AbstractXMLDoc {
         for (File connector : connectorFiles) {
             if (connector.isFile() && connector.getName().endsWith(".zip")) {
                 String fileName = connector.getName();
+                String baseName = fileName.substring(0, fileName.length() - Constants.ZIP_EXTENSION.length());
                 String name = ConnectorDependencyResolver.extractArtifactIdFromZipName(fileName);
-                String version = fileName.substring(name.length() + 1,
-                        fileName.length() - Constants.ZIP_EXTENSION.length());
-                if (version.isEmpty()) {
+                if (name.equals(baseName)) {
                     mojoInstance.logWarn("Skipping connector ZIP with non-standard name (no version): " + fileName);
                     continue;
                 }
+                String version = baseName.substring(name.length() + 1);
 
                 // Check per-connector omit flag
                 if (isConnectorOmitted(connectorConfig, name)) {
@@ -290,6 +290,35 @@ public class CAppHandler extends AbstractXMLDoc {
         }
         ConnectorDependencyConfig cfg = connectorConfig.getConnectors().get(connectorName);
         return cfg != null && cfg.isOmit();
+    }
+
+    /**
+     * Looks up a connector's config entry by either a direct key match or by matching the stored
+     * {@code qname} field against the given name.
+     *
+     * <p>The lib subdirectory written by {@link ConnectorDependencyResolver} is named after the
+     * connector QName (e.g. {@code {org.wso2.connector}db}), while connector-config.json is keyed
+     * by Maven artifact ID (e.g. {@code mi-connector-db}). When the language server populates the
+     * {@code qname} field, this method bridges the gap.
+     *
+     * @param connectorConfig parsed connector-config.json
+     * @param nameOrQName     the name to look up — either an artifact ID or a QName string
+     * @return the matching entry, or {@code null} if none found
+     */
+    private ConnectorDependencyConfig findConnectorCfgByQNameOrKey(ConnectorConfig connectorConfig,
+                                                                    String nameOrQName) {
+        // Fast path: direct key match (artifact ID)
+        ConnectorDependencyConfig direct = connectorConfig.getConnectors().get(nameOrQName);
+        if (direct != null) {
+            return direct;
+        }
+        // QName match: iterate entries and compare the stored qname field
+        for (ConnectorDependencyConfig cfg : connectorConfig.getConnectors().values()) {
+            if (nameOrQName.equals(cfg.getQname())) {
+                return cfg;
+            }
+        }
+        return null;
     }
 
     void processPropertyFile(File resourcesFolder, String archiveDirectory, String version,
@@ -1023,13 +1052,13 @@ public class CAppHandler extends AbstractXMLDoc {
                             continue;
                         }
                         String fileName = dependencyFile.getName();
+                        String baseName = fileName.substring(0, fileName.length() - Constants.ZIP_EXTENSION.length());
                         String name = ConnectorDependencyResolver.extractArtifactIdFromZipName(fileName);
-                        String version = fileName.substring(name.length() + 1,
-                                fileName.length() - Constants.ZIP_EXTENSION.length());
-                        if (version.isEmpty()) {
+                        if (name.equals(baseName)) {
                             mojoInstance.logWarn("Skipping connector ZIP with non-standard name (no version): " + fileName);
                             continue;
                         }
+                        String version = baseName.substring(name.length() + 1);
 
                         if (omitAllConnectors || isConnectorOmitted(connectorConfig, name)) {
                             mojoInstance.logInfo("connector-config.json: skipping connector ZIP: " + fileName);
@@ -1080,7 +1109,8 @@ public class CAppHandler extends AbstractXMLDoc {
 
             // Skip JARs for connectors that are omitted from the CAR or have their drivers omitted
             if (connectorConfig != null && connectorConfig.getConnectors() != null) {
-                ConnectorDependencyConfig connectorCfg = connectorConfig.getConnectors().get(connectorName);
+                ConnectorDependencyConfig connectorCfg = findConnectorCfgByQNameOrKey(
+                        connectorConfig, connectorName);
                 if (connectorCfg != null) {
                     if (connectorCfg.isOmit()) {
                         mojoInstance.logInfo("connector-config.json: omit=true for connector "

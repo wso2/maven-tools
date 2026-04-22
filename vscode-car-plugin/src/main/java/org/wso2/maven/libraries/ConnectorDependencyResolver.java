@@ -58,8 +58,11 @@ public class ConnectorDependencyResolver {
     private static Set<String> activeConnectionTypes;
     private static boolean scannedConnections = false;
 
-    /** Regex to extract the Maven artifactId from a versioned ZIP filename, e.g. "mi-connector-file-4.0.36". */
-    private static final Pattern ARTIFACT_ID_PATTERN = Pattern.compile("^(.+)-(\\d+(?:\\.\\d+)+)$");
+    /** Regex to extract the Maven artifactId from a versioned ZIP filename.
+     *  Matches release versions (e.g. "mi-connector-file-4.0.36") and qualified versions
+     *  (e.g. "mi-connector-smpp-2.0.0-SNAPSHOT", "mi-connector-file-4.0.36-beta1"). */
+    private static final Pattern ARTIFACT_ID_PATTERN =
+            Pattern.compile("^(.+)-(\\d+(?:\\.\\d+)+(?:-[A-Za-z0-9]+)*)$");
 
     /**
      * Resolves dependencies for connectors.
@@ -330,19 +333,19 @@ public class ConnectorDependencyResolver {
                     // Local JAR override — copy directly, skip Maven resolution entirely
                     if (!StringUtils.isBlank(override.getLocalPath())) {
                         File localJar = new File(override.getLocalPath());
-                        if (localJar.exists() && localJar.isFile()) {
-                            File targetDir = new File(libDir + File.separator + connectorQName);
-                            targetDir.mkdirs();
-                            File dest = new File(targetDir, localJar.getName());
-                            Files.copy(localJar.toPath(), dest.toPath(),
-                                    java.nio.file.StandardCopyOption.REPLACE_EXISTING);
-                            carMojo.logInfo("Copied local driver JAR per connector-config.json: "
-                                    + localJar.getAbsolutePath() + " → " + dest.getAbsolutePath());
-                        } else {
-                            carMojo.logError("connector-config.json localPath JAR not found: "
-                                    + override.getLocalPath() + " — skipping dependency "
-                                    + groupId + ":" + artifactId);
+                        if (!localJar.exists() || !localJar.isFile()) {
+                            throw new LibraryResolverException(
+                                    "connector-config.json specifies localPath for " + connectorArtifactId
+                                    + " / " + connectionType + " but the file does not exist: "
+                                    + override.getLocalPath());
                         }
+                        File targetDir = new File(libDir + File.separator + connectorQName);
+                        targetDir.mkdirs();
+                        File dest = new File(targetDir, localJar.getName());
+                        Files.copy(localJar.toPath(), dest.toPath(),
+                                java.nio.file.StandardCopyOption.REPLACE_EXISTING);
+                        carMojo.logInfo("Copied local driver JAR per connector-config.json: "
+                                + localJar.getAbsolutePath() + " → " + dest.getAbsolutePath());
                         continue;
                     }
                     // Apply coordinate overrides; bypass the connectionType gating below since
@@ -465,6 +468,12 @@ public class ConnectorDependencyResolver {
             }
             DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
             factory.setNamespaceAware(true);
+            factory.setFeature("http://apache.org/xml/features/disallow-doctype-decl", true);
+            factory.setFeature("http://xml.org/sax/features/external-general-entities", false);
+            factory.setFeature("http://xml.org/sax/features/external-parameter-entities", false);
+            factory.setFeature("http://apache.org/xml/features/nonvalidating/load-external-dtd", false);
+            factory.setXIncludeAware(false);
+            factory.setExpandEntityReferences(false);
             DocumentBuilder builder = factory.newDocumentBuilder();
             Document doc = builder.parse(localEntry);
             Element root = doc.getDocumentElement();

@@ -35,6 +35,13 @@ public class ConnectorDependencyConfig {
      */
     private boolean omitAllDrivers;
 
+    /**
+     * The connector's QName in {@code {package}name} form (e.g. {@code {org.wso2.connector}db}).
+     * Written by the language server. Used by the CAR plugin to match this config entry against
+     * the lib subdirectory whose name is derived from the connector QName.
+     */
+    private String qname;
+
     private List<DependencyOverride> dependencies;
 
     public boolean isOmit() {
@@ -43,6 +50,10 @@ public class ConnectorDependencyConfig {
 
     public boolean isOmitAllDrivers() {
         return omitAllDrivers;
+    }
+
+    public String getQname() {
+        return qname;
     }
 
     public List<DependencyOverride> getDependencies() {

@@ -19,6 +19,7 @@
 package org.wso2.maven.libraries;
 
 import com.google.gson.Gson;
+import org.apache.commons.lang.StringUtils;
 import org.wso2.maven.Constants;
 
 import java.io.File;
@@ -103,7 +104,7 @@ public class ConnectorConfigReader {
         }
 
         // Second pass: match by groupId + artifactId (for overrides without connectionType)
-        if (groupId != null && artifactId != null) {
+        if (StringUtils.isNotEmpty(groupId) && StringUtils.isNotEmpty(artifactId)) {
             for (DependencyOverride override : overrides) {
                 if (override.getConnectionType() == null
                         && groupId.equals(override.getGroupId())
