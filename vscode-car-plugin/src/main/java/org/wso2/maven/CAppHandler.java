@@ -36,6 +36,9 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.project.MavenProject;
 import org.wso2.maven.libraries.CAppDependencyResolver;
+import org.wso2.maven.libraries.ConnectorConfig;
+import org.wso2.maven.libraries.ConnectorDependencyConfig;
+import org.wso2.maven.libraries.ConnectorDependencyResolver;
 import org.wso2.maven.model.Artifact;
 import org.wso2.maven.model.ArtifactDependency;
 import org.wso2.maven.model.ArtifactDetails;
@@ -195,19 +198,24 @@ public class CAppHandler extends AbstractXMLDoc {
     /**
      * Method to process resources folder and create corresponding files in the archive directory.
      *
-     * @param resourcesFolder  path to resources folder
-     * @param archiveDirectory path to archive directory
-     * @param dependencies     list of dependencies to be added to artifacts.xml file
+     * @param resourcesFolder    path to resources folder
+     * @param archiveDirectory   path to archive directory
+     * @param dependencies       list of dependencies to be added to artifacts.xml file
+     * @param metadataDependencies list of metadata dependencies
+     * @param version            project version
+     * @param project            Maven project
+     * @param connectorConfig    parsed connector-config.json (may be null)
      */
     void processResourcesFolder(File resourcesFolder, String archiveDirectory, List<ArtifactDependency> dependencies,
-                                List<ArtifactDependency> metadataDependencies, String version, MavenProject project) {
+                                List<ArtifactDependency> metadataDependencies, String version, MavenProject project,
+                                ConnectorConfig connectorConfig) {
         if (!resourcesFolder.exists()) {
             mojoInstance.logInfo("Could not find resources folder in " + resourcesFolder.getAbsolutePath());
             return;
         }
-        processConnectors(resourcesFolder, archiveDirectory, dependencies, Constants.CONNECTORS_DIR_NAME);
+        processConnectors(resourcesFolder, archiveDirectory, dependencies, Constants.CONNECTORS_DIR_NAME, connectorConfig);
         if (MavenUtils.isConnectorPackingSupported(project)) {
-            processConnectors(resourcesFolder, archiveDirectory, dependencies, Constants.INBOUND_CONNECTORS_DIR_NAME);
+            processConnectors(resourcesFolder, archiveDirectory, dependencies, Constants.INBOUND_CONNECTORS_DIR_NAME, connectorConfig);
         }
         processRegistryResources(resourcesFolder, archiveDirectory, dependencies);
         processRegistryResources(new File(resourcesFolder, Constants.REGISTRY_DIR_NAME), archiveDirectory, dependencies);
@@ -222,8 +230,15 @@ public class CAppHandler extends AbstractXMLDoc {
      * @param archiveDirectory path to archive directory
      * @param dependencies     list of dependencies to be added to artifacts.xml file
      */
-    void processConnectors(File resourcesFolder, String archiveDirectory, List<ArtifactDependency> dependencies, String dirName) {
+    void processConnectors(File resourcesFolder, String archiveDirectory, List<ArtifactDependency> dependencies,
+                           String dirName, ConnectorConfig connectorConfig) {
         mojoInstance.logInfo("Processing connectors in " + resourcesFolder.getAbsolutePath());
+
+        if (connectorConfig != null && connectorConfig.isOmitAllConnectors()) {
+            mojoInstance.logInfo("connector-config.json: omitAllConnectors=true — skipping all connector packing.");
+            return;
+        }
+
         File connectorFolder = new File(resourcesFolder, dirName);
         if (!connectorFolder.exists()) {
             return;
@@ -235,15 +250,75 @@ public class CAppHandler extends AbstractXMLDoc {
         for (File connector : connectorFiles) {
             if (connector.isFile() && connector.getName().endsWith(".zip")) {
                 String fileName = connector.getName();
-                int lastIndex = fileName.lastIndexOf('-');
-                String name = fileName.substring(0, lastIndex);
-                // remove .zip at the end
-                String version = fileName.substring(lastIndex + 1, fileName.length() - 4);
+                String baseName = fileName.substring(0, fileName.length() - Constants.ZIP_EXTENSION.length());
+                String name = ConnectorDependencyResolver.extractArtifactIdFromZipName(fileName);
+                if (name.equals(baseName)) {
+                    mojoInstance.logWarn("Skipping connector ZIP with non-standard name (no version): " + fileName);
+                    continue;
+                }
+                String version = baseName.substring(name.length() + 1);
+
+                // Check per-connector omit flag
+                if (isConnectorOmitted(connectorConfig, name)) {
+                    mojoInstance.logInfo("connector-config.json: omit=true for connector " + name + " — skipping.");
+                    continue;
+                }
+
                 dependencies.add(new ArtifactDependency(name, version, Constants.SERVER_ROLE_EI, true));
                 writeArtifactAndFile(connector, archiveDirectory, name, Constants.CONNECTOR_TYPE,
                         Constants.SERVER_ROLE_EI, version, fileName, name + "_" + version);
             }
         }
+    }
+
+    /**
+     * Returns {@code true} if the given connector is marked with {@code "omit": true} in
+     * {@code connector-config.json}.
+     *
+     * <p>The {@code connectorName} argument is the connector ZIP filename with its version suffix
+     * stripped, which equals the connector's Maven artifactId
+     * (e.g. {@code "mi-connector-file"} for {@code mi-connector-file-1.0.0.zip}).
+     * Config keys must be the full Maven artifactId.
+     *
+     * @param connectorConfig parsed {@code connector-config.json} (may be {@code null})
+     * @param connectorName   the connector's full Maven artifactId (e.g. {@code "mi-connector-file"})
+     * @return {@code true} if a matching connector entry has {@code omit: true}; {@code false} otherwise
+     */
+    private boolean isConnectorOmitted(ConnectorConfig connectorConfig, String connectorName) {
+        if (connectorConfig == null || connectorConfig.getConnectors() == null) {
+            return false;
+        }
+        ConnectorDependencyConfig cfg = connectorConfig.getConnectors().get(connectorName);
+        return cfg != null && cfg.isOmit();
+    }
+
+    /**
+     * Looks up a connector's config entry by either a direct key match or by matching the stored
+     * {@code qname} field against the given name.
+     *
+     * <p>The lib subdirectory written by {@link ConnectorDependencyResolver} is named after the
+     * connector QName (e.g. {@code {org.wso2.connector}db}), while connector-config.json is keyed
+     * by Maven artifact ID (e.g. {@code mi-connector-db}). When the language server populates the
+     * {@code qname} field, this method bridges the gap.
+     *
+     * @param connectorConfig parsed connector-config.json
+     * @param nameOrQName     the name to look up — either an artifact ID or a QName string
+     * @return the matching entry, or {@code null} if none found
+     */
+    private ConnectorDependencyConfig findConnectorCfgByQNameOrKey(ConnectorConfig connectorConfig,
+                                                                    String nameOrQName) {
+        // Fast path: direct key match (artifact ID)
+        ConnectorDependencyConfig direct = connectorConfig.getConnectors().get(nameOrQName);
+        if (direct != null) {
+            return direct;
+        }
+        // QName match: iterate entries and compare the stored qname field
+        for (ConnectorDependencyConfig cfg : connectorConfig.getConnectors().values()) {
+            if (nameOrQName.equals(cfg.getQname())) {
+                return cfg;
+            }
+        }
+        return null;
     }
 
     void processPropertyFile(File resourcesFolder, String archiveDirectory, String version,
@@ -954,10 +1029,15 @@ public class CAppHandler extends AbstractXMLDoc {
     /**
      * Method to process lib dependencies which are inside deployment/lib/ folder in the project and add to dependencies
      *
-     * @param dependencies list of dependencies to be added to artifacts.xml file
-     * @param project      VSCode maven project
+     * @param dependencies    list of dependencies to be added to artifacts.xml file
+     * @param project         VSCode maven project
+     * @param connectorConfig parsed connector-config.json (may be null)
      */
-    void processConnectorLibDependencies(List<ArtifactDependency> dependencies, MavenProject project) {
+    void processConnectorLibDependencies(List<ArtifactDependency> dependencies, MavenProject project,
+                                         ConnectorConfig connectorConfig) {
+
+        boolean omitAllConnectors = connectorConfig != null
+                && connectorConfig.isOmitAllConnectors();
 
         // process connector dependencies
         File connectorDepFolder = new File(Paths.get(project.getBasedir().toString(),
@@ -972,11 +1052,19 @@ public class CAppHandler extends AbstractXMLDoc {
                             continue;
                         }
                         String fileName = dependencyFile.getName();
-                        int lastIndex = fileName.lastIndexOf('-');
-                        String name = fileName.substring(0, lastIndex);
-                        // remove .zip at the end
-                        String version = fileName.substring(lastIndex + 1,
-                                fileName.length() - Constants.ZIP_EXTENSION.length());
+                        String baseName = fileName.substring(0, fileName.length() - Constants.ZIP_EXTENSION.length());
+                        String name = ConnectorDependencyResolver.extractArtifactIdFromZipName(fileName);
+                        if (name.equals(baseName)) {
+                            mojoInstance.logWarn("Skipping connector ZIP with non-standard name (no version): " + fileName);
+                            continue;
+                        }
+                        String version = baseName.substring(name.length() + 1);
+
+                        if (omitAllConnectors || isConnectorOmitted(connectorConfig, name)) {
+                            mojoInstance.logInfo("connector-config.json: skipping connector ZIP: " + fileName);
+                            continue;
+                        }
+
                         dependencies.add(new ArtifactDependency(name, version, Constants.SERVER_ROLE_EI, true));
                         writeArtifactAndFile(dependencyFile, project.getBasedir().toString() + File.separator +
                                 Constants.TEMP_TARGET_DIR_NAME, name, Constants.CONNECTOR_TYPE,
@@ -993,6 +1081,14 @@ public class CAppHandler extends AbstractXMLDoc {
         }
 
         // Process library dependencies of connectors
+        boolean omitAllDrivers = connectorConfig != null
+                && connectorConfig.isOmitAllDrivers();
+        if (omitAllConnectors || omitAllDrivers) {
+            mojoInstance.logInfo("connector-config.json: skipping driver JAR packaging ("
+                    + (omitAllConnectors ? "omitAllConnectors" : "omitAllDrivers") + "=true).");
+            return;
+        }
+
         File libFolder = new File(project.getBasedir(), Constants.DEFAULT_TARGET_FOLDER + File.separator + Constants.LIBS);
 
         if (!libFolder.exists()) {
@@ -1010,6 +1106,24 @@ public class CAppHandler extends AbstractXMLDoc {
             }
 
             String connectorName = connectorDir.getName();
+
+            // Skip JARs for connectors that are omitted from the CAR or have their drivers omitted
+            if (connectorConfig != null && connectorConfig.getConnectors() != null) {
+                ConnectorDependencyConfig connectorCfg = findConnectorCfgByQNameOrKey(
+                        connectorConfig, connectorName);
+                if (connectorCfg != null) {
+                    if (connectorCfg.isOmit()) {
+                        mojoInstance.logInfo("connector-config.json: omit=true for connector "
+                                + connectorName + " — skipping driver JAR packaging.");
+                        continue;
+                    }
+                    if (connectorCfg.isOmitAllDrivers()) {
+                        mojoInstance.logInfo("connector-config.json: omitAllDrivers=true for connector "
+                                + connectorName + " — skipping driver JAR packaging.");
+                        continue;
+                    }
+                }
+            }
             File[] libFiles = connectorDir.listFiles(new FilenameFilter() {
                 @Override
                 public boolean accept(File dir, String name) {

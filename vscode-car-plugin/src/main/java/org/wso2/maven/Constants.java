@@ -146,6 +146,9 @@ public class Constants {
     public static final String LOCAL_MVN_SETTING = "MI.useLocalMaven";
     public static final String VERSIONED_DEPLOYMENT = "versionedDeployment";
     public static final String FAT_CAR_ENABLED = "fatCarEnabled";
+    public static final String CONNECTOR_CONFIG_FILE = "src" + File.separator + "main" + File.separator
+            + "wso2mi" + File.separator + "resources" + File.separator + "connectors" + File.separator
+            + "connector-config.json";
 
     private Constants() {
     }
