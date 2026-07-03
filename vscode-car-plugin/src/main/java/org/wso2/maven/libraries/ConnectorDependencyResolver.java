@@ -93,7 +93,8 @@ public class ConnectorDependencyResolver {
         }
 
         // Resolve connectors from resources folder
-        List<String> directories = Arrays.asList(Constants.CONNECTORS_DIR_NAME, Constants.INBOUND_CONNECTORS_DIR_NAME);
+        List<String> directories = Arrays.asList(Constants.CONNECTORS_DIR_NAME, Constants.INBOUND_ENDPOINTS_DIR_NAME,
+                Constants.INBOUND_CONNECTORS_DIR_NAME);
         for (String directoryName : directories) {
             resolveConnectorZipsFromResources(connectorZips, directoryName);
         }

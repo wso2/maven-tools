@@ -115,6 +115,7 @@ public class Constants {
     public static final String PACKAGE = "package";
     public static final String CONNECTOR = "connector";
     public static final String CONNECTORS_DIR_NAME = "connectors";
+    public static final String INBOUND_ENDPOINTS_DIR_NAME = "inbound-endpoints";
     public static final String INBOUND_CONNECTORS_DIR_NAME = "inbound-connectors";
     public static final String INBOUND_CONNECTORS_PREFIX = "mi-inbound-";
     public static final String CONNECTION_TYPE = "connectionType";

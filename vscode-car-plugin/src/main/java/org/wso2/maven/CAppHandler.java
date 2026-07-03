@@ -215,6 +215,7 @@ public class CAppHandler extends AbstractXMLDoc {
         }
         processConnectors(resourcesFolder, archiveDirectory, dependencies, Constants.CONNECTORS_DIR_NAME, connectorConfig);
         if (MavenUtils.isConnectorPackingSupported(project)) {
+            processConnectors(resourcesFolder, archiveDirectory, dependencies, Constants.INBOUND_ENDPOINTS_DIR_NAME, connectorConfig);
             processConnectors(resourcesFolder, archiveDirectory, dependencies, Constants.INBOUND_CONNECTORS_DIR_NAME, connectorConfig);
         }
         processRegistryResources(resourcesFolder, archiveDirectory, dependencies);
