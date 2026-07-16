@@ -72,8 +72,10 @@ public class ConnectorDependencyResolver {
      */
     public static void resolveDependencies(CARMojo carMojo, MavenProject project) throws Exception {
 
-        String extractedDir = Constants.DEFAULT_TARGET_FOLDER + File.separator + Constants.EXTRACTED_CONNECTORS;
-        String libDir = Constants.DEFAULT_TARGET_FOLDER + File.separator + Constants.LIBS;
+        String extractedDir = new File(project.getBasedir(),
+                Constants.DEFAULT_TARGET_FOLDER + File.separator + Constants.EXTRACTED_CONNECTORS).getAbsolutePath();
+        String libDir = new File(project.getBasedir(),
+                Constants.DEFAULT_TARGET_FOLDER + File.separator + Constants.LIBS).getAbsolutePath();
 
         // Ensure target directories exist
         new File(extractedDir).mkdirs();
@@ -85,7 +87,7 @@ public class ConnectorDependencyResolver {
         setupInvoker(invoker, project.getBasedir().getAbsolutePath());
 
         // Resolve connector ZIP files from pom.xml
-        ArrayList<File> connectorZips = resolveConnectorZips(invoker);
+        ArrayList<File> connectorZips = resolveConnectorZips(invoker, project.getBasedir());
 
         if (!MavenUtils.isConnectorPackingSupported(project)) {
             // runtime version is not 4.4.0 or higher, skip resolving dependencies
@@ -96,7 +98,7 @@ public class ConnectorDependencyResolver {
         List<String> directories = Arrays.asList(Constants.CONNECTORS_DIR_NAME, Constants.INBOUND_ENDPOINTS_DIR_NAME,
                 Constants.INBOUND_CONNECTORS_DIR_NAME);
         for (String directoryName : directories) {
-            resolveConnectorZipsFromResources(connectorZips, directoryName);
+            resolveConnectorZipsFromResources(connectorZips, directoryName, project.getBasedir());
         }
 
         // Load connector-config.json once for this build
@@ -178,18 +180,22 @@ public class ConnectorDependencyResolver {
     /**
      * Resolves connector ZIP files from the pom.xml file.
      *
-     * @param invoker The Maven Invoker.
+     * @param invoker    The Maven Invoker.
+     * @param projectDir The project base directory.
      * @return The list of connector ZIP files.
      * @throws MavenInvocationException If an error occurs while resolving dependencies.
      */
-    private static ArrayList<File> resolveConnectorZips(Invoker invoker) throws MavenInvocationException {
+    private static ArrayList<File> resolveConnectorZips(Invoker invoker, File projectDir)
+            throws MavenInvocationException {
 
         InvocationRequest request = new DefaultInvocationRequest();
-        request.setPomFile(new File(Constants.POM_FILE));
+        request.setBaseDirectory(projectDir);
+        request.setPomFile(new File(projectDir, Constants.POM_FILE));
         request.setGoals(Collections.singletonList("dependency:copy-dependencies -DincludeTypes=zip"));
         invoker.execute(request);
 
-        File dependenciesDir = new File(Constants.DEFAULT_TARGET_FOLDER + File.separator + Constants.DEPENDENCY);
+        File dependenciesDir = new File(projectDir,
+                Constants.DEFAULT_TARGET_FOLDER + File.separator + Constants.DEPENDENCY);
         if (!dependenciesDir.exists()) {
             return new ArrayList<>();
         }
@@ -202,9 +208,10 @@ public class ConnectorDependencyResolver {
         return connectorZips;
     }
 
-    private static void resolveConnectorZipsFromResources(ArrayList<File> connectorZips, String directoryName) {
+    private static void resolveConnectorZipsFromResources(ArrayList<File> connectorZips, String directoryName,
+                                                           File projectDir) {
 
-        File connectorsDir = new File(Constants.RESOURCES_FOLDER_PATH, directoryName);
+        File connectorsDir = new File(new File(projectDir, Constants.RESOURCES_FOLDER_PATH), directoryName);
         if (!connectorsDir.exists()) {
             return;
         }
@@ -366,8 +373,8 @@ public class ConnectorDependencyResolver {
                     // No explicit override — filter by whether the connectionType is active in local entries.
                     if (!scannedConnections) {
                         carMojo.logInfo("Scanning local entries folder for connections.");
-                        activeConnectionTypes =
-                                scanLocalEntriesForConnections(Constants.LOCAL_ENTRIES_FOLDER_PATH, carMojo);
+                        activeConnectionTypes = scanLocalEntriesForConnections(
+                                new File(projectDir, Constants.LOCAL_ENTRIES_FOLDER_PATH).getAbsolutePath(), carMojo);
                         scannedConnections = true;
                     }
 
