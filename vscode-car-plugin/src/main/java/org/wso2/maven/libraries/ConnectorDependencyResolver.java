@@ -37,6 +37,7 @@ import org.yaml.snakeyaml.Yaml;
 import java.io.*;
 import java.nio.file.Files;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.zip.ZipEntry;
@@ -53,10 +54,6 @@ import static org.wso2.maven.MavenUtils.setupInvoker;
  * Resolves dependencies for connectors.
  */
 public class ConnectorDependencyResolver {
-
-    // active connectionTypes and flag to check if connections are scanned
-    private static Set<String> activeConnectionTypes;
-    private static boolean scannedConnections = false;
 
     /** Regex to extract the Maven artifactId from a versioned ZIP filename.
      *  Matches release versions (e.g. "mi-connector-file-4.0.36") and qualified versions
@@ -154,6 +151,9 @@ public class ConnectorDependencyResolver {
         }
 
         if (!dependencyFiles.isEmpty()) {
+            // Scoped to this resolveDependencies() invocation only, so one module's local-entries
+            // scan is never reused by another module in the same multi-module reactor build.
+            AtomicReference<Set<String>> activeConnectionTypesRef = new AtomicReference<>();
             for (Map.Entry<QName, File> entry : dependencyFiles.entrySet()) {
                 String connectorArtifactId = connectorArtifactIds.getOrDefault(
                         entry.getKey(), entry.getKey().getLocalPart());
@@ -171,7 +171,8 @@ public class ConnectorDependencyResolver {
 
                 carMojo.logInfo("Resolving dependencies for " + entry.getKey());
                 resolveMavenDependencies(entry.getValue(), libDirPath, invoker, carMojo,
-                        entry.getKey().toString(), connectorArtifactId, project.getBasedir(), connectorConfig);
+                        entry.getKey().toString(), connectorArtifactId, project.getBasedir(), connectorConfig,
+                        activeConnectionTypesRef);
             }
         }
         carMojo.logInfo("All dependencies resolved and extracted successfully.");
@@ -279,11 +280,16 @@ public class ConnectorDependencyResolver {
      * @param connectorArtifactId The connector Maven artifactId (used to look up overrides).
      * @param projectDir          The project base directory.
      * @param overrideConfig      Parsed connector-config.json (may be null).
+     * @param activeConnectionTypesRef Lazily-populated, per-module cache of active connectionTypes
+     *                                 found in the local entries folder (shared across connectors
+     *                                 within one resolveDependencies() call only).
      * @throws Exception If an error occurs while resolving dependencies.
      */
     private static void resolveMavenDependencies(File descriptorYaml, String libDir, Invoker invoker, CARMojo carMojo,
                                                  String connectorQName, String connectorArtifactId,
-                                                 File projectDir, ConnectorConfig overrideConfig) throws Exception {
+                                                 File projectDir, ConnectorConfig overrideConfig,
+                                                 AtomicReference<Set<String>> activeConnectionTypesRef)
+            throws Exception {
 
         if (!descriptorYaml.exists()) {
             return;
@@ -371,12 +377,12 @@ public class ConnectorDependencyResolver {
                             + connectorArtifactId + ": " + groupId + ":" + artifactId + ":" + version);
                 } else if (connectionType != null) {
                     // No explicit override — filter by whether the connectionType is active in local entries.
-                    if (!scannedConnections) {
+                    if (activeConnectionTypesRef.get() == null) {
                         carMojo.logInfo("Scanning local entries folder for connections.");
-                        activeConnectionTypes = scanLocalEntriesForConnections(
-                                new File(projectDir, Constants.LOCAL_ENTRIES_FOLDER_PATH).getAbsolutePath(), carMojo);
-                        scannedConnections = true;
+                        activeConnectionTypesRef.set(scanLocalEntriesForConnections(
+                                new File(projectDir, Constants.LOCAL_ENTRIES_FOLDER_PATH).getAbsolutePath(), carMojo));
                     }
+                    Set<String> activeConnectionTypes = activeConnectionTypesRef.get();
 
                     if (activeConnectionTypes == null || !activeConnectionTypes.contains(connectionType)) {
                         carMojo.logInfo("Skipping dependency: " + groupId + ":" + artifactId + ":" + version
