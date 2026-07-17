@@ -37,6 +37,7 @@ import org.yaml.snakeyaml.Yaml;
 import java.io.*;
 import java.nio.file.Files;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.zip.ZipEntry;
@@ -54,10 +55,6 @@ import static org.wso2.maven.MavenUtils.setupInvoker;
  */
 public class ConnectorDependencyResolver {
 
-    // active connectionTypes and flag to check if connections are scanned
-    private static Set<String> activeConnectionTypes;
-    private static boolean scannedConnections = false;
-
     /** Regex to extract the Maven artifactId from a versioned ZIP filename.
      *  Matches release versions (e.g. "mi-connector-file-4.0.36") and qualified versions
      *  (e.g. "mi-connector-smpp-2.0.0-SNAPSHOT", "mi-connector-file-4.0.36-beta1"). */
@@ -72,8 +69,10 @@ public class ConnectorDependencyResolver {
      */
     public static void resolveDependencies(CARMojo carMojo, MavenProject project) throws Exception {
 
-        String extractedDir = Constants.DEFAULT_TARGET_FOLDER + File.separator + Constants.EXTRACTED_CONNECTORS;
-        String libDir = Constants.DEFAULT_TARGET_FOLDER + File.separator + Constants.LIBS;
+        String extractedDir = new File(project.getBasedir(),
+                Constants.DEFAULT_TARGET_FOLDER + File.separator + Constants.EXTRACTED_CONNECTORS).getAbsolutePath();
+        String libDir = new File(project.getBasedir(),
+                Constants.DEFAULT_TARGET_FOLDER + File.separator + Constants.LIBS).getAbsolutePath();
 
         // Ensure target directories exist
         new File(extractedDir).mkdirs();
@@ -85,7 +84,7 @@ public class ConnectorDependencyResolver {
         setupInvoker(invoker, project.getBasedir().getAbsolutePath());
 
         // Resolve connector ZIP files from pom.xml
-        ArrayList<File> connectorZips = resolveConnectorZips(invoker);
+        ArrayList<File> connectorZips = resolveConnectorZips(invoker, project.getBasedir());
 
         if (!MavenUtils.isConnectorPackingSupported(project)) {
             // runtime version is not 4.4.0 or higher, skip resolving dependencies
@@ -96,7 +95,7 @@ public class ConnectorDependencyResolver {
         List<String> directories = Arrays.asList(Constants.CONNECTORS_DIR_NAME, Constants.INBOUND_ENDPOINTS_DIR_NAME,
                 Constants.INBOUND_CONNECTORS_DIR_NAME);
         for (String directoryName : directories) {
-            resolveConnectorZipsFromResources(connectorZips, directoryName);
+            resolveConnectorZipsFromResources(connectorZips, directoryName, project.getBasedir());
         }
 
         // Load connector-config.json once for this build
@@ -152,6 +151,9 @@ public class ConnectorDependencyResolver {
         }
 
         if (!dependencyFiles.isEmpty()) {
+            // Scoped to this resolveDependencies() invocation only, so one module's local-entries
+            // scan is never reused by another module in the same multi-module reactor build.
+            AtomicReference<Set<String>> activeConnectionTypesRef = new AtomicReference<>();
             for (Map.Entry<QName, File> entry : dependencyFiles.entrySet()) {
                 String connectorArtifactId = connectorArtifactIds.getOrDefault(
                         entry.getKey(), entry.getKey().getLocalPart());
@@ -169,7 +171,8 @@ public class ConnectorDependencyResolver {
 
                 carMojo.logInfo("Resolving dependencies for " + entry.getKey());
                 resolveMavenDependencies(entry.getValue(), libDirPath, invoker, carMojo,
-                        entry.getKey().toString(), connectorArtifactId, project.getBasedir(), connectorConfig);
+                        entry.getKey().toString(), connectorArtifactId, project.getBasedir(), connectorConfig,
+                        activeConnectionTypesRef);
             }
         }
         carMojo.logInfo("All dependencies resolved and extracted successfully.");
@@ -178,18 +181,22 @@ public class ConnectorDependencyResolver {
     /**
      * Resolves connector ZIP files from the pom.xml file.
      *
-     * @param invoker The Maven Invoker.
+     * @param invoker    The Maven Invoker.
+     * @param projectDir The project base directory.
      * @return The list of connector ZIP files.
      * @throws MavenInvocationException If an error occurs while resolving dependencies.
      */
-    private static ArrayList<File> resolveConnectorZips(Invoker invoker) throws MavenInvocationException {
+    private static ArrayList<File> resolveConnectorZips(Invoker invoker, File projectDir)
+            throws MavenInvocationException {
 
         InvocationRequest request = new DefaultInvocationRequest();
-        request.setPomFile(new File(Constants.POM_FILE));
+        request.setBaseDirectory(projectDir);
+        request.setPomFile(new File(projectDir, Constants.POM_FILE));
         request.setGoals(Collections.singletonList("dependency:copy-dependencies -DincludeTypes=zip"));
         invoker.execute(request);
 
-        File dependenciesDir = new File(Constants.DEFAULT_TARGET_FOLDER + File.separator + Constants.DEPENDENCY);
+        File dependenciesDir = new File(projectDir,
+                Constants.DEFAULT_TARGET_FOLDER + File.separator + Constants.DEPENDENCY);
         if (!dependenciesDir.exists()) {
             return new ArrayList<>();
         }
@@ -202,9 +209,10 @@ public class ConnectorDependencyResolver {
         return connectorZips;
     }
 
-    private static void resolveConnectorZipsFromResources(ArrayList<File> connectorZips, String directoryName) {
+    private static void resolveConnectorZipsFromResources(ArrayList<File> connectorZips, String directoryName,
+                                                           File projectDir) {
 
-        File connectorsDir = new File(Constants.RESOURCES_FOLDER_PATH, directoryName);
+        File connectorsDir = new File(new File(projectDir, Constants.RESOURCES_FOLDER_PATH), directoryName);
         if (!connectorsDir.exists()) {
             return;
         }
@@ -272,11 +280,16 @@ public class ConnectorDependencyResolver {
      * @param connectorArtifactId The connector Maven artifactId (used to look up overrides).
      * @param projectDir          The project base directory.
      * @param overrideConfig      Parsed connector-config.json (may be null).
+     * @param activeConnectionTypesRef Lazily-populated, per-module cache of active connectionTypes
+     *                                 found in the local entries folder (shared across connectors
+     *                                 within one resolveDependencies() call only).
      * @throws Exception If an error occurs while resolving dependencies.
      */
     private static void resolveMavenDependencies(File descriptorYaml, String libDir, Invoker invoker, CARMojo carMojo,
                                                  String connectorQName, String connectorArtifactId,
-                                                 File projectDir, ConnectorConfig overrideConfig) throws Exception {
+                                                 File projectDir, ConnectorConfig overrideConfig,
+                                                 AtomicReference<Set<String>> activeConnectionTypesRef)
+            throws Exception {
 
         if (!descriptorYaml.exists()) {
             return;
@@ -364,12 +377,12 @@ public class ConnectorDependencyResolver {
                             + connectorArtifactId + ": " + groupId + ":" + artifactId + ":" + version);
                 } else if (connectionType != null) {
                     // No explicit override — filter by whether the connectionType is active in local entries.
-                    if (!scannedConnections) {
+                    if (activeConnectionTypesRef.get() == null) {
                         carMojo.logInfo("Scanning local entries folder for connections.");
-                        activeConnectionTypes =
-                                scanLocalEntriesForConnections(Constants.LOCAL_ENTRIES_FOLDER_PATH, carMojo);
-                        scannedConnections = true;
+                        activeConnectionTypesRef.set(scanLocalEntriesForConnections(
+                                new File(projectDir, Constants.LOCAL_ENTRIES_FOLDER_PATH).getAbsolutePath(), carMojo));
                     }
+                    Set<String> activeConnectionTypes = activeConnectionTypesRef.get();
 
                     if (activeConnectionTypes == null || !activeConnectionTypes.contains(connectionType)) {
                         carMojo.logInfo("Skipping dependency: " + groupId + ":" + artifactId + ":" + version
