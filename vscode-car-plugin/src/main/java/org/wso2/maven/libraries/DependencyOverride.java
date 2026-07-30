@@ -51,6 +51,13 @@ public class DependencyOverride {
      */
     private String localPath;
 
+    /**
+     * When true, this entry declares a brand-new dependency to be added to the connector, i.e.
+     * one that is not present in the connector's descriptor.yml. New dependencies that do not
+     * set this flag to true are ignored.
+     */
+    private boolean additionalDependency;
+
     public String getConnectionType() {
         return connectionType;
     }
@@ -73,5 +80,9 @@ public class DependencyOverride {
 
     public String getLocalPath() {
         return localPath;
+    }
+
+    public boolean isAdditionalDependency() {
+        return additionalDependency;
     }
 }
