@@ -346,20 +346,7 @@ public class ConnectorDependencyResolver {
                     }
                     // Local JAR override — copy directly, skip Maven resolution entirely
                     if (!StringUtils.isBlank(override.getLocalPath())) {
-                        File localJar = new File(override.getLocalPath());
-                        if (!localJar.exists() || !localJar.isFile()) {
-                            throw new LibraryResolverException(
-                                    "connector-config.json specifies localPath for " + connectorArtifactId
-                                    + " / " + connectionType + " but the file does not exist: "
-                                    + override.getLocalPath());
-                        }
-                        File targetDir = new File(libDir + File.separator + connectorQName);
-                        targetDir.mkdirs();
-                        File dest = new File(targetDir, localJar.getName());
-                        Files.copy(localJar.toPath(), dest.toPath(),
-                                java.nio.file.StandardCopyOption.REPLACE_EXISTING);
-                        carMojo.logInfo("Copied local driver JAR per connector-config.json: "
-                                + localJar.getAbsolutePath() + " → " + dest.getAbsolutePath());
+                        copyLocalJar(override, libDir, connectorQName, connectorArtifactId, carMojo);
                         continue;
                     }
                     // Apply coordinate overrides; bypass the connectionType gating below since
@@ -396,9 +383,68 @@ public class ConnectorDependencyResolver {
             }
         }
 
+        // Handle additional dependencies configured for a connector
+        List<DependencyOverride> allOverrides =
+                ConnectorConfigReader.getOverrides(overrideConfig, connectorArtifactId);
+        if (allOverrides != null) {
+            for (DependencyOverride addition : allOverrides) {
+                if (!addition.isAdditionalDependency()) {
+                    continue;
+                }
+                if (!StringUtils.isBlank(addition.getLocalPath())) {
+                    copyLocalJar(addition, libDir, connectorQName, connectorArtifactId, carMojo);
+                    continue;
+                }
+                if (StringUtils.isBlank(addition.getGroupId()) || StringUtils.isBlank(addition.getArtifactId())
+                        || StringUtils.isBlank(addition.getVersion())) {
+                    throw new LibraryResolverException(
+                            "Additional dependency for connector " + connectorArtifactId
+                            + " must specify groupId, artifactId and version (or a localPath). Got "
+                            + addition.getGroupId() + ":" + addition.getArtifactId() + ":"
+                            + addition.getVersion());
+                }
+                carMojo.logInfo("Adding dependency from connector-config.json for connector "
+                        + connectorArtifactId + ": " + addition.getGroupId() + ":"
+                        + addition.getArtifactId() + ":" + addition.getVersion());
+                dependencySet.add(addition.getGroupId() + ":" + addition.getArtifactId() + ":"
+                        + addition.getVersion());
+            }
+        }
+
         List<String> dependenciesList = new ArrayList<>(dependencySet);
         resolveAndCopyDependencies(dependenciesList, repositoriesList, libDir, invoker, carMojo, connectorQName,
                 projectDir);
+    }
+
+    /**
+     * Copies a local JAR declared via localPath in connector-config.json directly into the
+     * connector's lib directory, bypassing Maven resolution.
+     *
+     * @param override            the override/addition entry carrying the localPath
+     * @param libDir              the lib directory root
+     * @param connectorQName      the connector QName string
+     * @param connectorArtifactId the connector Maven artifactId
+     * @param carMojo             the Mojo instance
+     * @throws Exception if the local JAR does not exist or cannot be copied
+     */
+    private static void copyLocalJar(DependencyOverride override, String libDir, String connectorQName,
+                                     String connectorArtifactId, CARMojo carMojo) throws Exception {
+
+        File localJar = new File(override.getLocalPath());
+        if (!localJar.isAbsolute() || !localJar.getName().toLowerCase(Locale.ROOT).endsWith(".jar")
+                || !localJar.exists() || !localJar.isFile()) {
+            throw new LibraryResolverException(
+                    "connector-config.json specifies localPath for " + connectorArtifactId
+                    + " but it is not an absolute path to an existing JAR file: " + override.getLocalPath());
+        }
+        File targetDir = new File(libDir + File.separator + connectorQName);
+        if (!targetDir.exists() && !targetDir.mkdirs()) {
+            throw new LibraryResolverException("Failed to create directory: " + targetDir.getAbsolutePath());
+        }
+        File dest = new File(targetDir, localJar.getName());
+        Files.copy(localJar.toPath(), dest.toPath(), java.nio.file.StandardCopyOption.REPLACE_EXISTING);
+        carMojo.logInfo("Copied local driver JAR per connector-config.json: "
+                + localJar.getAbsolutePath() + " → " + dest.getAbsolutePath());
     }
 
     private static void resolveAndCopyDependencies(List<String> dependencies, List<String> repositories,

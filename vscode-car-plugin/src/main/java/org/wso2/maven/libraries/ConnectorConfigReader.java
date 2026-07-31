@@ -97,7 +97,8 @@ public class ConnectorConfigReader {
         // First pass: match by connectionType
         if (connectionType != null) {
             for (DependencyOverride override : overrides) {
-                if (connectionType.equalsIgnoreCase(override.getConnectionType())) {
+                if (!override.isAdditionalDependency()
+                        && connectionType.equalsIgnoreCase(override.getConnectionType())) {
                     return override;
                 }
             }
@@ -106,7 +107,8 @@ public class ConnectorConfigReader {
         // Second pass: match by groupId + artifactId (for overrides without connectionType)
         if (StringUtils.isNotEmpty(groupId) && StringUtils.isNotEmpty(artifactId)) {
             for (DependencyOverride override : overrides) {
-                if (override.getConnectionType() == null
+                if (!override.isAdditionalDependency()
+                        && override.getConnectionType() == null
                         && groupId.equals(override.getGroupId())
                         && artifactId.equals(override.getArtifactId())) {
                     return override;
@@ -114,5 +116,21 @@ public class ConnectorConfigReader {
             }
         }
         return null;
+    }
+
+    /**
+     * Return all dependency override entries declared for the given connector.
+     *
+     * @param config              the parsed connector config
+     * @param connectorArtifactId Maven artifactId of the connector ZIP
+     * @return the connector's override list or null if none are defined
+     */
+    public static List<DependencyOverride> getOverrides(ConnectorConfig config, String connectorArtifactId) {
+
+        if (config == null || config.getConnectors() == null) {
+            return null;
+        }
+        ConnectorDependencyConfig connectorCfg = config.getConnectors().get(connectorArtifactId);
+        return connectorCfg == null ? null : connectorCfg.getDependencies();
     }
 }
