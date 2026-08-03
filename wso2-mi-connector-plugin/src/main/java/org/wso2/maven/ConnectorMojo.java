@@ -37,12 +37,21 @@ public class ConnectorMojo extends AbstractMojo {
     private String connectorName;
     private String packageName;
 
-    public void execute() throws MojoExecutionException {
+    /**
+     * @parameter default-value="${project.basedir}/src/main/resources"
+     * @readonly
+     */
+    private File resourcesDirectory;
 
+    public void execute() throws MojoExecutionException {
         populateConnectorData();
+        
+        // Validate connector parameters
+        ConnectorValidator validator = new ConnectorValidator(resourcesDirectory, connectorName, this);
+        validator.validate();
+        
         ConnectorXmlGenerator.generateConnectorXml(connectorName, packageName, this);
         ComponentXmlGenerator.generateComponentXmls(this);
-        DescriptorGenerator.generateDescriptor(this);
     }
 
     private void populateConnectorData() throws MojoExecutionException {
@@ -124,5 +133,14 @@ public class ConnectorMojo extends AbstractMojo {
             return node.getTextContent().trim();
         }
         return null;
+    }
+
+    /**
+     * Gets the resources directory.
+     *
+     * @return The resources directory.
+     */
+    public File getResourcesDirectory() {
+        return resourcesDirectory;
     }
 }
