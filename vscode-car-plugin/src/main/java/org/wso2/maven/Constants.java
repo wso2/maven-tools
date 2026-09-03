@@ -94,6 +94,7 @@ public class Constants {
     public static final String DESCRIPTOR_YAML = "descriptor.yml";
     public static final String EXTRACTED_CONNECTORS = "extracted-connectors";
     public static final String LIBS = "libs";
+    public static final String TMP_POMS_DIR_NAME = "tmp-poms";
     public static final String REPOSITORIES = "repositories";
     public static final String DEPENDENCIES = "dependencies";
     public static final String ARTIFACT_ID = "artifactId";

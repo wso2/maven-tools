@@ -47,6 +47,7 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
+import java.util.Properties;
 import java.util.Set;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
@@ -287,11 +288,15 @@ public class CAppDependencyResolver {
 
         Invoker invoker = new DefaultInvoker();
         setupInvoker(invoker, projectDir.getPath());
+        File absolutePomFile = pomFile.getAbsoluteFile();
         DefaultInvocationRequest request = new DefaultInvocationRequest();
-        request.setBaseDirectory(projectDir);
-        request.setGoals(Collections.singletonList(
-                String.format("-f %s dependency:copy-dependencies -DincludeTypes=car -DoutputDirectory=%s",
-                        pomFile.getAbsolutePath(), outputDir.getAbsolutePath())));
+        request.setBaseDirectory(absolutePomFile.getParentFile());
+        request.setPomFile(absolutePomFile);
+        request.setGoals(Collections.singletonList("dependency:copy-dependencies"));
+        Properties properties = new Properties();
+        properties.setProperty("includeTypes", "car");
+        properties.setProperty("outputDirectory", outputDir.getAbsolutePath());
+        request.setProperties(properties);
         invoker.execute(request);
     }
 
@@ -439,18 +444,23 @@ public class CAppDependencyResolver {
     public static File fetchCarFileFromMavenRepo(File projectDir, File dependenciesDir, String groupId,
                                                  String artifactId, String version, CARMojo carMojo) throws Exception {
 
+        if (!dependenciesDir.exists() && !dependenciesDir.mkdirs()) {
+            throw new IOException("Failed to create directory: " + dependenciesDir.getAbsolutePath());
+        }
+        File tmpPomsDir = new File(projectDir, Constants.DEFAULT_TARGET_FOLDER + File.separator
+                + Constants.TMP_POMS_DIR_NAME);
+        if (!tmpPomsDir.exists() && !tmpPomsDir.mkdirs()) {
+            throw new IOException("Failed to create directory: " + tmpPomsDir.getAbsolutePath());
+        }
         File tempPomFile = createPomFile(
                 Collections.singletonList(groupId + Constants.COLON + artifactId + Constants.COLON + version + Constants.COLON + Constants.CAR_TYPE),
-                Collections.<String>emptyList());
+                Collections.<String>emptyList(), tmpPomsDir, artifactId + Constants.HYPHEN + version);
 
         try {
             executeDependencyCopy(projectDir, tempPomFile, dependenciesDir);
             File fetchedCarFile = new File(dependenciesDir, artifactId + Constants.HYPHEN + version + Constants.CAR_EXTENSION);
             if (fetchedCarFile.exists()) {
                 return fetchedCarFile;
-            }
-            if (!tempPomFile.delete()) {
-                carMojo.getLog().warn("Failed to delete temporary pom.xml: " + tempPomFile.getAbsolutePath());
             }
         } catch (MavenInvocationException e) {
             throw new Exception("Error while fetching .car from Maven repo: " + e.getMessage(), e);

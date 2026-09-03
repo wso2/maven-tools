@@ -17,6 +17,7 @@
 
 package org.wso2.maven;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.maven.artifact.versioning.ComparableVersion;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.project.MavenProject;
@@ -134,7 +135,19 @@ public class MavenUtils {
 
     public static File createPomFile(List<String> dependencies, List<String> repositories) throws IOException {
 
-        File tempPom = File.createTempFile("temp-pom", ".xml");
+        return createPomFile(dependencies, repositories, null, null);
+    }
+
+    public static File createPomFile(List<String> dependencies, List<String> repositories, File targetDirectory,
+                                     String identifier) throws IOException {
+
+        File tempPom;
+        if (StringUtils.isBlank(identifier)) {
+            tempPom = File.createTempFile("temp-pom", ".xml", targetDirectory);
+        } else {
+            File dir = targetDirectory != null ? targetDirectory : new File(System.getProperty("java.io.tmpdir"));
+            tempPom = new File(dir, "temp-pom-" + sanitizeForFileName(identifier) + ".xml");
+        }
         try (FileWriter writer = new FileWriter(tempPom)) {
             writer.write("<project xmlns=\"http://maven.apache.org/POM/4.0.0\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"\n" +
                     "         xsi:schemaLocation=\"http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd\">\n" +
@@ -192,6 +205,19 @@ public class MavenUtils {
             writer.write("</project>\n");
         }
         return tempPom;
+    }
+
+    /**
+     * Strips characters that are unsafe in a file name and caps the length, so the value
+     * can be embedded in a prefix.
+     */
+    private static String sanitizeForFileName(String value) {
+
+        if (StringUtils.isBlank(value)) {
+            return StringUtils.EMPTY;
+        }
+        String sanitized = value.replaceAll("[^a-zA-Z0-9.-]+", "-");
+        return sanitized.length() > 50 ? sanitized.substring(0, 50) : sanitized;
     }
 
     public static boolean useLocalMaven(String projectPath) {

@@ -102,10 +102,10 @@ public class DataMapperBundler {
     
         appendDataMapperLogs();
         setupInvoker(invoker, projectDirectory);
+        createDataMapperArtifacts();
 
         if (!isDmResourcesExist()) {
             mojoInstance.logInfo("Could not find the resources needed for data mapper bundling. " + "Starting the resources creation process.");
-            createDataMapperArtifacts();
             installNodeAndNPM();
         }else{
             mojoInstance.logInfo("Resources for data mapper bundling found. Skipping the resources creation process.");
@@ -181,7 +181,7 @@ public class DataMapperBundler {
         InvocationRequest request = createBaseRequest();
         mojoInstance.logInfo("Installing Node and NPM");
         request.setBaseDirectory(Paths.get(projectDirectory).toFile());
-        request.setGoals(Collections.singletonList(Constants.INSTALL_NODE_AND_NPM_GOAL + " -DinstallDirectory=" + getDataMapperBundlingCachePath()));
+        request.setGoals(Collections.singletonList(Constants.INSTALL_NODE_AND_NPM_GOAL));
         setNodeAndNpmProperties(request);
     
         executeRequest(request, "Node and NPM installation failed.");
@@ -320,11 +320,13 @@ public class DataMapperBundler {
 
             InvocationRequest request = createBaseRequest();
             Path globalCacheDir = getDataMapperBundlingCachePath();
-            Path pomPath = globalCacheDir.resolve(Constants.POM_FILE_NAME);
             request.setBaseDirectory(Paths.get(projectDirectory).toFile());
-            request.setGoals(Collections.singletonList(Constants.NPM_RUN_BUILD_GOAL + " -f " + pomPath
-                            + " -Dexec.executable=\"" + getNpmExecutablePath() + "\""
-                            + " -Dexec.args=\"" + Constants.RUN_BUILD + " " + Constants.PREPEND_NODE_CONFIG_FLAG + "\""));
+            request.setGoals(Collections.singletonList(Constants.NPM_RUN_BUILD_GOAL));
+            Properties buildProperties = new Properties();
+            buildProperties.setProperty("exec.executable", getNpmExecutablePath());
+            buildProperties.setProperty("exec.args", Constants.RUN_BUILD + " " + Constants.PREPEND_NODE_CONFIG_FLAG);
+            buildProperties.setProperty("exec.workingdir", globalCacheDir.toString());
+            request.setProperties(buildProperties);
 
             executeRequest(request, "Failed to bundle data mapper: " + dataMapperName);
 
@@ -361,12 +363,16 @@ public class DataMapperBundler {
         mojoInstance.logInfo("Generating schema for data mapper: " + dataMapperName);
         InvocationRequest request = createBaseRequest();
         Path globalCacheDir = getDataMapperBundlingCachePath();
-        Path pomPath = globalCacheDir.resolve(Constants.POM_FILE_NAME);
         request.setBaseDirectory(Paths.get(projectDirectory).toFile());
-        request.setGoals(Collections.singletonList(Constants.NPM_RUN_BUILD_GOAL + " -f " + pomPath
-                + " -Dexec.executable=\"" + getNpmExecutablePath() + "\""
-                + " -Dexec.args=\"" + Constants.RUN_GENERATE + " " + dataMapper + File.separator
-                + dataMapperName + ".ts" + " " + Constants.PREPEND_NODE_CONFIG_FLAG + "\""));
+        request.setGoals(Collections.singletonList(Constants.NPM_RUN_BUILD_GOAL));
+        Properties generateProperties = new Properties();
+        generateProperties.setProperty("exec.executable", getNpmExecutablePath());
+        generateProperties.setProperty("exec.args", Constants.RUN_GENERATE + " " + Constants.PREPEND_NODE_CONFIG_FLAG);
+        // passing as an env var due to windows path issue with spaces
+        String dataMapperTsFile = dataMapper + File.separator + dataMapperName + ".ts";
+        request.addShellEnvironment("DM_SOURCE_TS_FILE", dataMapperTsFile);
+        generateProperties.setProperty("exec.workingdir", globalCacheDir.toString());
+        request.setProperties(generateProperties);
 
         executeRequest(request, "Failed to bundle data mapper: " + dataMapperName);
     }
@@ -398,6 +404,7 @@ public class DataMapperBundler {
         Properties properties = new Properties();
         properties.setProperty("nodeVersion", Constants.NODE_VERSION);
         properties.setProperty("npmVersion", Constants.NPM_VERSION);
+        properties.setProperty("installDirectory", getDataMapperBundlingCachePath().toString());
         request.setProperties(properties);
     }
     
@@ -437,7 +444,7 @@ public class DataMapperBundler {
 
     /**
      * Creates necessary artifacts for data mapper bundling.
-     * 
+     *
      * @throws DataMapperException if an error occurs while creating the artifacts.
      */
     private void createDataMapperArtifacts() throws DataMapperException {
@@ -474,8 +481,8 @@ public class DataMapperBundler {
             "</project>";
     
         Path pomPath = getDataMapperBundlingCachePath().resolve(Constants.POM_FILE_NAME);
-        try {
-            Files.write(pomPath, pomContent.getBytes(), StandardOpenOption.CREATE);
+        try (FileWriter fileWriter = new FileWriter(pomPath.toFile())) {
+            fileWriter.write(pomContent);
         } catch (IOException e) {
             throw new DataMapperException("Failed to create pom.xml file.", e);
         }
