@@ -413,7 +413,7 @@ public class ConnectorDependencyResolver {
 
         List<String> dependenciesList = new ArrayList<>(dependencySet);
         resolveAndCopyDependencies(dependenciesList, repositoriesList, libDir, invoker, carMojo, connectorQName,
-                projectDir);
+                connectorArtifactId);
     }
 
     /**
@@ -449,27 +449,31 @@ public class ConnectorDependencyResolver {
 
     private static void resolveAndCopyDependencies(List<String> dependencies, List<String> repositories,
                                                    String libDir, Invoker invoker, CARMojo carMojo,
-                                                   String connectorName, File projectDir)
+                                                   String connectorName, String connectorArtifactId)
             throws LibraryResolverException {
 
         File targetDir = new File(libDir + File.separator + connectorName);
         if (!targetDir.exists() && !targetDir.mkdirs()) {
             throw new LibraryResolverException("Failed to create directory: " + targetDir.getAbsolutePath());
         }
+        File tmpPomsDir = new File(new File(libDir).getParentFile(), Constants.TMP_POMS_DIR_NAME);
+        if (!tmpPomsDir.exists() && !tmpPomsDir.mkdirs()) {
+            throw new LibraryResolverException("Failed to create directory: " + tmpPomsDir.getAbsolutePath());
+        }
         try {
             carMojo.logInfo("dependecies    " + dependencies.toString());
-            File tempPom = createPomFile(dependencies, repositories);
+            File tempPom = createPomFile(dependencies, repositories, tmpPomsDir, connectorArtifactId);
 
             InvocationRequest request = new DefaultInvocationRequest();
-            request.setBaseDirectory(projectDir);
-            request.setGoals(Collections.singletonList(String.format("-f %s dependency:copy-dependencies " +
-                            "-DexcludeTransitive=true -DoutputDirectory=%s", tempPom.getAbsolutePath(),
-                    libDir + File.separator + connectorName)));
+            request.setBaseDirectory(tempPom.getAbsoluteFile().getParentFile());
+            request.setPomFile(tempPom.getAbsoluteFile());
+            request.setGoals(Collections.singletonList("dependency:copy-dependencies"));
+            Properties properties = new Properties();
+            properties.setProperty("excludeTransitive", "true");
+            properties.setProperty("outputDirectory", libDir + File.separator + connectorName);
+            request.setProperties(properties);
 
             executeRequest(request, "Failed to resolve and copy dependencies", invoker, carMojo);
-            if (!tempPom.delete()) {
-                carMojo.getLog().warn("Failed to delete temporary pom.xml: " + tempPom.getAbsolutePath());
-            }
         } catch (IOException e) {
             throw new LibraryResolverException("Failed to create temporary pom.xml", e);
         }

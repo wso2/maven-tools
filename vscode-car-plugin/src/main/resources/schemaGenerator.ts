@@ -294,5 +294,8 @@ function generateJsonSchema(filePath: string): void {
   ts.sys.writeFile(outputSchemaPath, JSON.stringify(outputSchema, null, 2));
 }
 
-const filePath = process.argv[2];
+const filePath = process.env.DM_SOURCE_TS_FILE;
+if (!filePath) {
+  throw new Error("DM_SOURCE_TS_FILE environment variable is not set");
+}
 generateJsonSchema(filePath);
