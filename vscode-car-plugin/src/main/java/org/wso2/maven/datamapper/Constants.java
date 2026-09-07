@@ -62,6 +62,7 @@ class Constants {
     public static final String DATA_MAPPER = "datamapper"; 
     public static final String DATA_MAPPERS_CACHE_DIR = "datamappers";
     public static final String DATA_MAPPER_BUNDLING_CACHE_DIR = "datamapper_bundling_resources";
+    public static final String DATA_MAPPER_BUNDLING_RESOURCES_VERSION = "5.4.21";
     public static final String DATA_MAPPER_CACHE_NODE_MODULES = "node_modules";
     public static final String DATA_MAPPER_CACHE_NODE = "node";
     public static final String SRC_DIR = "src";
