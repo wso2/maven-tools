@@ -125,16 +125,15 @@ public class DataMapperBundler {
      * @return true if all necessary resources exist, false otherwise.
      */
     public boolean isDmResourcesExist() {
-        
-        Path globalCacheDir = getDataMapperBundlingCachePath();
 
-        return Files.exists(globalCacheDir) &&
-               Files.exists(globalCacheDir.resolve(Constants.DATA_MAPPER_CACHE_NODE_MODULES)) &&
-               Files.exists(globalCacheDir.resolve(Constants.DATA_MAPPER_CACHE_NODE)) &&
-               Files.exists(globalCacheDir.resolve(Constants.POM_FILE_NAME)) &&
-               Files.exists(globalCacheDir.resolve(Constants.PACKAGE_JSON_FILE_NAME)) &&
-               Files.exists(globalCacheDir.resolve(Constants.PACKAGE_LOCK_JSON)) &&
-               Files.exists(globalCacheDir.resolve(Constants.SCHEMA_GENERATOR));
+        Path nodeCacheDir = getDataMapperBundlingCachePath();
+        Path resourcesCacheDir = getDataMapperBundlingResourcesPath();
+        return Files.exists(nodeCacheDir.resolve(Constants.DATA_MAPPER_CACHE_NODE)) &&
+               Files.exists(nodeCacheDir.resolve(Constants.DATA_MAPPER_CACHE_NODE_MODULES)) &&
+               Files.exists(nodeCacheDir.resolve(Constants.POM_FILE_NAME)) &&
+               Files.exists(nodeCacheDir.resolve(Constants.PACKAGE_JSON_FILE_NAME)) &&
+               Files.exists(nodeCacheDir.resolve(Constants.PACKAGE_LOCK_JSON)) &&
+               Files.exists(resourcesCacheDir.resolve(Constants.SCHEMA_GENERATOR));
     }
 
     /**
@@ -217,6 +216,7 @@ public class DataMapperBundler {
         Properties properties = new Properties();
         properties.setProperty("arguments", Constants.PREPEND_NODE_CONFIG);
         properties.setProperty("workingDirectory", getDataMapperBundlingCachePath().toString());
+        properties.setProperty("installDirectory", getDataMapperBundlingCachePath().toString());
         request.setProperties(properties);
         executeRequest(request, "npm configuration failed.");
     }
@@ -287,7 +287,7 @@ public class DataMapperBundler {
         String dataMapperName = dataMapper.getFileName().toString();
         mojoInstance.logInfo("Bundling data mapper: " + dataMapperName);
         createWebpackConfig(dataMapperName);
-        Path cacheSrcDir = getDataMapperBundlingCachePath().resolve(Constants.SRC_DIR);
+        Path cacheSrcDir = getDataMapperBundlingResourcesPath().resolve(Constants.SRC_DIR);
         Path originalTsFile = cacheSrcDir.resolve(dataMapperName + ".ts");
         if (!Files.exists(originalTsFile)) {
             throw new DataMapperException("TypeScript file not found: " + originalTsFile);
@@ -319,7 +319,7 @@ public class DataMapperBundler {
             mojoInstance.logInfo("Temporary modifications applied to: " + originalTsFile);
 
             InvocationRequest request = createBaseRequest();
-            Path globalCacheDir = getDataMapperBundlingCachePath();
+            Path globalCacheDir = getDataMapperBundlingResourcesPath();
             request.setBaseDirectory(Paths.get(projectDirectory).toFile());
             request.setGoals(Collections.singletonList(Constants.NPM_RUN_BUILD_GOAL));
             Properties buildProperties = new Properties();
@@ -327,6 +327,7 @@ public class DataMapperBundler {
             buildProperties.setProperty("exec.args", Constants.RUN_BUILD + " " + Constants.PREPEND_NODE_CONFIG_FLAG);
             buildProperties.setProperty("exec.workingdir", globalCacheDir.toString());
             request.setProperties(buildProperties);
+            addSharedNodeModulesBinToPath(request);
 
             executeRequest(request, "Failed to bundle data mapper: " + dataMapperName);
 
@@ -362,7 +363,7 @@ public class DataMapperBundler {
         String dataMapperName = dataMapper.getFileName().toString();
         mojoInstance.logInfo("Generating schema for data mapper: " + dataMapperName);
         InvocationRequest request = createBaseRequest();
-        Path globalCacheDir = getDataMapperBundlingCachePath();
+        Path globalCacheDir = getDataMapperBundlingResourcesPath();
         request.setBaseDirectory(Paths.get(projectDirectory).toFile());
         request.setGoals(Collections.singletonList(Constants.NPM_RUN_BUILD_GOAL));
         Properties generateProperties = new Properties();
@@ -373,6 +374,7 @@ public class DataMapperBundler {
         request.addShellEnvironment("DM_SOURCE_TS_FILE", dataMapperTsFile);
         generateProperties.setProperty("exec.workingdir", globalCacheDir.toString());
         request.setProperties(generateProperties);
+        addSharedNodeModulesBinToPath(request);
 
         executeRequest(request, "Failed to bundle data mapper: " + dataMapperName);
     }
@@ -382,6 +384,22 @@ public class DataMapperBundler {
         String osName = System.getProperty("os.name").toLowerCase();
         String npmExecutable = osName.contains("win") ? "npm.cmd" : "npm";
         return getDataMapperBundlingCachePath().resolve(Constants.DATA_MAPPER_CACHE_NODE).resolve(npmExecutable).toString();
+    }
+
+    /**
+     * Prepends the shared node_modules/.bin to PATH, since the working directory only has its own
+     * package.json (see createPackageJson()) and 'npm run' won't find binaries like tsc/webpack otherwise.
+     *
+     * @param request The Maven invocation request to configure.
+     */
+    private void addSharedNodeModulesBinToPath(InvocationRequest request) {
+        Path nodeModulesBin = getDataMapperBundlingCachePath().resolve(Constants.DATA_MAPPER_CACHE_NODE_MODULES)
+                .resolve(".bin");
+        String existingPath = System.getenv("PATH");
+        String updatedPath = existingPath == null || existingPath.isEmpty()
+                ? nodeModulesBin.toString()
+                : nodeModulesBin + File.pathSeparator + existingPath;
+        request.addShellEnvironment("PATH", updatedPath);
     }
     
     /**
@@ -417,6 +435,7 @@ public class DataMapperBundler {
         Properties properties = new Properties();
         properties.setProperty("arguments", Constants.NPM_CI);
         properties.setProperty("workingDirectory", getDataMapperBundlingCachePath().toString());
+        properties.setProperty("installDirectory", getDataMapperBundlingCachePath().toString());
         request.setProperties(properties);
     }
     
@@ -494,7 +513,7 @@ public class DataMapperBundler {
     public void createSchemaGenerator() throws DataMapperException {
         try {
             InputStream inputStream = getClass().getClassLoader().getResourceAsStream(Constants.SCHEMA_GENERATOR);
-            String targetPath = getDataMapperBundlingCachePath().resolve(Constants.SCHEMA_GENERATOR).toString();
+            String targetPath = getDataMapperBundlingResourcesPath().resolve(Constants.SCHEMA_GENERATOR).toString();
             File targetFile = new File(targetPath);
             FileUtils.copyInputStreamToFile(inputStream, targetFile);
         } catch (IOException e) {
@@ -537,11 +556,14 @@ public class DataMapperBundler {
                 "    }\n" +
                 "}";
 
-        Path packageJsonPath = getDataMapperBundlingCachePath().resolve(Constants.PACKAGE_JSON_FILE_NAME);
+        writePackageJson(getDataMapperBundlingCachePath().resolve(Constants.PACKAGE_JSON_FILE_NAME), packageJsonContent);
+        writePackageJson(getDataMapperBundlingResourcesPath().resolve(Constants.PACKAGE_JSON_FILE_NAME), packageJsonContent);
+    }
+
+    private void writePackageJson(Path packageJsonPath, String packageJsonContent) throws DataMapperException {
         try (FileWriter fileWriter = new FileWriter(packageJsonPath.toFile())) {
             fileWriter.write(packageJsonContent);
-        }
-        catch (IOException e) {
+        } catch (IOException e) {
             throw new DataMapperException("Failed to create package.json file.", e);
         }
     }
@@ -563,7 +585,7 @@ public class DataMapperBundler {
                 "    ]\n" +
                 "}";
     
-        Path tsConfigPath = getDataMapperBundlingCachePath().resolve(Constants.TS_CONFIG_FILE_NAME);
+        Path tsConfigPath = getDataMapperBundlingResourcesPath().resolve(Constants.TS_CONFIG_FILE_NAME);
             try (FileWriter fileWriter = new FileWriter(tsConfigPath.toFile())) {
                 fileWriter.write(tsConfigContent);
             } catch (IOException e) {
@@ -587,7 +609,7 @@ public class DataMapperBundler {
                 "    }\n" +
                 "}";
 
-        Path tsConfigPath = getDataMapperBundlingCachePath().resolve(Constants.TS_CONFIG_FILE_NAME);
+        Path tsConfigPath = getDataMapperBundlingResourcesPath().resolve(Constants.TS_CONFIG_FILE_NAME);
         try (FileWriter fileWriter = new FileWriter(tsConfigPath.toFile())) {
             fileWriter.write(tsConfigContent);
         } catch (IOException e) {
@@ -627,7 +649,7 @@ public class DataMapperBundler {
                 "    mode: \"production\",\n" +
                 "};";
     
-        Path webpackConfigPath = getDataMapperBundlingCachePath().resolve(Constants.WEBPACK_CONFIG_FILE_NAME);
+        Path webpackConfigPath = getDataMapperBundlingResourcesPath().resolve(Constants.WEBPACK_CONFIG_FILE_NAME);
         try (FileWriter fileWriter = new FileWriter(webpackConfigPath.toFile())) {
             fileWriter.write(webPackConfigContent);
         } catch (IOException e) {
@@ -725,7 +747,7 @@ public class DataMapperBundler {
      * @throws DataMapperException if an error occurs while copying the TypeScript files.
      */
     private void copyTsFiles(final Path sourceDir) throws DataMapperException {
-        final Path destDir = getDataMapperBundlingCachePath().resolve(Constants.SRC_DIR);
+        final Path destDir = getDataMapperBundlingResourcesPath().resolve(Constants.SRC_DIR);
 
         try {
             Files.createDirectories(destDir);
@@ -792,7 +814,7 @@ public class DataMapperBundler {
      * @throws DataMapperException if an error occurs while creating the data-mapper artifacts directory.
      */
     private void ensureDataMapperBundlingCacheExists() throws DataMapperException {
-        Path dataMapperPath = getDataMapperBundlingCachePath();
+        Path dataMapperPath = getDataMapperBundlingResourcesPath();
         if (!Files.exists(dataMapperPath)) {
             try {
                 Files.createDirectories(dataMapperPath);
@@ -807,7 +829,7 @@ public class DataMapperBundler {
      * @throws DataMapperException if an error occurs while removing the webpack configuration file.
      */
     private void removeWebpackConfig() throws DataMapperException {
-        Path filePath = getDataMapperBundlingCachePath().resolve(Constants.WEBPACK_CONFIG_FILE_NAME);
+        Path filePath = getDataMapperBundlingResourcesPath().resolve(Constants.WEBPACK_CONFIG_FILE_NAME);
         try {
             Files.delete(filePath);
         } catch (IOException e) {
@@ -914,6 +936,16 @@ public class DataMapperBundler {
     }
 
     /**
+     * Returns the path to this plugin version's data mapper bundling resources, nested under a
+     * version-specific subdirectory so other plugin versions sharing the cache don't clobber them.
+     *
+     * @return The path to this version's data mapper bundling resources directory.
+     */
+    private Path getDataMapperBundlingResourcesPath() {
+        return getDataMapperBundlingCachePath().resolve(Constants.DATA_MAPPER_BUNDLING_RESOURCES_VERSION);
+    }
+
+    /**
      * Restores a cached data mapper files(except .ts files) to the resources directory of the project.
      * @param cachedDataMapperPath The path to the cached data mapper directory.
      * @throws DataMapperException if an error occurs while restoring the data mapper.
@@ -965,8 +997,8 @@ public class DataMapperBundler {
      * Deletes the 'src' and 'target' directories inside the data mapper bundling cache directory.
      */
     private void cleanUpBundlingResources() {
-        Path srcPath = getDataMapperBundlingCachePath().resolve(Constants.SRC_DIR);
-        Path targetPath = getDataMapperBundlingCachePath().resolve(Constants.TARGET_DIR_NAME);
+        Path srcPath = getDataMapperBundlingResourcesPath().resolve(Constants.SRC_DIR);
+        Path targetPath = getDataMapperBundlingResourcesPath().resolve(Constants.TARGET_DIR_NAME);
 
         try {
             if (Files.exists(srcPath)) {
