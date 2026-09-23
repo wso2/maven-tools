@@ -76,7 +76,7 @@ public class ConfigMapParserMojo extends AbstractMojo {
     @Parameter(property = "keystoreType")
     private String keystoreType;
 
-    @Parameter(property = "cipher")
+    @Parameter(property = "cipherTransformation")
     private String cipherTransformation;
 
     @Parameter(property = "projectLocation")
