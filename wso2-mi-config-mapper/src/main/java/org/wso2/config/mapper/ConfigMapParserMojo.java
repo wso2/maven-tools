@@ -40,11 +40,11 @@ import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
-import java.io.FileReader;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.OutputStream;
+import java.io.OutputStreamWriter;
 import java.io.PrintStream;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
@@ -254,7 +254,7 @@ public class ConfigMapParserMojo extends AbstractMojo {
             File tempFile = new File(fileFromOutput);
             tempFile.getParentFile().mkdirs();
             tempFile.createNewFile();
-            Files.write(Paths.get(fileFromOutput), fileSource.getBytes());
+            Files.write(Paths.get(fileFromOutput), fileSource.getBytes(StandardCharsets.UTF_8));
             metaDataMap.put(filePath, DigestUtils.md5Hex(entry.getValue()));
         }
 
@@ -434,8 +434,8 @@ public class ConfigMapParserMojo extends AbstractMojo {
     private String getBaseImageInDockerfile() throws IOException {
         StringBuilder builder = new StringBuilder();
         try (BufferedReader bufferReader = new BufferedReader(
-                new FileReader(projectLocation + ConfigMapParserConstants.TEMP_DOCKER_DIR + File.separator
-                        + ConfigMapParserConstants.DOCKER_FILE))) {
+                new InputStreamReader(new FileInputStream(projectLocation + ConfigMapParserConstants.TEMP_DOCKER_DIR
+                        + File.separator + ConfigMapParserConstants.DOCKER_FILE), StandardCharsets.UTF_8))) {
             String currentLine;
             while ((currentLine = bufferReader.readLine()) != null) {
                 if (currentLine.contains(ConfigMapParserConstants.DOCKER_FILE_AUTO_GENERATION_BEGIN)) {
@@ -582,7 +582,8 @@ public class ConfigMapParserMojo extends AbstractMojo {
 
         String passwordTempFileLocation = Paths.get(projectLocation, ConfigMapParserConstants.TEMP_DOCKER_DIR,
                 ConfigMapParserConstants.RESOURCE_DIR_PATH, ConfigMapParserConstants.PASSWORD_TMP_FILE_NAME).toString();
-        try (FileWriter fileWriter = new FileWriter(passwordTempFileLocation)) {
+        try (OutputStreamWriter fileWriter = new OutputStreamWriter(new FileOutputStream(passwordTempFileLocation),
+                StandardCharsets.UTF_8)) {
             fileWriter.write(keystorePassword);
         } catch (IOException e) {
             throw new MojoExecutionException("Error while creating " + passwordTempFileLocation);
